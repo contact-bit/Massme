@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { dbAdmin } from "@/lib/firebase.admin";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-09-30" as any,
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+
 
 export async function GET(req: Request) {
   try {
