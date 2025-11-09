@@ -1,11 +1,11 @@
 import Link from "next/link";
 
-export default async function HomePage({
+export default async function Page({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+  const { locale } = await params; // ✅ déstructure après `await`
 
   return (
     <main className="max-w-5xl mx-auto py-10 space-y-6 text-gray-900">

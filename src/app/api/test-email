@@ -1,0 +1,19 @@
+import { NextResponse } from "next/server";
+import { Resend } from "resend";
+
+export async function GET() {
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const result = await resend.emails.send({
+      from: "Massme <contact@hdconnects.com>", // 👈 même expéditeur que ton code
+      to: process.env.ADMIN_EMAIL!,
+      subject: "✅ Test Resend depuis Vercel",
+      text: "Si tu reçois cet e-mail, tout fonctionne en production ✅",
+    });
+
+    return NextResponse.json(result);
+  } catch (error: any) {
+    console.error("Erreur d’envoi test:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
