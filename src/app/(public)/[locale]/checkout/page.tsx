@@ -1,84 +1,177 @@
 "use client";
 
-import { useState } from "react";
-import { use } from "react"; // 👈 on importe use() pour unwrap la Promise
+import React, { useState } from "react";
 
-const SHIPPING_METHODS = [
-  {
-    id: "standard_fr",
-    name: { fr: "Livraison standard (France)", en: "Standard shipping (France)" },
-    price: { fr: 4.99, eu: 9.99, us: 14.99 },
-  },
-  {
-    id: "express",
-    name: { fr: "Express", en: "Express" },
-    price: { fr: 9.99, eu: 14.99, us: 19.99 },
-  },
-];
+type Locale = "fr" | "en";
 
-export default function CheckoutPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = use(params); // ✅ On "unwrap" la Promise ici
+export default function CheckoutPage({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}) {
+  // ✅ Nouvelle méthode Next 16 : React.use() pour déstructurer la Promise
+  const { locale } = React.use(params);
 
-  const [selectedShipping, setSelectedShipping] = useState(SHIPPING_METHODS[0]);
-  const [customerEmail, setCustomerEmail] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    phone: "",
+    shippingMethod: "standard",
+  });
 
-  async function handlePay() {
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      body: JSON.stringify({
-        items: [{ name: "Prestation Massme", price: 49.99, quantity: 1 }],
-        currency: "eur",
-        shippingMethod: selectedShipping,
-        customerEmail,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
+  const [loading, setLoading] = useState(false);
 
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleCheckout = async () => {
+    try {
+      setLoading(true);
+      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart,
+          currency: "eur",
+          shippingMethod: {
+            name: {
+              fr:
+                form.shippingMethod === "express"
+                  ? "Livraison express"
+                  : "Livraison standard",
+              en:
+                form.shippingMethod === "express"
+                  ? "Express shipping"
+                  : "Standard shipping",
+            },
+            price: { fr: form.shippingMethod === "express" ? 8.99 : 0 },
+          },
+          customerEmail: form.email,
+          shippingAddress: form,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Erreur de redirection Stripe ❌");
+      }
+    } catch (error) {
+      console.error("Erreur checkout:", error);
+      alert("Une erreur est survenue lors de la commande 😢");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <main className="max-w-3xl mx-auto py-8 space-y-4">
-      <h1 className="text-xl font-semibold">
-        {locale === "fr" ? "Finaliser la commande" : "Complete your order"}
+    <main className="max-w-2xl mx-auto py-10 px-4 text-gray-900">
+      <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">
+        {locale === "fr"
+          ? "🧾 Informations de livraison"
+          : "🧾 Shipping details"}
       </h1>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium">
-          {locale === "fr" ? "Votre email" : "Your email"}
-        </span>
+      <div className="bg-white shadow-lg rounded-2xl p-6 space-y-4 border border-gray-100">
         <input
-          value={customerEmail}
-          onChange={(e) => setCustomerEmail(e.target.value)}
-          className="border rounded px-3 py-2"
-          placeholder="vous@exemple.com"
+          type="text"
+          name="name"
+          placeholder={locale === "fr" ? "Nom complet" : "Full name"}
+          value={form.name}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
-      </label>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium">
-          {locale === "fr" ? "Mode de livraison" : "Shipping method"}
-        </p>
-        {SHIPPING_METHODS.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setSelectedShipping(m)}
-            className={`block w-full text-left border rounded px-3 py-2 ${
-              selectedShipping.id === m.id ? "border-black" : "border-gray-200"
-            }`}
-          >
-{m.name[locale as "fr" | "en"]} — {m.price.fr} €
-          </button>
-        ))}
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+
+        <input
+          type="text"
+          name="address"
+          placeholder={locale === "fr" ? "Adresse" : "Address"}
+          value={form.address}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+
+        <div className="flex gap-3">
+          <input
+            type="text"
+            name="city"
+            placeholder={locale === "fr" ? "Ville" : "City"}
+            value={form.city}
+            onChange={handleChange}
+            className="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+
+          <input
+            type="text"
+            name="postalCode"
+            placeholder={locale === "fr" ? "Code postal" : "Postal code"}
+            value={form.postalCode}
+            onChange={handleChange}
+            className="w-32 border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
+        <input
+          type="text"
+          name="phone"
+          placeholder={locale === "fr" ? "Téléphone" : "Phone"}
+          value={form.phone}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+
+        <select
+          name="shippingMethod"
+          value={form.shippingMethod}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          <option value="standard">
+            🚚{" "}
+            {locale === "fr"
+              ? "Livraison standard (gratuite)"
+              : "Standard shipping (free)"}
+          </option>
+          <option value="express">
+            ⚡{" "}
+            {locale === "fr"
+              ? "Livraison express (8,99 €)"
+              : "Express shipping (€8.99)"}
+          </option>
+        </select>
+
+        <button
+          onClick={handleCheckout}
+          disabled={loading}
+          className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+        >
+          {loading
+            ? locale === "fr"
+              ? "Traitement en cours..."
+              : "Processing..."
+            : locale === "fr"
+            ? "Payer maintenant 💳"
+            : "Pay now 💳"}
+        </button>
       </div>
-
-      <button
-        onClick={handlePay}
-        className="inline-flex items-center px-4 py-2 bg-black text-white rounded"
-      >
-        {locale === "fr" ? "Payer" : "Pay"}
-      </button>
     </main>
   );
 }
