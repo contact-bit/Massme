@@ -1,0 +1,6 @@
+import Stripe from "stripe";
+
+// ✅ Version d’API Stripe mise à jour pour correspondre au SDK installé
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-10-29.clover",
+});
