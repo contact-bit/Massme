@@ -1,45 +1,35 @@
 "use client";
 
-import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-
-function SuccessContent() {
-  const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id");
-
-  return (
-    <main className="max-w-2xl mx-auto py-16 text-center text-gray-800">
-      <h1 className="text-3xl font-bold mb-4 text-green-600">
-        ✅ Paiement réussi !
-      </h1>
-
-      {sessionId ? (
-        <p className="mb-6">
-          Merci pour votre commande 💚 <br />
-          <span className="text-sm text-gray-500">
-            ID de session : {sessionId}
-          </span>
-        </p>
-      ) : (
-        <p className="mb-6">Commande confirmée.</p>
-      )}
-
-      <Link
-        href="/fr"
-        className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition"
-      >
-        Retourner à la boutique
-      </Link>
-    </main>
-  );
-}
+import { useEffect, useState } from "react";
 
 export default function SuccessPage() {
-  // ✅ On protège le hook avec <Suspense>
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("session_id");
+  const [status, setStatus] = useState("⏳ Vérification du paiement...");
+
+  useEffect(() => {
+    if (!sessionId) return;
+    fetch(`/api/verify-payment?session_id=${sessionId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setStatus("✅ Paiement confirmé ! Merci pour votre commande 💚");
+        } else {
+          setStatus("⚠️ Paiement non confirmé. Veuillez contacter le support.");
+        }
+      })
+      .catch(() => setStatus("❌ Erreur lors de la vérification du paiement."));
+  }, [sessionId]);
+
   return (
-    <Suspense fallback={<div className="p-10 text-center">Chargement...</div>}>
-      <SuccessContent />
-    </Suspense>
+    <main className="flex flex-col items-center justify-center min-h-screen text-center px-6">
+      <h1 className="text-3xl font-bold mb-4">{status}</h1>
+      {sessionId && (
+        <p className="text-gray-500">
+          ID de session Stripe : <span className="font-mono">{sessionId}</span>
+        </p>
+      )}
+    </main>
   );
 }
