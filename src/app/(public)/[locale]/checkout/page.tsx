@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, use } from "react"; // ✅ import du hook `use`
 
 type Locale = "fr" | "en";
 
@@ -9,8 +9,8 @@ export default function CheckoutPage({
 }: {
   params: Promise<{ locale: Locale }>;
 }) {
-  // ✅ Nouvelle méthode Next 16 : React.use() pour déstructurer la Promise
-  const { locale } = React.use(params);
+  // ✅ Nouvelle méthode Next.js 16 : déstructuration de la Promise avec `use()`
+  const { locale } = use(params);
 
   const [form, setForm] = useState({
     name: "",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Locale = "fr" | "en";
@@ -13,12 +13,18 @@ type Product = {
   quantity?: number;
 };
 
-export default function CartPage({ params }: { params: { locale: Locale } }) {
-  const { locale } = params;
+export default function CartPage({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}) {
+  // ✅ Nouvelle API Next.js 16 : déballer la Promise
+  const { locale } = React.use(params);
+
   const [cart, setCart] = useState<Product[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
-  // ✅ Lecture du panier uniquement côté client
+  // ✅ Lecture du panier côté client uniquement
   useEffect(() => {
     try {
       const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
@@ -41,7 +47,7 @@ export default function CartPage({ params }: { params: { locale: Locale } }) {
   // 💰 Calcul du total
   const total = cart.reduce((acc, item) => acc + (item.price?.eur || 0), 0);
 
-  // 🚫 Empêche le rendu avant l’hydratation
+  // 🚫 Empêche le rendu avant hydratation
   if (!isMounted) {
     return (
       <main className="max-w-3xl mx-auto py-10 text-center text-gray-600">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -11,7 +11,7 @@ type Product = {
   id: string;
   name: Record<Locale, string>;
   description?: Record<Locale, string>;
-  price: { eur: number; usd?: number; gbp?: number };
+  price: { eur: number; usd?: number };
 };
 
 export default function ProductsPage({
@@ -19,44 +19,57 @@ export default function ProductsPage({
 }: {
   params: Promise<{ locale: Locale }>;
 }) {
+  // ✅ Nouvelle API Next.js 16 : on déballe la Promise avec `use()`
+  const { locale } = use(params);
+
   const [products, setProducts] = useState<Product[]>([]);
-  const [locale, setLocale] = useState<Locale>("fr");
 
   useEffect(() => {
     async function fetchProducts() {
-      const resolvedParams = await params;
-      setLocale(resolvedParams.locale);
-
       const snapshot = await getDocs(collection(db, "products"));
-      const data = snapshot.docs.map((doc) => ({
-        ...(doc.data() as Product),
-        id: doc.id, // ✅ id placé à la fin pour éviter le conflit
-      }));
+
+      // ✅ Corrigé : on évite le doublon du champ `id`
+      const data = snapshot.docs.map((doc) => {
+        const docData = doc.data() as Product;
+        const { id, ...rest } = docData; // supprime un éventuel id interne
+        return { id: doc.id, ...rest }; // garde uniquement le Firestore ID
+      });
+
       setProducts(data);
     }
 
     fetchProducts();
-  }, [params]);
+  }, []);
 
   const addToCart = (product: Product) => {
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const updatedCart = [...cart, product];
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    alert(`${product.name?.[locale] || product.name?.fr} ajouté au panier ! 🛒`);
+    const updated = [...cart, product];
+    localStorage.setItem("cart", JSON.stringify(updated));
+    alert(
+      `${product.name?.[locale] || product.name?.fr} ${
+        locale === "fr" ? "ajouté au panier 🛒" : "added to cart 🛒"
+      }`
+    );
   };
 
   return (
     <main className="max-w-6xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8">🧾 Nos prestations</h1>
+      <h1 className="text-3xl font-bold mb-8">
+        {locale === "fr" ? "Nos produits" : "Our products"}
+      </h1>
 
       {products.length === 0 ? (
-        <p className="text-gray-600">Aucun produit disponible.</p>
+        <p className="text-gray-600">
+          {locale === "fr"
+            ? "Aucun produit disponible."
+            : "No products found."}
+        </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((p) => (
             <div
               key={p.id}
-              className="border rounded-lg p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between bg-white"
+              className="border rounded-lg p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between"
             >
               <div>
                 <Link href={`/${locale}/products/${p.id}`}>
@@ -74,7 +87,9 @@ export default function ProductsPage({
                 onClick={() => addToCart(p)}
                 className="bg-black text-white py-2 rounded-md hover:bg-gray-800 transition"
               >
-                Ajouter au panier 🛒
+                {locale === "fr"
+                  ? "Ajouter au panier 🛒"
+                  : "Add to cart 🛒"}
               </button>
             </div>
           ))}
