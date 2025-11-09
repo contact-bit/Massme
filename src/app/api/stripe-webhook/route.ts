@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { dbAdmin } from "@/lib/firebase.admin"; // ✅ bon import (depuis ton fichier firebase.admin.ts)
+import { dbAdmin } from "@/lib/firebase.admin"; // ✅ bon import (SDK Admin)
 
 // ⚙️ Initialisation Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-09-30" as any,
 });
 
-// 🚨 On désactive le body parser automatique
-export const config = {
-  api: { bodyParser: false },
-};
+// ✅ Nouvelle syntaxe Next.js 16
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const preferredRegion = "auto";
 
 // 🔐 Fonction pour lire le raw body du webhook
 async function buffer(readable: ReadableStream<Uint8Array>) {
@@ -18,7 +18,7 @@ async function buffer(readable: ReadableStream<Uint8Array>) {
   const chunks: Uint8Array[] = [];
   let done, value;
   while ((({ done, value } = await reader.read()), !done)) {
-    chunks.push(value);
+    if (value) chunks.push(value); // ✅ vérifie que value n’est pas undefined
   }
   return Buffer.concat(chunks);
 }
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // ✅ Cas principal : paiement réussi
+  // ✅ Paiement réussi
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const orderId = session.metadata?.order_id;
@@ -63,9 +63,7 @@ export async function POST(req: Request) {
     console.log("💰 Paiement complété pour la commande:", orderId);
 
     try {
-      // ⚙️ Ici, on met à jour le document via le SDK Admin
       const orderRef = dbAdmin.collection("pending_orders").doc(orderId);
-
       await orderRef.update({
         status: "paid",
         paidAt: new Date(),
@@ -74,11 +72,10 @@ export async function POST(req: Request) {
 
       console.log("✅ Commande mise à jour comme payée:", orderId);
     } catch (err) {
-      console.error("🔥 Erreur lors de la mise à jour Firestore:", err);
+      console.error("🔥 Erreur Firestore:", err);
     }
   }
 
-  // ⚙️ Gestion d’autres cas (optionnel)
   else if (event.type === "checkout.session.expired") {
     console.log("⚠️ Session expirée:", event.id);
   } else if (event.type === "payment_intent.payment_failed") {
