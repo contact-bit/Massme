@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { dbAdmin as db } from "@/lib/firebase.admin"; // ✅ SDK admin
+import { Timestamp } from "firebase-admin/firestore"; // pour les dates Firestore
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     console.log("🧾 Body reçu :", JSON.stringify(body, null, 2));
 
     const {
@@ -20,33 +19,37 @@ export async function POST(req: Request) {
     // ⚠️ Vérifications de base
     if (!items || !Array.isArray(items) || items.length === 0) {
       console.error("🚫 ERREUR: items manquant ou vide");
-      return NextResponse.json({ error: "Missing or empty items" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing or empty items" },
+        { status: 400 }
+      );
     }
 
     if (!customerEmail) {
       console.error("🚫 ERREUR: customerEmail manquant");
-      return NextResponse.json({ error: "Missing email" }, { status: 400 });
-    }
-
-    if (!db) {
-      console.error("🔥 ERREUR: Firestore non initialisé !");
-      return NextResponse.json({ error: "Firestore not initialized" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Missing email" },
+        { status: 400 }
+      );
     }
 
     const currencyUsed = currency || "eur";
 
+    // 💾 Sauvegarde commande Firestore (SDK admin)
     console.log("💾 Sauvegarde commande Firestore...");
-    const orderRef = await addDoc(collection(db, "pending_orders"), {
+    const orderRef = await db.collection("pending_orders").add({
       email: customerEmail,
       items,
       shippingMethod,
       shippingAddress,
       currency: currencyUsed,
-      createdAt: serverTimestamp(),
+      createdAt: Timestamp.now(),
       status: "pending_payment",
     });
+
     console.log("✅ Commande sauvegardée avec ID:", orderRef.id);
 
+    // 💳 Prépare les articles Stripe
     const line_items = items.map((item: any, index: number) => ({
       price_data: {
         currency: currencyUsed,
@@ -58,6 +61,7 @@ export async function POST(req: Request) {
       quantity: item.quantity || 1,
     }));
 
+    // 💳 Crée la session Stripe
     console.log("💳 Création session Stripe...");
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -79,7 +83,7 @@ export async function POST(req: Request) {
         },
       ],
       metadata: {
-        order_id: orderRef.id,
+        order_id: orderRef.id, // 🔗 Liaison Firestore <-> Stripe
       },
       success_url: `${process.env.NEXT_PUBLIC_URL}/fr/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_URL}/fr/checkout`,
@@ -90,6 +94,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
     console.error("❌ Erreur checkout:", err);
-    return NextResponse.json({ error: err.message || "Internal Server Error" }, { status: 400 });
+    return NextResponse.json(
+      { error: err.message || "Internal Server Error" },
+      { status: 400 }
+    );
   }
 }
