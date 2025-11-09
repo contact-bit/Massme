@@ -59,12 +59,22 @@ export default function CheckoutPage({
         }),
       });
 
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Erreur de redirection Stripe ❌");
-      }
+const data = await res.json();
+
+if (!res.ok) {
+  console.error("❌ Erreur API checkout:", data);
+  alert(`Erreur serveur: ${data.error || "Impossible de créer la session Stripe"}`);
+  return;
+}
+
+if (data.url) {
+  window.location.href = data.url;
+} else {
+  alert("Erreur de redirection Stripe.");
+}
+
+
+
     } catch (error) {
       console.error("Erreur checkout:", error);
       alert("Une erreur est survenue lors de la commande 😢");

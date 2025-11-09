@@ -1,70 +1,66 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { buffer } from "node:stream/consumers";
-import { adminDB } from "@/lib/firebase.admin";
-import { sendOrderEmails } from "@/lib/mailer";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 
-// ✅ Stripe : version d’API mise à jour pour compatibilité SDK
+// ⚙️ Initialise Stripe avec ta clé secrète
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-10-29.clover",
+apiVersion: "2025-10-29.clover",
 });
 
-export const config = {
-  api: { bodyParser: false },
-};
+// 🚨 Important : désactiver le body parser de Next.js
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  try {
-    // 🧾 Lecture du corps brut requis par Stripe
-    const rawBody = await buffer(req.body as any);
-    const sig = req.headers.get("stripe-signature");
+  const sig = req.headers.get("stripe-signature");
 
-    // 🧩 Vérification de la signature Stripe
-    const event = stripe.webhooks.constructEvent(
-      rawBody,
-      sig!,
+  if (!sig) {
+    return NextResponse.json({ error: "Missing Stripe signature" }, { status: 400 });
+  }
+
+  let event: Stripe.Event;
+
+  try {
+    const buf = await req.arrayBuffer();
+    event = stripe.webhooks.constructEvent(
+      Buffer.from(buf),
+      sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
+  } catch (err: any) {
+    console.error("❌ Erreur vérification signature Stripe:", err.message);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
 
-    console.log("⚡ Webhook Stripe reçu :", event.type);
-
+  try {
+    // 🔔 Événement de paiement réussi
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object as any;
+      const session = event.data.object as Stripe.Checkout.Session;
 
-      const order = {
-        id: session.id,
-        amount_total: session.amount_total / 100,
-        currency: session.currency,
-        customer_email: session.customer_email,
-        payment_status: session.payment_status,
-        created_at: new Date().toISOString(),
-      };
-
-      console.log("🧾 Nouvelle commande reçue :", order);
-
-      // ✅ Enregistrer dans Firestore avec ID unique
-      await adminDB
-        .collection("orders")
-        .doc(`${session.id}_${Date.now()}`)
-        .set(order);
-      console.log("🔥 Commande enregistrée dans Firestore");
-
-      // 📨 Envoi des e-mails
-      try {
-        console.log("📬 Début envoi e-mails webhook…");
-        await sendOrderEmails({
-          order,
-          clientEmail: session.customer_email,
-        });
-        console.log("✅ E-mails envoyés depuis webhook !");
-      } catch (emailErr) {
-        console.error("❌ Erreur lors de l’envoi d’e-mails :", emailErr);
+      // ✅ Récupère l'ID de la commande Firestore stockée dans Stripe metadata
+      const orderId = session.metadata?.order_id;
+      if (!orderId) {
+        console.warn("Aucune metadata order_id trouvée dans la session Stripe");
+        return NextResponse.json({ received: true });
       }
+
+      // 💾 Met à jour la commande Firestore
+      const orderRef = doc(db, "pending_orders", orderId);
+      await updateDoc(orderRef, {
+        status: "paid",
+        amount_total: session.amount_total ? session.amount_total / 100 : null,
+        currency: session.currency,
+        stripe_session_id: session.id,
+        stripe_payment_intent: session.payment_intent,
+        paid_at: serverTimestamp(),
+      });
+
+      console.log(`✅ Commande ${orderId} mise à jour comme PAYÉE`);
     }
 
     return NextResponse.json({ received: true });
-  } catch (err: any) {
-    console.error("❌ Stripe webhook error:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err) {
+    console.error("⚠️ Erreur dans le webhook Stripe:", err);
+    return NextResponse.json({ error: "Webhook error" }, { status: 400 });
   }
 }

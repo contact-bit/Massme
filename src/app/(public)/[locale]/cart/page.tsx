@@ -44,8 +44,11 @@ export default function CartPage({
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
-  // 💰 Calcul du total
-  const total = cart.reduce((acc, item) => acc + (item.price?.eur || 0), 0);
+  // 💰 Calcul du total (protection contre NaN)
+  const total = cart.reduce(
+    (acc, item) => acc + (Number(item.price?.eur) || 0),
+    0
+  );
 
   // 🚫 Empêche le rendu avant hydratation
   if (!isMounted) {
@@ -69,9 +72,9 @@ export default function CartPage({
       ) : (
         <>
           <ul className="divide-y divide-gray-200 mb-6">
-            {cart.map((item) => (
+            {cart.map((item, index) => (
               <li
-                key={item.id}
+                key={`${item.id}-${index}`}
                 className="flex justify-between items-center py-4"
               >
                 <div>
@@ -79,7 +82,7 @@ export default function CartPage({
                     {item?.name?.[locale] ?? item?.name?.fr ?? "Produit"}
                   </h2>
                   <p className="text-gray-600 text-sm">
-                    {item.price?.eur?.toFixed(2)} €
+                    {Number(item.price?.eur).toFixed(2)} €
                   </p>
                 </div>
 
