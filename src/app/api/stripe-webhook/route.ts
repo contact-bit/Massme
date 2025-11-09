@@ -1,24 +1,24 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { dbAdmin } from "@/lib/firebase.admin"; // ✅ bon nom d'import
-import { doc, updateDoc } from "firebase-admin/firestore";
+import { dbAdmin } from "@/lib/firebase.admin"; // ✅ bon import (depuis ton fichier firebase.admin.ts)
 
-// ⚙️ Initialisation Stripe (clé secrète depuis .env)
+// ⚙️ Initialisation Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-09-30.clover",
+  apiVersion: "2025-09-30" as any,
 });
 
-// ✅ Nouvelle méthode Next.js 16 : on définit la config directement
-export const dynamic = "force-dynamic"; // autorise le body brut
+// 🚨 On désactive le body parser automatique
+export const config = {
+  api: { bodyParser: false },
+};
 
-// 🔐 Lecture du corps brut pour vérification de signature
+// 🔐 Fonction pour lire le raw body du webhook
 async function buffer(readable: ReadableStream<Uint8Array>) {
   const reader = readable.getReader();
   const chunks: Uint8Array[] = [];
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) chunks.push(value);
+  let done, value;
+  while ((({ done, value } = await reader.read()), !done)) {
+    chunks.push(value);
   }
   return Buffer.concat(chunks);
 }
@@ -28,21 +28,26 @@ export async function POST(req: Request) {
 
   if (!sig) {
     console.error("❌ Signature Stripe manquante");
-    return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing stripe-signature" },
+      { status: 400 }
+    );
   }
 
-  let event: Stripe.Event;
-
+  let event;
   try {
     const rawBody = await buffer(req.body!);
     event = stripe.webhooks.constructEvent(
       rawBody,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET! // ⚠️ à configurer dans Vercel
+      process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
     console.error("⚠️ Erreur de vérification du webhook:", err.message);
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+    return NextResponse.json(
+      { error: `Webhook Error: ${err.message}` },
+      { status: 400 }
+    );
   }
 
   // ✅ Cas principal : paiement réussi
@@ -51,28 +56,31 @@ export async function POST(req: Request) {
     const orderId = session.metadata?.order_id;
 
     if (!orderId) {
-      console.warn("⚠️ Aucun order_id dans la session Stripe.");
+      console.warn("⚠️ Aucun order_id trouvé dans la session Stripe.");
       return NextResponse.json({ received: true });
     }
 
     console.log("💰 Paiement complété pour la commande:", orderId);
 
     try {
-      const orderRef = doc(dbAdmin, "pending_orders", orderId);
-      await updateDoc(orderRef, {
+      // ⚙️ Ici, on met à jour le document via le SDK Admin
+      const orderRef = dbAdmin.collection("pending_orders").doc(orderId);
+
+      await orderRef.update({
         status: "paid",
         paidAt: new Date(),
         stripeSessionId: session.id,
       });
+
       console.log("✅ Commande mise à jour comme payée:", orderId);
     } catch (err) {
       console.error("🔥 Erreur lors de la mise à jour Firestore:", err);
     }
   }
 
-  // ⚠️ Cas secondaires
+  // ⚙️ Gestion d’autres cas (optionnel)
   else if (event.type === "checkout.session.expired") {
-    console.log("⌛ Session Stripe expirée:", event.id);
+    console.log("⚠️ Session expirée:", event.id);
   } else if (event.type === "payment_intent.payment_failed") {
     console.log("💸 Paiement échoué:", event.id);
   }
