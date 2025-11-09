@@ -1,64 +1,81 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { dbAdmin as db } from "@/lib/firebase.admin";
+import { dbAdmin } from "@/lib/firebase.admin"; // ✅ bon nom d'import
+import { doc, updateDoc } from "firebase-admin/firestore";
 
+// ⚙️ Initialisation Stripe (clé secrète depuis .env)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-11-20" as any,
+  apiVersion: "2025-09-30.clover",
 });
 
-// 🔐 Important : Empêche Next.js de parser le body
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// ✅ Nouvelle méthode Next.js 16 : on définit la config directement
+export const dynamic = "force-dynamic"; // autorise le body brut
 
-// 🧩 Utilitaire pour lire le raw body
-async function readBuffer(readable: ReadableStream) {
-  const chunks = [];
+// 🔐 Lecture du corps brut pour vérification de signature
+async function buffer(readable: ReadableStream<Uint8Array>) {
   const reader = readable.getReader();
-  let result;
-  while (!(result = await reader.read()).done) {
-    chunks.push(result.value);
+  const chunks: Uint8Array[] = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
   }
   return Buffer.concat(chunks);
 }
 
 export async function POST(req: Request) {
+  const sig = req.headers.get("stripe-signature");
+
+  if (!sig) {
+    console.error("❌ Signature Stripe manquante");
+    return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
+  }
+
+  let event: Stripe.Event;
+
   try {
-    const rawBody = await readBuffer(req.body!);
-    const sig = req.headers.get("stripe-signature");
-
-    if (!sig) {
-      return NextResponse.json({ error: "Missing Stripe signature" }, { status: 400 });
-    }
-
-    // ✅ Vérification de la signature Stripe
-    const event = stripe.webhooks.constructEvent(
+    const rawBody = await buffer(req.body!);
+    event = stripe.webhooks.constructEvent(
       rawBody,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET! // ⚠️ à configurer dans Vercel
     );
+  } catch (err: any) {
+    console.error("⚠️ Erreur de vérification du webhook:", err.message);
+    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  }
 
-    console.log("📦 Stripe webhook reçu :", event.type);
+  // ✅ Cas principal : paiement réussi
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const orderId = session.metadata?.order_id;
 
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const orderId = session.metadata?.order_id;
-
-      if (orderId) {
-        console.log("✅ Paiement confirmé pour la commande:", orderId);
-        await db.collection("pending_orders").doc(orderId).update({
-          status: "paid",
-          paymentIntentId: session.payment_intent,
-          updatedAt: new Date(),
-        });
-      }
+    if (!orderId) {
+      console.warn("⚠️ Aucun order_id dans la session Stripe.");
+      return NextResponse.json({ received: true });
     }
 
-    return NextResponse.json({ received: true });
-  } catch (err: any) {
-    console.error("❌ Erreur webhook Stripe:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    console.log("💰 Paiement complété pour la commande:", orderId);
+
+    try {
+      const orderRef = doc(dbAdmin, "pending_orders", orderId);
+      await updateDoc(orderRef, {
+        status: "paid",
+        paidAt: new Date(),
+        stripeSessionId: session.id,
+      });
+      console.log("✅ Commande mise à jour comme payée:", orderId);
+    } catch (err) {
+      console.error("🔥 Erreur lors de la mise à jour Firestore:", err);
+    }
   }
+
+  // ⚠️ Cas secondaires
+  else if (event.type === "checkout.session.expired") {
+    console.log("⌛ Session Stripe expirée:", event.id);
+  } else if (event.type === "payment_intent.payment_failed") {
+    console.log("💸 Paiement échoué:", event.id);
+  }
+
+  return NextResponse.json({ received: true });
 }
