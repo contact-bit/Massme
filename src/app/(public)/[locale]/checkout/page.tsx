@@ -1,17 +1,25 @@
 "use client";
 
-import { useState, use } from "react"; // ✅ import du hook `use`
+import { useState, use, useEffect } from "react"; // ✅ on ajoute useEffect ici
+import { useRouter } from "next/navigation";
 
 type Locale = "fr" | "en";
 
 export default function CheckoutPage({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: Locale }> | { locale: Locale };
 }) {
-  // ✅ Nouvelle méthode Next.js 16 : déstructuration de la Promise avec `use()`
-  const { locale } = use(params);
+  // ✅ Si params est une Promise, on la résout avec `use()`
+  const resolvedParams =
+    typeof (params as any).then === "function"
+      ? use(params as Promise<{ locale: Locale }>)
+      : (params as { locale: Locale });
 
+  const { locale } = resolvedParams;
+  const router = useRouter();
+
+  const [cart, setCart] = useState<any[]>([]);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -21,19 +29,39 @@ export default function CheckoutPage({
     phone: "",
     shippingMethod: "standard",
   });
-
   const [loading, setLoading] = useState(false);
 
+  // 🛒 Charger le panier depuis localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("cart");
+    if (stored) setCart(JSON.parse(stored));
+  }, []);
+
+  // 📝 Gestion des champs du formulaire
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  ) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  // 💳 Lancer la commande (création session Stripe)
   const handleCheckout = async () => {
+    if (cart.length === 0) {
+      alert(
+        locale === "fr" ? "Votre panier est vide 🛒" : "Your cart is empty 🛒"
+      );
+      return;
+    }
+
+    if (!form.email || !form.name || !form.address) {
+      alert(
+        locale === "fr"
+          ? "Veuillez remplir toutes les informations obligatoires."
+          : "Please fill all required fields."
+      );
+      return;
+    }
+
     try {
       setLoading(true);
-      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -59,29 +87,38 @@ export default function CheckoutPage({
         }),
       });
 
-const data = await res.json();
+      const data = await res.json();
+      console.log("📦 Réponse API checkout :", data);
 
-if (!res.ok) {
-  console.error("❌ Erreur API checkout:", data);
-  alert(`Erreur serveur: ${data.error || "Impossible de créer la session Stripe"}`);
-  return;
-}
+      if (!res.ok) {
+        console.error("❌ Erreur API checkout:", data);
+        alert(
+          `Erreur serveur: ${
+            data.error || "Impossible de créer la session Stripe"
+          }`
+        );
+        return;
+      }
 
-if (data.url) {
-  window.location.href = data.url;
-} else {
-  alert("Erreur de redirection Stripe.");
-}
-
-
-
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Erreur : lien de paiement introuvable.");
+      }
     } catch (error) {
-      console.error("Erreur checkout:", error);
+      console.error("💥 Erreur checkout:", error);
       alert("Une erreur est survenue lors de la commande 😢");
     } finally {
       setLoading(false);
     }
   };
+
+  // 💶 Calcul du total estimé
+  const total =
+    cart.reduce(
+      (sum, p) => sum + (p.price?.eur || 0) * (p.quantity || 1),
+      0
+    ) + (form.shippingMethod === "express" ? 8.99 : 0);
 
   return (
     <main className="max-w-2xl mx-auto py-10 px-4 text-gray-900">
@@ -92,6 +129,7 @@ if (data.url) {
       </h1>
 
       <div className="bg-white shadow-lg rounded-2xl p-6 space-y-4 border border-gray-100">
+        {/* FORMULAIRE */}
         <input
           type="text"
           name="name"
@@ -99,8 +137,8 @@ if (data.url) {
           value={form.name}
           onChange={handleChange}
           className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          required
         />
-
         <input
           type="email"
           name="email"
@@ -108,8 +146,8 @@ if (data.url) {
           value={form.email}
           onChange={handleChange}
           className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          required
         />
-
         <input
           type="text"
           name="address"
@@ -117,8 +155,8 @@ if (data.url) {
           value={form.address}
           onChange={handleChange}
           className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          required
         />
-
         <div className="flex gap-3">
           <input
             type="text"
@@ -128,7 +166,6 @@ if (data.url) {
             onChange={handleChange}
             className="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
-
           <input
             type="text"
             name="postalCode"
@@ -138,7 +175,6 @@ if (data.url) {
             className="w-32 border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
-
         <input
           type="text"
           name="phone"
@@ -148,6 +184,7 @@ if (data.url) {
           className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
 
+        {/* MÉTHODE DE LIVRAISON */}
         <select
           name="shippingMethod"
           value={form.shippingMethod}
@@ -168,6 +205,20 @@ if (data.url) {
           </option>
         </select>
 
+        {/* TOTAL */}
+        <div className="text-right border-t pt-4">
+          <p className="text-lg font-semibold">
+            {locale === "fr" ? "Total estimé :" : "Estimated total:"}{" "}
+            <span className="text-blue-600">
+              {new Intl.NumberFormat(locale, {
+                style: "currency",
+                currency: "EUR",
+              }).format(total)}
+            </span>
+          </p>
+        </div>
+
+        {/* BOUTON DE PAIEMENT */}
         <button
           onClick={handleCheckout}
           disabled={loading}

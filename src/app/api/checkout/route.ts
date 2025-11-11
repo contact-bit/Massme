@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { dbAdmin as db } from "@/lib/firebase.admin"; // ✅ SDK admin
-import { Timestamp } from "firebase-admin/firestore"; // pour les dates Firestore
+import { dbAdmin as db } from "@/lib/firebase.admin";
+import { Timestamp } from "firebase-admin/firestore";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("🧾 Body reçu :", JSON.stringify(body, null, 2));
+    console.log("🧾 [API /checkout] Body reçu :", JSON.stringify(body, null, 2));
 
     const {
       items,
@@ -16,27 +16,21 @@ export async function POST(req: Request) {
       shippingAddress,
     } = body;
 
-    // ⚠️ Vérifications de base
+    // 🧠 Vérifications de base
     if (!items || !Array.isArray(items) || items.length === 0) {
       console.error("🚫 ERREUR: items manquant ou vide");
-      return NextResponse.json(
-        { error: "Missing or empty items" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing or empty items" }, { status: 400 });
     }
 
     if (!customerEmail) {
       console.error("🚫 ERREUR: customerEmail manquant");
-      return NextResponse.json(
-        { error: "Missing email" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing email" }, { status: 400 });
     }
 
     const currencyUsed = currency || "eur";
 
-    // 💾 Sauvegarde commande Firestore (SDK admin)
-    console.log("💾 Sauvegarde commande Firestore...");
+    // 💾 Enregistre la commande Firestore
+    console.log("💾 Sauvegarde de la commande dans Firestore...");
     const orderRef = await db.collection("pending_orders").add({
       email: customerEmail,
       items,
@@ -47,56 +41,79 @@ export async function POST(req: Request) {
       status: "pending_payment",
     });
 
-    console.log("✅ Commande sauvegardée avec ID:", orderRef.id);
+    console.log(`✅ Commande créée dans Firestore : ${orderRef.id}`);
 
-    // 💳 Prépare les articles Stripe
-    const line_items = items.map((item: any, index: number) => ({
-      price_data: {
-        currency: currencyUsed,
-        product_data: {
-          name: item.name?.fr || item.name?.en || `Produit ${index + 1}`,
+    // 💳 Prépare les produits pour Stripe
+    const line_items = items.map((item: any, index: number) => {
+      const price = Math.round((item.price?.eur || 0) * 100);
+      const name = item.name?.fr || item.name?.en || `Produit ${index + 1}`;
+      return {
+        price_data: {
+          currency: currencyUsed,
+          product_data: { name },
+          unit_amount: price,
         },
-        unit_amount: Math.round((item.price?.eur || 0) * 100),
-      },
-      quantity: item.quantity || 1,
-    }));
+        quantity: item.quantity || 1,
+      };
+    });
+
+    // 💰 Calcul du total attendu
+    const total = line_items.reduce(
+      (sum, i) => sum + (i.price_data.unit_amount || 0) * (i.quantity || 1),
+      0
+    );
+    console.log("💶 Total calculé (centimes):", total);
 
     // 💳 Crée la session Stripe
-    console.log("💳 Création session Stripe...");
+    console.log("💳 Création de la session Stripe...");
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
       customer_email: customerEmail,
       line_items,
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            display_name:
-              shippingMethod?.name?.fr ??
-              (currencyUsed === "eur" ? "Livraison" : "Shipping"),
-            fixed_amount: {
-              amount: Math.round((shippingMethod?.price?.fr || 0) * 100),
-              currency: currencyUsed,
+      shipping_options: shippingMethod
+        ? [
+            {
+              shipping_rate_data: {
+                display_name:
+                  shippingMethod?.name?.fr ??
+                  (currencyUsed === "eur" ? "Livraison standard" : "Shipping"),
+                fixed_amount: {
+                  amount: Math.round((shippingMethod?.price?.fr || 0) * 100),
+                  currency: currencyUsed,
+                },
+                type: "fixed_amount",
+              },
             },
-            type: "fixed_amount",
-          },
-        },
-      ],
+          ]
+        : undefined,
       metadata: {
-        order_id: orderRef.id, // 🔗 Liaison Firestore <-> Stripe
+        order_id: orderRef.id,
+        email: customerEmail,
       },
       success_url: `${process.env.NEXT_PUBLIC_URL}/fr/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_URL}/fr/checkout`,
     });
 
-    console.log("✅ Session Stripe créée avec URL:", session.url);
+    if (!session?.url) {
+      console.error("⚠️ Session Stripe invalide :", session);
+      return NextResponse.json(
+        { error: "Stripe session creation failed" },
+        { status: 500 }
+      );
+    }
 
+    console.log("✅ Session Stripe créée :", session.id);
+
+    // ✅ Retourne le lien Stripe Checkout
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
-    console.error("❌ Erreur checkout:", err);
+    console.error("💥 ERREUR API /checkout :", err);
+
+    // Si Stripe ou Firebase donne un message d'erreur clair, on le renvoie
     return NextResponse.json(
       { error: err.message || "Internal Server Error" },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }
