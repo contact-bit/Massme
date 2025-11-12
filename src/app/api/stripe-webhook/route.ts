@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const preferredRegion = "auto";
 
-// Lecture du RAW body (Stripe requirement)
+// Lecture RAW body (exigé par Stripe)
 async function buffer(readable: ReadableStream<Uint8Array>) {
   const reader = readable.getReader();
   const chunks: Uint8Array[] = [];
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
 
   let event: Stripe.Event;
 
+  // Vérification authentique Stripe
   try {
     const rawBody = await buffer(req.body!);
     event = stripe.webhooks.constructEvent(
@@ -74,8 +75,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true });
     }
 
-    // Récupération commande Firestore
-    const orderSnap = await dbAdmin.collection("pending_orders").doc(orderId).get();
+    // 🔍 Récupération commande Firestore
+    const orderSnap = await dbAdmin
+      .collection("pending_orders")
+      .doc(orderId)
+      .get();
     const order = orderSnap.data();
 
     // 1️⃣ Mise à jour Firestore
@@ -85,27 +89,66 @@ export async function POST(req: Request) {
       stripeSessionId: session.id,
     });
 
-    // 2️⃣ Email client (1 seul email)
+    // =============================================================
+    // 2️⃣ Email Client PREMIUM
+    // =============================================================
     await resend.emails.send({
-      from: "Massme <contact@hdconnects.com>",
+      from: "Massme • Support <contact@hdconnects.com>",
+      reply_to: "contact@hdconnects.com",
       to: customerEmail,
       subject: "🎉 Merci pour votre commande - Massme",
       html: `
-        <h2>Merci pour votre commande !</h2>
-        <p>Votre paiement est confirmé.</p>
-        <p><b>ID commande :</b> ${orderId}</p>
-        <p>Nous vous informerons lors de l'expédition.</p>
+<div style="font-family:Arial, sans-serif; padding:20px; background:#f7f7f7;">
+  <div style="max-width:600px; margin:auto; background:white; border-radius:12px; padding:30px;">
+
+    <h1 style="color:#111; font-size:24px; margin-top:0;">
+      🎉 Merci pour votre commande !
+    </h1>
+
+    <p style="font-size:16px; color:#444;">
+      Bonjour,<br/><br/>
+      Nous avons bien reçu votre commande et votre paiement a été confirmé.
+      Merci de votre confiance !
+    </p>
+
+    <p style="font-size:18px; margin-top:20px;">
+      <b>ID de commande :</b> ${orderId}
+    </p>
+
+    <p style="font-size:16px; color:#444; margin-top:20px;">
+      Vous recevrez un second email dès que votre colis sera expédié.
+    </p>
+
+    <div style="margin-top:30px; padding:20px; background:#fafafa; border-radius:8px;">
+      <p style="font-size:14px; color:#666;">
+        Pour toute question, vous pouvez nous contacter :
+        <br/>
+        📧 <a href="mailto:contact@hdconnects.com">contact@hdconnects.com</a>
+      </p>
+    </div>
+
+    <p style="font-size:12px; color:#999; margin-top:30px; text-align:center;">
+      Massme • hdconnects.com<br/>
+      Cet email est envoyé automatiquement, merci de ne pas répondre directement.
+    </p>
+
+  </div>
+</div>
       `,
     });
 
-    // 3️⃣ Email admin via endpoint séparé
+    // =============================================================
+    // 3️⃣ Email ADMIN via endpoint séparé
+    // =============================================================
     fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-admin`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId, customerEmail }),
     }).catch(() => {});
 
-    // 4️⃣ Email logistique via endpoint séparé
+    // =============================================================
+    // 4️⃣ Email LOGISTIQUE via endpoint séparé
+    // =============================================================
     fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-logistique`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -4,29 +4,49 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+export const runtime = "nodejs";
+
 export async function POST(req: Request) {
-  const { orderId, customerEmail } = await req.json();
+  try {
+    const { orderId, customerEmail } = await req.json();
 
-  const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
-  const order = snap.data();
+    if (!orderId || !customerEmail) {
+      return NextResponse.json({ error: "Missing payload" }, { status: 400 });
+    }
 
-  await resend.emails.send({
-    from: "Massme <contact@hdconnects.com>",
-    to: process.env.LOGISTICS_EMAIL!,
-    subject: `📦 Préparer commande #${orderId}`,
-    html: `
-      <h2>Préparation logistique</h2>
+    const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
+    const order = snap.data();
 
-      <p><b>ID commande :</b> ${orderId}</p>
-      <p><b>Client :</b> ${customerEmail}</p>
+    await resend.emails.send({
+      from: "Massme • Logistique <contact@hdconnects.com>",
+      to: process.env.LOGISTICS_EMAIL!,
+      subject: `📦 Préparation de commande – #${orderId}`,
+      html: `
+        <div style="font-family:Arial, sans-serif; padding:20px;">
+          <h2 style="color:#222;">Préparer la commande</h2>
 
-      <h3>Adresse de livraison :</h3>
-      <pre>${JSON.stringify(order?.shippingAddress, null, 2)}</pre>
+          <p><b>ID Commande :</b> ${orderId}</p>
+          <p><b>Client :</b> ${customerEmail}</p>
 
-      <h3>Produits :</h3>
-      <pre>${JSON.stringify(order?.items, null, 2)}</pre>
-    `,
-  });
+          <h3 style="margin-top:25px;">📦 Articles :</h3>
+          <pre style="font-size:13px; background:#f7f7f7; padding:15px; border-radius:8px;">
+${JSON.stringify(order?.items, null, 2)}
+          </pre>
 
-  return NextResponse.json({ status: "logistics email sent" });
+          <h3>🚚 Adresse de livraison :</h3>
+          <pre style="font-size:13px; background:#f7f7f7; padding:15px; border-radius:8px;">
+${JSON.stringify(order?.shippingAddress, null, 2)}
+          </pre>
+
+          <p style="font-size:12px; color:#aaa; margin-top:25px;">
+            Email automatique Massme Logistique
+          </p>
+        </div>
+      `,
+    });
+
+    return NextResponse.json({ status: "logistics email sent" });
+  } catch (err) {
+    return NextResponse.json({ error: err }, { status: 500 });
+  }
 }
