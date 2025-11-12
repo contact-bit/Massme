@@ -1,23 +1,27 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { Resend } from "resend";
 
-// ⚙️ Initialisation Stripe (clé secrète de ton compte)
+// INITIALISATION
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-09-30" as any,
 });
 
-// ✅ Recommandations Next.js 16 / Vercel
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Requis par Stripe webhooks
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const preferredRegion = "auto";
 
-// 🔐 Lecture du raw body (nécessaire pour vérifier la signature Stripe)
+// Lecture raw body (obligatoire)
 async function buffer(readable: ReadableStream<Uint8Array>) {
   const reader = readable.getReader();
   const chunks: Uint8Array[] = [];
-  let done, value;
-  while ((({ done, value } = await reader.read()), !done)) {
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
     if (value) chunks.push(value);
   }
   return Buffer.concat(chunks);
@@ -34,28 +38,36 @@ export async function POST(req: Request) {
 
   try {
     const rawBody = await buffer(req.body!);
+
     event = stripe.webhooks.constructEvent(
       rawBody,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
-    console.error("⚠️ Erreur de vérification du webhook:", err.message);
+    console.error("⚠️ Erreur validation webhook:", err.message);
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
   }
 
-  // ✅ Cas principal : paiement réussi
+  // =============================================================
+  // 🟢 PAIEMENT RÉUSSI
+  // =============================================================
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const orderId = session.metadata?.order_id;
 
-    if (!orderId) {
-      console.warn("⚠️ Aucun order_id trouvé dans la session Stripe");
+    const orderId = session.metadata?.order_id;
+    const customerEmail =
+      session.customer_details?.email || session.customer_email;
+
+    console.log("💰 Paiement validé. Order:", orderId);
+    console.log("📧 Email client:", customerEmail);
+
+    if (!orderId || !customerEmail) {
+      console.error("⚠️ Pas d'order_id ou email → pas d'envoi d'email");
       return NextResponse.json({ received: true });
     }
 
-    console.log(`💰 Paiement complété — commande: ${orderId}`);
-
+    // 🔥 1. Mise à jour Firestore
     try {
       await dbAdmin.collection("pending_orders").doc(orderId).update({
         status: "paid",
@@ -63,16 +75,39 @@ export async function POST(req: Request) {
         stripeSessionId: session.id,
       });
 
-      console.log(`✅ Commande mise à jour (status = paid) : ${orderId}`);
+      console.log("✅ Firestore mis à jour :", orderId);
     } catch (err) {
-      console.error("🔥 Erreur lors de la mise à jour Firestore:", err);
+      console.error("🔥 Erreur update Firestore :", err);
+    }
+
+    // 🔥 2. Envoi de l’email de confirmation
+    try {
+      const emailResponse = await resend.emails.send({
+        from: "Massme <contact@hdconnects.com>",
+        to: customerEmail,
+        subject: "🎉 Merci pour votre commande - Massme",
+        html: `
+          <h2>Merci pour votre commande !</h2>
+          <p>Votre paiement a été confirmé.</p>
+          <p><b>ID Commande :</b> ${orderId}</p>
+          <p>Nous vous tiendrons informé de l'expédition.</p>
+        `,
+      });
+
+      console.log("📧 Email envoyé :", emailResponse.data?.id);
+    } catch (error: any) {
+      console.error("❌ Erreur envoi email Resend :", error);
     }
   }
 
-  // ⚙️ Autres cas utiles
+  // =============================================================
+  // AUTRES ÉVÉNEMENTS
+  // =============================================================
   else if (event.type === "checkout.session.expired") {
     console.log("⚠️ Session expirée:", event.id);
-  } else if (event.type === "payment_intent.payment_failed") {
+  }
+
+  else if (event.type === "payment_intent.payment_failed") {
     console.log("💸 Paiement échoué:", event.id);
   }
 
