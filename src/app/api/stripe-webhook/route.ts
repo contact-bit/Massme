@@ -94,7 +94,7 @@ export async function POST(req: Request) {
     // =============================================================
     await resend.emails.send({
       from: "Massme • Support <contact@hdconnects.com>",
-      reply_to: "contact@hdconnects.com",
+      replyTo: "contact@hdconnects.com",
       to: customerEmail,
       subject: "🎉 Merci pour votre commande - Massme",
       html: `
