@@ -12,12 +12,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Webhooks Next.js App Router
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const preferredRegion = "auto";
 
-// Lecture RAW body obligatoire pour Stripe
+// Lecture du RAW body (Stripe requirement)
 async function buffer(readable: ReadableStream<Uint8Array>) {
   const reader = readable.getReader();
   const chunks: Uint8Array[] = [];
@@ -32,13 +31,12 @@ async function buffer(readable: ReadableStream<Uint8Array>) {
 }
 
 // =============================================================
-// 📌 ROUTE PRINCIPALE — WEBHOOK
+// 📌 WEBHOOK — TRAITEMENT PRINCIPAL
 // =============================================================
 export async function POST(req: Request) {
   const signature = req.headers.get("stripe-signature");
 
   if (!signature) {
-    console.error("❌ Signature Stripe manquante");
     return NextResponse.json(
       { error: "Missing stripe-signature" },
       { status: 400 }
@@ -47,19 +45,14 @@ export async function POST(req: Request) {
 
   let event: Stripe.Event;
 
-  // ---------------------------------------
-  // 🎯 Vérification de la signature Stripe
-  // ---------------------------------------
   try {
     const rawBody = await buffer(req.body!);
-
     event = stripe.webhooks.constructEvent(
       rawBody,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
-    console.error("⚠️ Erreur validation webhook:", err.message);
     return NextResponse.json(
       { error: `Webhook Error: ${err.message}` },
       { status: 400 }
@@ -67,7 +60,7 @@ export async function POST(req: Request) {
   }
 
   // =============================================================
-  // 🟢 PAIEMENT VALIDÉ — L'ÉVÉNEMENT LE PLUS IMPORTANT
+  // 🟢 PAIEMENT VALIDÉ
   // =============================================================
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -76,108 +69,52 @@ export async function POST(req: Request) {
     const customerEmail =
       session.customer_details?.email || session.customer_email;
 
-    console.log("💰 Paiement complété");
-    console.log("🧾 ID Commande :", orderId);
-    console.log("📧 Email client :", customerEmail);
-
     if (!orderId || !customerEmail) {
-      console.error("⚠️ order_id ou email manquant — arrêt du process email.");
+      console.error("❌ Missing required metadata");
       return NextResponse.json({ received: true });
     }
 
-    // 🔍 Récupère les infos Firestore pour les emails admin/logistique
+    // Récupération commande Firestore
     const orderSnap = await dbAdmin.collection("pending_orders").doc(orderId).get();
     const order = orderSnap.data();
 
-    // ---------------------------------------
     // 1️⃣ Mise à jour Firestore
-    // ---------------------------------------
-    try {
-      await dbAdmin.collection("pending_orders").doc(orderId).update({
-        status: "paid",
-        paidAt: new Date(),
-        stripeSessionId: session.id,
-      });
+    await dbAdmin.collection("pending_orders").doc(orderId).update({
+      status: "paid",
+      paidAt: new Date(),
+      stripeSessionId: session.id,
+    });
 
-      console.log("✅ Firestore mis à jour");
-    } catch (err) {
-      console.error("🔥 Erreur Firestore :", err);
-    }
+    // 2️⃣ Email client (1 seul email)
+    await resend.emails.send({
+      from: "Massme <contact@hdconnects.com>",
+      to: customerEmail,
+      subject: "🎉 Merci pour votre commande - Massme",
+      html: `
+        <h2>Merci pour votre commande !</h2>
+        <p>Votre paiement est confirmé.</p>
+        <p><b>ID commande :</b> ${orderId}</p>
+        <p>Nous vous informerons lors de l'expédition.</p>
+      `,
+    });
 
-    // ---------------------------------------
-    // 2️⃣ Email Client (Confirmation)
-    // ---------------------------------------
-    try {
-      const emailClient = await resend.emails.send({
-        from: "Massme <contact@hdconnects.com>",
-        to: customerEmail,
-        subject: "🎉 Merci pour votre commande - Massme",
-        html: `
-          <h2>Merci pour votre commande !</h2>
-          <p>Votre paiement est confirmé.</p>
-          <p><b>ID commande :</b> ${orderId}</p>
-          <p>Vous recevrez une notification lors de l'expédition.</p>
-        `,
-      });
+    // 3️⃣ Email admin via endpoint séparé
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-admin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, customerEmail }),
+    }).catch(() => {});
 
-      console.log("📧 Email CLIENT envoyé :", emailClient.data?.id);
-    } catch (err) {
-      console.error("❌ Erreur envoi email CLIENT :", err);
-    }
-
-    // ---------------------------------------
-    // 3️⃣ Email ADMIN (Notification interne)
-    // ---------------------------------------
-    try {
-      const adminEmail = await resend.emails.send({
-        from: "Massme <contact@hdconnects.com>",
-        to: process.env.ADMIN_EMAIL!,
-        subject: `🛒 Nouvelle commande #${orderId}`,
-        html: `
-          <h2>Nouvelle commande reçue</h2>
-          <p><b>ID commande :</b> ${orderId}</p>
-          <p><b>Client :</b> ${customerEmail}</p>
-
-          <h3>Détails :</h3>
-          <pre>${JSON.stringify(order, null, 2)}</pre>
-        `,
-      });
-
-      console.log("📧 Email ADMIN envoyé :", adminEmail.data?.id);
-    } catch (err) {
-      console.error("❌ Erreur email ADMIN :", err);
-    }
-
-    // ---------------------------------------
-    // 4️⃣ Email LOGISTIQUE (préparation colis)
-    // ---------------------------------------
-    try {
-      const logisticsEmail = await resend.emails.send({
-        from: "Massme <contact@hdconnects.com>",
-        to: process.env.LOGISTICS_EMAIL!,
-        subject: `📦 Préparer commande #${orderId}`,
-        html: `
-          <h2>Préparation logistique</h2>
-
-          <p><b>ID commande :</b> ${orderId}</p>
-          <p><b>Client :</b> ${customerEmail}</p>
-
-          <h3>Adresse de livraison :</h3>
-          <pre>${JSON.stringify(order?.shippingAddress, null, 2)}</pre>
-
-          <h3>Produits :</h3>
-          <pre>${JSON.stringify(order?.items, null, 2)}</pre>
-        `,
-      });
-
-      console.log("📧 Email LOGISTIQUE envoyé :", logisticsEmail.data?.id);
-    } catch (err) {
-      console.error("❌ Erreur envoi email LOGISTIQUE :", err);
-    }
+    // 4️⃣ Email logistique via endpoint séparé
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-logistique`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, customerEmail }),
+    }).catch(() => {});
   }
 
   // =============================================================
-  // AUTRES ÉVÉNEMENTS UTILES
+  // AUTRES ÉVÉNEMENTS
   // =============================================================
   else if (event.type === "checkout.session.expired") {
     console.log("⚠️ Session expirée :", event.id);
