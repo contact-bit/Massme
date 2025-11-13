@@ -87,14 +87,19 @@ export async function POST(req: Request) {
     });
 
     // =============================================================
-    // ✉️ 2. ENVOI EMAIL CLIENT (PREMIUM)
-    // =============================================================
-    await resend.emails.send({
-      from: "Massme • Support <contact@hdconnects.com>",
-      replyTo: "contact@hdconnects.com",
-      to: customerEmail,
-      subject: "🎉 Merci pour votre commande - Massme",
-      html: `
+// 2️⃣ Email Client PREMIUM + Facture PDF en pièce jointe
+// =============================================================
+
+// 🔥 Génération de la facture PDF
+const pdfBuffer = await generateInvoicePDF(order, orderId);
+const pdfBase64 = pdfBuffer.toString("base64");
+
+await resend.emails.send({
+  from: "Massme • Support <contact@hdconnects.com>",
+  replyTo: "contact@hdconnects.com",
+  to: customerEmail,
+  subject: "🎉 Merci pour votre commande - Massme",
+  html: `
 <div style="font-family:Arial, sans-serif; padding:20px; background:#f7f7f7;">
   <div style="max-width:600px; margin:auto; background:white; border-radius:12px; padding:30px;">
 
@@ -113,16 +118,9 @@ export async function POST(req: Request) {
     </p>
 
     <p style="font-size:16px; color:#444; margin-top:20px;">
-      Vous recevrez un second email dès que votre colis sera expédié.
+      Votre facture est jointe à cet e-mail au format PDF.<br/>
+      Vous recevrez un second e-mail lors de l’expédition.
     </p>
-
-    <div style="margin-top:30px; padding:20px; background:#fafafa; border-radius:8px;">
-      <p style="font-size:14px; color:#666;">
-        Pour toute question, vous pouvez nous contacter :
-        <br/>
-        📧 <a href="mailto:contact@hdconnects.com">contact@hdconnects.com</a>
-      </p>
-    </div>
 
     <p style="font-size:12px; color:#999; margin-top:30px; text-align:center;">
       Massme • hdconnects.com<br/>
@@ -131,8 +129,16 @@ export async function POST(req: Request) {
 
   </div>
 </div>
-      `,
-    });
+  `,
+  attachments: [
+    {
+      filename: `facture-${orderId}.pdf`,
+      content: pdfBase64,
+      contentType: "application/pdf",
+    },
+  ],
+});
+
 
     // =============================================================
     // ✉️ 3. EMAIL ADMIN → endpoint séparé
