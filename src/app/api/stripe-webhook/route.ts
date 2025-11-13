@@ -87,19 +87,20 @@ export async function POST(req: Request) {
     });
 
     // =============================================================
-// 2️⃣ Email Client PREMIUM + Facture PDF en pièce jointe
-// =============================================================
+    // 2️⃣ Email Client PREMIUM + Facture PDF en pièce jointe
+    // =============================================================
 
-// 🔥 Génération de la facture PDF
-const pdfBuffer = await generateInvoicePDF(order, orderId);
-const pdfBase64 = pdfBuffer.toString("base64");
+    try {
+      // 🔥 Génération de la facture PDF
+      const pdfBuffer = await generateInvoicePDF(order, orderId);
+      const pdfBase64 = pdfBuffer.toString("base64");
 
-await resend.emails.send({
-  from: "Massme • Support <contact@hdconnects.com>",
-  replyTo: "contact@hdconnects.com",
-  to: customerEmail,
-  subject: "🎉 Merci pour votre commande - Massme",
-  html: `
+      await resend.emails.send({
+        from: "Massme • Support <contact@hdconnects.com>",
+        replyTo: "contact@hdconnects.com",
+        to: customerEmail,
+        subject: "🎉 Merci pour votre commande - Massme",
+        html: `
 <div style="font-family:Arial, sans-serif; padding:20px; background:#f7f7f7;">
   <div style="max-width:600px; margin:auto; background:white; border-radius:12px; padding:30px;">
 
@@ -129,15 +130,21 @@ await resend.emails.send({
 
   </div>
 </div>
-  `,
-  attachments: [
-    {
-      filename: `facture-${orderId}.pdf`,
-      content: pdfBase64,
-      contentType: "application/pdf",
-    },
-  ],
-});
+        `,
+        attachments: [
+          {
+            filename: `facture-${orderId}.pdf`,
+            content: pdfBase64,
+            contentType: "application/pdf",
+          },
+        ],
+      });
+
+      console.log("📎 Facture PDF envoyée au client :", orderId);
+
+    } catch (err) {
+      console.error("❌ Erreur lors de l'envoi de l'email client avec facture :", err);
+    }
 
 
     // =============================================================
