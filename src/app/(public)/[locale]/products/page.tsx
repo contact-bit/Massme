@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -12,6 +13,7 @@ type Product = {
   name: Record<Locale, string>;
   description?: Record<Locale, string>;
   price: { eur: number; usd?: number };
+  imageUrl?: string; // 👈 ajouté ici
 };
 
 export default function ProductsPage({
@@ -19,20 +21,17 @@ export default function ProductsPage({
 }: {
   params: Promise<{ locale: Locale }>;
 }) {
-  // ✅ Nouvelle API Next.js 16 : on déballe la Promise avec `use()`
   const { locale } = use(params);
-
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     async function fetchProducts() {
       const snapshot = await getDocs(collection(db, "products"));
 
-      // ✅ Corrigé : on évite le doublon du champ `id`
       const data = snapshot.docs.map((doc) => {
         const docData = doc.data() as Product;
-        const { id, ...rest } = docData; // supprime un éventuel id interne
-        return { id: doc.id, ...rest }; // garde uniquement le Firestore ID
+        const { id, ...rest } = docData;
+        return { id: doc.id, ...rest };
       });
 
       setProducts(data);
@@ -45,6 +44,7 @@ export default function ProductsPage({
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
     const updated = [...cart, product];
     localStorage.setItem("cart", JSON.stringify(updated));
+
     alert(
       `${product.name?.[locale] || product.name?.fr} ${
         locale === "fr" ? "ajouté au panier 🛒" : "added to cart 🛒"
@@ -71,15 +71,28 @@ export default function ProductsPage({
               key={p.id}
               className="border rounded-lg p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between"
             >
+              {/** 🖼️ AFFICHAGE DE L'IMAGE */}
+              {p.imageUrl && (
+                <Image
+                  src={p.imageUrl}
+                  alt={p.name?.[locale] || p.name?.fr}
+                  width={500}
+                  height={500}
+                  className="rounded-md object-cover w-full h-64 mb-4"
+                />
+              )}
+
               <div>
                 <Link href={`/${locale}/products/${p.id}`}>
                   <h2 className="font-semibold text-lg mb-2 hover:underline">
                     {p.name?.[locale] || p.name?.fr}
                   </h2>
                 </Link>
+
                 <p className="text-gray-600 text-sm mb-4">
                   {p.description?.[locale] || p.description?.fr}
                 </p>
+
                 <p className="font-medium text-lg mb-6">{p.price?.eur} €</p>
               </div>
 
