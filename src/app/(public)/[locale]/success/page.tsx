@@ -1,26 +1,18 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function SuccessPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ locale: string }> | { locale: string };
-  searchParams: Promise<{ session_id: string }> | { session_id: string };
+  params: { locale: string };
+  searchParams: { session_id: string };
 }) {
-  // ✅ Next.js 16 – params / searchParams peuvent être des Promises
-  const resolvedParams =
-    typeof (params as any).then === "function" ? use(params) : params;
-
-  const resolvedSearch =
-    typeof (searchParams as any).then === "function"
-      ? use(searchParams)
-      : searchParams;
-
-  const locale = resolvedParams.locale;
-  const sessionId = resolvedSearch.session_id;
+  // 👇 PLUS AUCUN use() → build OK
+  const locale = params.locale;
+  const sessionId = searchParams.session_id;
 
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -43,24 +35,22 @@ export default function SuccessPage({
     fetchOrder();
   }, [sessionId]);
 
-  // Petit helper de traduction
+  // Traduction
   const t = (fr: string, en: string) => (locale === "fr" ? fr : en);
 
-  // 🔎 Extraction propre de la méthode de livraison
+  // Méthode de livraison propre
   let shippingName = "—";
   let shippingPrice: number | null = null;
 
   if (order?.shippingMethod) {
     const sm = order.shippingMethod;
 
-    // name peut être une string ou un objet { fr, en }
     if (typeof sm.name === "string") {
       shippingName = sm.name;
     } else if (sm.name?.fr || sm.name?.en) {
       shippingName = sm.name.fr || sm.name.en;
     }
 
-    // price peut être un number ou un objet { fr, en }
     if (typeof sm.price === "number") {
       shippingPrice = sm.price;
     } else if (typeof sm.price?.fr === "number") {
@@ -81,9 +71,8 @@ export default function SuccessPage({
 
   return (
     <main className="max-w-2xl mx-auto py-10 px-6 text-gray-900">
-      {/* HEADER ------------------------------------------------------ */}
+      {/* HEADER ------------------------------------------------------- */}
       <div className="text-center mt-4 animate-fade-in">
-        {/* Check icon style startup */}
         <div className="mx-auto w-24 h-24 text-green-500 mb-4">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -101,7 +90,6 @@ export default function SuccessPage({
           </svg>
         </div>
 
-        {/* Message principal */}
         <h1 className="text-3xl font-bold">
           {order
             ? t(`🎉 Merci ${firstName} !`, `🎉 Thank you, ${firstName}!`)
@@ -125,17 +113,16 @@ export default function SuccessPage({
         </p>
       </div>
 
-      {/* LOADING ----------------------------------------------------- */}
+      {/* LOADING ------------------------------------------------------- */}
       {loading && (
         <p className="text-center text-gray-500 mt-10">
           {t("Chargement de votre commande…", "Loading your order…")}
         </p>
       )}
 
-      {/* DETAILS COMMANDE ------------------------------------------- */}
+      {/* DETAILS ------------------------------------------------------- */}
       {order && (
         <div className="bg-white border rounded-2xl shadow-xl p-6 mt-10 space-y-6 animate-fade-in">
-          {/* Numéro de commande */}
           <div>
             <p className="text-sm font-semibold text-gray-500">
               {t("Numéro de commande", "Order ID")}
@@ -143,7 +130,6 @@ export default function SuccessPage({
             <p className="text-lg font-bold">{order.id}</p>
           </div>
 
-          {/* Adresse de livraison */}
           <div>
             <p className="text-sm font-semibold text-gray-500">
               {t("Adresse de livraison", "Shipping address")}
@@ -151,24 +137,21 @@ export default function SuccessPage({
             <p>{order.shippingAddress?.name}</p>
             <p>{order.shippingAddress?.address}</p>
             <p>
-              {order.shippingAddress?.postalCode}{" "}
-              {order.shippingAddress?.city}
+              {order.shippingAddress?.postalCode} {order.shippingAddress?.city}
             </p>
             <p>{order.shippingAddress?.phone}</p>
           </div>
 
-          {/* Méthode d’envoi */}
           <div>
             <p className="text-sm font-semibold text-gray-500">
               {t("Méthode d’envoi", "Shipping method")}
             </p>
-            <p className="font-medium">{shippingName || "—"}</p>
+            <p className="font-medium">{shippingName}</p>
             <p className="text-gray-600">
               {shippingPrice != null ? `${shippingPrice.toFixed(2)} €` : "—"}
             </p>
           </div>
 
-          {/* Produits */}
           <div>
             <p className="text-sm font-semibold text-gray-500 mb-2">
               {t("Articles commandés", "Ordered items")}
@@ -180,9 +163,7 @@ export default function SuccessPage({
                 className="flex justify-between bg-gray-50 p-3 rounded-md"
               >
                 <div>
-                  <p className="font-medium">
-                    {item.name?.fr || item.name?.en || "Produit"}
-                  </p>
+                  <p className="font-medium">{item.name.fr || item.name.en}</p>
                   <p className="text-xs text-gray-500">
                     x{item.quantity || 1}
                   </p>
@@ -195,13 +176,11 @@ export default function SuccessPage({
             ))}
           </div>
 
-          {/* Total payé */}
           <div className="flex justify-between text-lg font-bold pt-4 border-t">
             <span>{t("Total payé", "Total paid")}</span>
             <span className="text-blue-600">{totalPaid} €</span>
           </div>
 
-          {/* Message d’expédition */}
           <p className="text-gray-500 text-sm pt-2">
             {t(
               "Votre commande sera préparée sous 24h et expédiée dans les meilleurs délais.",
@@ -211,7 +190,7 @@ export default function SuccessPage({
         </div>
       )}
 
-      {/* CTA --------------------------------------------------------- */}
+      {/* CTA ---------------------------------------------------------- */}
       <div className="text-center mt-12 space-y-4">
         <Link
           href={`/${locale}`}
