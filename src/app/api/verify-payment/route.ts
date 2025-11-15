@@ -3,8 +3,7 @@ import Stripe from "stripe";
 import { dbAdmin } from "@/lib/firebase.admin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
@@ -12,49 +11,66 @@ export async function GET(req: Request) {
     const sessionId = searchParams.get("session_id");
 
     if (!sessionId) {
-      console.error("❌ session_id manquant dans la requête");
-      return NextResponse.json({ error: "Missing session_id" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing session_id" },
+        { status: 400 }
+      );
     }
 
-    console.log("🔎 Vérification Stripe pour la session :", sessionId);
-
+    // 🔍 Récupération session Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (!session) {
-      console.error("❌ Session Stripe introuvable !");
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Stripe session not found" },
+        { status: 404 }
+      );
     }
-
-    console.log("💳 Stripe status:", session.payment_status);
-    console.log("🧾 Metadata:", session.metadata);
 
     const orderId = session.metadata?.order_id;
 
+    if (!orderId) {
+      return NextResponse.json({
+        success: false,
+        error: "Order ID missing from Stripe metadata",
+      });
+    }
+
+    // 📌 Récupération de la commande Firestore
+    const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
+
+    if (!snap.exists) {
+      return NextResponse.json(
+        { success: false, error: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    const order = snap.data();
+
+    // 🟢 Si Stripe confirme → Mise à jour Firestore
     if (session.payment_status === "paid") {
-      if (!orderId) {
-        console.warn("⚠️ Aucune commande associée (order_id manquant).");
-        return NextResponse.json({ success: true, note: "No order_id metadata" });
-      }
-
-      console.log("✅ Paiement confirmé, mise à jour Firestore...");
-
       await dbAdmin.collection("pending_orders").doc(orderId).update({
         status: "paid",
         paidAt: new Date(),
         stripeSessionId: session.id,
       });
-
-      console.log("🔥 Commande mise à jour avec succès :", orderId);
-      return NextResponse.json({ success: true });
     }
 
-    console.warn("⚠️ Paiement non encore confirmé :", session.payment_status);
-    return NextResponse.json({ success: false, status: session.payment_status });
+    // 🔥 On renvoie tout : shipping method, address, items, total, etc.
+    return NextResponse.json({
+      success: true,
+      order: {
+        id: orderId,
+        ...order,
+        amount_total: session.amount_total, // Stripe total en CENTIMES
+      },
+    });
 
   } catch (err: any) {
-    console.error("🚨 Erreur interne verify-payment :", err);
+    console.error("❌ verify-payment error:", err);
     return NextResponse.json(
-      { error: err.message || "Erreur interne du serveur" },
+      { success: false, error: err.message || "Server error" },
       { status: 500 }
     );
   }
