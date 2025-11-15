@@ -10,66 +10,66 @@ export async function POST(req: Request) {
 
     const {
       items,
-      currency,
+      currency = "eur",
       shippingMethod,
       customerEmail,
       shippingAddress,
-      locale,
+      locale = "fr",
     } = body;
 
     // ----------------------------------
     // 🧠 Vérifications
     // ----------------------------------
-    if (!items || !Array.isArray(items) || items.length === 0)
+    if (!items?.length)
       return NextResponse.json({ error: "Missing items" }, { status: 400 });
 
-    if (!shippingMethod)
-      return NextResponse.json({ error: "Missing shippingMethod" }, { status: 400 });
+    if (!shippingMethod?.name || typeof shippingMethod.price !== "number")
+      return NextResponse.json(
+        { error: "Invalid or missing shippingMethod" },
+        { status: 400 }
+      );
 
     if (!customerEmail)
       return NextResponse.json({ error: "Missing email" }, { status: 400 });
 
-    const currencyUsed = currency || "eur";
-
     // ----------------------------------
-    // 📦 Correction shippingMethod pour Firestore
+    // 📦 Normalisation shippingMethod pour Firestore
     // ----------------------------------
     const normalizedShipping = {
-      name: {
-        fr: shippingMethod.name, // tu n'as que 1 valeur, donc je l'applique aux deux langues
-        en: shippingMethod.name,
-      },
-      price: {
-        fr: shippingMethod.price,
-        en: shippingMethod.price,
-      },
+      name: { fr: shippingMethod.name, en: shippingMethod.name },
+      price: { fr: shippingMethod.price, en: shippingMethod.price },
     };
 
-    console.log("🚚 Méthode envoyée à Firestore :", normalizedShipping);
+    console.log("🚚 Shipping enregistré Firestore :", normalizedShipping);
 
     // ----------------------------------
-    // 💾 Enregistrer la commande dans Firestore
+    // 💾 Sauvegarde de la commande
     // ----------------------------------
     const orderRef = await db.collection("pending_orders").add({
       email: customerEmail,
       items,
       shippingAddress,
       shippingMethod: normalizedShipping,
-      currency: currencyUsed,
-      locale: locale || "fr",
+      currency,
+      locale,
       createdAt: Timestamp.now(),
       status: "pending_payment",
     });
 
-    console.log(`✅ Commande créée : ${orderRef.id}`);
+    console.log(`✅ Commande Firestore créée : ${orderRef.id}`);
 
     // ----------------------------------
-    // 🧮 Préparer les produits pour Stripe
+    // 🧮 Stripe line_items
     // ----------------------------------
     const line_items = items.map((item: any, index: number) => ({
       price_data: {
-        currency: currencyUsed,
-        product_data: { name: item.name?.fr || item.name?.en || `Produit ${index + 1}` },
+        currency,
+        product_data: {
+          name:
+            item.name?.fr ||
+            item.name?.en ||
+            `Produit ${index + 1}`,
+        },
         unit_amount: Math.round((item.price?.eur || 0) * 100),
       },
       quantity: item.quantity || 1,
@@ -79,9 +79,9 @@ export async function POST(req: Request) {
     // 💳 Session Stripe Checkout
     // ----------------------------------
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
       mode: "payment",
       customer_email: customerEmail,
+      payment_method_types: ["card"],
       line_items,
       shipping_options: [
         {
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
             display_name: shippingMethod.name,
             fixed_amount: {
               amount: Math.round(shippingMethod.price * 100),
-              currency: currencyUsed,
+              currency,
             },
             type: "fixed_amount",
           },
@@ -105,14 +105,17 @@ export async function POST(req: Request) {
 
     if (!session?.url) {
       console.error("❌ Session Stripe invalide :", session);
-      return NextResponse.json({ error: "Stripe session creation failed" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Stripe session creation failed" },
+        { status: 500 }
+      );
     }
 
-    console.log("✅ Session Stripe créée :", session.id);
+    console.log("💳 Session Stripe ok :", session.id);
 
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
-    console.error("💥 ERREUR API /checkout :", err);
+    console.error("💥 ERREUR /checkout :", err);
     return NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 }

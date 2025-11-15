@@ -19,14 +19,12 @@ export default function CheckoutPage({
 }: {
   params: Promise<{ locale: Locale }>;
 }) {
+  // ⚡ Next.js 16 — les params sont une Promise
+  const { locale } = use(params);
 
-  // ⬅️ OBLIGATOIRE NEXT.JS 16
-  const resolved = use(params);
-  const locale: Locale = resolved.locale;
-
-  // --------------------------
-  // STATES
-  // --------------------------
+  // --------------------------------------------------
+  // STATE
+  // --------------------------------------------------
   const [cart, setCart] = useState<any[]>([]);
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
   const [loadingShipping, setLoadingShipping] = useState(true);
@@ -43,13 +41,17 @@ export default function CheckoutPage({
 
   const [loading, setLoading] = useState(false);
 
-  // Load cart from localStorage
+  // --------------------------------------------------
+  // Load cart
+  // --------------------------------------------------
   useEffect(() => {
     const stored = localStorage.getItem("cart");
     if (stored) setCart(JSON.parse(stored));
   }, []);
 
-  // Load shipping methods per locale
+  // --------------------------------------------------
+  // Load shipping methods
+  // --------------------------------------------------
   useEffect(() => {
     loadShippingMethods();
   }, [locale]);
@@ -61,6 +63,7 @@ export default function CheckoutPage({
 
     const list = snap.docs.map((d) => {
       const data: any = d.data();
+
       return {
         id: d.id,
         name: data.name?.[locale] || null,
@@ -82,13 +85,20 @@ export default function CheckoutPage({
     }
   }
 
+  // --------------------------------------------------
+  // Form handler
+  // --------------------------------------------------
   const handleChange = (e: any) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
+  // --------------------------------------------------
+  // Checkout
+  // --------------------------------------------------
   const handleCheckout = async () => {
     const selected = shippingMethods.find((m) => m.id === form.shippingMethod);
+
     if (!selected) {
-      alert(locale === "fr" ? "Sélectionnez un transporteur" : "Select carrier");
+      alert(locale === "fr" ? "Sélectionnez un transporteur" : "Select a carrier");
       return;
     }
 
@@ -117,7 +127,9 @@ export default function CheckoutPage({
     setLoading(false);
   };
 
+  // --------------------------------------------------
   // Total
+  // --------------------------------------------------
   const selectedMethod = shippingMethods.find(
     (m) => m.id === form.shippingMethod
   );
@@ -125,29 +137,35 @@ export default function CheckoutPage({
   const shippingPrice = selectedMethod?.price || 0;
 
   const total =
-    cart.reduce((s, p) => s + (p.price?.eur || 0) * (p.quantity || 1), 0) +
-    shippingPrice;
+    cart.reduce(
+      (sum, p) => sum + (p.price?.eur || 0) * (p.quantity || 1),
+      0
+    ) + shippingPrice;
 
+  // ===========================================================
+  // UI STARTUP MODERNE ⚡
+  // ===========================================================
   return (
-    <main className="max-w-2xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-center text-blue-700">
+    <main className="max-w-2xl mx-auto py-12 px-6 text-gray-900">
+
+      <h1 className="text-4xl font-extrabold mb-10 text-center text-blue-700 tracking-tight">
         {locale === "fr" ? "🧾 Informations de livraison" : "🧾 Shipping details"}
       </h1>
 
-      <div className="bg-white shadow-xl rounded-2xl p-6 space-y-8">
+      <div className="bg-white shadow-2xl rounded-3xl p-8 space-y-10 border border-gray-100">
 
-        {/* Adresse */}
+        {/* SECTION — LIVRAISON */}
         <section>
-          <h2 className="text-xl font-semibold mb-4">
+          <h2 className="text-xl font-bold mb-6 text-gray-800">
             {locale === "fr" ? "📍 Adresse de livraison" : "📍 Shipping address"}
           </h2>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             <input className="input" name="name" placeholder={locale === "fr" ? "Nom complet" : "Full name"} value={form.name} onChange={handleChange} />
             <input className="input" name="email" placeholder="Email" value={form.email} onChange={handleChange} />
             <input className="input" name="address" placeholder={locale === "fr" ? "Adresse" : "Address"} value={form.address} onChange={handleChange} />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-5">
               <input className="input" name="city" placeholder={locale === "fr" ? "Ville" : "City"} value={form.city} onChange={handleChange} />
               <input className="input" name="postalCode" placeholder={locale === "fr" ? "Code postal" : "ZIP"} value={form.postalCode} onChange={handleChange} />
             </div>
@@ -156,9 +174,9 @@ export default function CheckoutPage({
           </div>
         </section>
 
-        {/* Shipping */}
+        {/* SECTION — SHIPPING METHOD */}
         <section>
-          <h2 className="text-lg font-semibold mb-3">
+          <h2 className="text-xl font-bold mb-4 text-gray-800">
             {locale === "fr" ? "🚚 Méthode de livraison" : "🚚 Shipping method"}
           </h2>
 
@@ -184,16 +202,17 @@ export default function CheckoutPage({
           )}
         </section>
 
-        {/* Total */}
-        <section className="flex justify-between text-xl font-semibold border-t pt-4">
+        {/* TOTAL */}
+        <section className="flex justify-between text-2xl font-bold border-t pt-6">
           <span>{locale === "fr" ? "Total à payer :" : "Total:"}</span>
           <span className="text-blue-600">{total.toFixed(2)} €</span>
         </section>
 
+        {/* CTA */}
         <button
           onClick={handleCheckout}
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-4 rounded-xl text-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+          className="w-full bg-blue-600 text-white py-4 rounded-xl text-xl font-semibold hover:bg-blue-700 transition transform hover:scale-[1.02] disabled:opacity-50"
         >
           {loading
             ? locale === "fr" ? "Traitement…" : "Processing…"
