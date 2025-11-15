@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { Resend } from "resend";
+import { generateInvoicePDF } from "@/lib/generateInvoice"; // ⬅️ IMPORTANT
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing payload" }, { status: 400 });
     }
 
-    // 📌 Récupération de la commande Firestore
+    // 📌 Récupération commande Firestore
     const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
     const order = snap.data();
 
@@ -23,31 +24,35 @@ export async function POST(req: Request) {
     }
 
     // ============================================================
-    // 📦 TABLEAU DES ARTICLES (UI premium)
+    // 📄 GÉNÉRATION FACTURE PDF
+    // ============================================================
+    let pdfBase64 = "";
+
+    try {
+      const pdfBuffer = await generateInvoicePDF(order, orderId);
+      pdfBase64 = pdfBuffer.toString("base64");
+    } catch (err) {
+      console.error("❌ Erreur génération facture PDF :", err);
+    }
+
+    // ============================================================
+    // 📦 TABLEAU DES ARTICLES
     // ============================================================
     const itemsTable = order.items
       .map(
         (item: any) => `
-      <tr>
-        <td style="padding:10px; border-bottom:1px solid #eee;">
-          ${item.name?.fr || "Produit"}
-        </td>
-        <td style="padding:10px; border-bottom:1px solid #eee; color:#666;">
-          ${item.description?.fr || "-"}
-        </td>
-        <td style="padding:10px; border-bottom:1px solid #eee;">
-          ${item.price?.eur} €
-        </td>
-        <td style="padding:10px; border-bottom:1px solid #eee;">
-          ${item.quantity || 1}
-        </td>
-      </tr>
-    `
+        <tr>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${item.name?.fr || "Produit"}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee; color:#666;">${item.description?.fr || "-"}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${item.price?.eur} €</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${item.quantity || 1}</td>
+        </tr>
+      `
       )
       .join("");
 
     // ============================================================
-    // 🚚 BLOC ADRESSE CLIENT
+    // 🚚 ADRESSE
     // ============================================================
     const a = order.shippingAddress;
 
@@ -64,7 +69,7 @@ export async function POST(req: Request) {
     `;
 
     // ============================================================
-    // ✨ TEMPLATE ADMIN — Version PREMIUM
+    // ✨ TEMPLATE PREMIUM
     // ============================================================
     const htmlTemplate = `
 <div style="font-family:Arial, sans-serif; background:#f3f4f7; padding:25px;">
@@ -75,16 +80,14 @@ export async function POST(req: Request) {
     </h2>
 
     <p style="font-size:15px; color:#444; margin-bottom:25px;">
-      Une nouvelle commande vient d’être validée sur Massme. Ci-dessous, tous les détails.
+      Une nouvelle commande vient d’être validée sur Massme.
     </p>
 
-    <!-- Bloc résumé -->
     <div style="padding:18px; background:#f6faff; border-radius:10px; border:1px solid #d9e3f0; margin-bottom:30px;">
       <p style="margin:5px 0; font-size:16px;"><b>ID Commande :</b> ${orderId}</p>
       <p style="margin:5px 0; font-size:16px;"><b>Client :</b> ${customerEmail}</p>
     </div>
 
-    <!-- Liste des produits -->
     <h3 style="margin-top:10px; font-size:20px; color:#111;">📦 Articles commandés</h3>
 
     <table style="width:100%; border-collapse:collapse; margin-top:15px; font-size:15px;">
@@ -97,7 +100,6 @@ export async function POST(req: Request) {
       ${itemsTable}
     </table>
 
-    <!-- Adresse -->
     <h3 style="margin-top:35px; font-size:20px; color:#111;">🚚 Adresse de livraison</h3>
     ${addressBlock}
 
@@ -111,13 +113,23 @@ export async function POST(req: Request) {
 `;
 
     // ============================================================
-    // 📤 ENVOI EMAIL ADMIN
+    // 📤 ENVOI EMAIL AVEC FACTURE POUR ADMIN
     // ============================================================
     await resend.emails.send({
       from: "Massme • Orders <contact@hdconnects.com>",
       to: process.env.ADMIN_EMAIL!,
       subject: `🛒 Nouvelle commande – #${orderId}`,
       html: htmlTemplate,
+      attachments:
+        pdfBase64
+          ? [
+              {
+                filename: `facture-${orderId}.pdf`,
+                content: pdfBase64,
+                contentType: "application/pdf",
+              },
+            ]
+          : undefined,
     });
 
     return NextResponse.json({ status: "admin email sent" });
