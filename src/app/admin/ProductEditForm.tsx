@@ -22,6 +22,7 @@ export default function ProductEditForm({
   const [descFr, setDescFr] = useState("");
   const [descEn, setDescEn] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [imageUrl, setImageUrl] = useState(""); // 👈 nouvel état image
 
   useEffect(() => {
     setNameFr(product.name?.fr || "");
@@ -31,6 +32,7 @@ export default function ProductEditForm({
     setDescFr(product.description?.fr || "");
     setDescEn(product.description?.en || "");
     setIsActive(product.isActive ?? true);
+    setImageUrl(product.imageUrl || ""); // 👈 initialiser la preview
   }, [product]);
 
   const handleSave = async (e: any) => {
@@ -42,26 +44,60 @@ export default function ProductEditForm({
       price: { eur: parseFloat(price as string) },
       stock: parseInt(stock as string),
       isActive,
+      imageUrl: imageUrl || null, // 👈 sauvegarder l'image
     });
+
     onUpdated();
     onClose();
   };
 
   return (
-    <form onSubmit={handleSave} className="space-y-4 bg-white p-4 rounded-md shadow">
-      <h2 className="text-xl font-semibold mb-2 text-gray-800">✏️ Modifier le produit</h2>
+    <form
+      onSubmit={handleSave}
+      className="space-y-4 bg-white p-4 rounded-md shadow max-w-lg mx-auto"
+    >
+      <h2 className="text-xl font-semibold mb-2 text-gray-800">
+        ✏️ Modifier le produit
+      </h2>
+
+      {/* 🖼️ Preview image */}
+      <div className="flex flex-col items-center gap-2">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt="Preview"
+            className="w-32 h-32 object-cover rounded border shadow"
+          />
+        ) : (
+          <div className="w-32 h-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm">
+            Pas d’image
+          </div>
+        )}
+      </div>
+
+      {/* 🔥 Champ image */}
+      <input
+        type="text"
+        placeholder="URL de l'image Cloudflare"
+        value={imageUrl}
+        onChange={(e) => setImageUrl(e.target.value)}
+        className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
+      />
 
       <input
         type="text"
         value={nameFr}
         onChange={(e) => setNameFr(e.target.value)}
         className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
+        placeholder="Nom FR"
       />
+
       <input
         type="text"
         value={nameEn}
         onChange={(e) => setNameEn(e.target.value)}
         className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
+        placeholder="Nom EN"
       />
 
       <input
@@ -69,6 +105,7 @@ export default function ProductEditForm({
         value={price}
         onChange={(e) => setPrice(e.target.value)}
         className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
+        placeholder="Prix EUR"
       />
 
       <input
@@ -76,6 +113,7 @@ export default function ProductEditForm({
         value={stock}
         onChange={(e) => setStock(e.target.value)}
         className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
+        placeholder="Stock"
       />
 
       <textarea
@@ -83,15 +121,18 @@ export default function ProductEditForm({
         onChange={(e) => setDescFr(e.target.value)}
         className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
         rows={2}
+        placeholder="Description FR"
       />
+
       <textarea
         value={descEn}
         onChange={(e) => setDescEn(e.target.value)}
         className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
         rows={2}
+        placeholder="Description EN"
       />
 
-      {/* ✅ Switch actif/inactif */}
+      {/* Switch actif/inactif */}
       <label className="flex items-center gap-3 mt-2">
         <input
           type="checkbox"

@@ -25,7 +25,7 @@ export default function AdminPage() {
   const handleLogin = () => {
     if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
       setIsAuthenticated(true);
-      localStorage.setItem("admin_auth", "true"); // ✅ garde la session
+      localStorage.setItem("admin_auth", "true");
       fetchProducts();
     } else {
       alert("Mot de passe incorrect 🚫");
@@ -53,7 +53,7 @@ export default function AdminPage() {
     fetchProducts();
   };
 
-  // 🧱 Interface de connexion admin
+  // 🧱 Page de connexion admin
   if (!isAuthenticated) {
     return (
       <main className="h-screen flex flex-col items-center justify-center bg-gray-50">
@@ -92,27 +92,47 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* ✅ Formulaire d’ajout */}
+      {/* ➕ Ajouter un produit */}
       <div className="mb-10 bg-white p-6 rounded-lg shadow">
         <ProductForm onSuccess={fetchProducts} />
       </div>
 
-      {/* ✅ Liste des produits */}
+      {/* 📝 Liste des produits */}
       <div className="grid gap-4">
         {products.map((product) => (
           <div
             key={product.id}
             className="p-4 border rounded-md shadow-sm flex justify-between items-center bg-white"
           >
-            <div>
-              <h3 className="font-semibold text-gray-900">{product.name?.fr}</h3>
-              <p className="text-sm text-gray-600">{product.price?.eur} €</p>
-              <p className="text-xs text-gray-500">
-                Stock : {product.stock} |{" "}
-                {product.isActive ? "🟢 Actif" : "🔴 Inactif"}
-              </p>
+            {/* 🔥 IMAGE + INFOS */}
+            <div className="flex items-center gap-4">
+              {/* 🖼️ Mini image */}
+              {product.imageUrl ? (
+                <img
+                  src={product.imageUrl}
+                  alt={product.name?.fr}
+                  className="w-16 h-16 object-cover rounded border"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-gray-100 rounded border flex items-center justify-center text-[10px] text-gray-400">
+                  No image
+                </div>
+              )}
+
+              {/* Infos produit */}
+              <div>
+                <h3 className="font-semibold text-gray-900">
+                  {product.name?.fr}
+                </h3>
+                <p className="text-sm text-gray-600">{product.price?.eur} €</p>
+                <p className="text-xs text-gray-500">
+                  Stock : {product.stock} |{" "}
+                  {product.isActive ? "🟢 Actif" : "🔴 Inactif"}
+                </p>
+              </div>
             </div>
 
+            {/* ✏️ Modifier / 🗑️ Supprimer */}
             <div className="flex gap-2">
               <button
                 onClick={() => setEditingProduct(product)}
@@ -131,7 +151,7 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {/* ✅ Modal de modification */}
+      {/* 🪟 Modal d’édition */}
       {editingProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg relative">
@@ -141,6 +161,7 @@ export default function AdminPage() {
             >
               ✖
             </button>
+
             <ProductEditForm
               product={editingProduct}
               onClose={() => setEditingProduct(null)}
