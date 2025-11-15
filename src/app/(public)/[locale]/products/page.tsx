@@ -13,7 +13,8 @@ type Product = {
   name: Record<Locale, string>;
   description?: Record<Locale, string>;
   price: { eur: number; usd?: number };
-  imageUrl?: string; // 👈 ajouté ici
+  imageUrl?: string;
+  isActive?: boolean; // 👈 IMPORTANT
 };
 
 export default function ProductsPage({
@@ -28,11 +29,11 @@ export default function ProductsPage({
     async function fetchProducts() {
       const snapshot = await getDocs(collection(db, "products"));
 
-      const data = snapshot.docs.map((doc) => {
-        const docData = doc.data() as Product;
-        const { id, ...rest } = docData;
-        return { id: doc.id, ...rest };
-      });
+      const data = snapshot.docs
+        .map((doc) => {
+          return { id: doc.id, ...(doc.data() as Product) };
+        })
+        .filter((p) => p.isActive === true); // 👈 FILTRE FINAL
 
       setProducts(data);
     }
@@ -44,6 +45,9 @@ export default function ProductsPage({
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
     const updated = [...cart, product];
     localStorage.setItem("cart", JSON.stringify(updated));
+
+    // 🔥 Mettre à jour mini-panier
+    window.dispatchEvent(new Event("cart-updated"));
 
     alert(
       `${product.name?.[locale] || product.name?.fr} ${
@@ -71,7 +75,7 @@ export default function ProductsPage({
               key={p.id}
               className="border rounded-lg p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between"
             >
-              {/** 🖼️ AFFICHAGE DE L'IMAGE */}
+              {/* 🖼️ IMAGE DU PRODUIT */}
               {p.imageUrl && (
                 <Image
                   src={p.imageUrl}
