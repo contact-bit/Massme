@@ -27,8 +27,8 @@ type Order = {
     phone: string;
   };
   shippingMethod?: {
-    name?: Record<string, string>;
-    price?: Record<string, number>;
+    name?: string | Record<string, string>;
+    price?: number | Record<string, number>;
   };
   items: {
     name: Record<string, string>;
@@ -40,9 +40,7 @@ type Order = {
 export default function OrdersAdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "paid" | "pending_payment">(
-    "all"
-  );
+  const [filter, setFilter] = useState<"all" | "paid" | "pending_payment">("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
@@ -119,12 +117,9 @@ export default function OrdersAdminPage() {
   const deleteMultiple = async () => {
     if (selectedOrders.length === 0) return;
 
-    if (
-      !confirm(
-        `⚠️ Vous allez supprimer ${selectedOrders.length} commande(s).\n\nCONFIRMER ?`
-      )
-    )
-      return;
+    if (!confirm(
+      `⚠️ Vous allez supprimer ${selectedOrders.length} commande(s).\n\nCONFIRMER ?`
+    )) return;
 
     for (const id of selectedOrders) {
       await deleteDoc(doc(db, "pending_orders", id));
@@ -254,7 +249,9 @@ export default function OrdersAdminPage() {
                   </div>
 
                   <button
-                    onClick={() => setExpanded(expanded === order.id ? null : order.id)}
+                    onClick={() =>
+                      setExpanded(expanded === order.id ? null : order.id)
+                    }
                     className="text-blue-600 w-6"
                   >
                     {expanded === order.id ? "▲" : "▼"}
@@ -278,29 +275,32 @@ export default function OrdersAdminPage() {
                       <p>{order.shippingAddress?.phone}</p>
                     </div>
 
-                    {/* Méthode d’envoi */}
+                    {/* MÉTHODE D’ENVOI — VERSION FIXED */}
                     <div>
                       <h3 className="text-sm font-bold mb-1">
                         Méthode d’envoi
                       </h3>
 
                       <p>
-                        {order.shippingMethod?.name?.fr ||
-                          order.shippingMethod?.name?.en ||
-                          "—"}
+                        {typeof order.shippingMethod?.name === "string"
+                          ? order.shippingMethod.name
+                          : order.shippingMethod?.name?.fr ||
+                            order.shippingMethod?.name?.en ||
+                            "—"}
                       </p>
+
                       <p>
-                        {order.shippingMethod?.price?.fr
-                          ? order.shippingMethod?.price?.fr.toFixed(2) + " €"
+                        {typeof order.shippingMethod?.price === "number"
+                          ? order.shippingMethod.price.toFixed(2) + " €"
+                          : order.shippingMethod?.price?.fr
+                          ? order.shippingMethod.price.fr.toFixed(2) + " €"
                           : "—"}
                       </p>
                     </div>
 
                     {/* Produits */}
                     <div>
-                      <h3 className="text-sm font-bold mb-1">
-                        Produits
-                      </h3>
+                      <h3 className="text-sm font-bold mb-1">Produits</h3>
 
                       {order.items?.map((item, i) => (
                         <div
@@ -323,7 +323,7 @@ export default function OrdersAdminPage() {
                       ))}
                     </div>
 
-                    {/* Suppression simple */}
+                    {/* DELETE SINGLE */}
                     <button
                       onClick={() => deleteSingle(order.id)}
                       className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
