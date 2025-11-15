@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import React from "react";
 
 type Order = {
   id: string;
@@ -19,13 +18,10 @@ type Order = {
     postalCode: string;
     phone: string;
   };
-  shippingMethod?: {
-    name: Record<string, string>;
-    price: Record<string, number>;
-  };
+  shippingMethod?: any;
   items: {
     name: Record<string, string>;
-    price: number;
+    price: { eur: number };
     quantity?: number;
   }[];
 };
@@ -33,16 +29,21 @@ type Order = {
 export default function OrdersAdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "paid" | "pending_payment">("all");
+  const [filter, setFilter] =
+    useState<"all" | "paid" | "pending_payment">("all");
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchOrders() {
       try {
         setLoading(true);
+
         let q;
         if (filter === "all") {
-          q = query(collection(db, "pending_orders"), orderBy("createdAt", "desc"));
+          q = query(
+            collection(db, "pending_orders"),
+            orderBy("createdAt", "desc")
+          );
         } else {
           q = query(
             collection(db, "pending_orders"),
@@ -51,15 +52,15 @@ export default function OrdersAdminPage() {
           );
         }
 
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map((doc) => ({
+        const snap = await getDocs(q);
+        const data = snap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Order[];
 
         setOrders(data);
-      } catch (err) {
-        console.error("Erreur de chargement des commandes :", err);
+      } catch (error) {
+        console.error("Erreur chargement commandes :", error);
       } finally {
         setLoading(false);
       }
@@ -69,142 +70,172 @@ export default function OrdersAdminPage() {
   }, [filter]);
 
   return (
-    <main className="max-w-6xl mx-auto py-10 px-4 text-gray-900">
-      <h1 className="text-3xl font-bold mb-8 text-blue-700">
-        🧾 Tableau de bord - Commandes
-      </h1>
+    <main className="max-w-5xl mx-auto py-10 px-4 text-gray-900">
+      <h1 className="text-3xl font-bold mb-8 text-blue-700">🧾 Commandes</h1>
 
-      {/* FILTRE */}
-      <div className="mb-6 flex gap-4">
-        {["all", "paid", "pending_payment"].map((type) => (
+      {/* FILTRES */}
+      <div className="mb-6 flex gap-3">
+        {[
+          { key: "all", label: "Toutes" },
+          { key: "paid", label: "Payées" },
+          { key: "pending_payment", label: "En attente" },
+        ].map(({ key, label }) => (
           <button
-            key={type}
-            onClick={() => setFilter(type as any)}
+            key={key}
+            onClick={() => setFilter(key as any)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-              filter === type
-                ? type === "paid"
-                  ? "bg-green-600 text-white"
-                  : type === "pending_payment"
-                  ? "bg-yellow-500 text-white"
-                  : "bg-blue-600 text-white"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+              filter === key
+                ? "bg-blue-600 text-white shadow"
+                : "bg-gray-100 hover:bg-gray-200"
             }`}
           >
-            {type === "all"
-              ? "Toutes"
-              : type === "paid"
-              ? "Payées"
-              : "En attente"}
+            {label}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <p className="text-gray-500 text-center py-20">
-          Chargement des commandes...
-        </p>
+        <p className="text-gray-600 text-center py-20">Chargement…</p>
       ) : orders.length === 0 ? (
         <p className="text-gray-600">Aucune commande trouvée.</p>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-2xl shadow border border-gray-100">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Client</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Total</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Statut</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Détails</th>
-              </tr>
-            </thead>
+        <div className="space-y-4">
+          {orders.map((order) => {
+            // PROTECTION shippingMethod
+            const shipping =
+              typeof order.shippingMethod === "object"
+                ? order.shippingMethod
+                : null;
 
-            <tbody className="divide-y divide-gray-100">
-              {orders.map((order) => (
-                <React.Fragment key={order.id}>
-                  <tr
-                    onClick={() =>
-                      setExpanded(expanded === order.id ? null : order.id)
-                    }
-                    className="hover:bg-gray-50 cursor-pointer transition"
-                  >
-                    <td className="px-4 py-3">{order.shippingAddress?.name || "—"}</td>
-                    <td className="px-4 py-3">{order.email}</td>
-                    <td className="px-4 py-3 font-medium">
-                      {order.amount_total
-                        ? (order.amount_total / 100).toFixed(2)
-                        : "—"}{" "}
-                      {order.currency?.toUpperCase() || "EUR"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          order.status === "paid"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {order.status === "paid" ? "Payée" : "En attente"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {order.createdAt?.toDate
-                        ? order.createdAt.toDate().toLocaleString("fr-FR")
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-blue-600 underline text-sm">
-                      {expanded === order.id ? "▲ Fermer" : "▼ Voir"}
-                    </td>
-                  </tr>
+            // CALCUL TOTAL (sécurisé)
+            const total =
+              typeof order.amount_total === "number"
+                ? (order.amount_total / 100).toFixed(2)
+                : order.items?.length
+                ? order.items
+                    .reduce(
+                      (sum, item) =>
+                        sum + (item.price?.eur || 0) * (item.quantity || 1),
+                      0
+                    )
+                    .toFixed(2)
+                : "0.00";
 
-                  {/* DÉTAILS ÉTENDUS */}
-                  {expanded === order.id && (
-                    <tr>
-                      <td colSpan={6} className="bg-gray-50 px-6 py-4">
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-700">
-                          <div>
-                            <p className="font-semibold mb-1">Adresse</p>
-                            <p>{order.shippingAddress?.address}</p>
-                            <p>
-                              {order.shippingAddress?.postalCode}{" "}
-                              {order.shippingAddress?.city}
+            return (
+              <div
+                key={order.id}
+                className="bg-white border rounded-xl shadow-sm overflow-hidden"
+              >
+                {/* LIGNE COMPACTE */}
+                <div
+                  className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
+                  onClick={() =>
+                    setExpanded(expanded === order.id ? null : order.id)
+                  }
+                >
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {order.shippingAddress?.name}
+                    </p>
+                    <p className="text-sm text-gray-500">{order.email}</p>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="font-semibold text-gray-900">{total} €</p>
+                    <p
+                      className={`text-xs inline-block px-2 py-1 rounded-full mt-1 ${
+                        order.status === "paid"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {order.status === "paid" ? "Payée" : "En attente"}
+                    </p>
+                  </div>
+
+                  <div className="ml-4 text-sm text-blue-600">
+                    {expanded === order.id ? "▲" : "▼"}
+                  </div>
+                </div>
+
+                {/* DETAILS */}
+                {expanded === order.id && (
+                  <div className="border-t bg-gray-50 p-6 space-y-6">
+                    {/* ADRESSE */}
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-700 mb-2">
+                        Adresse de livraison
+                      </h3>
+                      <p>{order.shippingAddress?.name}</p>
+                      <p>{order.shippingAddress?.address}</p>
+                      <p>
+                        {order.shippingAddress?.postalCode}{" "}
+                        {order.shippingAddress?.city}
+                      </p>
+                      <p>{order.shippingAddress?.phone}</p>
+                    </div>
+
+                    {/* SHIPPING */}
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-700 mb-2">
+                        Méthode d’envoi
+                      </h3>
+                      <p>{shipping?.name?.fr || "—"}</p>
+                      <p className="text-gray-700">
+                        {typeof shipping?.price?.fr === "number"
+                          ? `${shipping.price.fr.toFixed(2)} €`
+                          : "—"}
+                      </p>
+                    </div>
+
+                    {/* PRODUITS */}
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-700 mb-2">
+                        Produits
+                      </h3>
+
+                      <div className="space-y-2">
+                        {order.items?.map((item, i) => (
+                          <div
+                            key={i}
+                            className="flex justify-between bg-white border rounded-md p-3"
+                          >
+                            <div>
+                              <p className="font-medium">
+                                {item.name.fr || item.name.en}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Qté : {item.quantity || 1}
+                              </p>
+                            </div>
+
+                            <p className="font-semibold text-gray-800">
+                              {typeof item.price?.eur === "number"
+                                ? item.price.eur.toFixed(2)
+                                : "0.00"}{" "}
+                              €
                             </p>
-                            <p>{order.shippingAddress?.phone}</p>
                           </div>
+                        ))}
+                      </div>
+                    </div>
 
-                          <div>
-                            <p className="font-semibold mb-1">Méthode d’envoi</p>
-                            <p>
-                              {order.shippingMethod?.name?.fr ||
-                                order.shippingMethod?.name?.en}
-                            </p>
-                            <p>
-                              {order.shippingMethod?.price?.fr
-                                ? `${order.shippingMethod?.price?.fr.toFixed(2)} €`
-                                : "—"}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="font-semibold mb-1">Produits</p>
-                            <ul className="list-disc list-inside space-y-1">
-                              {order.items?.map((item, i) => (
-                                <li key={i}>
-                                  {item.name.fr || item.name.en} —{" "}
-                                  {(item.price / 100).toFixed(2)}€ ×{" "}
-                                  {item.quantity || 1}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
+                    {/* DATE */}
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-700 mb-2">
+                        Date de commande
+                      </h3>
+                      <p className="text-gray-700">
+                        {order.createdAt?.toDate
+                          ? order.createdAt.toDate().toLocaleString("fr-FR")
+                          : "—"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </main>
