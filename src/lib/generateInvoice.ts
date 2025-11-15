@@ -5,14 +5,6 @@ import path from "path";
 export async function generateInvoicePDF(order: any, orderId: string) {
   return new Promise<Buffer>((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ size: "A4", margin: 50 });
-      const chunks: Uint8Array[] = [];
-
-      doc.on("data", (chunk) => chunks.push(chunk));
-      doc.on("end", () => resolve(Buffer.concat(chunks)));
-      doc.on("error", reject);
-
-      // --- Load custom fonts ---
       const fontRegular = path.join(
         process.cwd(),
         "src",
@@ -20,6 +12,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
         "fonts",
         "Poppins-Regular.ttf"
       );
+
       const fontBold = path.join(
         process.cwd(),
         "src",
@@ -28,16 +21,25 @@ export async function generateInvoicePDF(order: any, orderId: string) {
         "Poppins-Bold.ttf"
       );
 
-      if (fs.existsSync(fontRegular)) doc.font(fontRegular);
-      else doc.font("Times-Roman");
+      // 🟢 IMPORTANT : définir la police par défaut → empêche PDFKit d’utiliser Helvetica
+      const doc = new PDFDocument({
+        size: "A4",
+        margin: 50,
+        font: fontRegular, // <= 🔥 FIX ULTIME
+      });
+
+      const chunks: Uint8Array[] = [];
+      doc.on("data", (chunk) => chunks.push(chunk));
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", reject);
 
       // ============================================================
       // 🧾 HEADER
       // ============================================================
-      doc.fontSize(24).text("📄 Facture Massme");
-      doc.moveDown();
+      if (fs.existsSync(fontBold)) doc.font(fontBold);
+      doc.fontSize(24).text("📄 Facture Massme").moveDown();
 
-      doc.fontSize(12);
+      doc.font(fontRegular).fontSize(12);
       doc.text(`Numéro de commande : ${orderId}`);
       doc.text(`Date : ${new Date().toLocaleDateString()}`);
       doc.moveDown(2);
@@ -46,8 +48,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
       // 👤 CLIENT
       // ============================================================
       if (fs.existsSync(fontBold)) doc.font(fontBold);
-      doc.fontSize(16).text("Informations client");
-      doc.moveDown(1);
+      doc.fontSize(16).text("Informations client").moveDown(1);
 
       doc.font(fontRegular).fontSize(12);
       doc.text(`Nom : ${order.shippingAddress.name}`);
@@ -62,8 +63,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
       // 📦 PRODUITS
       // ============================================================
       if (fs.existsSync(fontBold)) doc.font(fontBold);
-      doc.fontSize(16).text("Détail de la commande");
-      doc.moveDown(1);
+      doc.fontSize(16).text("Détail de la commande").moveDown(1);
 
       doc.font(fontRegular).fontSize(12);
 
@@ -88,7 +88,6 @@ export async function generateInvoicePDF(order: any, orderId: string) {
       if (fs.existsSync(fontBold)) doc.font(fontBold);
       doc.fontSize(16).text(`Total : ${total} €`, { align: "right" });
 
-      // Finish PDF
       doc.end();
     } catch (err) {
       reject(err);

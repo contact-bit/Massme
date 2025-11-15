@@ -1,96 +1,179 @@
-import PDFDocument from "pdfkit";
-import fs from "fs";
-import path from "path";
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
+import { dbAdmin } from "@/lib/firebase.admin";
+import { Resend } from "resend";
+import { generateInvoicePDF } from "@/lib/generateInvoice";
 
-export async function generateInvoicePDF(order: any, orderId: string) {
-  return new Promise<Buffer>((resolve, reject) => {
-    try {
-      const fontRegular = path.join(
-        process.cwd(),
-        "src",
-        "lib",
-        "fonts",
-        "Poppins-Regular.ttf"
-      );
+// =============================================================
+// 🚀 INITIALISATION
+// =============================================================
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-09-30" as any,
+});
 
-      const fontBold = path.join(
-        process.cwd(),
-        "src",
-        "lib",
-        "fonts",
-        "Poppins-Bold.ttf"
-      );
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-      // 🟢 IMPORTANT : définir la police par défaut → empêche PDFKit d’utiliser Helvetica
-      const doc = new PDFDocument({
-        size: "A4",
-        margin: 50,
-        font: fontRegular, // <= 🔥 FIX ULTIME
-      });
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const preferredRegion = "auto";
 
-      const chunks: Uint8Array[] = [];
-      doc.on("data", (chunk) => chunks.push(chunk));
-      doc.on("end", () => resolve(Buffer.concat(chunks)));
-      doc.on("error", reject);
+// Stripe exige la lecture du RAW body
+async function buffer(stream: ReadableStream<Uint8Array>) {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
 
-      // ============================================================
-      // 🧾 HEADER
-      // ============================================================
-      if (fs.existsSync(fontBold)) doc.font(fontBold);
-      doc.fontSize(24).text("📄 Facture Massme").moveDown();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
+  }
 
-      doc.font(fontRegular).fontSize(12);
-      doc.text(`Numéro de commande : ${orderId}`);
-      doc.text(`Date : ${new Date().toLocaleDateString()}`);
-      doc.moveDown(2);
+  return Buffer.concat(chunks);
+}
 
-      // ============================================================
-      // 👤 CLIENT
-      // ============================================================
-      if (fs.existsSync(fontBold)) doc.font(fontBold);
-      doc.fontSize(16).text("Informations client").moveDown(1);
+// =============================================================
+// 📌 WEBHOOK STRIPE — TRAITEMENT PRINCIPAL
+// =============================================================
+export async function POST(req: Request) {
+  const signature = req.headers.get("stripe-signature");
 
-      doc.font(fontRegular).fontSize(12);
-      doc.text(`Nom : ${order.shippingAddress.name}`);
-      doc.text(`Email : ${order.shippingAddress.email}`);
-      doc.text(`Adresse : ${order.shippingAddress.address}`);
-      doc.text(
-        `${order.shippingAddress.postalCode} ${order.shippingAddress.city}`
-      );
-      doc.moveDown(2);
+  if (!signature) {
+    return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
+  }
 
-      // ============================================================
-      // 📦 PRODUITS
-      // ============================================================
-      if (fs.existsSync(fontBold)) doc.font(fontBold);
-      doc.fontSize(16).text("Détail de la commande").moveDown(1);
+  let event: Stripe.Event;
 
-      doc.font(fontRegular).fontSize(12);
+  // Vérification authentique Stripe
+  try {
+    const rawBody = await buffer(req.body!);
 
-      order.items.forEach((item: any) => {
-        doc.text(
-          `• ${item.name?.fr || "Produit"} — ${item.price.eur} € x ${
-            item.quantity || 1
-          }`
-        );
-      });
+    event = stripe.webhooks.constructEvent(
+      rawBody,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch (err: any) {
+    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  }
 
-      // ============================================================
-      // 💰 TOTAL
-      // ============================================================
-      const total = order.items.reduce(
-        (sum: number, item: any) =>
-          sum + item.price.eur * (item.quantity || 1),
-        0
-      );
+  // =============================================================
+  // ✅ 1. PAIEMENT VALIDÉ
+  // =============================================================
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
 
-      doc.moveDown(2);
-      if (fs.existsSync(fontBold)) doc.font(fontBold);
-      doc.fontSize(16).text(`Total : ${total} €`, { align: "right" });
+    const orderId = session.metadata?.order_id;
+    const customerEmail = session.customer_details?.email || session.customer_email;
 
-      doc.end();
-    } catch (err) {
-      reject(err);
+    if (!orderId || !customerEmail) {
+      console.error("⚠️ Missing order_id or customerEmail");
+      return NextResponse.json({ received: true });
     }
-  });
+
+    // 🗂️ Récupération de la commande Firestore
+    const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
+    const order = snap.data();
+
+    if (!order) {
+      console.error("⚠️ Commande introuvable dans Firestore");
+      return NextResponse.json({ received: true });
+    }
+
+    // 🔄 Mise à jour Firestore
+    await dbAdmin.collection("pending_orders").doc(orderId).update({
+      status: "paid",
+      paidAt: new Date(),
+      stripeSessionId: session.id,
+    });
+
+    // =============================================================
+    // 2️⃣ Email Client PREMIUM + Facture PDF en pièce jointe
+    // =============================================================
+
+    try {
+      // 🔥 Génération de la facture PDF
+      const pdfBuffer = await generateInvoicePDF(order, orderId);
+      const pdfBase64 = pdfBuffer.toString("base64");
+
+      await resend.emails.send({
+        from: "Massme • Support <contact@hdconnects.com>",
+        replyTo: "contact@hdconnects.com",
+        to: customerEmail,
+        subject: "🎉 Merci pour votre commande - Massme",
+        html: `
+<div style="font-family:Arial, sans-serif; padding:20px; background:#f7f7f7;">
+  <div style="max-width:600px; margin:auto; background:white; border-radius:12px; padding:30px;">
+
+    <h1 style="color:#111; font-size:24px; margin-top:0;">
+      🎉 Merci pour votre commande !
+    </h1>
+
+    <p style="font-size:16px; color:#444;">
+      Bonjour,<br/><br/>
+      Nous avons bien reçu votre commande et votre paiement a été confirmé.
+      Merci de votre confiance !
+    </p>
+
+    <p style="font-size:18px; margin-top:20px;">
+      <b>ID de commande :</b> ${orderId}
+    </p>
+
+    <p style="font-size:16px; color:#444; margin-top:20px;">
+      Votre facture est jointe à cet e-mail au format PDF.<br/>
+      Vous recevrez un second e-mail lors de l’expédition.
+    </p>
+
+    <p style="font-size:12px; color:#999; margin-top:30px; text-align:center;">
+      Massme • hdconnects.com<br/>
+      Cet email est envoyé automatiquement, merci de ne pas répondre directement.
+    </p>
+
+  </div>
+</div>
+        `,
+        attachments: [
+          {
+            filename: `facture-${orderId}.pdf`,
+            content: pdfBase64,
+            contentType: "application/pdf",
+          },
+        ],
+      });
+
+      console.log("📎 Facture PDF envoyée au client :", orderId);
+
+    } catch (err) {
+      console.error("❌ Erreur lors de l'envoi de l'email client avec facture :", err);
+    }
+
+
+    // =============================================================
+    // ✉️ 3. EMAIL ADMIN → endpoint séparé
+    // =============================================================
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-admin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, customerEmail }),
+    }).catch(() => {});
+
+    // =============================================================
+    // ✉️ 4. EMAIL LOGISTIQUE → endpoint séparé
+    // =============================================================
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-logistique`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, customerEmail }),
+    }).catch(() => {});
+  }
+
+  // =============================================================
+  // ⚠️ AUTRES ÉVÉNEMENTS
+  // =============================================================
+  else if (event.type === "checkout.session.expired") {
+    console.log("⚠️ Session expirée :", event.id);
+  } else if (event.type === "payment_intent.payment_failed") {
+    console.log("💸 Paiement échoué :", event.id);
+  }
+
+  return NextResponse.json({ received: true });
 }
