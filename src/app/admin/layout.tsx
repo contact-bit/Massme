@@ -17,12 +17,7 @@ export default function AdminLayout({
             </Link>
 
             <nav className="flex items-center gap-6 text-sm">
-              <Link href="/admin" className="hover:text-blue-600">
-                🛍️ Produits
-              </Link>
-              <Link href="/admin/orders" className="hover:text-blue-600">
-                📦 Commandes
-              </Link>
+
               <Link href="/fr" className="hover:text-blue-600">
                 🌐 Retour site
               </Link>

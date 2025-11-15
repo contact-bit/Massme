@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ====== THEME LIGHT POUR L’ADMIN ====== */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
+html, body {
+  background-color: #f4f6f8 !important;
+  color: #111 !important;
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Boîtes / cartes */
+.card {
+  @apply bg-white text-black rounded-xl shadow p-6 border border-gray-200;
+}
+
+/* Inputs */
+.input {
+  @apply bg-white text-black border border-gray-400 rounded p-2 w-full;
+}
+
+/* Selects */
+.select {
+  @apply bg-white text-black border border-gray-400 rounded p-2;
+}
+
+/* Boutons */
+.btn {
+  @apply px-4 py-2 rounded font-medium;
+}
+
+.btn-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-500;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-500;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-black hover:bg-gray-300;
+}
+
+/* Modals */
+.modal-backdrop {
+  @apply fixed inset-0 bg-black/40 flex items-center justify-center z-50;
+}
+
+.modal {
+  @apply bg-white text-black rounded-xl shadow-xl p-6 w-full max-w-xl border border-gray-300;
+}
+
