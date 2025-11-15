@@ -4,8 +4,6 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 
   images: {
-    domains: ["imagedelivery.net"],
-
     remotePatterns: [
       {
         protocol: "https",
