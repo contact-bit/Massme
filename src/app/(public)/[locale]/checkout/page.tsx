@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -14,13 +14,19 @@ type ShippingMethod = {
   isActive: boolean;
 };
 
-export default function CheckoutPage({ params }: any) {
-  // ✔️ Next.js 16 fournit automatiquement params
-  const locale: Locale = params.locale;
+export default function CheckoutPage({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}) {
 
-  // -----------------------------
+  // ⬅️ OBLIGATOIRE NEXT.JS 16
+  const resolved = use(params);
+  const locale: Locale = resolved.locale;
+
+  // --------------------------
   // STATES
-  // -----------------------------
+  // --------------------------
   const [cart, setCart] = useState<any[]>([]);
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
   const [loadingShipping, setLoadingShipping] = useState(true);
@@ -37,17 +43,13 @@ export default function CheckoutPage({ params }: any) {
 
   const [loading, setLoading] = useState(false);
 
-  // -----------------------------
-  // Load Cart
-  // -----------------------------
+  // Load cart from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("cart");
     if (stored) setCart(JSON.parse(stored));
   }, []);
 
-  // -----------------------------
-  // Load Shipping Methods (Firestore)
-  // -----------------------------
+  // Load shipping methods per locale
   useEffect(() => {
     loadShippingMethods();
   }, [locale]);
@@ -57,9 +59,8 @@ export default function CheckoutPage({ params }: any) {
 
     const snap = await getDocs(collection(db, "shipping_methods"));
 
-    const list: ShippingMethod[] = snap.docs.map((d) => {
+    const list = snap.docs.map((d) => {
       const data: any = d.data();
-
       return {
         id: d.id,
         name: data.name?.[locale] || null,
@@ -81,61 +82,42 @@ export default function CheckoutPage({ params }: any) {
     }
   }
 
-  // -----------------------------
-  // Handle Form
-  // -----------------------------
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: any) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-  // -----------------------------
-  // Checkout
-  // -----------------------------
   const handleCheckout = async () => {
     const selected = shippingMethods.find((m) => m.id === form.shippingMethod);
-
     if (!selected) {
-      alert("Sélectionnez un transporteur");
+      alert(locale === "fr" ? "Sélectionnez un transporteur" : "Select carrier");
       return;
     }
 
-    try {
-      setLoading(true);
+    setLoading(true);
 
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: cart,
-          currency: "eur",
-          shippingMethod: {
-            name: selected.name,
-            price: selected.price,
-          },
-          customerEmail: form.email,
-          shippingAddress: form,
-        }),
-      });
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: cart,
+        currency: "eur",
+        shippingMethod: {
+          name: selected.name,
+          price: selected.price,
+        },
+        customerEmail: form.email,
+        shippingAddress: form,
+      }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) {
-        alert("Erreur serveur : " + data.error);
-        return;
-      }
+    if (res.ok && data.url) window.location.href = data.url;
+    else alert("Erreur paiement");
 
-      if (data.url) window.location.href = data.url;
-    } catch (err) {
-      console.error(err);
-      alert("Erreur paiement.");
-    } finally {
-      setLoading(false);
-    }
+    setLoading(false);
   };
 
-  // -----------------------------
-  // Total price
-  // -----------------------------
+  // Total
   const selectedMethod = shippingMethods.find(
     (m) => m.id === form.shippingMethod
   );
@@ -143,50 +125,49 @@ export default function CheckoutPage({ params }: any) {
   const shippingPrice = selectedMethod?.price || 0;
 
   const total =
-    cart.reduce(
-      (sum, p) => sum + (p.price?.eur || 0) * (p.quantity || 1),
-      0
-    ) + shippingPrice;
+    cart.reduce((s, p) => s + (p.price?.eur || 0) * (p.quantity || 1), 0) +
+    shippingPrice;
 
-  // -----------------------------
-  // UI — Perfect Checkout
-  // -----------------------------
   return (
-    <main className="max-w-2xl mx-auto py-10 px-4 text-gray-900">
+    <main className="max-w-2xl mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold mb-8 text-center text-blue-700">
-        🧾 {locale === "fr" ? "Informations de livraison" : "Shipping details"}
+        {locale === "fr" ? "🧾 Informations de livraison" : "🧾 Shipping details"}
       </h1>
 
-      <div className="bg-white shadow-xl rounded-2xl p-6 border border-gray-200 space-y-10">
+      <div className="bg-white shadow-xl rounded-2xl p-6 space-y-8">
 
-        {/* ADRESSE */}
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800">
-            📍 {locale === "fr" ? "Adresse de livraison" : "Shipping address"}
+        {/* Adresse */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4">
+            {locale === "fr" ? "📍 Adresse de livraison" : "📍 Shipping address"}
           </h2>
 
-          <input className="input" name="name" placeholder={locale === "fr" ? "Nom complet" : "Full name"} value={form.name} onChange={handleChange} />
-          <input className="input" name="email" placeholder="Email" value={form.email} onChange={handleChange} />
-          <input className="input" name="address" placeholder={locale === "fr" ? "Adresse" : "Address"} value={form.address} onChange={handleChange} />
+          <div className="flex flex-col gap-4">
+            <input className="input" name="name" placeholder={locale === "fr" ? "Nom complet" : "Full name"} value={form.name} onChange={handleChange} />
+            <input className="input" name="email" placeholder="Email" value={form.email} onChange={handleChange} />
+            <input className="input" name="address" placeholder={locale === "fr" ? "Adresse" : "Address"} value={form.address} onChange={handleChange} />
 
-          <div className="grid grid-cols-2 gap-4">
-            <input className="input" name="city" placeholder={locale === "fr" ? "Ville" : "City"} value={form.city} onChange={handleChange} />
-            <input className="input" name="postalCode" placeholder={locale === "fr" ? "Code postal" : "ZIP"} value={form.postalCode} onChange={handleChange} />
+            <div className="grid grid-cols-2 gap-4">
+              <input className="input" name="city" placeholder={locale === "fr" ? "Ville" : "City"} value={form.city} onChange={handleChange} />
+              <input className="input" name="postalCode" placeholder={locale === "fr" ? "Code postal" : "ZIP"} value={form.postalCode} onChange={handleChange} />
+            </div>
+
+            <input className="input" name="phone" placeholder={locale === "fr" ? "Téléphone" : "Phone"} value={form.phone} onChange={handleChange} />
           </div>
-
-          <input className="input" name="phone" placeholder={locale === "fr" ? "Téléphone" : "Phone"} value={form.phone} onChange={handleChange} />
         </section>
 
-        {/* SHIPPING METHOD */}
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800">
-            🚚 {locale === "fr" ? "Méthode de livraison" : "Shipping method"}
+        {/* Shipping */}
+        <section>
+          <h2 className="text-lg font-semibold mb-3">
+            {locale === "fr" ? "🚚 Méthode de livraison" : "🚚 Shipping method"}
           </h2>
 
           {loadingShipping ? (
             <p>Chargement…</p>
           ) : shippingMethods.length === 0 ? (
-            <p className="text-red-600">Aucun transporteur disponible.</p>
+            <p className="text-red-600">
+              {locale === "fr" ? "Aucun transporteur disponible." : "No carrier available."}
+            </p>
           ) : (
             <select
               className="input"
@@ -203,13 +184,12 @@ export default function CheckoutPage({ params }: any) {
           )}
         </section>
 
-        {/* TOTAL */}
-        <section className="flex justify-between text-xl font-semibold pt-6 border-t">
+        {/* Total */}
+        <section className="flex justify-between text-xl font-semibold border-t pt-4">
           <span>{locale === "fr" ? "Total à payer :" : "Total:"}</span>
           <span className="text-blue-600">{total.toFixed(2)} €</span>
         </section>
 
-        {/* BUTTON */}
         <button
           onClick={handleCheckout}
           disabled={loading}
@@ -219,7 +199,6 @@ export default function CheckoutPage({ params }: any) {
             ? locale === "fr" ? "Traitement…" : "Processing…"
             : locale === "fr" ? "Payer maintenant 💳" : "Pay now 💳"}
         </button>
-
       </div>
     </main>
   );
