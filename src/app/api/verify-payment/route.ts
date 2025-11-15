@@ -48,7 +48,29 @@ export async function GET(req: Request) {
 
     const order = snap.data();
 
-    // 🟢 Si Stripe confirme → Mise à jour Firestore
+    // 🧩 SHIPPING METHOD — NORMALISATION
+    const shipping = order.shippingMethod || {};
+
+    let shippingName = "—";
+    let shippingPrice: number | null = null;
+
+    // name
+    if (typeof shipping.name === "string") {
+      shippingName = shipping.name;
+    } else if (shipping.name?.fr || shipping.name?.en) {
+      shippingName = shipping.name.fr || shipping.name.en;
+    }
+
+    // price
+    if (typeof shipping.price === "number") {
+      shippingPrice = shipping.price;
+    } else if (typeof shipping.price?.fr === "number") {
+      shippingPrice = shipping.price.fr;
+    } else if (typeof shipping.price?.en === "number") {
+      shippingPrice = shipping.price.en;
+    }
+
+    // 🟢 UPDATE FIRESTORE SI PAYÉ
     if (session.payment_status === "paid") {
       await dbAdmin.collection("pending_orders").doc(orderId).update({
         status: "paid",
@@ -57,13 +79,22 @@ export async function GET(req: Request) {
       });
     }
 
-    // 🔥 On renvoie tout : shipping method, address, items, total, etc.
+    // 🧮 CALCUL TOTAL EN EUROS
+    const stripeAmount = session.amount_total || 0; // CENTIMES
+    const amountEuro = stripeAmount / 100;
+
+    // 🔥 Réponse complète (pour SuccessPage)
     return NextResponse.json({
       success: true,
       order: {
         id: orderId,
         ...order,
-        amount_total: session.amount_total, // Stripe total en CENTIMES
+        shippingMethod: {
+          name: shippingName,
+          price: shippingPrice,
+        },
+        amount_total: stripeAmount,
+        amount_eur: amountEuro,
       },
     });
 
