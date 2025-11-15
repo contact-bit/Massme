@@ -14,7 +14,7 @@ type Product = {
   description?: Record<Locale, string>;
   price: { eur: number; usd?: number };
   imageUrl?: string;
-  isActive?: boolean; // 👈 IMPORTANT
+  isActive?: boolean;
 };
 
 export default function ProductsPage({
@@ -31,9 +31,17 @@ export default function ProductsPage({
 
       const data = snapshot.docs
         .map((doc) => {
-          return { id: doc.id, ...(doc.data() as Product) };
+          const raw = doc.data() as any;
+
+          // 🛑 Supprime un éventuel id contenu dans raw pour éviter le conflit TypeScript
+          if ("id" in raw) delete raw.id;
+
+          return {
+            id: doc.id, // l'id Firestore officiel
+            ...raw,
+          };
         })
-        .filter((p) => p.isActive === true); // 👈 FILTRE FINAL
+        .filter((p) => p.isActive === true); // 👈 Filtre produit actif
 
       setProducts(data);
     }
@@ -46,7 +54,6 @@ export default function ProductsPage({
     const updated = [...cart, product];
     localStorage.setItem("cart", JSON.stringify(updated));
 
-    // 🔥 Mettre à jour mini-panier
     window.dispatchEvent(new Event("cart-updated"));
 
     alert(
@@ -75,7 +82,6 @@ export default function ProductsPage({
               key={p.id}
               className="border rounded-lg p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between"
             >
-              {/* 🖼️ IMAGE DU PRODUIT */}
               {p.imageUrl && (
                 <Image
                   src={p.imageUrl}
