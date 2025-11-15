@@ -8,31 +8,33 @@ export async function generateInvoicePDF(order: any, orderId: string) {
       const doc = new PDFDocument({ size: "A4", margin: 50 });
       const chunks: Uint8Array[] = [];
 
-      // --- Capture PDF output ---
       doc.on("data", (chunk) => chunks.push(chunk));
       doc.on("end", () => resolve(Buffer.concat(chunks)));
       doc.on("error", reject);
 
-      // --- Load custom font ---
-      const fontPath = path.join(
+      // --- Load custom fonts ---
+      const fontRegular = path.join(
         process.cwd(),
         "src",
         "lib",
         "fonts",
         "Poppins-Regular.ttf"
       );
+      const fontBold = path.join(
+        process.cwd(),
+        "src",
+        "lib",
+        "fonts",
+        "Poppins-Bold.ttf"
+      );
 
-      if (fs.existsSync(fontPath)) {
-        doc.font(fontPath);
-      } else {
-        console.error("❌ Police introuvable :", fontPath);
-        doc.font("Times-Roman"); // fallback
-      }
+      if (fs.existsSync(fontRegular)) doc.font(fontRegular);
+      else doc.font("Times-Roman");
 
       // ============================================================
       // 🧾 HEADER
       // ============================================================
-      doc.fontSize(24).text("📄 Facture Massme", { align: "left" });
+      doc.fontSize(24).text("📄 Facture Massme");
       doc.moveDown();
 
       doc.fontSize(12);
@@ -43,10 +45,11 @@ export async function generateInvoicePDF(order: any, orderId: string) {
       // ============================================================
       // 👤 CLIENT
       // ============================================================
-      doc.fontSize(16).text("Informations client", { underline: true });
-      doc.moveDown(0.5);
+      if (fs.existsSync(fontBold)) doc.font(fontBold);
+      doc.fontSize(16).text("Informations client");
+      doc.moveDown(1);
 
-      doc.fontSize(12);
+      doc.font(fontRegular).fontSize(12);
       doc.text(`Nom : ${order.shippingAddress.name}`);
       doc.text(`Email : ${order.shippingAddress.email}`);
       doc.text(`Adresse : ${order.shippingAddress.address}`);
@@ -58,17 +61,18 @@ export async function generateInvoicePDF(order: any, orderId: string) {
       // ============================================================
       // 📦 PRODUITS
       // ============================================================
-      doc.fontSize(16).text("Détail de la commande", { underline: true });
+      if (fs.existsSync(fontBold)) doc.font(fontBold);
+      doc.fontSize(16).text("Détail de la commande");
       doc.moveDown(1);
 
+      doc.font(fontRegular).fontSize(12);
+
       order.items.forEach((item: any) => {
-        doc
-          .fontSize(12)
-          .text(
-            `• ${item.name?.fr || "Produit"} — ${item.price.eur} € x ${
-              item.quantity || 1
-            }`
-          );
+        doc.text(
+          `• ${item.name?.fr || "Produit"} — ${item.price.eur} € x ${
+            item.quantity || 1
+          }`
+        );
       });
 
       // ============================================================
@@ -81,11 +85,10 @@ export async function generateInvoicePDF(order: any, orderId: string) {
       );
 
       doc.moveDown(2);
+      if (fs.existsSync(fontBold)) doc.font(fontBold);
       doc.fontSize(16).text(`Total : ${total} €`, { align: "right" });
 
-      // ============================================================
-      // ✔️ FIN
-      // ============================================================
+      // Finish PDF
       doc.end();
     } catch (err) {
       reject(err);
