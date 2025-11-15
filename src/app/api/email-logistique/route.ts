@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { Resend } from "resend";
+import { generateInvoicePDF } from "@/lib/generateInvoice";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -14,6 +15,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing payload" }, { status: 400 });
     }
 
+    // 📌 Récupération commande Firestore
     const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
     const order = snap.data();
 
@@ -21,7 +23,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // === Formatting products ===
+    // ============================================================
+    // 📄 Génération de la facture PDF
+    // ============================================================
+    let pdfBase64 = "";
+
+    try {
+      const pdfBuffer = await generateInvoicePDF(order, orderId);
+      pdfBase64 = pdfBuffer.toString("base64");
+    } catch (err) {
+      console.error("❌ Erreur génération facture PDF (logistique) :", err);
+    }
+
+    // ============================================================
+    // 🛍 Formatage des produits
+    // ============================================================
     const itemsTable = order.items
       .map(
         (item: any) => `
@@ -35,7 +51,9 @@ export async function POST(req: Request) {
       )
       .join("");
 
-    // === Formatting address ===
+    // ============================================================
+    // 🚚 Formatage de l'adresse
+    // ============================================================
     const address = order.shippingAddress;
     const addressBlock = `
       <div style="padding:15px; background:#eef3f7; border-radius:8px; border:1px solid #d0dae3;">
@@ -49,7 +67,9 @@ export async function POST(req: Request) {
       </div>
     `;
 
-    // === EMAIL TEMPLATE PRO LOGISTIQUE ===
+    // ============================================================
+    // ✉️ TEMPLATE EMAIL LOGISTIQUE
+    // ============================================================
     const htmlTemplate = `
 <div style="font-family:Arial, sans-serif; background:#f0f4f7; padding:25px;">
   <div style="max-width:700px; margin:auto; background:white; border-radius:10px; padding:30px; border:1px solid #e5e8eb;">
@@ -86,6 +106,10 @@ export async function POST(req: Request) {
     <h3 style="margin-top:30px; font-size:20px; color:#0a3d62;">🚚 Adresse de livraison</h3>
     ${addressBlock}
 
+    <p style="font-size:14px; color:#555; margin-top:25px;">
+      La facture au format PDF est jointe à cet email pour vérification.
+    </p>
+
     <p style="font-size:12px; color:#777; text-align:center; margin-top:35px;">
       Massme • Service Logistique<br/>
       Email automatique — ne pas répondre
@@ -95,11 +119,24 @@ export async function POST(req: Request) {
 </div>
     `;
 
+    // ============================================================
+    // 📤 ENVOI EMAIL + FACTURE PDF
+    // ============================================================
     await resend.emails.send({
       from: "Massme • Logistique <contact@hdconnects.com>",
       to: process.env.LOGISTICS_EMAIL!,
       subject: `📦 Préparer la commande #${orderId}`,
       html: htmlTemplate,
+      attachments:
+        pdfBase64
+          ? [
+              {
+                filename: `facture-${orderId}.pdf`,
+                content: pdfBase64,
+                contentType: "application/pdf",
+              },
+            ]
+          : undefined,
     });
 
     return NextResponse.json({ status: "logistics email sent" });
