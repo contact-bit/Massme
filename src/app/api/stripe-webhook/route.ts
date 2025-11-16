@@ -4,19 +4,17 @@ import { dbAdmin } from "@/lib/firebase.admin";
 import { Resend } from "resend";
 import { generateInvoicePDF } from "@/lib/generateInvoice";
 
-// =============================================================
-// 🚀 INIT
-// =============================================================
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-09-30" as any,
+  apiVersion: "2025-10-29.clover" as any,
 });
+
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-// Stripe demande le RAW body
+// Convert RAW stream → Buffer (obligatoire pour webhook Stripe)
 async function buffer(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader();
   const chunks: Uint8Array[] = [];
@@ -30,9 +28,6 @@ async function buffer(stream: ReadableStream<Uint8Array>) {
   return Buffer.concat(chunks);
 }
 
-// =============================================================
-// 📌 WEBHOOK PRINCIPAL
-// =============================================================
 export async function POST(req: Request) {
   const signature = req.headers.get("stripe-signature");
 
@@ -51,95 +46,83 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
+    console.error("❌ Webhook signature error:", err.message);
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
   }
 
-  // =============================================================
+  // --------------------------------------------------------------------
   // 🎯 PAIEMENT VALIDÉ
-  // =============================================================
+  // --------------------------------------------------------------------
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
     const orderId = session.metadata?.order_id;
-    const customerEmail =
-      session.customer_details?.email || session.customer_email;
+    const customerEmail = session.customer_details?.email || session.customer_email;
 
     if (!orderId || !customerEmail) {
-      console.error("⚠️ Missing order_id or customerEmail");
+      console.error("⚠️ Missing order_id or email");
       return NextResponse.json({ received: true });
     }
 
-    // 🔎 Récupérer commande Firestore
     const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
-    let order = snap.data();
+    const savedOrder = snap.data();
 
-    if (!order) {
+    if (!savedOrder) {
       console.error("⚠️ Commande introuvable");
       return NextResponse.json({ received: true });
     }
 
-    // =============================================================
-    // 🧹 NORMALISATION AVANT GÉNÉRATION PDF (FIX DÉFINITIF)
-    // =============================================================
+    // --------------------------------------------------------------------
+    // 🧹 NORMALISATION
+    // --------------------------------------------------------------------
+    const items = savedOrder.items.map((it: any) => ({
+      name: it.name || "Produit",
+      price: Number(it.price) || 0,
+      quantity: Number(it.quantity || 1),
+      description: it.description || "",
+    }));
 
-    // 🟢 Normalisation des items
-    const normalizedItems = order.items.map((item: any) => {
-      const name = item.name || "Produit";
-
-      // 🔥 Firestore enregistre TOUJOURS price en number
-      const price =
-        typeof item.price === "number"
-          ? item.price
-          : Number(item.unit_price) ||
-            Number(item.total) ||
-            0;
-
-      const quantity = Number(item.quantity || 1);
-
-      return { name, price, quantity };
-    });
-
-    // 🟢 Normalisation shipping
     const shippingPrice =
-      typeof order.shippingMethod?.price === "number"
-        ? order.shippingMethod.price
-        : Number(order.shippingMethod?.price?.fr) ||
-          Number(order.shippingMethod?.price?.en) ||
+      typeof savedOrder.shippingMethod?.price === "number"
+        ? savedOrder.shippingMethod.price
+        : Number(savedOrder.shippingMethod?.price?.fr) ||
+          Number(savedOrder.shippingMethod?.price?.en) ||
           0;
 
-    order = {
-      ...order,
-      items: normalizedItems,
+    const normalizedOrder = {
+      ...savedOrder,
+      items,
       shippingMethod: { price: shippingPrice },
     };
 
-    console.log("📦 Données envoyées au PDF :", order);
-
-    // =============================================================
-    // 🔄 Mise à jour Firestore
-    // =============================================================
+    // --------------------------------------------------------------------
+    // 💾 Update Firestore
+    // --------------------------------------------------------------------
     await dbAdmin.collection("pending_orders").doc(orderId).update({
       status: "paid",
-      paidAt: new Date(),
       stripeSessionId: session.id,
+      paidAt: new Date(),
     });
 
-    // =============================================================
-    // ✉️ ENVOI EMAIL CLIENT + FACTURE PDF
-    // =============================================================
+    // --------------------------------------------------------------------
+    // 📄 PDF (Font locale, pas PDFKit)
+    // --------------------------------------------------------------------
     try {
-      const pdfBuffer = await generateInvoicePDF(order, orderId);
+      const pdfBuffer = await generateInvoicePDF(normalizedOrder, orderId);
       const pdfBase64 = pdfBuffer.toString("base64");
 
+      // --------------------------------------------------------------------
+      // ✉️ EMAIL CLIENT
+      // --------------------------------------------------------------------
       await resend.emails.send({
         from: "Massme • Support <contact@hdconnects.com>",
         to: customerEmail,
-        subject: "🎉 Merci pour votre commande - Massme",
+        subject: "🎉 Merci pour votre achat — Votre facture",
         html: `
           <div style="font-family:Arial; padding:20px;">
             <h2>🎉 Merci pour votre commande !</h2>
             <p>Votre facture est jointe à cet e-mail.</p>
-            <p>ID commande : <b>${orderId}</b></p>
+            <p><b>Numéro de commande :</b> ${orderId}</p>
           </div>
         `,
         attachments: [
@@ -151,24 +134,24 @@ export async function POST(req: Request) {
         ],
       });
 
-      console.log("📎 Facture envoyée :", orderId);
+      console.log("📧 Email client envoyé ✔");
     } catch (err) {
-      console.error("❌ Erreur email PDF :", err);
+      console.error("❌ Erreur génération/envoi PDF client :", err);
     }
 
-    // =============================================================
-    // 📮 Emails Admin + Logistique (sans attendre)
-    // =============================================================
+    // --------------------------------------------------------------------
+    // 📮 EMAILS Admin + Logistique (asynchrone)
+    // --------------------------------------------------------------------
     fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-admin`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId, customerEmail }),
+      headers: { "Content-Type": "application/json" },
     });
 
     fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-logistique`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId, customerEmail }),
+      headers: { "Content-Type": "application/json" },
     });
   }
 

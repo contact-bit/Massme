@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { Resend } from "resend";
-import { generateInvoicePDF } from "@/lib/generateInvoice"; // ⬅️ IMPORTANT
+import { generateInvoicePDF } from "@/lib/generateInvoice";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -15,17 +15,40 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing payload" }, { status: 400 });
     }
 
-    // 📌 Récupération commande Firestore
+    // ---------------------------------------------------------
+    // 🔍 Récupération commande Firestore
+    // ---------------------------------------------------------
     const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
-    const order = snap.data();
+    const rawOrder = snap.data();
 
-    if (!order) {
+    if (!rawOrder) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // ============================================================
-    // 📄 GÉNÉRATION FACTURE PDF
-    // ============================================================
+    // ---------------------------------------------------------
+    // 🧹 NORMALISATION — identique webhook + logistique
+    // ---------------------------------------------------------
+    const order = {
+      ...rawOrder,
+      items: rawOrder.items.map((item: any) => ({
+        name: item.name || "Produit",
+        price: Number(item.price) || 0,
+        quantity: Number(item.quantity) || 1,
+        description: item.description || "",
+      })),
+      shippingMethod: {
+        price:
+          typeof rawOrder.shippingMethod?.price === "number"
+            ? rawOrder.shippingMethod.price
+            : Number(rawOrder.shippingMethod?.price?.fr) ||
+              Number(rawOrder.shippingMethod?.price?.en) ||
+              0,
+      },
+    };
+
+    // ---------------------------------------------------------
+    // 📄 Génération de la facture PDF
+    // ---------------------------------------------------------
     let pdfBase64 = "";
 
     try {
@@ -35,42 +58,41 @@ export async function POST(req: Request) {
       console.error("❌ Erreur génération facture PDF :", err);
     }
 
-    // ============================================================
-    // 📦 TABLEAU DES ARTICLES
-    // ============================================================
+    // ---------------------------------------------------------
+    // 🧾 Tableau Produits
+    // ---------------------------------------------------------
     const itemsTable = order.items
       .map(
         (item: any) => `
         <tr>
-          <td style="padding:10px; border-bottom:1px solid #eee;">${item.name?.fr || "Produit"}</td>
-          <td style="padding:10px; border-bottom:1px solid #eee; color:#666;">${item.description?.fr || "-"}</td>
-          <td style="padding:10px; border-bottom:1px solid #eee;">${item.price?.eur} €</td>
-          <td style="padding:10px; border-bottom:1px solid #eee;">${item.quantity || 1}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${item.name}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee; color:#666;">${item.description || "-"}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${item.price.toFixed(2)} €</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${item.quantity}</td>
         </tr>
       `
       )
       .join("");
 
-    // ============================================================
-    // 🚚 ADRESSE
-    // ============================================================
-    const a = order.shippingAddress;
+    // ---------------------------------------------------------
+    // 🚚 Adresse de livraison
+    // ---------------------------------------------------------
+    const a = rawOrder.shippingAddress;
 
     const addressBlock = `
       <div style="padding:20px; background:#f8fbff; border-radius:10px; border:1px solid #e0e7f1;">
-        <p style="margin:6px 0;"><b>Nom :</b> ${a.name}</p>
-        <p style="margin:6px 0;"><b>Email :</b> ${a.email}</p>
-        <p style="margin:6px 0;"><b>Adresse :</b> ${a.address}</p>
-        <p style="margin:6px 0;"><b>Ville :</b> ${a.city}</p>
-        <p style="margin:6px 0;"><b>Code postal :</b> ${a.postalCode}</p>
-        <p style="margin:6px 0;"><b>Téléphone :</b> ${a.phone}</p>
-        <p style="margin:6px 0;"><b>Livraison :</b> ${a.shippingMethod}</p>
+        <p><b>Nom :</b> ${a.name}</p>
+        <p><b>Email :</b> ${a.email}</p>
+        <p><b>Adresse :</b> ${a.address}</p>
+        <p><b>Ville :</b> ${a.city}</p>
+        <p><b>Code postal :</b> ${a.postalCode}</p>
+        <p><b>Téléphone :</b> ${a.phone}</p>
       </div>
     `;
 
-    // ============================================================
-    // ✨ TEMPLATE PREMIUM
-    // ============================================================
+    // ---------------------------------------------------------
+    // ✨ TEMPLATE EMAIL + Facture PDF
+    // ---------------------------------------------------------
     const htmlTemplate = `
 <div style="font-family:Arial, sans-serif; background:#f3f4f7; padding:25px;">
   <div style="max-width:720px; margin:auto; background:white; border-radius:12px; padding:35px; border:1px solid #e5e7eb; box-shadow:0 4px 12px rgba(0,0,0,0.04);">
@@ -84,8 +106,8 @@ export async function POST(req: Request) {
     </p>
 
     <div style="padding:18px; background:#f6faff; border-radius:10px; border:1px solid #d9e3f0; margin-bottom:30px;">
-      <p style="margin:5px 0; font-size:16px;"><b>ID Commande :</b> ${orderId}</p>
-      <p style="margin:5px 0; font-size:16px;"><b>Client :</b> ${customerEmail}</p>
+      <p style="margin:0; font-size:16px;"><b>ID Commande :</b> ${orderId}</p>
+      <p style="margin:0; font-size:16px;"><b>Client :</b> ${customerEmail}</p>
     </div>
 
     <h3 style="margin-top:10px; font-size:20px; color:#111;">📦 Articles commandés</h3>
@@ -112,24 +134,23 @@ export async function POST(req: Request) {
 </div>
 `;
 
-    // ============================================================
-    // 📤 ENVOI EMAIL AVEC FACTURE POUR ADMIN
-    // ============================================================
+    // ---------------------------------------------------------
+    // 📤 ENVOI EMAIL ADMIN
+    // ---------------------------------------------------------
     await resend.emails.send({
       from: "Massme • Orders <contact@hdconnects.com>",
       to: process.env.ADMIN_EMAIL!,
       subject: `🛒 Nouvelle commande – #${orderId}`,
       html: htmlTemplate,
-      attachments:
-        pdfBase64
-          ? [
-              {
-                filename: `facture-${orderId}.pdf`,
-                content: pdfBase64,
-                contentType: "application/pdf",
-              },
-            ]
-          : undefined,
+      attachments: pdfBase64
+        ? [
+            {
+              filename: `facture-${orderId}.pdf`,
+              content: pdfBase64,
+              contentType: "application/pdf",
+            },
+          ]
+        : undefined,
     });
 
     return NextResponse.json({ status: "admin email sent" });
