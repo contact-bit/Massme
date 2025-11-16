@@ -64,38 +64,31 @@ export default async function BlogPage({
   if (!t) return notFound();
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-16 space-y-12">
+    <main className="blog-page">
       {/* HEADER */}
-      <header className="text-center space-y-3">
-        <h1 className="text-4xl font-semibold">{t.title}</h1>
-        <p className="text-lg opacity-80">{t.subtitle}</p>
+      <header className="blog-header">
+        <h1>{t.title}</h1>
+        <p>{t.subtitle}</p>
       </header>
 
       {/* LISTE DES ARTICLES */}
-      <section className="grid md:grid-cols-2 gap-10">
+      <section className="blog-grid">
         {t.posts.map((post) => (
-          <article
-            key={post.id}
-            className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition bg-white"
-          >
-            <div className="relative w-full h-52">
+          <article key={post.id} className="blog-card">
+            <div className="blog-card-img">
               <Image
                 src={post.image}
                 alt={post.title}
                 fill
-                className="object-cover"
               />
             </div>
 
-            <div className="p-6 space-y-3">
-              <h2 className="text-xl font-semibold">{post.title}</h2>
-              <p className="text-sm opacity-60">{post.date}</p>
-              <p className="opacity-80">{post.excerpt}</p>
+            <div className="blog-card-body">
+              <h2 className="blog-card-title">{post.title}</h2>
+              <p className="blog-card-date">{post.date}</p>
+              <p className="blog-card-excerpt">{post.excerpt}</p>
 
-              <a
-                href="#"
-                className="inline-block mt-2 text-black font-medium underline hover:no-underline"
-              >
+              <a href="#" className="blog-card-link">
                 {t.readMore}
               </a>
             </div>

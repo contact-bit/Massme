@@ -1,0 +1,146 @@
+/* ============================================
+   CHECKOUT — MASSME PREMIUM
+   Tous les styles utilisent les variables :root
+============================================ */
+
+.checkout-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-md) calc(var(--space-xl) * 2);
+  color: var(--color-text);
+  font-family: var(--font-main);
+}
+
+/* Title */
+.checkout-title {
+  text-align: center;
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  font-family: var(--font-title);
+  margin-bottom: var(--space-xl);
+}
+
+/* Main card */
+.checkout-card {
+  background: var(--color-bg);
+  padding: calc(var(--space-lg) * 1.2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Section titles */
+.checkout-section {
+  margin-bottom: var(--space-xl);
+}
+
+.checkout-section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-secondary);
+  margin-bottom: var(--space-md);
+  font-family: var(--font-title);
+}
+
+/* Inputs */
+.checkout-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.checkout-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.checkout-input {
+  width: 100%;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-alt);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.checkout-input:focus {
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  outline: none;
+}
+
+/* Shipping select */
+.checkout-input select {
+  appearance: none;
+}
+
+/* Loading text */
+.checkout-loading {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+/* Total section */
+.checkout-total {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  font-size: 1.4rem;
+  font-weight: 600;
+
+  display: flex;
+  justify-content: space-between;
+
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.checkout-total-amount {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+/* Pay button */
+.checkout-button {
+  margin-top: var(--space-lg);
+  width: 100%;
+
+  background: var(--color-primary);
+  color: var(--color-bg);
+
+  padding: calc(var(--space-md) * 1.2);
+  border-radius: var(--radius-lg);
+
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: center;
+
+  transition: var(--transition);
+}
+
+.checkout-button:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+}
+
+.checkout-button:active {
+  transform: translateY(0);
+}
+
+/* RESPONSIVE */
+@media (max-width: 480px) {
+  .checkout-title {
+    font-size: 2rem;
+  }
+
+  .checkout-card {
+    padding: var(--space-lg);
+  }
+
+  .checkout-row {
+    grid-template-columns: 1fr;
+  }
+}

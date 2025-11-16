@@ -12,16 +12,12 @@ export default function CheckoutPage({
 }: {
   params: Promise<{ locale: Locale }>;
 }) {
-  // ✅ Next.js 16 — unwrap de la Promise
   const { locale } = use(params);
+  const { items, getTotal } = useCart();
 
-  const { items, getTotal, clearCart } = useCart();
-
-  // --------------------------------------------------
-  // Shipping methods
-  // --------------------------------------------------
   const [shippingMethods, setShipping] = useState<any[]>([]);
   const [loadingShipping, setLoadingShipping] = useState(true);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -67,12 +63,14 @@ export default function CheckoutPage({
   const handleChange = (e: any) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  // --------------------------------------------------
-  // Checkout Stripe
-  // --------------------------------------------------
   const handleCheckout = async () => {
     const method = shippingMethods.find((m) => m.id === form.shippingMethod);
-    if (!method) return alert("Sélectionnez un transporteur");
+    if (!method)
+      return alert(
+        locale === "fr"
+          ? "Sélectionnez une méthode de livraison"
+          : "Select a shipping method"
+      );
 
     const res = await fetch("/api/checkout", {
       method: "POST",
@@ -91,63 +89,60 @@ export default function CheckoutPage({
     else alert("Erreur paiement");
   };
 
-  // Total final
   const shippingPrice =
     shippingMethods.find((m) => m.id === form.shippingMethod)?.price || 0;
 
   const total = getTotal() + shippingPrice;
 
-  // --------------------------------------------------
-  // UI
-  // --------------------------------------------------
   return (
-    <main className="max-w-2xl mx-auto py-12 px-6 text-gray-900">
-      <h1 className="text-4xl font-extrabold mb-10 text-center text-blue-700">
-        {locale === "fr" ? "🧾 Informations de livraison" : "🧾 Shipping details"}
+    <main className="checkout-page">
+      <h1 className="checkout-title">
+        {locale === "fr" ? "Informations de livraison" : "Shipping details"}
       </h1>
 
-      <div className="bg-white shadow-xl rounded-3xl p-8 space-y-10 border border-gray-100">
-        {/* Adresse */}
-        <section>
-          <h2 className="text-xl font-bold mb-6">📍 Adresse</h2>
+      <div className="checkout-card">
+        {/* FORMULAIRE CLIENT */}
+        <section className="checkout-section">
+          <h2 className="checkout-section-title">
+            {locale === "fr" ? "Adresse" : "Address"}
+          </h2>
 
-          <div className="flex flex-col gap-5">
+          <div className="checkout-fields">
             <input
-              className="input"
               name="name"
+              className="checkout-input"
               placeholder={locale === "fr" ? "Nom complet" : "Full name"}
               value={form.name}
               onChange={handleChange}
             />
 
             <input
-              className="input"
               name="email"
+              className="checkout-input"
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
             />
 
             <input
-              className="input"
               name="address"
+              className="checkout-input"
               placeholder={locale === "fr" ? "Adresse" : "Address"}
               value={form.address}
               onChange={handleChange}
             />
 
-            <div className="grid grid-cols-2 gap-5">
+            <div className="checkout-row">
               <input
-                className="input"
                 name="city"
+                className="checkout-input"
                 placeholder={locale === "fr" ? "Ville" : "City"}
                 value={form.city}
                 onChange={handleChange}
               />
-
               <input
-                className="input"
                 name="postalCode"
+                className="checkout-input"
                 placeholder={locale === "fr" ? "Code postal" : "ZIP"}
                 value={form.postalCode}
                 onChange={handleChange}
@@ -155,8 +150,8 @@ export default function CheckoutPage({
             </div>
 
             <input
-              className="input"
               name="phone"
+              className="checkout-input"
               placeholder={locale === "fr" ? "Téléphone" : "Phone"}
               value={form.phone}
               onChange={handleChange}
@@ -164,23 +159,17 @@ export default function CheckoutPage({
           </div>
         </section>
 
-        {/* Méthode de livraison */}
-        <section>
-          <h2 className="text-xl font-bold mb-4">
-            {locale === "fr" ? "🚚 Méthode de livraison" : "🚚 Shipping method"}
+        {/* SHIPPING METHODS */}
+        <section className="checkout-section">
+          <h2 className="checkout-section-title">
+            {locale === "fr" ? "Méthode de livraison" : "Shipping method"}
           </h2>
 
           {loadingShipping ? (
-            <p>Chargement…</p>
-          ) : shippingMethods.length === 0 ? (
-            <p className="text-red-600">
-              {locale === "fr"
-                ? "Aucun transporteur disponible."
-                : "No carrier available."}
-            </p>
+            <p className="checkout-loading">Chargement…</p>
           ) : (
             <select
-              className="input"
+              className="checkout-input"
               name="shippingMethod"
               value={form.shippingMethod}
               onChange={handleChange}
@@ -194,16 +183,15 @@ export default function CheckoutPage({
           )}
         </section>
 
-        {/* Total */}
-        <section className="flex justify-between text-2xl font-bold border-t pt-6">
+        {/* TOTAL */}
+        <section className="checkout-total">
           <span>{locale === "fr" ? "Total à payer :" : "Total:"}</span>
-          <span className="text-blue-600">{total.toFixed(2)} €</span>
+          <span className="checkout-total-amount">
+            {total.toFixed(2)} €
+          </span>
         </section>
 
-        <button
-          onClick={handleCheckout}
-          className="w-full bg-blue-600 text-white py-4 rounded-xl text-xl font-semibold hover:bg-blue-700"
-        >
+        <button className="checkout-button" onClick={handleCheckout}>
           {locale === "fr" ? "Payer maintenant 💳" : "Pay now 💳"}
         </button>
       </div>

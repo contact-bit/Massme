@@ -1,0 +1,96 @@
+/* ============================================
+   FOOTER MASSME — PREMIUM & CLEAN DESIGN
+   Palette : Bleu nuit (#0F1A2A) + Bleu roi (#2563eb) + Ivoire (#F6F6F4)
+============================================ */
+
+.footer {
+  background: linear-gradient(145deg, #0f1a2a 0%, #1a2d45 100%);
+  color: #f6f6f4;
+  padding: 4rem 1.5rem 2.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* Légère ombre pour effet premium */
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.25) inset;
+}
+
+.footer-container {
+  max-width: 1250px;
+  margin: 0 auto;
+  display: grid;
+  gap: 3.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  padding-bottom: 1rem;
+}
+
+/* ===== TITLES ===== */
+.footer-col h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 1rem;
+  letter-spacing: 0.4px;
+}
+
+/* ===== LINKS & TEXT ===== */
+.footer-col p,
+.footer-col a {
+  display: block;
+  margin: 0.45rem 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #f6f6f4;
+  opacity: 0.85;
+  text-decoration: none;
+  transition: opacity 0.25s ease, transform 0.2s ease;
+}
+
+.footer-col a:hover {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+/* ===== SOCIAL ICONS ===== */
+.footer-socials {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1.2rem;
+  justify-content: flex-start;
+}
+
+.footer-socials a {
+  color: #ffffff;
+  opacity: 0.75;
+  font-size: 1.45rem;
+  transition: opacity 0.25s ease, transform 0.2s ease;
+}
+
+.footer-socials a:hover {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+/* ===== BOTTOM BAR ===== */
+.footer-bottom {
+  max-width: 1250px;
+  margin: 3rem auto 0;
+  padding-top: 1.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+
+/* Mobile spacing */
+@media (max-width: 600px) {
+  .footer {
+    padding: 3rem 1rem 2rem;
+  }
+
+  .footer-container {
+    gap: 2.5rem;
+  }
+
+  .footer-col h3 {
+    margin-bottom: 0.7rem;
+  }
+}

@@ -10,170 +10,113 @@ import ProductEditForm from "./ProductEditForm";
 export default function AdminPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
-  const [password, setPassword] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Vérifie la session admin
+  /* ================================
+        CHECK SESSION
+  ================================= */
   useEffect(() => {
-    const auth = localStorage.getItem("admin_auth");
-    if (auth === "true") {
-      setIsAuthenticated(true);
-      fetchProducts();
+    const saved = localStorage.getItem("admin_auth");
+
+    if (saved !== "true") {
+      window.location.href = "/admin/login";
+      return;
     }
+
+    fetchProducts();
   }, []);
 
-  // Vérification du mot de passe
-  const handleLogin = () => {
-    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      localStorage.setItem("admin_auth", "true");
-      fetchProducts();
-    } else {
-      alert("Mot de passe incorrect 🚫");
-    }
-  };
-
-  // Déconnexion
-  const handleLogout = () => {
-    localStorage.removeItem("admin_auth");
-    setIsAuthenticated(false);
-    setPassword("");
-  };
-
-  // Charger les produits
+  /* ================================
+        FIRESTORE
+  ================================= */
   const fetchProducts = async () => {
     const snapshot = await getDocs(collection(db, "products"));
-    const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     setProducts(list);
+    setLoading(false);
   };
 
-  // Supprimer un produit
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer ce produit ?")) return;
     await deleteDoc(doc(db, "products", id));
     fetchProducts();
   };
 
-  /* =======================
-        PAGE LOGIN ADMIN
-  ======================== */
-  if (!isAuthenticated) {
-    return (
-      <main className="h-screen flex flex-col items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md w-80 text-center">
-          <h1 className="text-2xl font-semibold mb-4 text-gray-800">
-            🔐 Admin MassMe
-          </h1>
-          <input
-            type="password"
-            placeholder="Mot de passe"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="border border-gray-300 rounded-md w-full p-2 mb-4"
-          />
-          <button
-            onClick={handleLogin}
-            className="bg-black text-white px-4 py-2 rounded-md w-full hover:bg-gray-800"
-          >
-            Se connecter
-          </button>
-        </div>
-      </main>
-    );
-  }
+  const handleLogout = () => {
+    localStorage.removeItem("admin_auth");
+    window.location.href = "/admin/login";
+  };
 
-  /* =======================
-         PAGE ADMIN
-  ======================== */
+  /* ================================
+        DASHBOARD ADMIN PAGE
+  ================================= */
   return (
-    <main className="max-w-4xl mx-auto py-10 text-gray-900">
-      {/* HEADER AVEC NAVIGATION */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">🛍️ Espace Admin</h1>
+    <main className="admin-container">
 
-        <div className="flex items-center gap-3">
-          {/* Produits */}
-          <Link
-            href="/admin"
-            className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-sm"
-          >
-            🛍️ Produits
-          </Link>
+      {/* HEADER TOP */}
+      <div className="admin-header-row">
+        <h1 className="admin-title">🛍️ Produits</h1>
 
-          {/* Livraisons */}
-          <Link
-            href="/admin/shipping"
-            className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-sm"
-          >
-            📦 Livraisons
-          </Link>
-
-          {/* Commandes */}
-          <Link
-            href="/admin/orders"
-            className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-sm"
-          >
-            🧾 Commandes
-          </Link>
-
-          {/* Déconnexion */}
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-500"
-          >
-            🚪 Déconnexion
-          </button>
+        <div className="admin-nav">
+          <Link href="/admin" className="btn btn-secondary">Produits</Link>
+          <Link href="/admin/shipping" className="btn btn-secondary">Livraisons</Link>
+          <Link href="/admin/orders" className="btn btn-secondary">Commandes</Link>
+          <button onClick={handleLogout} className="btn btn-danger">Déconnexion</button>
         </div>
       </div>
 
-      {/* FORM AJOUT PRODUIT */}
-      <div className="mb-10 bg-white p-6 rounded-lg shadow">
+      {/* FORMULAIRE AJOUT PRODUIT */}
+      <div className="admin-card">
+        <h2 className="admin-section-title">Ajouter un produit</h2>
         <ProductForm onSuccess={fetchProducts} />
       </div>
 
       {/* LISTE PRODUITS */}
-      <div className="grid gap-4">
+      <div className="admin-products-list">
+        <h2 className="admin-section-title">Liste des produits</h2>
+
+        {loading && <p className="admin-loading">Chargement…</p>}
+
+        {!loading && products.length === 0 && (
+          <p className="admin-empty">Aucun produit disponible.</p>
+        )}
+
         {products.map((product) => (
-          <div
-            key={product.id}
-            className="p-4 border rounded-md shadow-sm flex justify-between items-center bg-white"
-          >
-            {/* IMAGE + INFOS */}
-            <div className="flex items-center gap-4">
+          <div key={product.id} className="admin-product-row">
+
+            {/* IMAGE + INFORMATIONS */}
+            <div className="admin-product-info">
               {product.imageUrl ? (
                 <img
                   src={product.imageUrl}
                   alt={product.name?.fr}
-                  className="w-16 h-16 object-cover rounded border"
+                  className="admin-product-img"
                 />
               ) : (
-                <div className="w-16 h-16 bg-gray-100 rounded border flex items-center justify-center text-[10px] text-gray-400">
-                  No image
-                </div>
+                <div className="admin-product-placeholder">No image</div>
               )}
 
-              <div>
-                <h3 className="font-semibold text-gray-900">{product.name?.fr}</h3>
-                <p className="text-sm text-gray-600">{product.price?.eur} €</p>
-                <p className="text-xs text-gray-500">
-                  Stock : {product.stock} |{" "}
-                  {product.isActive ? "🟢 Actif" : "🔴 Inactif"}
-                </p>
+              <div className="admin-product-text">
+                <h3>{product.name?.fr}</h3>
+                <p>{product.price?.eur} €</p>
+                <span className="admin-product-status">
+                  Stock : {product.stock} | {product.isActive ? "🟢 Actif" : "🔴 Inactif"}
+                </span>
               </div>
             </div>
 
-            {/* ACTIONS */}
-            <div className="flex gap-2">
+            {/* BOUTONS ACTION */}
+            <div className="admin-product-actions">
               <button
                 onClick={() => setEditingProduct(product)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-500"
+                className="btn btn-primary"
               >
                 ✏️ Modifier
               </button>
 
               <button
                 onClick={() => handleDelete(product.id)}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-500"
+                className="btn btn-danger"
               >
                 🗑️ Supprimer
               </button>
@@ -184,14 +127,16 @@ export default function AdminPage() {
 
       {/* MODAL EDITION */}
       {editingProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg relative">
+        <div className="admin-modal-overlay">
+          <div className="admin-modal">
             <button
               onClick={() => setEditingProduct(null)}
-              className="absolute top-2 right-3 text-gray-500 hover:text-black text-xl"
+              className="admin-modal-close"
             >
               ✖
             </button>
+
+            <h2 className="admin-section-title">Modifier le produit</h2>
 
             <ProductEditForm
               product={editingProduct}

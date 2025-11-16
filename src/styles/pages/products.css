@@ -1,0 +1,74 @@
+/* PAGE PRODUITS — Style premium monoproduit */
+
+.products-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 80px 20px;
+}
+
+/* CARD */
+.product-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow-lg);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+
+  text-align: center;
+}
+
+/* IMAGE */
+.product-img-wrapper {
+  width: 100%;
+  max-width: 420px;
+  height: 420px;
+
+  position: relative; /* obligatoire pour Image fill */
+  overflow: hidden;
+
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-alt);
+}
+
+.product-img {
+  object-fit: contain;
+}
+
+/* TITRE */
+.product-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+/* DESCRIPTION */
+.product-desc {
+  max-width: 600px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+
+/* PRIX */
+.product-price {
+  font-size: 30px;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* ACTIONS */
+.product-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.product-actions .btn {
+  width: 100%;
+}

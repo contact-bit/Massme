@@ -2,74 +2,89 @@
 
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
+import { usePathname } from "next/navigation";   // ✅ MANQUANT !!
 
-export default function CartDrawer({ locale }: { locale: string }) {
+export default function CartDrawer() {
+  const pathname = usePathname();
+  const rawLocale = pathname?.split("/")[1];
+  const locale = rawLocale === "fr" || rawLocale === "en" ? rawLocale : "fr";
+
   const { items, removeItem, isOpen, toggleCart, getTotal } = useCart();
 
+  const T = {
+    fr: {
+      title: "Votre panier",
+      empty: "Votre panier est vide.",
+      remove: "Retirer",
+      total: "Total",
+      checkout: "Commander",
+    },
+    en: {
+      title: "Your cart",
+      empty: "Your cart is empty.",
+      remove: "Remove",
+      total: "Total",
+      checkout: "Checkout",
+    },
+  }[locale];
+
   return (
-    <div>
+    <>
       {/* BACKDROP */}
-      {isOpen && (
-        <div
-          onClick={toggleCart}
-          className="fixed inset-0 bg-black/40 z-40"
-        />
-      )}
+      {isOpen && <div className="cart-backdrop" onClick={toggleCart} />}
 
-      {/* SIDEBAR */}
-      <div
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-xl z-50 p-6 transition-transform duration-300
-        ${isOpen ? "translate-x-0" : "translate-x-full"}`}
-      >
-        <h2 className="text-xl font-semibold mb-4">
-          {locale === "fr" ? "Votre panier" : "Your cart"}
-        </h2>
+      {/* DRAWER */}
+      <div className={`cart-drawer ${isOpen ? "open" : ""}`}>
+        <div className="cart-header">
+          <h2 className="cart-title">{T.title}</h2>
+          <button className="cart-close-btn" onClick={toggleCart}>✕</button>
+        </div>
 
-        {/* PANIER VIDE */}
-        {items.length === 0 ? (
-          <p className="text-gray-500">
-            {locale === "fr" ? "Votre panier est vide." : "Your cart is empty."}
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex justify-between items-center border-b pb-3"
-              >
-                <div className="flex flex-col">
-                  <p className="font-medium">{item.name}</p>
-
-                  <p className="text-sm text-gray-500">
+        <div className="cart-items">
+          {items.length === 0 ? (
+            <p className="text-gray-500">{T.empty}</p>
+          ) : (
+            items.map((item) => (
+              <div key={item.id} className="cart-item">
+                <img
+                  src={item.imageUrl || "/placeholder.jpg"}
+                  className="cart-item-img"
+                  alt={item.name}
+                />
+                <div className="cart-item-info">
+                  <p className="cart-item-name">{item.name}</p>
+                  <p className="cart-item-price">
                     {(Number(item.price) || 0).toFixed(2)} € × {item.quantity}
                   </p>
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    className="cart-item-remove"
+                  >
+                    {T.remove}
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="text-red-500 hover:underline"
-                >
-                  ✕
-                </button>
               </div>
-            ))}
+            ))
+          )}
+        </div>
 
-            {/* TOTAL */}
-            <div className="text-right font-semibold text-lg mt-4">
-              Total : {getTotal().toFixed(2)} €
+        {items.length > 0 && (
+          <div className="cart-footer">
+            <div className="cart-total">
+              <span>{T.total}</span>
+              <span>{getTotal().toFixed(2)} €</span>
             </div>
 
-            {/* CTA */}
             <Link
               href={`/${locale}/checkout`}
-              className="btn-primary block text-center mt-4"
+              className="btn btn-primary btn-full"
               onClick={toggleCart}
             >
-              {locale === "fr" ? "Commander" : "Checkout"}
+              {T.checkout}
             </Link>
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

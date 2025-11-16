@@ -1,0 +1,44 @@
+:root {
+  /* 🎨 Couleurs principales - STYLE C (bleu moderne) */
+  --color-primary: #2563eb;        /* bleu principal */
+  --color-primary-light: #3b82f6;  /* survol / accent */
+  --color-primary-dark: #1d4ed8;   /* clic / état actif */
+
+  --color-secondary: #111827;      /* gris très foncé pour texte/titres */
+
+  /* Neutres */
+  --color-bg: #ffffff;
+  --color-bg-alt: #f3f4f6;
+  --color-text: #111827;
+  --color-muted: #6b7280;
+
+  /* États */
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+
+  /* Typographies */
+  --font-main: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-title: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Rayons */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  /* Espacements */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Ombres */
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.12);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.16);
+  --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.18);
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition: 0.25s ease;
+}

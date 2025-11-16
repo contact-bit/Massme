@@ -8,9 +8,9 @@ const CONTENT = {
     hero: {
       title: "Votre confort commence ici.",
       subtitle:
-        "Découvrez MassMe, la têtière ergonomique conçue pour soulager, reposer et améliorer votre bien-être.",
+        "MassMe est la têtière ergonomique conçue pour soulager, reposer et améliorer votre bien-être.",
       cta: "Découvrir MassMe",
-      image: "/hero-massme.jpg", // remplace par ton image
+      image: "/hero-massme.jpg",
     },
     needs: {
       title: "Vos besoins",
@@ -34,16 +34,6 @@ const CONTENT = {
     },
     testimonials: {
       title: "Ils adorent MassMe",
-      list: [
-        {
-          name: "Sophie L.",
-          text: "Convalescence après vitrectomie. MassMe m’a vraiment aidée à tenir la position sans souffrir.",
-        },
-        {
-          name: "Alexandre P.",
-          text: "Je télétravaille toute la journée. MassMe réduit clairement mes tensions dans le cou.",
-        },
-      ],
     },
     blog: {
       title: "Nos derniers articles",
@@ -52,9 +42,9 @@ const CONTENT = {
 
   en: {
     hero: {
-      title: "Your comfort starts now.",
+      title: "Your comfort starts here.",
       subtitle:
-        "Discover MassMe, the ergonomic headrest designed to support, relieve and improve your well-being.",
+        "MassMe is the ergonomic headrest designed to support, relieve and enhance your well-being.",
       cta: "Discover MassMe",
       image: "/hero-massme.jpg",
     },
@@ -80,16 +70,6 @@ const CONTENT = {
     },
     testimonials: {
       title: "They love MassMe",
-      list: [
-        {
-          name: "Sophia L.",
-          text: "Recovering from vitrectomy. MassMe really helped me maintain position without pain.",
-        },
-        {
-          name: "Alex P.",
-          text: "I work from home all day. MassMe clearly reduces neck tension.",
-        },
-      ],
     },
     blog: {
       title: "Latest articles",
@@ -107,105 +87,90 @@ export default async function HomePage({
   if (!t) return notFound();
 
   return (
-    <main>
+    <main className="home">
 
       {/* ================= HERO ================= */}
-      <section className="section bg-gray-50">
-        <div className="container grid md:grid-cols-2 gap-10 items-center">
-          <div>
-            <h1 className="title-xl">{t.hero.title}</h1>
-            <p className="subtitle max-w-xl">{t.hero.subtitle}</p>
+      <section className="home-hero">
+        <div className="home-hero-content">
+          <h1>{t.hero.title}</h1>
+          <p>{t.hero.subtitle}</p>
 
+          <a href={`/${locale}/products`} className="btn btn-primary home-hero-cta">
+            {t.hero.cta}
+          </a>
+        </div>
+
+        <div className="home-hero-img">
+          <Image
+            src={t.hero.image}
+            alt="MassMe"
+            fill
+            className="img-cover"
+          />
+        </div>
+      </section>
+
+      {/* ================= NEEDS ================= */}
+      <section className="home-section">
+        <h2 className="home-section-title">{t.needs.title}</h2>
+
+        <div className="home-needs-grid">
+          {t.needs.items.map((item) => (
             <a
-              href={`/${locale}/products`}
-              className="btn-primary inline-block mt-6"
+              key={item.slug}
+              href={`/${locale}/besoins/${item.slug}`}
+              className="home-card"
             >
-              {t.hero.cta}
+              <h3>{item.title}</h3>
             </a>
-          </div>
+          ))}
+        </div>
+      </section>
 
-          <div className="relative w-full h-72 md:h-96">
-            <Image
-              src={t.hero.image}
-              alt="MassMe"
-              fill
-              className="object-cover rounded-2xl shadow-lg"
-            />
+      {/* ================= FEATURES ================= */}
+      <section className="home-section home-section-alt">
+        <h2 className="home-section-title">{t.features.title}</h2>
+
+        <ul className="home-features-grid">
+          {t.features.list.map((f, i) => (
+            <li key={i} className="home-feature-item">
+              {f}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* ================= PRODUCTS ================= */}
+      <section className="home-section">
+        <h2 className="home-section-title">{t.products.title}</h2>
+
+        <div className="home-products-grid">
+          <div className="home-card">MassMe – Têtière</div>
+          <div className="home-card">MassMe Plus – Têtière PRO</div>
+        </div>
+      </section>
+
+      {/* ================= TESTIMONIALS ================= */}
+      <section className="home-section home-section-alt">
+        <h2 className="home-section-title">{t.testimonials.title}</h2>
+
+        <div className="home-testimonials-grid">
+          <div className="home-card">
+            “MassMe m’a aidé à tenir la position après opération.”
+          </div>
+          <div className="home-card">
+            “Un confort incroyable pour soulager le cou.”
           </div>
         </div>
       </section>
 
-      {/* ============== Vos besoins =============== */}
-      <section className="section">
-        <div className="container">
-          <h2 className="title-lg mb-10">{t.needs.title}</h2>
+      {/* ================= BLOG ================= */}
+      <section className="home-section">
+        <h2 className="home-section-title">{t.blog.title}</h2>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {t.needs.items.map((item) => (
-              <a
-                key={item.slug}
-                href={`/${locale}/besoins/${item.slug}`}
-                className="card hover:shadow-xl transition"
-              >
-                <h3 className="text-xl font-medium">{item.title}</h3>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============== Features Section =============== */}
-      <section className="section bg-gray-50">
-        <div className="container">
-          <h2 className="title-lg mb-10">{t.features.title}</h2>
-
-          <ul className="grid md:grid-cols-2 gap-6">
-            {t.features.list.map((f, i) => (
-              <li key={i} className="card">
-                {f}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* ============== Products section =============== */}
-      <section className="section">
-        <div className="container">
-          <h2 className="title-lg mb-10">{t.products.title}</h2>
-
-          <div className="grid md:grid-cols-2 gap-10">
-            <div className="card">MassMe - Têtière</div>
-            <div className="card">MassMe Plus - Têtière Pro</div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============== Testimonials =============== */}
-      <section className="section bg-gray-50">
-        <div className="container">
-          <h2 className="title-lg mb-10">{t.testimonials.title}</h2>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {t.testimonials.list.map((item, i) => (
-              <div key={i} className="card">
-                <p className="italic mb-2">“{item.text}”</p>
-                <p className="font-medium">— {item.name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============== Blog preview =============== */}
-      <section className="section">
-        <div className="container">
-          <h2 className="title-lg mb-10">{t.blog.title}</h2>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="card">Article 1</div>
-            <div className="card">Article 2</div>
-          </div>
+        <div className="home-blog-grid">
+          <div className="home-card">Article 1</div>
+          <div className="home-card">Article 2</div>
         </div>
       </section>
     </main>

@@ -1,0 +1,108 @@
+/* =========================================================
+   💎 PAGE LOGIN ADMIN — MASSME DASHBOARD
+   ========================================================= */
+
+/* Wrapper global */
+.admin-login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+
+  /* Superbe gradient doux */
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-light),
+    var(--color-primary-dark)
+  );
+  padding: var(--space-lg);
+}
+
+/* Carte en glassmorphism */
+.admin-login-card {
+  width: 350px;
+  padding: var(--space-xl);
+  text-align: center;
+
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(14px);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+
+  animation: fadeIn var(--transition);
+}
+
+/* Titre */
+.admin-login-title,
+.admin-login-card h1 {
+  font-size: 1.7rem;
+  font-family: var(--font-title);
+  color: white;
+  margin-bottom: var(--space-lg);
+  font-weight: 600;
+}
+
+/* Champs */
+.admin-login-input,
+.admin-input {
+  width: 100%;
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255,255,255,0.4);
+
+  font-size: 1rem;
+  background: rgba(255,255,255,0.25);
+  color: white;
+
+  outline: none;
+  transition: var(--transition);
+}
+
+.admin-login-input::placeholder,
+.admin-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Focus amélioré */
+.admin-login-input:focus,
+.admin-input:focus {
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .3);
+}
+
+/* Bouton principal */
+.admin-login-button,
+.btn-primary {
+  width: 100%;
+  padding: var(--space-md);
+  
+  background: var(--color-primary);
+  color: white;
+
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.admin-login-button:hover,
+.btn-primary:hover {
+  background: var(--color-primary-light);
+}
+
+/* Désactivé */
+.admin-login-button:disabled {
+  background: var(--color-primary-dark);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Anim d’apparition */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,132 @@
+/* ==========================================
+   PAGE SUCCESS — Confirmation de commande
+========================================== */
+
+.success-page {
+  min-height: 80vh;
+  background: var(--color-bg-alt);
+  display: flex;
+  align-items: center;
+  padding: 40px 16px;
+}
+
+.success-container {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  padding: 48px 32px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* --- BADGE --- */
+.success-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-primary);
+  padding: 6px 14px;
+  border-radius: 999px;
+
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  margin-bottom: 24px;
+}
+
+/* --- TITRES --- */
+.success-title {
+  font-family: var(--font-title);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-secondary);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.success-subtitle {
+  font-size: 18px;
+  text-align: center;
+  color: var(--color-muted);
+  margin-bottom: 32px;
+}
+
+/* ===========================
+   CARTE COMMANDE
+=========================== */
+
+.success-box {
+  background: var(--color-bg);
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,0.04);
+  margin-top: 32px;
+}
+
+.success-block-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+
+.success-block-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-secondary);
+}
+
+/* GRID */
+.success-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .success-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.success-box-alt {
+  background: var(--color-bg-alt);
+  padding: 20px;
+  border-radius: var(--radius-md);
+}
+
+/* ITEMS LIST */
+.success-item {
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* CTA BOTTOM */
+.success-cta {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.success-cta .btn-home {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 14px 28px;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.success-cta .btn-home:hover {
+  background: var(--color-primary-dark);
+}

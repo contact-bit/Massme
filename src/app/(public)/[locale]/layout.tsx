@@ -1,30 +1,50 @@
+import { ReactNode } from "react";
+
+/* TOKENS & THEMES */
+import "@/styles/tokens.css";
+import "@/styles/themes.css";
+import "@/styles/utilities.css";
+
+/* COMPONENTS */
+import "@/styles/components/buttons.css";
+import "@/styles/components/navbar.css";
+import "@/styles/components/footer.css";
+import "@/styles/components/cartDrawer.css";
+import "@/styles/components/productCard.css";
+import "@/styles/components/productList.css";
+
+/* PAGES */
+import "@/styles/pages/home.css";
+import "@/styles/pages/products.css";
+import "@/styles/pages/checkout.css";
+import "@/styles/pages/contact.css";
+import "@/styles/pages/success.css";
+import "@/styles/pages/blog.css";
+import "@/styles/pages/about.css";
+import "@/styles/pages/besoins.css";
+
 import Navbar from "@/components/Navbar";
 import CartDrawer from "@/components/CartDrawer";
+import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
-import "../../globals.css";
 
-export default async function LocaleLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
+interface LayoutProps {
+  children: ReactNode;
   params: Promise<{ locale: string }>;
-}) {
-  // ⬇️ OBLIGATOIRE car params est une Promise dans les layouts async
+}
+
+export default async function LocaleLayout({ children, params }: LayoutProps) {
   const { locale } = await params;
+  const safeLocale = locale === "fr" || locale === "en" ? locale : "fr";
 
   return (
     <CartProvider>
-      <Navbar />
+      <Navbar /> 
+      <CartDrawer />
 
-      <CartDrawer locale={locale} />
+      <main>{children}</main>
 
-      <main className="flex-1">{children}</main>
-
-      <footer className="border-t py-6 text-center text-sm text-gray-500">
-        © 2025 MassMe — 
-        {locale === "fr" ? " Fabriqué en France" : " Made in France"}
-      </footer>
+      <Footer />
     </CartProvider>
   );
 }

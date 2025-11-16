@@ -22,7 +22,7 @@ export default function ProductEditForm({
   const [descFr, setDescFr] = useState("");
   const [descEn, setDescEn] = useState("");
   const [isActive, setIsActive] = useState(true);
-  const [imageUrl, setImageUrl] = useState(""); // 👈 nouvel état image
+  const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
     setNameFr(product.name?.fr || "");
@@ -32,11 +32,12 @@ export default function ProductEditForm({
     setDescFr(product.description?.fr || "");
     setDescEn(product.description?.en || "");
     setIsActive(product.isActive ?? true);
-    setImageUrl(product.imageUrl || ""); // 👈 initialiser la preview
+    setImageUrl(product.imageUrl || "");
   }, [product]);
 
   const handleSave = async (e: any) => {
     e.preventDefault();
+
     const ref = doc(db, "products", product.id);
     await updateDoc(ref, {
       name: { fr: nameFr, en: nameEn },
@@ -44,7 +45,7 @@ export default function ProductEditForm({
       price: { eur: parseFloat(price as string) },
       stock: parseInt(stock as string),
       isActive,
-      imageUrl: imageUrl || null, // 👈 sauvegarder l'image
+      imageUrl: imageUrl || null,
     });
 
     onUpdated();
@@ -52,111 +53,87 @@ export default function ProductEditForm({
   };
 
   return (
-    <form
-      onSubmit={handleSave}
-      className="space-y-4 bg-white p-4 rounded-md shadow max-w-lg mx-auto"
-    >
-      <h2 className="text-xl font-semibold mb-2 text-gray-800">
-        ✏️ Modifier le produit
-      </h2>
+    <form onSubmit={handleSave} className="admin-form">
+      <h2 className="admin-section-title">Modifier le produit</h2>
 
-      {/* 🖼️ Preview image */}
-      <div className="flex flex-col items-center gap-2">
+      {/* IMAGE PREVIEW */}
+      <div className="admin-img-wrapper">
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt="Preview"
-            className="w-32 h-32 object-cover rounded border shadow"
-          />
+          <img src={imageUrl} alt="Preview" className="admin-img-preview" />
         ) : (
-          <div className="w-32 h-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm">
-            Pas d’image
-          </div>
+          <div className="admin-img-placeholder">Aucune image</div>
         )}
       </div>
 
-      {/* 🔥 Champ image */}
+      <label className="admin-label">URL de l'image Cloudflare</label>
       <input
         type="text"
-        placeholder="URL de l'image Cloudflare"
         value={imageUrl}
         onChange={(e) => setImageUrl(e.target.value)}
-        className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
+        className="admin-input"
       />
 
+      <label className="admin-label">Nom (FR)</label>
       <input
         type="text"
         value={nameFr}
         onChange={(e) => setNameFr(e.target.value)}
-        className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
-        placeholder="Nom FR"
+        className="admin-input"
       />
 
+      <label className="admin-label">Nom (EN)</label>
       <input
         type="text"
         value={nameEn}
         onChange={(e) => setNameEn(e.target.value)}
-        className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
-        placeholder="Nom EN"
+        className="admin-input"
       />
 
+      <label className="admin-label">Prix (EUR)</label>
       <input
         type="number"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
-        className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
-        placeholder="Prix EUR"
+        className="admin-input"
       />
 
+      <label className="admin-label">Stock</label>
       <input
         type="number"
         value={stock}
         onChange={(e) => setStock(e.target.value)}
-        className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
-        placeholder="Stock"
+        className="admin-input"
       />
 
+      <label className="admin-label">Description FR</label>
       <textarea
         value={descFr}
         onChange={(e) => setDescFr(e.target.value)}
-        className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
-        rows={2}
-        placeholder="Description FR"
+        className="admin-textarea"
       />
 
+      <label className="admin-label">Description EN</label>
       <textarea
         value={descEn}
         onChange={(e) => setDescEn(e.target.value)}
-        className="border border-gray-300 p-3 rounded-md w-full text-gray-800"
-        rows={2}
-        placeholder="Description EN"
+        className="admin-textarea"
       />
 
-      {/* Switch actif/inactif */}
-      <label className="flex items-center gap-3 mt-2">
+      <label className="admin-switch">
         <input
           type="checkbox"
           checked={isActive}
           onChange={(e) => setIsActive(e.target.checked)}
-          className="w-5 h-5 accent-green-600"
         />
-        <span className="text-gray-800">
-          Produit actif ({isActive ? "🟢 visible" : "🔴 masqué"})
-        </span>
+        <span>Produit actif ({isActive ? "🟢 visible" : "🔴 masqué"})</span>
       </label>
 
-      <div className="flex justify-between mt-4">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 bg-gray-200 rounded-md"
-        >
+      <div className="admin-form-actions">
+        <button type="button" onClick={onClose} className="btn btn-secondary">
           Annuler
         </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-black text-white rounded-md"
-        >
+
+        <button type="submit" className="btn btn-primary">
           💾 Enregistrer
         </button>
       </div>
