@@ -1,34 +1,27 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { use, useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useCart } from "@/context/CartContext";
 
 type Locale = "fr" | "en";
-
-type ShippingMethod = {
-  id: string;
-  name: string;
-  delay: string;
-  price: number;
-  isActive: boolean;
-};
 
 export default function CheckoutPage({
   params,
 }: {
   params: Promise<{ locale: Locale }>;
 }) {
-  // ⚡ Next.js 16 — les params sont une Promise
+  // ✅ Next.js 16 — unwrap de la Promise
   const { locale } = use(params);
 
-  // --------------------------------------------------
-  // STATE
-  // --------------------------------------------------
-  const [cart, setCart] = useState<any[]>([]);
-  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
-  const [loadingShipping, setLoadingShipping] = useState(true);
+  const { items, getTotal, clearCart } = useCart();
 
+  // --------------------------------------------------
+  // Shipping methods
+  // --------------------------------------------------
+  const [shippingMethods, setShipping] = useState<any[]>([]);
+  const [loadingShipping, setLoadingShipping] = useState(true);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -39,19 +32,6 @@ export default function CheckoutPage({
     shippingMethod: "",
   });
 
-  const [loading, setLoading] = useState(false);
-
-  // --------------------------------------------------
-  // Load cart
-  // --------------------------------------------------
-  useEffect(() => {
-    const stored = localStorage.getItem("cart");
-    if (stored) setCart(JSON.parse(stored));
-  }, []);
-
-  // --------------------------------------------------
-  // Load shipping methods
-  // --------------------------------------------------
   useEffect(() => {
     loadShippingMethods();
   }, [locale]);
@@ -63,12 +43,11 @@ export default function CheckoutPage({
 
     const list = snap.docs.map((d) => {
       const data: any = d.data();
-
       return {
         id: d.id,
-        name: data.name?.[locale] || null,
-        delay: data.delay?.[locale] || null,
-        price: data.price?.[locale] || null,
+        name: data.name?.[locale],
+        delay: data.delay?.[locale],
+        price: data.price?.[locale],
         isActive: data.isActive ?? true,
       };
     });
@@ -77,106 +56,117 @@ export default function CheckoutPage({
       (m) => m.isActive && m.name && m.delay && typeof m.price === "number"
     );
 
-    setShippingMethods(usable);
+    setShipping(usable);
     setLoadingShipping(false);
 
     if (usable.length > 0) {
-      setForm((prev) => ({ ...prev, shippingMethod: usable[0].id }));
+      setForm((f) => ({ ...f, shippingMethod: usable[0].id }));
     }
   }
 
-  // --------------------------------------------------
-  // Form handler
-  // --------------------------------------------------
   const handleChange = (e: any) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   // --------------------------------------------------
-  // Checkout
+  // Checkout Stripe
   // --------------------------------------------------
   const handleCheckout = async () => {
-    const selected = shippingMethods.find((m) => m.id === form.shippingMethod);
-
-    if (!selected) {
-      alert(locale === "fr" ? "Sélectionnez un transporteur" : "Select a carrier");
-      return;
-    }
-
-    setLoading(true);
+    const method = shippingMethods.find((m) => m.id === form.shippingMethod);
+    if (!method) return alert("Sélectionnez un transporteur");
 
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        items: cart,
-        currency: "eur",
-        shippingMethod: {
-          name: selected.name,
-          price: selected.price,
-        },
+        items,
+        shippingMethod: method,
         customerEmail: form.email,
         shippingAddress: form,
+        currency: "eur",
       }),
     });
 
     const data = await res.json();
-
-    if (res.ok && data.url) window.location.href = data.url;
+    if (data.url) window.location.href = data.url;
     else alert("Erreur paiement");
-
-    setLoading(false);
   };
 
+  // Total final
+  const shippingPrice =
+    shippingMethods.find((m) => m.id === form.shippingMethod)?.price || 0;
+
+  const total = getTotal() + shippingPrice;
+
   // --------------------------------------------------
-  // Total
+  // UI
   // --------------------------------------------------
-  const selectedMethod = shippingMethods.find(
-    (m) => m.id === form.shippingMethod
-  );
-
-  const shippingPrice = selectedMethod?.price || 0;
-
-  const total =
-    cart.reduce(
-      (sum, p) => sum + (p.price?.eur || 0) * (p.quantity || 1),
-      0
-    ) + shippingPrice;
-
-  // ===========================================================
-  // UI STARTUP MODERNE ⚡
-  // ===========================================================
   return (
     <main className="max-w-2xl mx-auto py-12 px-6 text-gray-900">
-
-      <h1 className="text-4xl font-extrabold mb-10 text-center text-blue-700 tracking-tight">
+      <h1 className="text-4xl font-extrabold mb-10 text-center text-blue-700">
         {locale === "fr" ? "🧾 Informations de livraison" : "🧾 Shipping details"}
       </h1>
 
-      <div className="bg-white shadow-2xl rounded-3xl p-8 space-y-10 border border-gray-100">
-
-        {/* SECTION — LIVRAISON */}
+      <div className="bg-white shadow-xl rounded-3xl p-8 space-y-10 border border-gray-100">
+        {/* Adresse */}
         <section>
-          <h2 className="text-xl font-bold mb-6 text-gray-800">
-            {locale === "fr" ? "📍 Adresse de livraison" : "📍 Shipping address"}
-          </h2>
+          <h2 className="text-xl font-bold mb-6">📍 Adresse</h2>
 
           <div className="flex flex-col gap-5">
-            <input className="input" name="name" placeholder={locale === "fr" ? "Nom complet" : "Full name"} value={form.name} onChange={handleChange} />
-            <input className="input" name="email" placeholder="Email" value={form.email} onChange={handleChange} />
-            <input className="input" name="address" placeholder={locale === "fr" ? "Adresse" : "Address"} value={form.address} onChange={handleChange} />
+            <input
+              className="input"
+              name="name"
+              placeholder={locale === "fr" ? "Nom complet" : "Full name"}
+              value={form.name}
+              onChange={handleChange}
+            />
+
+            <input
+              className="input"
+              name="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+            />
+
+            <input
+              className="input"
+              name="address"
+              placeholder={locale === "fr" ? "Adresse" : "Address"}
+              value={form.address}
+              onChange={handleChange}
+            />
 
             <div className="grid grid-cols-2 gap-5">
-              <input className="input" name="city" placeholder={locale === "fr" ? "Ville" : "City"} value={form.city} onChange={handleChange} />
-              <input className="input" name="postalCode" placeholder={locale === "fr" ? "Code postal" : "ZIP"} value={form.postalCode} onChange={handleChange} />
+              <input
+                className="input"
+                name="city"
+                placeholder={locale === "fr" ? "Ville" : "City"}
+                value={form.city}
+                onChange={handleChange}
+              />
+
+              <input
+                className="input"
+                name="postalCode"
+                placeholder={locale === "fr" ? "Code postal" : "ZIP"}
+                value={form.postalCode}
+                onChange={handleChange}
+              />
             </div>
 
-            <input className="input" name="phone" placeholder={locale === "fr" ? "Téléphone" : "Phone"} value={form.phone} onChange={handleChange} />
+            <input
+              className="input"
+              name="phone"
+              placeholder={locale === "fr" ? "Téléphone" : "Phone"}
+              value={form.phone}
+              onChange={handleChange}
+            />
           </div>
         </section>
 
-        {/* SECTION — SHIPPING METHOD */}
+        {/* Méthode de livraison */}
         <section>
-          <h2 className="text-xl font-bold mb-4 text-gray-800">
+          <h2 className="text-xl font-bold mb-4">
             {locale === "fr" ? "🚚 Méthode de livraison" : "🚚 Shipping method"}
           </h2>
 
@@ -184,7 +174,9 @@ export default function CheckoutPage({
             <p>Chargement…</p>
           ) : shippingMethods.length === 0 ? (
             <p className="text-red-600">
-              {locale === "fr" ? "Aucun transporteur disponible." : "No carrier available."}
+              {locale === "fr"
+                ? "Aucun transporteur disponible."
+                : "No carrier available."}
             </p>
           ) : (
             <select
@@ -202,21 +194,17 @@ export default function CheckoutPage({
           )}
         </section>
 
-        {/* TOTAL */}
+        {/* Total */}
         <section className="flex justify-between text-2xl font-bold border-t pt-6">
           <span>{locale === "fr" ? "Total à payer :" : "Total:"}</span>
           <span className="text-blue-600">{total.toFixed(2)} €</span>
         </section>
 
-        {/* CTA */}
         <button
           onClick={handleCheckout}
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-4 rounded-xl text-xl font-semibold hover:bg-blue-700 transition transform hover:scale-[1.02] disabled:opacity-50"
+          className="w-full bg-blue-600 text-white py-4 rounded-xl text-xl font-semibold hover:bg-blue-700"
         >
-          {loading
-            ? locale === "fr" ? "Traitement…" : "Processing…"
-            : locale === "fr" ? "Payer maintenant 💳" : "Pay now 💳"}
+          {locale === "fr" ? "Payer maintenant 💳" : "Pay now 💳"}
         </button>
       </div>
     </main>

@@ -6,6 +6,7 @@ import { Timestamp } from "firebase-admin/firestore";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+
     console.log("🧾 [API /checkout] Body reçu :", JSON.stringify(body, null, 2));
 
     const {
@@ -17,46 +18,71 @@ export async function POST(req: Request) {
       locale,
     } = body;
 
-    // ================================
+    // ---------------------------------------------------
     // 🔍 VALIDATION
-    // ================================
-    if (!items || !Array.isArray(items) || items.length === 0)
+    // ---------------------------------------------------
+    if (!items?.length)
       return NextResponse.json({ error: "Missing items" }, { status: 400 });
 
     if (!shippingMethod)
-      return NextResponse.json(
-        { error: "Missing shippingMethod" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing shippingMethod" }, { status: 400 });
 
     if (!customerEmail)
       return NextResponse.json({ error: "Missing email" }, { status: 400 });
 
     const currencyUsed = currency || "eur";
-    const localeUsed = locale || "fr"; // ✔ corrige undefined locale
+    const localeUsed = locale || "fr";
 
-    // ================================
-    // 🧩 NORMALISATION shippingMethod
-    // ================================
+// ---------------------------------------------------
+// 🧹 NORMALISATION DES ARTICLES (Fix ULTIME)
+// ---------------------------------------------------
+const cleanItems = items.map((item: any) => {
+  console.log("🟡 Item brut reçu :", item);
+
+  // 🔥 NOM : supporte tous les formats possibles
+  const name =
+    item.name?.fr ||
+    item.name?.en ||
+    item.name ||
+    "Produit";
+
+  // 🔥 PRIX : supporte TOUS les formats possibles du frontend
+  const price =
+    Number(item.price) || // format CartContext
+    Number(item.unit_price) || // format ancien checkout
+    Number(item.unitPrice) ||
+    Number(item.total) || // format Shopify-like
+    0;
+
+  // 🔥 QUANTITÉ
+  const quantity = Number(item.quantity || 1);
+
+  console.log("💶 Final normalisé :", { name, price, quantity });
+
+  return {
+    id: String(item.id),
+    name,
+    price,
+    quantity,
+  };
+});
+
+console.log("🧾 Items normalisés pour Firestore :", cleanItems);
+
+    // ---------------------------------------------------
+    // 💾 SHIPPING METHOD (Firestore Format)
+    // ---------------------------------------------------
     const normalizedShipping = {
-      name: {
-        fr: shippingMethod.name,
-        en: shippingMethod.name,
-      },
-      price: {
-        fr: shippingMethod.price,
-        en: shippingMethod.price,
-      },
+      name: { fr: shippingMethod.name, en: shippingMethod.name },
+      price: { fr: shippingMethod.price, en: shippingMethod.price },
     };
 
-    console.log("🚚 Méthode envoyée à Firestore :", normalizedShipping);
-
-    // ================================
-    // 💾 ENREGISTREMENT COMMANDE
-    // ================================
+    // ---------------------------------------------------
+    // 💾 SAUVEGARDE COMMANDE
+    // ---------------------------------------------------
     const orderRef = await db.collection("pending_orders").add({
       email: customerEmail,
-      items,
+      items: cleanItems,
       shippingAddress,
       shippingMethod: normalizedShipping,
       currency: currencyUsed,
@@ -67,64 +93,56 @@ export async function POST(req: Request) {
 
     console.log(`✅ Commande créée : ${orderRef.id}`);
 
-    // ================================
-    // 🧮 PRÉPARATION STRIPE
-    // ================================
-    const line_items = items.map((item: any, i: number) => ({
+    // ---------------------------------------------------
+    // 🧮 STRIPE line_items
+    // ---------------------------------------------------
+    const line_items = cleanItems.map((item: any) => ({
       price_data: {
         currency: currencyUsed,
-        product_data: { name: item.name?.fr || item.name?.en || `Produit ${i}` },
-        unit_amount: Math.round((item.price?.eur || 0) * 100),
+        product_data: { name: item.name },
+        unit_amount: Math.round(item.price * 100),
       },
-      quantity: item.quantity || 1,
+      quantity: item.quantity,
     }));
 
-    // ================================
-    // 💳 SESSION CHECKOUT STRIPE
-    // ================================
+    // ---------------------------------------------------
+    // 🚚 SHIPPING OPTION
+    // ---------------------------------------------------
+    const shippingOption = {
+      shipping_rate_data: {
+        display_name: shippingMethod.name,
+        type: "fixed_amount",
+        fixed_amount: {
+          amount: Math.round(shippingMethod.price * 100),
+          currency: currencyUsed,
+        },
+      },
+    };
+
+    // ---------------------------------------------------
+    // 💳 SESSION STRIPE
+    // ---------------------------------------------------
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
       mode: "payment",
+      payment_method_types: ["card"],
       customer_email: customerEmail,
       line_items,
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            display_name: shippingMethod.name,
-            fixed_amount: {
-              amount: Math.round(shippingMethod.price * 100),
-              currency: currencyUsed,
-            },
-            type: "fixed_amount",
-          },
-        },
-      ],
-
-      metadata: {
-        order_id: orderRef.id,
-        email: customerEmail,
-      },
-
-      // 🔥🔥🔥 FIX DEFINITIF DE undefined/success
+      shipping_options: [shippingOption],
+      metadata: { order_id: orderRef.id, email: customerEmail },
       success_url: `${process.env.NEXT_PUBLIC_URL}/${localeUsed}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_URL}/${localeUsed}/checkout`,
     });
 
     if (!session?.url) {
-      console.error("❌ Session Stripe invalide :", session);
-      return NextResponse.json(
-        { error: "Stripe session creation failed" },
-        { status: 500 }
-      );
+      throw new Error("Stripe session invalid");
     }
 
-    console.log("✅ Session Stripe créée :", session.id);
-
     return NextResponse.json({ url: session.url });
+
   } catch (err: any) {
     console.error("💥 ERREUR API /checkout :", err);
     return NextResponse.json(
-      { error: err.message || "Internal server error" },
+      { error: err?.message || "Internal server error" },
       { status: 500 }
     );
   }

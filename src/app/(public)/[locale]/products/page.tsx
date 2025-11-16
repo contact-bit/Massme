@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useCart } from "@/context/CartContext";
 
 type Locale = "fr" | "en";
 
@@ -12,7 +13,7 @@ type Product = {
   id: string;
   name: Record<Locale, string>;
   description?: Record<Locale, string>;
-  price: { eur: number; usd?: number };
+  price: { eur: number };
   imageUrl?: string;
   isActive?: boolean;
 };
@@ -24,43 +25,38 @@ export default function ProductsPage({
 }) {
   const { locale } = use(params);
   const [products, setProducts] = useState<Product[]>([]);
+  const { addItem } = useCart();
 
   useEffect(() => {
     async function fetchProducts() {
       const snapshot = await getDocs(collection(db, "products"));
-
       const data = snapshot.docs
-        .map((doc) => {
-          const raw = doc.data() as any;
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        .filter((p: Product) => p.isActive);
 
-          // 🛑 Supprime un éventuel id contenu dans raw pour éviter le conflit TypeScript
-          if ("id" in raw) delete raw.id;
-
-          return {
-            id: doc.id, // l'id Firestore officiel
-            ...raw,
-          };
-        })
-        .filter((p) => p.isActive === true); // 👈 Filtre produit actif
-
-      setProducts(data);
+      setProducts(data as Product[]);
     }
 
     fetchProducts();
   }, []);
 
-  const addToCart = (product: Product) => {
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const updated = [...cart, product];
-    localStorage.setItem("cart", JSON.stringify(updated));
+  // 🧩 Nouvelle version compatible CartContext
+  const addToCart = (p: Product) => {
+    const name = p.name?.[locale] || p.name.fr;
+    const description = p.description?.[locale] || p.description?.fr || "";
 
-    window.dispatchEvent(new Event("cart-updated"));
-
-    alert(
-      `${product.name?.[locale] || product.name?.fr} ${
-        locale === "fr" ? "ajouté au panier 🛒" : "added to cart 🛒"
-      }`
-    );
+    addItem({
+      id: p.id,
+      name,
+      description,
+      imageUrl: p.imageUrl || "",
+      unit_price: p.price.eur,
+      quantity: 1,
+      total: p.price.eur,
+    });
   };
 
   return (
@@ -71,9 +67,7 @@ export default function ProductsPage({
 
       {products.length === 0 ? (
         <p className="text-gray-600">
-          {locale === "fr"
-            ? "Aucun produit disponible."
-            : "No products found."}
+          {locale === "fr" ? "Aucun produit disponible." : "No products found."}
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -85,7 +79,7 @@ export default function ProductsPage({
               {p.imageUrl && (
                 <Image
                   src={p.imageUrl}
-                  alt={p.name?.[locale] || p.name?.fr}
+                  alt={p.name[locale] || p.name.fr}
                   width={500}
                   height={500}
                   className="rounded-md object-cover w-full h-64 mb-4"
@@ -95,7 +89,7 @@ export default function ProductsPage({
               <div>
                 <Link href={`/${locale}/products/${p.id}`}>
                   <h2 className="font-semibold text-lg mb-2 hover:underline">
-                    {p.name?.[locale] || p.name?.fr}
+                    {p.name[locale] || p.name.fr}
                   </h2>
                 </Link>
 
@@ -103,16 +97,14 @@ export default function ProductsPage({
                   {p.description?.[locale] || p.description?.fr}
                 </p>
 
-                <p className="font-medium text-lg mb-6">{p.price?.eur} €</p>
+                <p className="font-medium text-lg mb-6">{p.price.eur} €</p>
               </div>
 
               <button
                 onClick={() => addToCart(p)}
                 className="bg-black text-white py-2 rounded-md hover:bg-gray-800 transition"
               >
-                {locale === "fr"
-                  ? "Ajouter au panier 🛒"
-                  : "Add to cart 🛒"}
+                {locale === "fr" ? "Ajouter au panier 🛒" : "Add to cart 🛒"}
               </button>
             </div>
           ))}

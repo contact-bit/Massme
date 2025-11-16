@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // 🔍 Récup session Stripe
+    // 🔍 Récupération session Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (!session) {
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       });
     }
 
-    // 📌 Récup commande Firestore
+    // 📌 Récupération de la commande Firestore
     const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
 
     if (!snap.exists) {
@@ -48,15 +48,8 @@ export async function GET(req: Request) {
 
     const order = snap.data();
 
-    if (!order) {
-      return NextResponse.json(
-        { success: false, error: "Order data missing" },
-        { status: 500 }
-      );
-    }
-
-    // 🧩 SHIPPING METHOD — normalisation
-    const shipping = order.shippingMethod ?? {};
+    // 🧩 SHIPPING METHOD — NORMALISATION
+    const shipping = order.shippingMethod || {};
 
     let shippingName = "—";
     let shippingPrice: number | null = null;
@@ -77,7 +70,7 @@ export async function GET(req: Request) {
       shippingPrice = shipping.price.en;
     }
 
-    // 🟢 Mise à jour Firestore si payé
+    // 🟢 UPDATE FIRESTORE SI PAYÉ
     if (session.payment_status === "paid") {
       await dbAdmin.collection("pending_orders").doc(orderId).update({
         status: "paid",
@@ -86,11 +79,11 @@ export async function GET(req: Request) {
       });
     }
 
-    // 🧮 TOTAL en € (Stripe renvoie en centimes)
-    const stripeAmount = session.amount_total || 0;
+    // 🧮 CALCUL TOTAL EN EUROS
+    const stripeAmount = session.amount_total || 0; // CENTIMES
     const amountEuro = stripeAmount / 100;
 
-    // 🔥 Réponse pour SuccessPage
+    // 🔥 Réponse complète (pour SuccessPage)
     return NextResponse.json({
       success: true,
       order: {

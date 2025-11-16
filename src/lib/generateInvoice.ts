@@ -5,88 +5,84 @@ import path from "path";
 export async function generateInvoicePDF(order: any, orderId: string) {
   return new Promise<Buffer>((resolve, reject) => {
     try {
-      const fontRegular = path.join(
-        process.cwd(),
-        "src",
-        "lib",
-        "fonts",
-        "Poppins-Regular.ttf"
-      );
+      const fontRegular = path.join(process.cwd(), "src", "lib", "fonts", "Poppins-Regular.ttf");
+      const fontBold = path.join(process.cwd(), "src", "lib", "fonts", "Poppins-Bold.ttf");
 
-      const fontBold = path.join(
-        process.cwd(),
-        "src",
-        "lib",
-        "fonts",
-        "Poppins-Bold.ttf"
-      );
+      // --- PDF INIT ---
+      const doc = new PDFDocument({ size: "A4", margin: 50 });
 
-      // 🟢 IMPORTANT : définir la police par défaut → empêche PDFKit d’utiliser Helvetica
-      const doc = new PDFDocument({
-        size: "A4",
-        margin: 50,
-        font: fontRegular, // <= 🔥 FIX ULTIME
-      });
-
-      const chunks: Uint8Array[] = [];
-      doc.on("data", (chunk) => chunks.push(chunk));
+      const chunks: Buffer[] = [];
+      doc.on("data", (c) => chunks.push(c));
       doc.on("end", () => resolve(Buffer.concat(chunks)));
       doc.on("error", reject);
 
-      // ============================================================
+      // ============================
       // 🧾 HEADER
-      // ============================================================
+      // ============================
       if (fs.existsSync(fontBold)) doc.font(fontBold);
       doc.fontSize(24).text("📄 Facture Massme").moveDown();
 
-      doc.font(fontRegular).fontSize(12);
-      doc.text(`Numéro de commande : ${orderId}`);
-      doc.text(`Date : ${new Date().toLocaleDateString()}`);
-      doc.moveDown(2);
+      if (fs.existsSync(fontRegular)) doc.font(fontRegular);
+      doc.fontSize(12)
+        .text(`Numéro de commande : ${orderId}`)
+        .text(`Date : ${new Date().toLocaleDateString()}`)
+        .moveDown(2);
 
-      // ============================================================
+      // ============================
       // 👤 CLIENT
-      // ============================================================
+      // ============================
+      const a = order.shippingAddress;
+
       if (fs.existsSync(fontBold)) doc.font(fontBold);
       doc.fontSize(16).text("Informations client").moveDown(1);
 
-      doc.font(fontRegular).fontSize(12);
-      doc.text(`Nom : ${order.shippingAddress.name}`);
-      doc.text(`Email : ${order.shippingAddress.email}`);
-      doc.text(`Adresse : ${order.shippingAddress.address}`);
-      doc.text(
-        `${order.shippingAddress.postalCode} ${order.shippingAddress.city}`
-      );
+      if (fs.existsSync(fontRegular)) doc.font(fontRegular);
+      doc.fontSize(12);
+
+      doc.text(`Nom : ${a.name}`);
+      doc.text(`Email : ${a.email}`);
+      doc.text(`Adresse : ${a.address}`);
+      doc.text(`${a.postalCode} ${a.city}`);
+      doc.text(`Téléphone : ${a.phone}`);
       doc.moveDown(2);
 
-      // ============================================================
-      // 📦 PRODUITS
-      // ============================================================
+      // ============================
+      // 📦 PRODUITS — FIXÉ
+      // ============================
       if (fs.existsSync(fontBold)) doc.font(fontBold);
       doc.fontSize(16).text("Détail de la commande").moveDown(1);
 
-      doc.font(fontRegular).fontSize(12);
+      if (fs.existsSync(fontRegular)) doc.font(fontRegular);
+      doc.fontSize(12);
+
+      let itemsTotal = 0;
 
       order.items.forEach((item: any) => {
-        doc.text(
-          `• ${item.name?.fr || "Produit"} — ${item.price.eur} € x ${
-            item.quantity || 1
-          }`
-        );
+        const name = item.name || "Produit";
+        const price = Number(item.price || 0); // 🔥 Prix normalisé
+        const qty = Number(item.quantity || 1);
+
+        itemsTotal += price * qty;
+
+        doc.text(`• ${name} — ${price.toFixed(2)} € × ${qty}`);
       });
 
-      // ============================================================
-      // 💰 TOTAL
-      // ============================================================
-      const total = order.items.reduce(
-        (sum: number, item: any) =>
-          sum + item.price.eur * (item.quantity || 1),
-        0
-      );
+      // ============================
+      // 🚚 LIVRAISON — FIXÉ
+      // ============================
+      const shippingPrice = Number(order.shippingMethod?.price || 0);
 
-      doc.moveDown(2);
+      doc.moveDown(1);
+      doc.text(`Livraison : ${shippingPrice.toFixed(2)} €`);
+
+      // ============================
+      // 💰 TOTAL — FIXÉ
+      // ============================
+      const total = itemsTotal + shippingPrice;
+
       if (fs.existsSync(fontBold)) doc.font(fontBold);
-      doc.fontSize(16).text(`Total : ${total} €`, { align: "right" });
+      doc.moveDown(2);
+      doc.fontSize(16).text(`Total : ${total.toFixed(2)} €`, { align: "right" });
 
       doc.end();
     } catch (err) {

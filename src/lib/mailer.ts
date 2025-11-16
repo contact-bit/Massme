@@ -8,10 +8,9 @@ type Order = {
   currency: string;
   customer_email: string;
   payment_status: string;
-  created_at: string;
+  created_at: any; // Firestore timestamp possible
 };
 
-// Fonction d'envoi d'e-mails de commande
 export async function sendOrderEmails({
   order,
   clientEmail,
@@ -20,8 +19,14 @@ export async function sendOrderEmails({
   clientEmail: string;
 }) {
   console.log("🔑 Resend key loaded:", !!process.env.RESEND_API_KEY);
-  console.log("📦 Admin email:", process.env.ADMIN_EMAIL);
-  console.log("🚚 Logistics emails:", process.env.LOGISTICS_EMAILS);
+
+  // Sender sécurisé tant que domaine non validé
+  const sender = "Massme <onboarding@resend.dev>";
+
+  const created =
+    order.created_at?._seconds
+      ? new Date(order.created_at._seconds * 1000)
+      : new Date(order.created_at || Date.now());
 
   const subjectClient = "🧘 Votre commande Massme est confirmée";
   const subjectAdmin = "🛍️ Nouvelle commande reçue";
@@ -31,7 +36,7 @@ export async function sendOrderEmails({
 Bonjour,
 
 Merci pour votre commande chez Massme 💆‍♀️
-Votre paiement de ${order.amount_total} ${order.currency.toUpperCase()} a bien été reçu.
+Votre paiement de ${order.amount_total / 100} ${order.currency.toUpperCase()} a bien été reçu.
 
 Nous vous informerons dès que votre commande sera en préparation.
 
@@ -44,7 +49,7 @@ Nouvelle commande reçue !
 
 - ID: ${order.id}
 - Email client: ${order.customer_email}
-- Montant: ${order.amount_total} ${order.currency.toUpperCase()}
+- Montant: ${order.amount_total / 100} ${order.currency.toUpperCase()}
 - Statut: ${order.payment_status}
   `;
 
@@ -52,27 +57,16 @@ Nouvelle commande reçue !
 Une nouvelle commande doit être traitée :
 
 Client : ${order.customer_email}
-Montant : ${order.amount_total} ${order.currency.toUpperCase()}
-Date : ${new Date(order.created_at).toLocaleString("fr-FR")}
+Montant : ${order.amount_total / 100} ${order.currency.toUpperCase()}
+Date : ${created.toLocaleString("fr-FR")}
   `;
 
   try {
-    console.log("📧 Envoi des e-mails Massme...");
+    console.log("📮 Envoi des e-mails...");
 
-    // Adresse expéditeur (utilise onboarding@resend.dev tant que massme.fr n’est pas validé)
-    const sender = "Massme <contact@hdconnects.com>";
-
-    // Liste des destinataires logistiques (peut contenir plusieurs adresses séparées par une virgule)
     const logisticsEmails = process.env.LOGISTICS_EMAILS
       ? process.env.LOGISTICS_EMAILS.split(",").map((e) => e.trim())
       : [];
-
-    // Supprime les doublons (si le mail du client ou admin est déjà dans logistique)
-    const uniqueRecipients = Array.from(
-      new Set([clientEmail, process.env.ADMIN_EMAIL!, ...logisticsEmails])
-    );
-
-    console.log("📮 Envoi vers :", uniqueRecipients);
 
     const results = await Promise.allSettled([
       resend.emails.send({
@@ -105,15 +99,14 @@ Date : ${new Date(order.created_at).toLocaleString("fr-FR")}
           ? "Admin"
           : `Logistique ${i - 1}`;
       if (res.status === "fulfilled") {
-        const id = res.value?.data?.id ?? "(aucun ID)";
-        console.log(`✅ Email ${type} envoyé (ID: ${id})`);
+        console.log(`✅ Email ${type} envoyé`);
       } else {
-        console.error(`❌ Échec envoi ${type}:`, res.reason);
+        console.error(`❌ Échec ${type}:`, res.reason);
       }
     });
 
-    console.log("✅ Envoi terminé.");
+    console.log("✅ Envoi terminé");
   } catch (err) {
-    console.error("💥 Erreur critique d’envoi Resend :", err);
+    console.error("💥 Erreur critique Resend :", err);
   }
 }
