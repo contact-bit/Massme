@@ -20,8 +20,8 @@ type Product = {
 
 export default function ProductPage() {
   const params = useParams();
-  const locale = (Array.isArray(params.locale) ? params.locale[0] : params.locale) as Locale;
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const locale = params.locale as Locale;
+  const id = params.id as string;
 
   const { addItem, toggleCart } = useCart();
 
@@ -30,7 +30,7 @@ export default function ProductPage() {
 
   useEffect(() => {
     async function fetchProduct() {
-      if (!id || typeof id !== "string") return;
+      if (!id) return;
 
       const ref = doc(db, "products", id);
       const snap = await getDoc(ref);
@@ -53,12 +53,14 @@ export default function ProductPage() {
   const addToCart = () => {
     addItem({
       id: product.id,
-      name: product.name[locale] || product.name.fr,
-      price: product.price.eur,
+      name: product.name[locale],
+      description: product.description[locale],
+      imageUrl: product.imageUrl,
+      price: Number(product.price.eur),
       quantity: 1,
     });
 
-    toggleCart(); // ouvre le panier
+    toggleCart();
   };
 
   return (

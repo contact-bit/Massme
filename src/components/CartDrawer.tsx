@@ -41,7 +41,7 @@ export default function CartDrawer({ locale }: { locale: string }) {
                   <p className="font-medium">{item.name}</p>
 
                   <p className="text-sm text-gray-500">
-                    {item.unit_price.toFixed(2)} € × {item.quantity}
+                    {item.price.toFixed(2)} € × {item.quantity}
                   </p>
                 </div>
 

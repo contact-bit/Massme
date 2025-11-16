@@ -5,11 +5,10 @@ import { createContext, useContext, useEffect, useState } from "react";
 export type CartItem = {
   id: string;
   name: string;
-  description?: string;
-  imageUrl?: string;
-  unit_price: number;  // 🔥 Prix unitaire
+  price: number;      // 🔥 format unique
   quantity: number;
-  total: number;        // 🔥 quantity * unit_price
+  imageUrl?: string;
+  description?: string;
 };
 
 type CartContextType = {
@@ -30,19 +29,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Load cart safely
+  // Load cart
   useEffect(() => {
-    if (localStorage.getItem("cart")) {
-      localStorage.removeItem("cart"); // 🔥 Supprime ANCIEN format
-    }
-
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         setItems(JSON.parse(saved));
       } catch {
         setItems([]);
-        localStorage.removeItem(STORAGE_KEY);
       }
     }
   }, []);
@@ -52,7 +46,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
-  // ADD ITEM (pro complet)
+  // ADD ITEM (prix propre)
   const addItem = (item: CartItem) => {
     setItems((prev) => {
       const existing = prev.find((p) => p.id === item.id);
@@ -60,11 +54,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         return prev.map((p) =>
           p.id === item.id
-            ? {
-                ...p,
-                quantity: p.quantity + item.quantity,
-                total: (p.quantity + item.quantity) * p.unit_price,
-              }
+            ? { ...p, quantity: p.quantity + item.quantity }
             : p
         );
       }
@@ -72,7 +62,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return [...prev, item];
     });
 
-    setIsOpen(true); // Ouvre le drawer
+    setIsOpen(true);
   };
 
   const removeItem = (id: string) => {
@@ -84,8 +74,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  const getTotal = () =>
-    items.reduce((sum, item) => sum + item.total, 0); // 🔥 total propre
+  const getTotal = () => items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const toggleCart = () => setIsOpen((o) => !o);
 

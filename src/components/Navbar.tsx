@@ -8,7 +8,7 @@ import { ShoppingCart } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
-  
+
   // 🔥 Correction : sécuriser le locale
   const rawLocale = pathname?.split("/")[1];
   const locale = rawLocale === "fr" || rawLocale === "en" ? rawLocale : "fr";
@@ -57,7 +57,7 @@ export default function Navbar() {
                     className="block px-4 py-2 hover:bg-gray-100"
                     onClick={() => setOpenDropdown(false)}
                   >
-                    {t.needs[item.slug]}
+                    {t.needs[item.slug as keyof typeof t.needs]}
                   </Link>
                 ))}
               </div>
@@ -107,7 +107,7 @@ export default function Navbar() {
                   href={`/${locale}/besoins/${item.slug}`}
                   className="py-1 hover:underline"
                 >
-                  {t.needs[item.slug]}
+                  {t.needs[item.slug as keyof typeof t.needs]}
                 </Link>
               ))}
             </div>

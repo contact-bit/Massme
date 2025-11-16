@@ -35,7 +35,7 @@ export default function ProductsPage({
           id: doc.id,
           ...doc.data(),
         }))
-        .filter((p: Product) => p.isActive);
+        .filter((p: any) => p.isActive);
 
       setProducts(data as Product[]);
     }
@@ -43,19 +43,14 @@ export default function ProductsPage({
     fetchProducts();
   }, []);
 
-  // 🧩 Nouvelle version compatible CartContext
   const addToCart = (p: Product) => {
-    const name = p.name?.[locale] || p.name.fr;
-    const description = p.description?.[locale] || p.description?.fr || "";
-
     addItem({
       id: p.id,
-      name,
-      description,
-      imageUrl: p.imageUrl || "",
-      unit_price: p.price.eur,
+      name: p.name[locale] || p.name.fr,
+      description: p.description?.[locale] || "",
+      imageUrl: p.imageUrl,
+      price: Number(p.price.eur),
       quantity: 1,
-      total: p.price.eur,
     });
   };
 
@@ -79,7 +74,7 @@ export default function ProductsPage({
               {p.imageUrl && (
                 <Image
                   src={p.imageUrl}
-                  alt={p.name[locale] || p.name.fr}
+                  alt={p.name[locale]}
                   width={500}
                   height={500}
                   className="rounded-md object-cover w-full h-64 mb-4"
@@ -89,12 +84,12 @@ export default function ProductsPage({
               <div>
                 <Link href={`/${locale}/products/${p.id}`}>
                   <h2 className="font-semibold text-lg mb-2 hover:underline">
-                    {p.name[locale] || p.name.fr}
+                    {p.name[locale]}
                   </h2>
                 </Link>
 
                 <p className="text-gray-600 text-sm mb-4">
-                  {p.description?.[locale] || p.description?.fr}
+                  {p.description?.[locale] || ""}
                 </p>
 
                 <p className="font-medium text-lg mb-6">{p.price.eur} €</p>

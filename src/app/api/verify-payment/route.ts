@@ -48,8 +48,15 @@ export async function GET(req: Request) {
 
     const order = snap.data();
 
-    // 🧩 SHIPPING METHOD — NORMALISATION
-    const shipping = order.shippingMethod || {};
+    if (!order) {
+      return NextResponse.json(
+        { success: false, error: "Order data invalid" },
+        { status: 500 }
+      );
+    }
+
+    // 🧩 SHIPPING METHOD — NORMALISATION (FIX TypeScript)
+    const shipping = order?.shippingMethod ?? {};
 
     let shippingName = "—";
     let shippingPrice: number | null = null;
@@ -80,7 +87,7 @@ export async function GET(req: Request) {
     }
 
     // 🧮 CALCUL TOTAL EN EUROS
-    const stripeAmount = session.amount_total || 0; // CENTIMES
+    const stripeAmount = session.amount_total || 0;
     const amountEuro = stripeAmount / 100;
 
     // 🔥 Réponse complète (pour SuccessPage)
