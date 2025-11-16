@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const localeUsed = locale || "fr";
 
     // ---------------------------------------------------
-    // NORMALISATION ARTICLES
+    // 🔥 NORMALISATION ARTICLES (VERSION FINALE)
     // ---------------------------------------------------
     const cleanItems = items.map((item: any) => {
       const name =
@@ -37,31 +37,34 @@ export async function POST(req: Request) {
         item.name ||
         "Produit";
 
-      const price =
-        Number(item.price) ||
-        Number(item.unit_price) ||
-        Number(item.unitPrice) ||
-        Number(item.total) ||
-        0;
+      // 🔥 prix 100% fiable
+      const rawPrice =
+        typeof item.price === "number"
+          ? item.price
+          : typeof item.price === "object"
+          ? Number(item.price.eur)
+          : 0;
+
+      const price = Number(rawPrice) || 0;
 
       const quantity = Number(item.quantity || 1);
 
-      return { id: String(item.id), name, price, quantity };
+      return {
+        id: String(item.id),
+        name,
+        price,
+        quantity,
+      };
     });
 
     // ---------------------------------------------------
     // ENREGISTREMENT COMMANDE FIREBASE
     // ---------------------------------------------------
-    const normalizedShipping = {
-      name: { fr: shippingMethod.name, en: shippingMethod.name },
-      price: { fr: shippingMethod.price, en: shippingMethod.price },
-    };
-
     const orderRef = await db.collection("pending_orders").add({
       email: customerEmail,
       items: cleanItems,
       shippingAddress,
-      shippingMethod: normalizedShipping,
+      shippingMethod,
       currency: currencyUsed,
       locale: localeUsed,
       createdAt: Timestamp.now(),
@@ -80,13 +83,10 @@ export async function POST(req: Request) {
       quantity: item.quantity,
     }));
 
-    // ---------------------------------------------------
-    // SHIPPING OPTION (FIX)
-    // ---------------------------------------------------
     const shippingOption: Stripe.Checkout.SessionCreateParams.ShippingOption = {
       shipping_rate_data: {
         display_name: shippingMethod.name,
-        type: "fixed_amount" as const, // 🔥 FIX TYPE
+        type: "fixed_amount" as const,
         fixed_amount: {
           amount: Math.round(shippingMethod.price * 100),
           currency: currencyUsed,
@@ -94,10 +94,7 @@ export async function POST(req: Request) {
       },
     };
 
-    // ---------------------------------------------------
-    // CRÉATION SESSION STRIPE (FIX API 2025)
-    // ---------------------------------------------------
-    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+    const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       customer_email: customerEmail,
@@ -109,9 +106,7 @@ export async function POST(req: Request) {
       },
       success_url: `${process.env.NEXT_PUBLIC_URL}/${localeUsed}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_URL}/${localeUsed}/checkout`,
-    };
-
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    });
 
     if (!session?.url) throw new Error("Stripe session invalid");
 

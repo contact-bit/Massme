@@ -32,7 +32,7 @@ type Order = {
   };
   items: {
     name: Record<string, string>;
-    price?: { eur: number };
+    price?: number | { eur: number };
     quantity?: number;
   }[];
 };
@@ -117,9 +117,12 @@ export default function OrdersAdminPage() {
   const deleteMultiple = async () => {
     if (selectedOrders.length === 0) return;
 
-    if (!confirm(
-      `⚠️ Vous allez supprimer ${selectedOrders.length} commande(s).\n\nCONFIRMER ?`
-    )) return;
+    if (
+      !confirm(
+        `⚠️ Vous allez supprimer ${selectedOrders.length} commande(s).\nCONFIRMER ?`
+      )
+    )
+      return;
 
     for (const id of selectedOrders) {
       await deleteDoc(doc(db, "pending_orders", id));
@@ -127,6 +130,15 @@ export default function OrdersAdminPage() {
 
     setOrders((prev) => prev.filter((o) => !selectedOrders.includes(o.id)));
     setSelectedOrders([]);
+  };
+
+  /* -------------------------------------------------------
+     🧮 FONCTION DE CALCUL DU PRIX (FIX)
+  -------------------------------------------------------- */
+  const getItemPrice = (item: any) => {
+    if (typeof item.price === "number") return item.price;
+    if (typeof item.price?.eur === "number") return item.price.eur;
+    return 0;
   };
 
   /* -------------------------------------------------------
@@ -196,14 +208,14 @@ export default function OrdersAdminPage() {
           {orders.map((order) => {
             const isChecked = selectedOrders.includes(order.id);
 
+            /* ---- FIX CALCUL TOTAL ---- */
             const total =
               typeof order.amount_total === "number"
                 ? (order.amount_total / 100).toFixed(2)
                 : order.items
                     ?.reduce(
                       (sum, item) =>
-                        sum +
-                        (item.price?.eur || 0) * (item.quantity || 1),
+                        sum + getItemPrice(item) * (item.quantity || 1),
                       0
                     )
                     .toFixed(2);
@@ -275,7 +287,7 @@ export default function OrdersAdminPage() {
                       <p>{order.shippingAddress?.phone}</p>
                     </div>
 
-                    {/* MÉTHODE D’ENVOI — VERSION FIXED */}
+                    {/* MÉTHODE D’ENVOI */}
                     <div>
                       <h3 className="text-sm font-bold mb-1">
                         Méthode d’envoi
@@ -302,25 +314,29 @@ export default function OrdersAdminPage() {
                     <div>
                       <h3 className="text-sm font-bold mb-1">Produits</h3>
 
-                      {order.items?.map((item, i) => (
-                        <div
-                          key={i}
-                          className="flex justify-between bg-white border rounded-md p-3 mb-2"
-                        >
-                          <div>
-                            <p className="font-medium">
-                              {item.name.fr || item.name.en}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Qté : {item.quantity || 1}
+                      {order.items?.map((item, i) => {
+                        const price = getItemPrice(item);
+
+                        return (
+                          <div
+                            key={i}
+                            className="flex justify-between bg-white border rounded-md p-3 mb-2"
+                          >
+                            <div>
+                              <p className="font-medium">
+                                {item.name.fr || item.name.en}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Qté : {item.quantity || 1}
+                              </p>
+                            </div>
+
+                            <p className="font-semibold">
+                              {price.toFixed(2)} €
                             </p>
                           </div>
-
-                          <p className="font-semibold">
-                            {(item.price?.eur || 0).toFixed(2)} €
-                          </p>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {/* DELETE SINGLE */}
