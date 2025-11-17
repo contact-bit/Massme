@@ -1,151 +1,166 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, where, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import ProductForm from "./ProductForm";
-import ProductEditForm from "./ProductEditForm";
 
-export default function AdminPage() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+type Stats = {
+  products: number;
+  orders: number;
+  paidOrders: number;
+  revenue: number;
+};
+
+export default function DashboardPage() {
+  const [stats, setStats] = useState<Stats>({
+    products: 0,
+    orders: 0,
+    paidOrders: 0,
+    revenue: 0,
+  });
+
   const [loading, setLoading] = useState(true);
 
-  /* ================================
-        CHECK SESSION
-  ================================= */
   useEffect(() => {
-    const saved = localStorage.getItem("admin_auth");
+    async function loadStats() {
+      try {
+        // -----------------------------------------
+        // 🔵 PRODUITS
+        // -----------------------------------------
+        const productsSnap = await getDocs(collection(db, "products"));
+        const productsCount = productsSnap.size;
 
-    if (saved !== "true") {
-      window.location.href = "/admin/login";
-      return;
+        // -----------------------------------------
+        // 🟡 COMMANDES (toutes)
+        // -----------------------------------------
+        const ordersSnap = await getDocs(collection(db, "pending_orders"));
+        const ordersCount = ordersSnap.size;
+
+        // -----------------------------------------
+        // 🟢 COMMANDES PAYÉES
+        // -----------------------------------------
+        const paidQuery = query(
+          collection(db, "pending_orders"),
+          where("status", "==", "paid")
+        );
+        const paidSnap = await getDocs(paidQuery);
+        const paidCount = paidSnap.size;
+
+        // -----------------------------------------
+        // 💶 REVENUS
+        // -----------------------------------------
+        let revenue = 0;
+
+        paidSnap.forEach((docSnap) => {
+          const order = docSnap.data();
+
+          // Cas 1 : total enregistré dans la commande
+          if (typeof order.total === "number") {
+            revenue += order.total;
+            return;
+          }
+
+          // Cas 2 : Stripe amount_total
+          if (typeof order.amount_total === "number") {
+            revenue += order.amount_total / 100;
+            return;
+          }
+
+          // Cas 3 : Recalcul manuel
+          const subtotal =
+            order.items?.reduce(
+              (sum: number, item: any) =>
+                sum +
+                ((typeof item.price === "number"
+                  ? item.price
+                  : item.price?.eur ?? 0) *
+                  (item.quantity ?? 1)),
+              0
+            ) ?? 0;
+
+          const shipping =
+            typeof order.shippingMethod?.price === "number"
+              ? order.shippingMethod.price
+              : Number(order.shippingMethod?.price?.eur ?? 0);
+
+          revenue += subtotal + shipping;
+        });
+
+        setStats({
+          products: productsCount,
+          orders: ordersCount,
+          paidOrders: paidCount,
+          revenue,
+        });
+
+      } catch (error) {
+        console.error("Erreur Dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    fetchProducts();
+    loadStats();
   }, []);
 
-  /* ================================
-        FIRESTORE
-  ================================= */
-  const fetchProducts = async () => {
-    const snapshot = await getDocs(collection(db, "products"));
-    const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    setProducts(list);
-    setLoading(false);
-  };
+  if (loading) {
+    return (
+      <div className="admin-page">
+        <h1 className="admin-page-title">📊 Tableau de bord</h1>
+        <p>Chargement…</p>
+      </div>
+    );
+  }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Supprimer ce produit ?")) return;
-    await deleteDoc(doc(db, "products", id));
-    fetchProducts();
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("admin_auth");
-    window.location.href = "/admin/login";
-  };
-
-  /* ================================
-        DASHBOARD ADMIN PAGE
-  ================================= */
+  // -----------------------------------------
+  // 🔥 UI DASHBOARD
+  // -----------------------------------------
   return (
-    <main className="admin-container">
+    <div className="admin-page">
+      <h1 className="admin-page-title">📊 Tableau de bord</h1>
 
-      {/* HEADER TOP */}
-      <div className="admin-header-row">
-        <h1 className="admin-title">🛍️ Produits</h1>
+      <div className="dashboard-grid">
 
-        <div className="admin-nav">
-          <Link href="/admin" className="btn btn-secondary">Produits</Link>
-          <Link href="/admin/shipping" className="btn btn-secondary">Livraisons</Link>
-          <Link href="/admin/orders" className="btn btn-secondary">Commandes</Link>
-          <button onClick={handleLogout} className="btn btn-danger">Déconnexion</button>
+        <div className="dashboard-card primary">
+          <h3>Produits</h3>
+          <p className="dashboard-number">{stats.products}</p>
+        </div>
+
+        <div className="dashboard-card">
+          <h3>Commandes</h3>
+          <p className="dashboard-number">{stats.orders}</p>
+        </div>
+
+        <div className="dashboard-card success">
+          <h3>Commandes payées</h3>
+          <p className="dashboard-number">{stats.paidOrders}</p>
+        </div>
+
+        <div className="dashboard-card">
+          <h3>Revenu total (€)</h3>
+          <p className="dashboard-number">{stats.revenue.toFixed(2)}</p>
+        </div>
+
+      </div>
+
+      {/* QUICK ACTIONS */}
+      <div className="dashboard-quick-actions">
+        <h2 className="admin-section-title">Actions rapides</h2>
+
+        <div className="dashboard-actions-grid">
+          <a href="/admin/products" className="dashboard-action-btn">
+            ➕ Ajouter un produit
+          </a>
+
+          <a href="/admin/orders" className="dashboard-action-btn">
+            📦 Voir les commandes
+          </a>
+
+          <a href="/admin/shipping" className="dashboard-action-btn">
+            🚚 Configurer livraisons
+          </a>
         </div>
       </div>
-
-      {/* FORMULAIRE AJOUT PRODUIT */}
-      <div className="admin-card">
-        <h2 className="admin-section-title">Ajouter un produit</h2>
-        <ProductForm onSuccess={fetchProducts} />
-      </div>
-
-      {/* LISTE PRODUITS */}
-      <div className="admin-products-list">
-        <h2 className="admin-section-title">Liste des produits</h2>
-
-        {loading && <p className="admin-loading">Chargement…</p>}
-
-        {!loading && products.length === 0 && (
-          <p className="admin-empty">Aucun produit disponible.</p>
-        )}
-
-        {products.map((product) => (
-          <div key={product.id} className="admin-product-row">
-
-            {/* IMAGE + INFORMATIONS */}
-            <div className="admin-product-info">
-              {product.imageUrl ? (
-                <img
-                  src={product.imageUrl}
-                  alt={product.name?.fr}
-                  className="admin-product-img"
-                />
-              ) : (
-                <div className="admin-product-placeholder">No image</div>
-              )}
-
-              <div className="admin-product-text">
-                <h3>{product.name?.fr}</h3>
-                <p>{product.price?.eur} €</p>
-                <span className="admin-product-status">
-                  Stock : {product.stock} | {product.isActive ? "🟢 Actif" : "🔴 Inactif"}
-                </span>
-              </div>
-            </div>
-
-            {/* BOUTONS ACTION */}
-            <div className="admin-product-actions">
-              <button
-                onClick={() => setEditingProduct(product)}
-                className="btn btn-primary"
-              >
-                ✏️ Modifier
-              </button>
-
-              <button
-                onClick={() => handleDelete(product.id)}
-                className="btn btn-danger"
-              >
-                🗑️ Supprimer
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* MODAL EDITION */}
-      {editingProduct && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal">
-            <button
-              onClick={() => setEditingProduct(null)}
-              className="admin-modal-close"
-            >
-              ✖
-            </button>
-
-            <h2 className="admin-section-title">Modifier le produit</h2>
-
-            <ProductEditForm
-              product={editingProduct}
-              onClose={() => setEditingProduct(null)}
-              onUpdated={fetchProducts}
-            />
-          </div>
-        </div>
-      )}
-    </main>
+    </div>
   );
 }

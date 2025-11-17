@@ -1,14 +1,20 @@
-// src/app/admin/layout.tsx
 import type { ReactNode } from "react";
-
-// 🎨 On importe aussi les styles GLOBALS du site
-import "@/styles/tokens.css";
-import "@/styles/utilities.css";
-import "@/styles/components.css";
-
-// 🎨 Puis les styles ADMIN
 import "./styles/admin.css";
+import AdminSidebar from "./components/AdminSidebar";
+import AdminHeader from "./components/AdminHeader";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  return <div className="admin-wrapper">{children}</div>;
+  return (
+    <div className="admin-layout">
+      
+      {/* SIDEBAR */}
+      <AdminSidebar />
+
+      {/* CONTENT */}
+      <div className="admin-content">
+        <AdminHeader />
+        <div className="admin-page">{children}</div>
+      </div>
+    </div>
+  );
 }

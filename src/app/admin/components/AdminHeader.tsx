@@ -1,33 +1,30 @@
 "use client";
 
-import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-export default function AdminHeader({ onLogout }: { onLogout: () => void }) {
+export default function AdminHeader() {
+  const pathname = usePathname();
+
+  const titles: Record<string, string> = {
+    "/admin": "Dashboard",
+    "/admin/orders": "Commandes",
+    "/admin/products": "Produits",
+    "/admin/shipping": "Livraison",
+  };
+
   return (
     <header className="admin-header">
-      {/* LEFT : LOGO + TITLE */}
-      <div className="admin-header-left">
-        <div className="admin-logo">⚙️ MassMe Admin</div>
-      </div>
+      <h2>{titles[pathname] || "Admin"}</h2>
 
-      {/* RIGHT : NAVIGATION */}
-      <nav className="admin-nav">
-        <Link href="/admin" className="btn btn-secondary">
-          Produits
-        </Link>
-
-        <Link href="/admin/shipping" className="btn btn-secondary">
-          Livraisons
-        </Link>
-
-        <Link href="/admin/orders" className="btn btn-secondary">
-          Commandes
-        </Link>
-
-        <button className="btn btn-danger" onClick={onLogout}>
-          Déconnexion
-        </button>
-      </nav>
+      <button
+        onClick={() => {
+          localStorage.removeItem("admin_token");
+          window.location.href = "/admin/login";
+        }}
+        className="btn-logout"
+      >
+        Déconnexion
+      </button>
     </header>
   );
 }
