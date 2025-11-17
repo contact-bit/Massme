@@ -8,17 +8,23 @@ import {
   getDocs,
   orderBy,
   query,
-  where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 type Order = {
   id: string;
   email: string;
-  status: string;
+  status?: "pending_payment" | "paid";
   createdAt?: any;
-  amount_total?: number;
-  currency?: string;
+
+  // Stripe
+  amount_total?: number; // total payé en centimes
+
+  // Stocké par ton API
+  subtotal?: number;
+  shippingPrice?: number;
+  total?: number;
+
   shippingAddress?: {
     name: string;
     address: string;
@@ -26,14 +32,16 @@ type Order = {
     postalCode: string;
     phone: string;
   };
+
   shippingMethod?: {
-    name?: string | Record<string, string>;
-    price?: number | Record<string, number>;
+    name?: string;
+    price?: number;
   };
+
   items: {
-    name: Record<string, string>;
-    price?: number | { eur: number };
-    quantity?: number;
+    name: { fr?: string; en?: string };
+    price: number | { eur?: number };
+    quantity: number;
   }[];
 };
 
@@ -44,85 +52,77 @@ export default function OrdersAdminPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
-  /* -------------------------------------------------------
-     🔄 CHARGEMENT DES COMMANDES
-  -------------------------------------------------------- */
+  /* ---------------------------------------------------------
+     🔄 Chargement des commandes (Full + filtrage front-end)
+  --------------------------------------------------------- */
   useEffect(() => {
-    async function fetchOrders() {
-      try {
-        setLoading(true);
+    async function loadOrders() {
+      setLoading(true);
 
-        let q;
-        if (filter === "all") {
-          q = query(
-            collection(db, "pending_orders"),
-            orderBy("createdAt", "desc")
-          );
-        } else {
-          q = query(
-            collection(db, "pending_orders"),
-            where("status", "==", filter),
-            orderBy("createdAt", "desc")
-          );
-        }
+      const q = query(collection(db, "pending_orders"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      const allOrders = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Order[];
 
-        const snap = await getDocs(q);
-        const data = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Order[];
+      // 🔥 Filtrage front-end → FINI les soucis Firestore
+      const filtered =
+        filter === "all" ? allOrders : allOrders.filter((o) => o.status === filter);
 
-        setOrders(data);
-      } catch (e) {
-        console.error("Erreur chargement commandes :", e);
-      } finally {
-        setLoading(false);
-      }
+      setOrders(filtered);
+      setLoading(false);
     }
 
-    fetchOrders();
+    loadOrders();
   }, [filter]);
 
-  /* -------------------------------------------------------
-     🔘 SELECTION UNIQUE
-  -------------------------------------------------------- */
-  const toggleSelect = (id: string) => {
-    setSelectedOrders((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  /* ---------------------------------------------------------
+     🧮 Calculs des prix
+  --------------------------------------------------------- */
+  const getItemPrice = (item: any): number =>
+    typeof item.price === "number" ? item.price :
+    typeof item.price?.eur === "number" ? item.price.eur : 0;
+
+  const getSubtotal = (order: Order): number =>
+    order.items?.reduce(
+      (sum, item) => sum + getItemPrice(item) * item.quantity,
+      0
+    ) || 0;
+
+  const getShippingPrice = (order: Order): number =>
+    typeof order.shippingMethod?.price === "number"
+      ? order.shippingMethod.price
+      : typeof order.shippingPrice === "number"
+      ? order.shippingPrice
+      : 0;
+
+  const getTotal = (order: Order): number => {
+    // 1️⃣ Stripe → le plus fiable
+    if (typeof order.amount_total === "number") return order.amount_total / 100;
+
+    // 2️⃣ Stocké par ton API
+    if (typeof order.total === "number") return order.total;
+
+    // 3️⃣ Recalcul propre
+    return getSubtotal(order) + getShippingPrice(order);
   };
 
-  /* -------------------------------------------------------
-     🔘 TOUT SELECTIONNER
-  -------------------------------------------------------- */
-  const toggleSelectAll = () => {
-    if (selectedOrders.length === orders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(orders.map((o) => o.id));
-    }
-  };
-
-  /* -------------------------------------------------------
-     🗑️ SUPPRESSION INDIVIDUELLE
-  -------------------------------------------------------- */
+  /* ---------------------------------------------------------
+     🗑️ Suppression commandes
+  --------------------------------------------------------- */
   const deleteSingle = async (id: string) => {
-    if (!confirm("❌ Supprimer définitivement cette commande ?")) return;
-
+    if (!confirm("Supprimer cette commande ?")) return;
     await deleteDoc(doc(db, "pending_orders", id));
     setOrders((prev) => prev.filter((o) => o.id !== id));
-    setSelectedOrders((prev) => prev.filter((x) => x !== id));
   };
 
-  /* -------------------------------------------------------
-     🗑️ SUPPRESSION MULTIPLE
-  -------------------------------------------------------- */
+  const toggleSelectAll = () => {
+    if (selectedOrders.length === orders.length) setSelectedOrders([]);
+    else setSelectedOrders(orders.map((o) => o.id));
+  };
+
   const deleteMultiple = async () => {
     if (selectedOrders.length === 0) return;
 
-    if (
-      !confirm(
-        `⚠️ Vous allez supprimer ${selectedOrders.length} commande(s).\nCONFIRMER ?`
-      )
-    )
-      return;
+    if (!confirm(`Supprimer ${selectedOrders.length} commandes ?`)) return;
 
     for (const id of selectedOrders) {
       await deleteDoc(doc(db, "pending_orders", id));
@@ -132,24 +132,12 @@ export default function OrdersAdminPage() {
     setSelectedOrders([]);
   };
 
-  /* -------------------------------------------------------
-     🧮 FONCTION DE CALCUL DU PRIX (FIX)
-  -------------------------------------------------------- */
-  const getItemPrice = (item: any) => {
-    if (typeof item.price === "number") return item.price;
-    if (typeof item.price?.eur === "number") return item.price.eur;
-    return 0;
-  };
-
-  /* -------------------------------------------------------
-     🖥️ RENDU UI
-  -------------------------------------------------------- */
-
+  /* ---------------------------------------------------------
+     UI
+  --------------------------------------------------------- */
   return (
     <main className="max-w-6xl mx-auto py-10 px-4 text-gray-900">
-      <h1 className="text-3xl font-bold mb-8 text-blue-700">
-        🧾 Tableau de bord – Commandes
-      </h1>
+      <h1 className="text-3xl font-bold mb-8 text-blue-700">🧾 Commandes</h1>
 
       {/* FILTRE */}
       <div className="mb-6 flex gap-4">
@@ -159,12 +147,8 @@ export default function OrdersAdminPage() {
             onClick={() => setFilter(type as any)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition ${
               filter === type
-                ? type === "paid"
-                  ? "bg-green-600 text-white"
-                  : type === "pending_payment"
-                  ? "bg-yellow-500 text-white"
-                  : "bg-blue-600 text-white"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 hover:bg-gray-200"
             }`}
           >
             {type === "all"
@@ -176,8 +160,8 @@ export default function OrdersAdminPage() {
         ))}
       </div>
 
-      {/* ACTIONS MULTIPLES */}
-      <div className="flex items-center justify-between mb-3">
+      {/* ACTIONS GLOBALES */}
+      <div className="flex items-center justify-between mb-4">
         <button
           onClick={toggleSelectAll}
           className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
@@ -190,35 +174,24 @@ export default function OrdersAdminPage() {
         {selectedOrders.length > 0 && (
           <button
             onClick={deleteMultiple}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md text-white text-sm"
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
           >
-            🗑️ Supprimer {selectedOrders.length} commande(s)
+            Supprimer {selectedOrders.length} commande(s)
           </button>
         )}
       </div>
 
+      {/* LISTE COMMANDES */}
       {loading ? (
-        <p className="text-center py-20 text-gray-500">
-          Chargement des commandes…
-        </p>
+        <p className="text-center py-20 text-gray-500">Chargement…</p>
       ) : orders.length === 0 ? (
-        <p className="text-gray-600">Aucune commande trouvée.</p>
+        <p className="text-gray-600">Aucune commande.</p>
       ) : (
         <div className="space-y-4">
           {orders.map((order) => {
-            const isChecked = selectedOrders.includes(order.id);
-
-            /* ---- FIX CALCUL TOTAL ---- */
-            const total =
-              typeof order.amount_total === "number"
-                ? (order.amount_total / 100).toFixed(2)
-                : order.items
-                    ?.reduce(
-                      (sum, item) =>
-                        sum + getItemPrice(item) * (item.quantity || 1),
-                      0
-                    )
-                    .toFixed(2);
+            const subtotal = getSubtotal(order);
+            const shipping = getShippingPrice(order);
+            const total = getTotal(order);
 
             return (
               <div
@@ -229,8 +202,14 @@ export default function OrdersAdminPage() {
                 <div className="flex items-center p-4">
                   <input
                     type="checkbox"
-                    checked={isChecked}
-                    onChange={() => toggleSelect(order.id)}
+                    checked={selectedOrders.includes(order.id)}
+                    onChange={() =>
+                      setSelectedOrders((prev) =>
+                        prev.includes(order.id)
+                          ? prev.filter((x) => x !== order.id)
+                          : [...prev, order.id]
+                      )
+                    }
                     className="w-5 h-5 accent-blue-600 mr-3"
                   />
 
@@ -241,16 +220,16 @@ export default function OrdersAdminPage() {
                     }
                   >
                     <p className="font-semibold">
-                      {order.shippingAddress?.name}
+                      {order.shippingAddress?.name || "Client"}
                     </p>
                     <p className="text-sm text-gray-500">{order.email}</p>
                   </div>
 
                   <div className="text-right mr-4">
-                    <p className="font-semibold">{total} €</p>
+                    <p className="font-semibold">{total.toFixed(2)} €</p>
 
                     <p
-                      className={`text-xs inline-block px-2 py-1 rounded-full ${
+                      className={`text-xs px-2 py-1 rounded-full ${
                         order.status === "paid"
                           ? "bg-green-100 text-green-700"
                           : "bg-yellow-100 text-yellow-700"
@@ -273,11 +252,8 @@ export default function OrdersAdminPage() {
                 {/* DETAILS */}
                 {expanded === order.id && (
                   <div className="border-t bg-gray-50 p-6 space-y-6">
-                    {/* Adresse */}
                     <div>
-                      <h3 className="text-sm font-bold mb-1">
-                        Adresse de livraison
-                      </h3>
+                      <h3 className="text-sm font-bold mb-1">Adresse</h3>
                       <p>{order.shippingAddress?.name}</p>
                       <p>{order.shippingAddress?.address}</p>
                       <p>
@@ -287,32 +263,16 @@ export default function OrdersAdminPage() {
                       <p>{order.shippingAddress?.phone}</p>
                     </div>
 
-                    {/* MÉTHODE D’ENVOI */}
                     <div>
-                      <h3 className="text-sm font-bold mb-1">
-                        Méthode d’envoi
-                      </h3>
-
-                      <p>
-                        {typeof order.shippingMethod?.name === "string"
-                          ? order.shippingMethod.name
-                          : order.shippingMethod?.name?.fr ||
-                            order.shippingMethod?.name?.en ||
-                            "—"}
-                      </p>
-
-                      <p>
-                        {typeof order.shippingMethod?.price === "number"
-                          ? order.shippingMethod.price.toFixed(2) + " €"
-                          : order.shippingMethod?.price?.fr
-                          ? order.shippingMethod.price.fr.toFixed(2) + " €"
-                          : "—"}
+                      <h3 className="text-sm font-bold mb-1">Livraison</h3>
+                      <p>{order.shippingMethod?.name || "—"}</p>
+                      <p className="font-semibold">
+                        {shipping.toFixed(2)} €
                       </p>
                     </div>
 
-                    {/* Produits */}
                     <div>
-                      <h3 className="text-sm font-bold mb-1">Produits</h3>
+                      <h3 className="text-sm font-bold mb-2">Produits</h3>
 
                       {order.items?.map((item, i) => {
                         const price = getItemPrice(item);
@@ -324,13 +284,12 @@ export default function OrdersAdminPage() {
                           >
                             <div>
                               <p className="font-medium">
-                                {item.name.fr || item.name.en}
+                                {item.name.fr || item.name.en || "Produit"}
                               </p>
                               <p className="text-xs text-gray-500">
-                                Qté : {item.quantity || 1}
+                                Qté : {item.quantity}
                               </p>
                             </div>
-
                             <p className="font-semibold">
                               {price.toFixed(2)} €
                             </p>
@@ -339,12 +298,17 @@ export default function OrdersAdminPage() {
                       })}
                     </div>
 
-                    {/* DELETE SINGLE */}
+                    <div className="border-t pt-4 space-y-1 text-sm">
+                      <p>Sous-total : {subtotal.toFixed(2)} €</p>
+                      <p>Livraison : {shipping.toFixed(2)} €</p>
+                      <p className="font-bold text-lg">Total : {total.toFixed(2)} €</p>
+                    </div>
+
                     <button
                       onClick={() => deleteSingle(order.id)}
                       className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
                     >
-                      🗑️ Supprimer cette commande
+                      Supprimer
                     </button>
                   </div>
                 )}

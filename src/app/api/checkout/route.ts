@@ -4,6 +4,13 @@ import { dbAdmin as db } from "@/lib/firebase.admin";
 import { Timestamp } from "firebase-admin/firestore";
 import Stripe from "stripe";
 
+type CleanItem = {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+};
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -19,8 +26,13 @@ export async function POST(req: Request) {
 
     if (!items?.length)
       return NextResponse.json({ error: "Missing items" }, { status: 400 });
+
     if (!shippingMethod)
-      return NextResponse.json({ error: "Missing shippingMethod" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing shippingMethod" },
+        { status: 400 }
+      );
+
     if (!customerEmail)
       return NextResponse.json({ error: "Missing email" }, { status: 400 });
 
@@ -28,16 +40,15 @@ export async function POST(req: Request) {
     const localeUsed = locale || "fr";
 
     // ---------------------------------------------------
-    // 🔥 NORMALISATION ARTICLES (VERSION FINALE)
+    // 1️⃣ NORMALISATION PRODUITS
     // ---------------------------------------------------
-    const cleanItems = items.map((item: any) => {
+    const cleanItems: CleanItem[] = items.map((item: any) => {
       const name =
-        item.name?.fr ||
-        item.name?.en ||
-        item.name ||
+        item?.name?.fr ||
+        item?.name?.en ||
+        item?.name ||
         "Produit";
 
-      // 🔥 prix 100% fiable
       const rawPrice =
         typeof item.price === "number"
           ? item.price
@@ -45,36 +56,51 @@ export async function POST(req: Request) {
           ? Number(item.price.eur)
           : 0;
 
-      const price = Number(rawPrice) || 0;
-
-      const quantity = Number(item.quantity || 1);
-
       return {
         id: String(item.id),
         name,
-        price,
-        quantity,
+        price: Number(rawPrice),
+        quantity: Number(item.quantity || 1),
       };
     });
 
     // ---------------------------------------------------
-    // ENREGISTREMENT COMMANDE FIREBASE
+    // 2️⃣ CALCULS PRIX
+    // ---------------------------------------------------
+    const subtotal = cleanItems.reduce(
+      (acc: number, item: CleanItem) =>
+        acc + item.price * item.quantity,
+      0
+    );
+
+    const shippingPrice = Number(shippingMethod.price || 0);
+
+    const total = subtotal + shippingPrice;
+
+    // ---------------------------------------------------
+    // 3️⃣ ENREGISTREMENT FIREBASE
     // ---------------------------------------------------
     const orderRef = await db.collection("pending_orders").add({
       email: customerEmail,
       items: cleanItems,
       shippingAddress,
       shippingMethod,
+
+      subtotal,
+      shippingPrice,
+      total,
+
       currency: currencyUsed,
       locale: localeUsed,
+
       createdAt: Timestamp.now(),
       status: "pending_payment",
     });
 
     // ---------------------------------------------------
-    // STRIPE line_items
+    // 4️⃣ STRIPE - préparation des line_items
     // ---------------------------------------------------
-    const line_items = cleanItems.map((item: any) => ({
+    const line_items = cleanItems.map((item: CleanItem) => ({
       price_data: {
         currency: currencyUsed,
         product_data: { name: item.name },
@@ -85,21 +111,29 @@ export async function POST(req: Request) {
 
     const shippingOption: Stripe.Checkout.SessionCreateParams.ShippingOption = {
       shipping_rate_data: {
-        display_name: shippingMethod.name,
-        type: "fixed_amount" as const,
+        display_name:
+          typeof shippingMethod.name === "string"
+            ? shippingMethod.name
+            : shippingMethod.name?.fr ||
+              shippingMethod.name?.en ||
+              "Livraison",
+        type: "fixed_amount",
         fixed_amount: {
-          amount: Math.round(shippingMethod.price * 100),
+          amount: Math.round(shippingPrice * 100),
           currency: currencyUsed,
         },
       },
     };
 
+    // ---------------------------------------------------
+    // 5️⃣ CRÉATION SESSION CHECKOUT STRIPE
+    // ---------------------------------------------------
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      payment_method_types: ["card"],
       customer_email: customerEmail,
       line_items,
       shipping_options: [shippingOption],
+      payment_method_types: ["card"],
       metadata: {
         order_id: orderRef.id,
         email: customerEmail,

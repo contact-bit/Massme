@@ -1,15 +1,78 @@
-import BesoinPageTemplate from "@/components/BesoinPage";
+import { notFound } from "next/navigation";
 
-export default function CadeauxPage() {
+export const dynamic = "force-dynamic";
+
+const CONTENT = {
+  fr: {
+    title: "Contact",
+    subtitle: "Nous sommes à votre écoute.",
+    form: {
+      name: "Nom",
+      email: "Email",
+      message: "Message",
+      submit: "Envoyer",
+    },
+    emailLabel: "Email :",
+  },
+  en: {
+    title: "Contact",
+    subtitle: "We're here to help you.",
+    form: {
+      name: "Name",
+      email: "Email",
+      message: "Message",
+      submit: "Send",
+    },
+    emailLabel: "Email:",
+  },
+} as const;
+
+export default async function ContactPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  const t = CONTENT[locale as "fr" | "en"];
+  if (!t) return notFound();
+
   return (
-    <BesoinPageTemplate
-      title="Idées cadeaux bien-être"
-      subtitle="Offrez du confort, de la relaxation et de la récupération."
-      paragraphs={[
-        "MassMe est un cadeau qui a du sens : il apporte du bien-être immédiat à tous ceux qui en ont besoin.",
-        "Contrairement aux accessoires classiques, MassMe offre un véritable soutien ergonomique permettant de se détendre profondément.",
-        "Que ce soit pour un proche sportif, stressé, souffrant de tensions cervicales ou en phase de convalescence, MassMe devient rapidement un indispensable.",
-      ]}
-    />
+    <main className="contact-page">
+
+      {/* HEADER */}
+      <header className="contact-header">
+        <h1>{t.title}</h1>
+        <p>{t.subtitle}</p>
+      </header>
+
+      {/* FORMULAIRE */}
+      <form className="contact-form" method="POST" action="#">
+        <div className="contact-field">
+          <label>{t.form.name}</label>
+          <input type="text" name="name" placeholder={t.form.name} />
+        </div>
+
+        <div className="contact-field">
+          <label>{t.form.email}</label>
+          <input type="email" name="email" placeholder={t.form.email} />
+        </div>
+
+        <div className="contact-field">
+          <label>{t.form.message}</label>
+          <textarea name="message" placeholder={t.form.message} />
+        </div>
+
+        <button type="submit" className="contact-submit">
+          {t.form.submit}
+        </button>
+      </form>
+
+      {/* EMAIL DIRECT */}
+      <div className="contact-email">
+        {t.emailLabel}
+        <a href="mailto:contact@massme.fr">contact@massme.fr</a>
+      </div>
+    </main>
   );
 }
