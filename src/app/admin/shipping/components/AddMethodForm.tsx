@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { setDoc, doc } from "firebase/firestore";
+import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function AddMethodForm({
@@ -11,80 +11,131 @@ export default function AddMethodForm({
   zone: string;
   onAdded: () => void;
 }) {
-  const [name, setName] = useState("");
-  const [delay, setDelay] = useState("");
-  const [price, setPrice] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    delay: "",
+    price: "",
+    type: "home",
+    relayProvider: "",
+  });
 
-  async function handleAdd() {
-    if (!name || !delay || !price) {
-      alert("Veuillez remplir tous les champs");
+  const handleChange = (e: any) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async () => {
+    if (!form.name || !form.price) {
+      alert("Veuillez remplir au minimum le nom et le prix.");
       return;
     }
 
-    setLoading(true);
+    const priceValue = parseFloat(form.price);
 
-    // ID document = standard_fr | express_en etc.
-    const id = `${name.toLowerCase().replace(/\s+/g, "_")}_${zone}`;
+    if (isNaN(priceValue)) {
+      alert("Le prix doit être un nombre.");
+      return;
+    }
 
-    await setDoc(doc(db, "shipping_methods", id), {
-      name: {
-        fr: zone === "fr" ? name : "",
-        en: zone === "en" ? name : "",
-      },
-      delay: {
-        fr: zone === "fr" ? delay : "",
-        en: zone === "en" ? delay : "",
-      },
-      price: {
-        fr: zone === "fr" ? Number(price) : null,
-        en: zone === "en" ? Number(price) : null,
-      },
-      isActive: true,
+    // ---- MULTILINGUE : remplit automatiquement fr + en ----
+    const name = {
+      fr: form.name,
+      en: form.name, // fallback auto
+    };
+
+    const delay = {
+      fr: form.delay,
+      en: form.delay, // fallback auto
+    };
+
+    const price = {
+      fr: priceValue,
+      en: priceValue, // fallback auto
+    };
+
+    // ---- Relay provider : seulement si type = relay ----
+    const relayProvider =
+      form.type === "relay" ? form.relayProvider : null;
+
+    // ---- ENREGISTREMENT FIRESTORE ----
+    await addDoc(collection(db, "shipping_methods"), {
       zone,
+      isActive: true,
+
+      // champs nécessaires pour checkout
+      type: form.type,
+      relayProvider,
+
+      // champs multilingues propres
+      name,
+      delay,
+      price,
     });
 
-    setName("");
-    setDelay("");
-    setPrice("");
-    setLoading(false);
+    // Reset formulaire
+    setForm({
+      name: "",
+      delay: "",
+      price: "",
+      type: "home",
+      relayProvider: "",
+    });
+
     onAdded();
-  }
+  };
 
   return (
-    <div className="bg-white border rounded-lg p-5 shadow mb-6">
-      <h3 className="text-lg font-semibold mb-4">
-        ➕ Ajouter un transporteur ({zone.toUpperCase()})
-      </h3>
-
+    <div className="space-y-3">
       <input
-        className="input"
-        placeholder="Nom (ex: Livraison express)"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
+        name="name"
+        className="admin-input"
+        placeholder="Nom (ex : Mondial Relay - Point Relais)"
+        value={form.name}
+        onChange={handleChange}
       />
 
       <input
-        className="input mt-2"
-        placeholder="Délai (ex: 24–48h)"
-        value={delay}
-        onChange={(e) => setDelay(e.target.value)}
+        name="delay"
+        className="admin-input"
+        placeholder="Délai (ex : 48-72h)"
+        value={form.delay}
+        onChange={handleChange}
       />
 
       <input
+        name="price"
+        className="admin-input"
         type="number"
-        className="input mt-2"
         placeholder="Prix (€)"
-        value={price}
-        onChange={(e) => setPrice(e.target.value)}
+        value={form.price}
+        onChange={handleChange}
       />
 
-      <button
-        onClick={handleAdd}
-        disabled={loading}
-        className="btn-primary mt-4"
+      <select
+        name="type"
+        className="admin-input"
+        value={form.type}
+        onChange={handleChange}
       >
-        {loading ? "Ajout..." : "➕ Ajouter le transporteur"}
+        <option value="home">Livraison à domicile</option>
+        <option value="relay">Point relais</option>
+      </select>
+
+      {form.type === "relay" && (
+        <select
+          name="relayProvider"
+          className="admin-input"
+          value={form.relayProvider}
+          onChange={handleChange}
+        >
+          <option value="">Choisir le réseau</option>
+          <option value="mondialrelay">Mondial Relay</option>
+          <option value="pickup">Pickup Shop2Shop</option>
+          <option value="colissimo">Colissimo</option>
+          <option value="relais-colis">Relais Colis</option>
+        </select>
+      )}
+
+      <button className="btn-primary" onClick={handleSubmit}>
+        ➕ Ajouter le transporteur
       </button>
     </div>
   );

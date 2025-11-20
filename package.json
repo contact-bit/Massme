@@ -20,7 +20,8 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "resend": "^6.4.2",
-    "stripe": "^19.3.0"
+    "stripe": "^19.3.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

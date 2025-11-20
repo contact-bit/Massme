@@ -1,11 +1,5 @@
 /* UTILITAIRES GLOBAUX — simples, non spécifiques */
 
-.page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-lg) var(--space-md);
-}
-
 .section {
   padding: var(--space-xl) 0;
 }

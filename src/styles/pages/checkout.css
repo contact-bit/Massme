@@ -1,17 +1,17 @@
 /* ============================================
    CHECKOUT — MASSME PREMIUM
-   Tous les styles utilisent les variables :root
 ============================================ */
 
 .checkout-page {
-  max-width: 680px;
+  width: 100%;
+  max-width: 1200px; /* 🔥 élargi toute la zone */
   margin: 0 auto;
   padding: var(--space-xl) var(--space-md) calc(var(--space-xl) * 2);
   color: var(--color-text);
   font-family: var(--font-main);
 }
 
-/* Title */
+/* Titre */
 .checkout-title {
   text-align: center;
   font-size: 2.4rem;
@@ -21,16 +21,19 @@
   margin-bottom: var(--space-xl);
 }
 
-/* Main card */
+/* Carte du formulaire */
 .checkout-card {
   background: var(--color-bg);
   padding: calc(var(--space-lg) * 1.2);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   border: 1px solid rgba(0, 0, 0, 0.06);
+
+  max-width: 750px;   /* 🔥 limite propre du formulaire */
+  margin: 0 auto;     /* mais centré dans la zone large */
 }
 
-/* Section titles */
+/* Section titres */
 .checkout-section {
   margin-bottom: var(--space-xl);
 }
@@ -51,7 +54,6 @@
 }
 
 .checkout-row {
-  display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-md);
 }
@@ -62,7 +64,6 @@
   border-radius: var(--radius-md);
   background: var(--color-bg-alt);
   border: 1px solid rgba(0, 0, 0, 0.15);
-
   font-size: 1rem;
   transition: var(--transition);
 }
@@ -74,18 +75,7 @@
   outline: none;
 }
 
-/* Shipping select */
-.checkout-input select {
-  appearance: none;
-}
-
-/* Loading text */
-.checkout-loading {
-  color: var(--color-muted);
-  font-style: italic;
-}
-
-/* Total section */
+/* Total */
 .checkout-total {
   margin-top: var(--space-lg);
   padding-top: var(--space-lg);
@@ -103,21 +93,17 @@
   font-weight: 800;
 }
 
-/* Pay button */
+/* Bouton payer */
 .checkout-button {
   margin-top: var(--space-lg);
   width: 100%;
-
   background: var(--color-primary);
   color: var(--color-bg);
-
   padding: calc(var(--space-md) * 1.2);
   border-radius: var(--radius-lg);
-
   font-size: 1.2rem;
   font-weight: 700;
   text-align: center;
-
   transition: var(--transition);
 }
 
@@ -138,6 +124,7 @@
 
   .checkout-card {
     padding: var(--space-lg);
+    max-width: 100%;
   }
 
   .checkout-row {

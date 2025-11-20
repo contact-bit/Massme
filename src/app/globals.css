@@ -3,3 +3,90 @@
 @import "../styles/utilities.css";
 @import "../styles/components.css";
 
+/* ============================
+   MONDIAL RELAY — STYLE CLEAN
+============================ */
+
+/* Conteneur */
+.mr-wrapper {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  box-sizing: border-box;
+}
+
+.mr-title {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  color: #111827;
+}
+
+/* Zone scrollable */
+.mr-zone {
+  max-height: 520px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+.mr-zone::-webkit-scrollbar {
+  width: 6px;
+}
+.mr-zone::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+/* Neutralisation des styles imposés */
+.mr-zone * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Champs texte */
+.mr-zone input[type="text"] {
+  border: 1px solid #d1d5db !important;
+  background: #f9fafb !important;
+  border-radius: 6px !important;
+  padding: 10px !important;
+  font-size: 0.95rem !important;
+  width: 100% !important;
+  margin-bottom: 10px !important;
+}
+
+/* Boutons */
+.mr-zone input[type="button"] {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  border: none !important;
+  cursor: pointer;
+  margin-bottom: 10px !important;
+}
+.mr-zone input[type="button"]:hover {
+  background: #1d4ed8 !important;
+}
+
+/* Liste */
+.mr-zone .ListeResultat div {
+  padding: 10px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  font-size: 0.9rem !important;
+  cursor: pointer;
+}
+.mr-zone .ListeResultat div:hover {
+  background: #f3f4f6 !important;
+}
+
+/* Carte */
+.mr-zone .leaflet-container {
+  width: 100% !important;
+  height: 340px !important;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  margin: 12px 0 !important;
+}
