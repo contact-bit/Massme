@@ -8,15 +8,37 @@ import AddMethodForm from "./components/AddMethodForm";
 import ToggleActivation from "./components/ToggleActivation";
 import EditMethodModal from "./components/EditMethodModal";
 
+/* ============================================================
+   🔥 TYPAGE FIRESTORE SHIPPING METHOD
+============================================================ */
+export type ShippingMethod = {
+  id: string;
+  name: {
+    fr: string;
+    en?: string;
+  };
+  delay: {
+    fr: string;
+    en?: string;
+  };
+  price: {
+    fr: number;
+    en?: number;
+  };
+  type: "home" | "relay";
+  relayProvider?: "mondialrelay" | "pickup" | null;
+  isActive: boolean;
+};
+
 export default function ShippingAdminPage() {
-  const [methods, setMethods] = useState<any[]>([]);
+  const [methods, setMethods] = useState<ShippingMethod[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [editing, setEditing] = useState<any>(null);
+  const [editing, setEditing] = useState<ShippingMethod | null>(null);
 
-  /* -------------------------------------------------------
+  /* ============================================================
      🔄 CHARGEMENT DES MÉTHODES
-  ------------------------------------------------------- */
+  ============================================================ */
   async function loadMethods() {
     try {
       setLoading(true);
@@ -24,10 +46,10 @@ export default function ShippingAdminPage() {
       const q = query(collection(db, "shipping_methods"));
       const snap = await getDocs(q);
 
-      let list = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      let list: ShippingMethod[] = snap.docs.map((doc) => {
+        const data = doc.data() as Omit<ShippingMethod, "id">;
+        return { id: doc.id, ...data };
+      });
 
       // Trier : actifs en premier
       list.sort((a, b) => {
@@ -47,25 +69,23 @@ export default function ShippingAdminPage() {
     loadMethods();
   }, []);
 
-  /* -------------------------------------------------------
-     🖼️ RENDER
-  ------------------------------------------------------- */
+  /* ============================================================
+     🎨 RENDER
+  ============================================================ */
   return (
     <div className="space-y-6">
       <h1 className="admin-title">Méthodes de livraison</h1>
 
-      {/* ------------------------------------------ */}
-      {/* FORMULAIRE AJOUT */}
-      {/* ------------------------------------------ */}
+      {/* AJOUT */}
       <div className="admin-card">
         <AddMethodForm zone="fr" onAdded={loadMethods} />
       </div>
 
-      {/* ------------------------------------------ */}
-      {/* LISTE DES MÉTHODES */}
-      {/* ------------------------------------------ */}
+      {/* LISTE */}
       <div className="admin-card">
-        <h2 className="text-lg font-semibold mb-4">Transporteurs configurés</h2>
+        <h2 className="text-lg font-semibold mb-4">
+          Transporteurs configurés
+        </h2>
 
         {loading ? (
           <p>Chargement…</p>
@@ -80,10 +100,10 @@ export default function ShippingAdminPage() {
                   m.isActive ? "bg-white" : "bg-gray-100 opacity-70"
                 }`}
               >
-                {/* Infos transporteur */}
+                {/* INFO */}
                 <div>
                   <p className="font-semibold text-lg">
-                    {m.name?.fr || m.name?.en || "(Sans nom)"}
+                    {m.name?.fr || "(Sans nom)"}
                   </p>
 
                   <p className="text-sm text-gray-600">
@@ -101,7 +121,7 @@ export default function ShippingAdminPage() {
                   </p>
                 </div>
 
-                {/* BOUTONS */}
+                {/* ACTIONS */}
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setEditing(m)}
@@ -122,9 +142,7 @@ export default function ShippingAdminPage() {
         )}
       </div>
 
-      {/* ------------------------------------------ */}
       {/* MODAL ÉDITION */}
-      {/* ------------------------------------------ */}
       {editing && (
         <EditMethodModal
           data={editing}

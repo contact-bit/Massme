@@ -2,16 +2,32 @@
 
 import { useEffect, useState } from "react";
 
-export default function TestMRModal({ onSelect }) {
-  const [selectedPoint, setSelectedPoint] = useState(null);
+type RelayPoint = {
+  name: string;
+  address: string;
+  address2?: string | null;
+  city: string;
+  postalCode: string;
+  country: string;
+  latitude?: string | null;
+  longitude?: string | null;
+  raw: any;
+};
+
+type TestMRModalProps = {
+  onSelect: (relay: RelayPoint) => void;
+};
+
+export default function TestMRModal({ onSelect }: TestMRModalProps) {
+  const [selectedPoint, setSelectedPoint] = useState<RelayPoint | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      const loadScript = (src) =>
-        new Promise((resolve) => {
+      const loadScript = (src: string) =>
+        new Promise<void>((resolve) => {
           const s = document.createElement("script");
           s.src = src;
-          s.onload = resolve;
+          s.onload = () => resolve();
           document.body.appendChild(s);
         });
 
@@ -21,17 +37,14 @@ export default function TestMRModal({ onSelect }) {
         "https://widget.mondialrelay.com/parcelshop-picker/jquery.plugin.mondialrelay.parcelshoppicker.min.js"
       );
 
-      window.jQuery("#mr-zone").MR_ParcelShopPicker({
+      (window as any).jQuery("#mr-zone").MR_ParcelShopPicker({
         Target: "#mr-target",
         Brand: "CC23PDX2",
         Country: "FR",
         ColLivMod: "24R",
 
-        OnParcelShopSelected(data) {
-          console.log("📦 Point Mondial Relay selectionné :", data);
-
-          // 🔥 NORMALISATION AUTOMATIQUE pour SuccessPage
-          const normalized = {
+        OnParcelShopSelected(data: any) {
+          const normalized: RelayPoint = {
             name: data.Nom,
             address: data.Adresse1,
             address2: data.Adresse2 || null,
@@ -40,7 +53,7 @@ export default function TestMRModal({ onSelect }) {
             country: data.Pays || "FR",
             latitude: data.Latitude || null,
             longitude: data.Longitude || null,
-            raw: data, // utile si besoin côté admin
+            raw: data,
           };
 
           setSelectedPoint(normalized);
@@ -64,7 +77,9 @@ export default function TestMRModal({ onSelect }) {
             <p className="font-semibold">{selectedPoint.name}</p>
             <p>{selectedPoint.address}</p>
             {selectedPoint.address2 && <p>{selectedPoint.address2}</p>}
-            <p>{selectedPoint.postalCode} {selectedPoint.city}</p>
+            <p>
+              {selectedPoint.postalCode} {selectedPoint.city}
+            </p>
 
             <button
               onClick={() => onSelect(selectedPoint)}

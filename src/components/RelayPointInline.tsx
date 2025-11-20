@@ -2,19 +2,23 @@
 
 import { useEffect, useState } from "react";
 
-export default function TestMRModal({ onSelect }) {
+type RelayInlineProps = {
+  onSelect: (relay: any) => void;
+};
+
+export default function RelayPointInline({ onSelect }: RelayInlineProps) {
   const [open, setOpen] = useState(false);
-  const [selectedPoint, setSelectedPoint] = useState(null);
+  const [selectedPoint, setSelectedPoint] = useState<any>(null);
 
   useEffect(() => {
     if (!open) return;
 
     const load = async () => {
-      const loadScript = (src) =>
-        new Promise((res) => {
+      const loadScript = (src: string) =>
+        new Promise<void>((resolve) => {
           const s = document.createElement("script");
           s.src = src;
-          s.onload = res;
+          s.onload = () => resolve();
           document.body.appendChild(s);
         });
 
@@ -24,16 +28,27 @@ export default function TestMRModal({ onSelect }) {
         "https://widget.mondialrelay.com/parcelshop-picker/jquery.plugin.mondialrelay.parcelshoppicker.min.js"
       );
 
-      window.jQuery("#mr-zone").MR_ParcelShopPicker({
+      (window as any).jQuery("#mr-inline").MR_ParcelShopPicker({
         Target: "#mr-target",
         Brand: "CC23PDX2",
         Country: "FR",
         ColLivMod: "24R",
 
-        // Quand un point est cliqué
-        OnParcelShopSelected: function (data) {
-          setSelectedPoint(data);
-        }
+        OnParcelShopSelected(data: any) {
+          const normalized = {
+            name: data.Nom,
+            address: data.Adresse1,
+            address2: data.Adresse2 || null,
+            city: data.Ville,
+            postalCode: data.CP,
+            country: data.Pays || "FR",
+            latitude: data.Latitude || null,
+            longitude: data.Longitude || null,
+            raw: data,
+          };
+
+          setSelectedPoint(normalized);
+        },
       });
     };
 
@@ -42,58 +57,30 @@ export default function TestMRModal({ onSelect }) {
 
   return (
     <div>
-      {/* Bouton ouverture */}
       <button
+        className="checkout-button"
         onClick={() => setOpen(true)}
-        className="px-4 py-2 bg-black text-white rounded-md"
       >
-        Choisir un point relais
+        Choisir un point Mondial Relay
       </button>
 
-      {/* Modal */}
       {open && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white w-[90%] max-w-3xl rounded-lg shadow-xl p-4 relative">
+        <div id="mr-inline" style={{ height: "450px", marginTop: "20px" }}></div>
+      )}
 
-            <button
-              onClick={() => setOpen(false)}
-              className="absolute right-3 top-3 text-gray-500 hover:text-black text-xl"
-            >
-              ✕
-            </button>
+      {selectedPoint && (
+        <div className="p-3 mt-3 bg-blue-50 border rounded">
+          <p className="font-semibold">{selectedPoint.name}</p>
+          <p>{selectedPoint.address}</p>
+          {selectedPoint.address2 && <p>{selectedPoint.address2}</p>}
+          <p>{selectedPoint.postalCode} {selectedPoint.city}</p>
 
-            <h2 className="text-xl font-bold mb-3">Sélectionner un point relais</h2>
-
-            {/* Widget MR */}
-            <div id="mr-zone" className="mr-zone"></div>
-            <input type="hidden" id="mr-target" />
-
-            {/* Détails du point */}
-            {selectedPoint && (
-              <div className="mt-4 p-3 border rounded-lg bg-gray-50">
-                <h3 className="font-semibold mb-1">Point sélectionné :</h3>
-
-                <p className="text-sm text-gray-700">
-                  <strong>{selectedPoint.Nom}</strong><br />
-                  {selectedPoint.Adresse1}<br />
-                  {selectedPoint.Adresse2 && <>{selectedPoint.Adresse2}<br /></>}
-                  {selectedPoint.CP} {selectedPoint.Ville}
-                </p>
-
-                {/* Bouton renvoi */}
-                <button
-                  onClick={() => {
-                    onSelect(selectedPoint);
-                    setOpen(false);
-                  }}
-                  className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md"
-                >
-                  Sélectionner ce point relais
-                </button>
-              </div>
-            )}
-
-          </div>
+          <button
+            className="checkout-button mt-3"
+            onClick={() => onSelect(selectedPoint)}
+          >
+            Sélectionner ce point
+          </button>
         </div>
       )}
     </div>

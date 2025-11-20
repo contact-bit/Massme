@@ -8,16 +8,20 @@ const PRIVATE_KEY = "GP8KVrZi";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const cp = searchParams.get("cp") || "13008"; // code postal test
+  const cp = searchParams.get("cp") || "13008"; // Code postal par défaut (test)
 
-  // 🔐 Security = MD5(Brand + Pays + CP + PrivateKey)
+  /* -------------------------------------------------------
+     🔐 Calcul sécurité MD5 : BRAND + Pays + CP + PrivateKey
+  ------------------------------------------------------- */
   const security = crypto
     .createHash("md5")
     .update(BRAND + "FR" + cp + PRIVATE_KEY)
     .digest("hex")
     .toUpperCase();
 
-  // ---- SOAP REQUEST ----
+  /* -------------------------------------------------------
+     📡 SOAP BODY
+  ------------------------------------------------------- */
   const xml = `
     <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
         xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
@@ -35,6 +39,9 @@ export async function GET(req: Request) {
   `;
 
   try {
+    /* -------------------------------------------------------
+       📬 Appel API Mondial Relay
+    ------------------------------------------------------- */
     const response = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
@@ -50,6 +57,9 @@ export async function GET(req: Request) {
     console.log("🔵 SOAP RAW RESPONSE:");
     console.log(text);
 
+    /* -------------------------------------------------------
+       📦 Parse XML -> JS (xml2js)
+    ------------------------------------------------------- */
     const parsed = await xml2js.parseStringPromise(text, {
       explicitArray: false,
     });
@@ -59,8 +69,18 @@ export async function GET(req: Request) {
         ?.WSI4_PointRelais_RechercheResult?.PointsRelais
         ?.PointRelais_Details || [];
 
+    /* -------------------------------------------------------
+       🟢 Réponse OK
+    ------------------------------------------------------- */
     return NextResponse.json({ ok: true, list });
-  } catch (e) {
-    return NextResponse.json({ ok: false, error: e.toString() });
+
+  } catch (e: any) {
+    /* -------------------------------------------------------
+       🔥 Correction TS : e = unknown → on normalise
+    ------------------------------------------------------- */
+    return NextResponse.json({
+      ok: false,
+      error: typeof e === "string" ? e : e?.message || "Unknown error",
+    });
   }
 }

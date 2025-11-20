@@ -5,13 +5,39 @@ import { useCart } from "@/context/CartContext";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-// Mondial Relay Modal
 import TestMRModal from "@/components/TestMRModal";
-
-// Pickup Modal
 import RelayModalPickup from "@/components/RelayWidget";
 
+/* ============================================================
+   📦 Types Firestore + Relay Points
+============================================================ */
+
+type ShippingMethodFS = {
+  name: any;
+  delay: any;
+  price: any;
+  type: "home" | "relay";
+  relayProvider?: string | null;
+  isActive: boolean;
+};
+
+type RelayPoint = {
+  name: string;
+  address: string;
+  address2?: string | null;
+  city: string;
+  postalCode: string;
+  country: string;
+  latitude?: string | null;
+  longitude?: string | null;
+  raw?: any;
+};
+
 type Locale = "fr" | "en";
+
+/* ============================================================
+   📦 COMPONENT
+============================================================ */
 
 export default function CheckoutPage({
   params,
@@ -24,7 +50,7 @@ export default function CheckoutPage({
   const [shippingMethods, setShipping] = useState<any[]>([]);
   const [loadingShipping, setLoadingShipping] = useState(true);
 
-  const [relayPoint, setRelayPoint] = useState<any>(null);
+  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
   const [showRelayModal, setShowRelayModal] = useState(false);
 
   const [form, setForm] = useState({
@@ -37,9 +63,9 @@ export default function CheckoutPage({
     shippingMethod: "",
   });
 
-  /* ===========================================================================
-     🔥 1) CHARGEMENT DES MÉTHODES DE LIVRAISON (Firestore)
-     =========================================================================== */
+  /* ============================================================
+     🔥 Load shipping methods
+  ============================================================ */
   useEffect(() => {
     async function load() {
       setLoadingShipping(true);
@@ -47,8 +73,11 @@ export default function CheckoutPage({
       const snap = await getDocs(collection(db, "shipping_methods"));
 
       const list = snap.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((m) => m.isActive === true)
+        .map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as ShippingMethodFS),
+        }))
+        .filter((m) => m.isActive)
         .map((m) => ({
           id: m.id,
           name: m.name?.[locale] || m.name?.fr,
@@ -70,9 +99,9 @@ export default function CheckoutPage({
     load();
   }, [locale]);
 
-  /* ===========================================================================
-     📝 FORM HANDLER
-     =========================================================================== */
+  /* ============================================================
+     📝 Form handler
+  ============================================================ */
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -81,9 +110,9 @@ export default function CheckoutPage({
     (m) => m.id === form.shippingMethod
   );
 
-  /* ===========================================================================
-     💳 CHECKOUT
-     =========================================================================== */
+  /* ============================================================
+     💳 Checkout / Stripe
+  ============================================================ */
   const handleCheckout = async () => {
     if (!currentMethod)
       return alert(locale === "fr" ? "Méthode invalide" : "Invalid method");
@@ -104,7 +133,7 @@ export default function CheckoutPage({
         shippingMethod: currentMethod,
         customerEmail: form.email,
         shippingAddress: form,
-        relayPoint, // 🔥 Mondial Relay / Pickup OK
+        relayPoint,
         currency: "eur",
       }),
     });
@@ -114,12 +143,11 @@ export default function CheckoutPage({
     else alert("Erreur paiement");
   };
 
-  const shippingPrice = currentMethod?.price || 0;
-  const total = getTotal() + shippingPrice;
+  const total = getTotal() + (currentMethod?.price || 0);
 
-  /* ===========================================================================
-     JSX
-     =========================================================================== */
+  /* ============================================================
+     🎨 RENDER
+  ============================================================ */
   return (
     <main className="checkout-page">
       <h1 className="checkout-title">
@@ -128,7 +156,7 @@ export default function CheckoutPage({
 
       <div className="checkout-card">
 
-        {/* ============================= FORMULAIRE ============================= */}
+        {/* FORMULAIRE */}
         <section className="checkout-section">
           <h2 className="checkout-section-title">
             {locale === "fr" ? "Adresse" : "Address"}
@@ -148,7 +176,7 @@ export default function CheckoutPage({
           </div>
         </section>
 
-        {/* ============================= MÉTHODES ============================= */}
+        {/* MÉTHODES */}
         <section className="checkout-section">
           <h2 className="checkout-section-title">
             {locale === "fr" ? "Méthode de livraison" : "Shipping method"}
@@ -163,7 +191,7 @@ export default function CheckoutPage({
               value={form.shippingMethod}
               onChange={(e) => {
                 handleChange(e);
-                setRelayPoint(null); // reset si change de méthode
+                setRelayPoint(null);
               }}
             >
               {shippingMethods.map((m) => (
@@ -174,7 +202,7 @@ export default function CheckoutPage({
             </select>
           )}
 
-          {/* ============================= MONDIAL RELAY ============================= */}
+          {/* MONDIAL RELAY */}
           {currentMethod?.type === "relay" &&
             currentMethod.relayProvider === "mondialrelay" && (
               <>
@@ -198,7 +226,7 @@ export default function CheckoutPage({
               </>
             )}
 
-          {/* ============================= PICKUP ============================= */}
+          {/* PICKUP */}
           {currentMethod?.type === "relay" &&
             currentMethod.relayProvider === "pickup" && (
               <>
@@ -222,7 +250,7 @@ export default function CheckoutPage({
             )}
         </section>
 
-        {/* ============================= TOTAL ============================= */}
+        {/* TOTAL */}
         <section className="checkout-total">
           <span>{locale === "fr" ? "Total à payer :" : "Total:"}</span>
           <span className="checkout-total-amount">{total.toFixed(2)} €</span>
@@ -233,13 +261,13 @@ export default function CheckoutPage({
         </button>
       </div>
 
-      {/* ============================= MODALS ============================= */}
+      {/* MODALS */}
 
       {/* Mondial Relay */}
       {showRelayModal &&
         currentMethod?.relayProvider === "mondialrelay" && (
           <TestMRModal
-            onSelect={(data) => {
+            onSelect={(data: RelayPoint) => {
               setRelayPoint(data);
               setShowRelayModal(false);
             }}
@@ -251,7 +279,7 @@ export default function CheckoutPage({
         currentMethod?.relayProvider === "pickup" && (
           <RelayModalPickup
             onClose={() => setShowRelayModal(false)}
-            onSelect={(data) => setRelayPoint(data)}
+            onSelect={(data: RelayPoint) => setRelayPoint(data)}
           />
         )}
     </main>
