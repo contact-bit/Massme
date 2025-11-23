@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 /* ============================================================
-   EXPORT — Type public utilisé dans checkout
+   Type exporté — utilisé dans /checkout
 ============================================================ */
 export type RelayPoint = {
   name: string;
@@ -18,129 +18,168 @@ export type RelayPoint = {
 };
 
 /* ============================================================
-   COMPONENT
+   Composant Mondial Relay INLINE
 ============================================================ */
-
 export default function RelayPointInline({
   onSelect,
 }: {
   onSelect: (relay: RelayPoint) => void;
 }) {
   const [selectedPoint, setSelectedPoint] = useState<RelayPoint | null>(null);
+
   const initialized = useRef(false);
 
+  // refs Leaflet
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const mapInstance = useRef<any>(null);
+  const marker = useRef<any>(null);
+
   /* ============================================================
-     LOAD MONDIAL RELAY WIDGET
+     Chargement scripts + init widget + init carte
   ============================================================ */
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
 
     const loadScript = (src: string) =>
-      new Promise<void>((resolve) => {
+      new Promise<void>((resolve, reject) => {
+        // évite de charger 2x le même script
+        if (document.querySelector(`script[src="${src}"]`)) {
+          return resolve();
+        }
+
         const s = document.createElement("script");
         s.src = src;
+        s.async = true;
         s.onload = () => resolve();
+        s.onerror = () => reject(new Error(`Échec chargement script: ${src}`));
         document.body.appendChild(s);
       });
 
+    const loadLeafletCss = () => {
+      if (document.querySelector('link[data-leaflet-css="true"]')) return;
+
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet/dist/leaflet.css";
+      link.setAttribute("data-leaflet-css", "true");
+      document.head.appendChild(link);
+    };
+
     const init = async () => {
-      await loadScript("https://code.jquery.com/jquery/3.6.4.min.js");
-      await loadScript("https://unpkg.com/leaflet/dist/leaflet.js");
-      await loadScript(
-        "https://widget.mondialrelay.com/parcelshop-picker/jquery.plugin.mondialrelay.parcelshoppicker.min.js"
-      );
+      try {
+        loadLeafletCss();
 
-      (window as any).jQuery("#mr-list").MR_ParcelShopPicker({
-        Target: "#mr-target",
-        Brand: "CC23PDX2",
-        Country: "FR",
-        ColLivMod: "24R",
+        // 1) jQuery + Leaflet + widget
+        await loadScript("https://code.jquery.com/jquery-3.6.4.min.js");
+        await loadScript("https://unpkg.com/leaflet/dist/leaflet.js");
+        await loadScript(
+          "https://widget.mondialrelay.com/parcelshop-picker/jquery.plugin.mondialrelay.parcelshoppicker.min.js"
+        );
 
-        OnParcelShopSelected(data: any) {
-          const relay: RelayPoint = {
-            name: data.Nom,
-            address: data.Adresse1,
-            address2: data.Adresse2 || null,
-            city: data.Ville,
-            postalCode: data.CP,
-            country: data.Pays,
-            latitude: data.Latitude,
-            longitude: data.Longitude,
-            raw: data,
-          };
+        const $ = (window as any).jQuery;
+        const L = (window as any).L;
 
-          setSelectedPoint(relay);
-          updateMap(relay);
-        },
-      });
+        if (! $ || !$.fn || !$.fn.MR_ParcelShopPicker) {
+          console.error("❌ MR_ParcelShopPicker introuvable");
+          return;
+        }
+        if (!L) {
+          console.error("❌ Leaflet (window.L) introuvable");
+          return;
+        }
+
+        // 2) Init Leaflet sur ta div carte
+        if (mapRef.current && !mapInstance.current) {
+          mapInstance.current = L.map(mapRef.current).setView(
+            [48.8566, 2.3522], // Paris par défaut
+            10
+          );
+
+          L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+              attribution: "&copy; OpenStreetMap",
+            }
+          ).addTo(mapInstance.current);
+
+          marker.current = L.marker([48.8566, 2.3522]).addTo(
+            mapInstance.current
+          );
+        }
+
+        // 3) Init du widget Mondial Relay (liste)
+        $("#mr-list").MR_ParcelShopPicker({
+          Target: "#mr-target",
+          Brand: "CC23PDX2",
+          Country: "FR",
+          ColLivMod: "24R",
+
+          OnParcelShopSelected(data: any) {
+            const relay: RelayPoint = {
+              name: data.Nom,
+              address: data.Adresse1,
+              address2: data.Adresse2 || null,
+              city: data.Ville,
+              postalCode: data.CP,
+              country: data.Pays,
+              latitude: data.Latitude,
+              longitude: data.Longitude,
+              raw: data,
+            };
+
+            setSelectedPoint(relay);
+
+            // met à jour la carte
+            if (
+              mapInstance.current &&
+              marker.current &&
+              relay.latitude &&
+              relay.longitude
+            ) {
+              const lat = parseFloat(relay.latitude);
+              const lng = parseFloat(relay.longitude);
+
+              mapInstance.current.setView([lat, lng], 16);
+              marker.current.setLatLng([lat, lng]);
+            }
+          },
+        });
+      } catch (err) {
+        console.error("❌ Erreur init Mondial Relay :", err);
+      }
     };
 
     init();
+
+    // Cleanup Leaflet à l’unmount (optionnel mais propre)
+    return () => {
+      try {
+        if (mapInstance.current) {
+          mapInstance.current.remove();
+        }
+      } catch {}
+      mapInstance.current = null;
+      marker.current = null;
+    };
   }, []);
 
   /* ============================================================
-     LEAFLET MAP SETUP
-  ============================================================ */
-  const mapRef = useRef<HTMLDivElement | null>(null);
-  const mapInstance = useRef<any>(null);
-  const marker = useRef<any>(null);
-
-  useEffect(() => {
-    if (!mapRef.current || mapInstance.current) return;
-
-    const interval = setInterval(() => {
-      if ((window as any).L) {
-        const L = (window as any).L;
-
-        mapInstance.current = L.map(mapRef.current).setView(
-          [48.8566, 2.3522],
-          10
-        );
-
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap",
-        }).addTo(mapInstance.current);
-
-        marker.current = L.marker([48.8566, 2.3522]).addTo(
-          mapInstance.current
-        );
-
-        clearInterval(interval);
-      }
-    }, 300);
-  }, []);
-
-  /* ============================================================
-     UPDATE MAP WHEN USER SELECTS A RELAY POINT
-  ============================================================ */
-  function updateMap(relay: RelayPoint) {
-    if (!mapInstance.current || !marker.current) return;
-    if (!relay.latitude || !relay.longitude) return;
-
-    const lat = parseFloat(relay.latitude);
-    const lng = parseFloat(relay.longitude);
-
-    mapInstance.current.setView([lat, lng], 16);
-    marker.current.setLatLng([lat, lng]);
-  }
-
-  /* ============================================================
-     RENDER UI
+     UI
   ============================================================ */
   return (
     <div className="mr-wrapper mt-4">
       <h3 className="mr-title">Choisissez votre point Mondial Relay</h3>
 
       <div className="mr-grid">
-        {/* LISTE IMPLÉMENTÉE PAR LE WIDGET */}
-        <div id="mr-list" className="mr-list"></div>
+        {/* Liste injectée par le widget */}
+        <div id="mr-list" className="mr-list" />
 
-        {/* CARTE LEAFLET */}
-        <div className="mr-map" ref={mapRef}></div>
+        {/* Carte Leaflet custom */}
+        <div className="mr-map" ref={mapRef} />
       </div>
 
-      {/* CONFIRMATION PRO (affiché uniquement si point sélectionné) */}
+      {/* Bloc de confirmation UX propre */}
       {selectedPoint && (
         <div className="mt-4 p-4 rounded-xl border border-blue-200 bg-blue-50">
           <h4 className="font-semibold text-lg text-blue-900 mb-1">
