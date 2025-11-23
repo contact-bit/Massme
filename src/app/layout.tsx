@@ -8,9 +8,8 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr">
-      {/* ✅ Même classes que dans /app/admin/layout.tsx */}
-      <body className="min-h-screen bg-gray-50 text-gray-900">
+    <html lang="fr" className="w-full h-full">
+      <body className="w-full min-h-full bg-gray-50 text-gray-900">
         {children}
       </body>
     </html>

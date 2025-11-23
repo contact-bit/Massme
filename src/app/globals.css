@@ -4,15 +4,19 @@
 @import "../styles/components.css";
 
 /* ============================================
-   WRAPPER
+   WRAPPER GLOBAL MASSME
 ============================================ */
 .mr-wrapper {
   width: 100%;
+  margin: 0 auto !important;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 14px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .mr-title {
@@ -20,35 +24,32 @@
   font-size: 1.2rem;
   margin-bottom: 14px;
   text-align: center;
+  width: 100%;
 }
 
 /* ============================================
-   ZONE SCROLLABLE (widget interne)
+   ZONE MONDIAL RELAY
 ============================================ */
+#mr-zone,
+#mr-list,
+#MRW-Enveloppe,
+#MRW-Widget {
+  width: 100% !important;
+  max-width: 760px !important;
+  margin: 0 auto !important;
+}
+
 .mr-zone {
-  max-height: 520px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
-/* Scrollbar */
-.mr-zone::-webkit-scrollbar {
-  width: 6px;
-}
-.mr-zone::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-/* Empêche overflow dans les tableaux */
 .mr-zone * {
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
 
-/* ============================================
-   CHAMPS
-============================================ */
+/* Inputs + boutons */
 #mr-zone input[type="text"] {
   border: 1px solid #d1d5db !important;
   background: #f9fafb !important;
@@ -56,16 +57,9 @@
   padding: 10px !important;
   font-size: 0.95rem !important;
   width: 100% !important;
-  margin-bottom: 10px !important;
+  margin-bottom: 12px !important;
 }
 
-#mr-zone input[type="text"]::placeholder {
-  color: #9ca3af !important;
-}
-
-/* ============================================
-   BOUTONS
-============================================ */
 #mr-zone input[type="button"] {
   background: #2563eb !important;
   color: #fff !important;
@@ -73,7 +67,7 @@
   padding: 8px 12px !important;
   border: none !important;
   cursor: pointer;
-  margin-bottom: 10px !important;
+  margin-bottom: 14px !important;
 }
 
 #mr-zone input[type="button"]:hover {
@@ -81,30 +75,7 @@
 }
 
 /* ============================================
-   SUPPRESSION LOGOS / DRAPEAUX
-============================================ */
-#mr-zone img,
-#mr-zone .MRW-SearchFlag,
-#mr-zone .MRW-ColLeft,
-#mr-zone .MRW-Bandeau,
-#mr-zone .MRW-IconSalon,
-#mr-zone .MRW-SearchLogo {
-  display: none !important;
-  visibility: hidden !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
-/* Supprime les backgrounds sprites */
-#mr-zone [style*="background"],
-#mr-zone [style*="Logo"],
-#mr-zone [style*="Flag"] {
-  background: none !important;
-  background-image: none !important;
-}
-
-/* ============================================
-   LEAFLET FIX (ne pas casser la carte)
+   CARTE LEAFLET
 ============================================ */
 #mr-zone .leaflet-container {
   width: 100% !important;
@@ -114,6 +85,99 @@
   margin: 12px 0 !important;
 }
 
-.mr-zone {
-  scrollbar-gutter: stable both-edges;
+/* Supprime logos MR */
+#mr-list [style*="background"],
+#mr-zone [style*="background"],
+#mr-list *[style*="url"],
+#mr-zone *[style*="url"] {
+  display: none !important;
+}
+
+/* ============================================
+   🅰️ PC — CARTE + LISTE CÔTE À CÔTÉ
+============================================ */
+.MRW-Map,
+.MRW-RList {
+  float: none !important;
+}
+
+.MRW-Results {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 18px !important;
+}
+
+@media (min-width: 821px) {
+  .MRW-Map {
+    width: 65% !important;
+    height: 370px !important;
+  }
+  .MRW-RList {
+    width: 35% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
+
+/* ============================================
+   📱 MOBILE — CARTE EN HAUT / LISTE EN BAS
+============================================ */
+@media (max-width: 820px) {
+
+  .MRW-Results {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  /* CARTE */
+  .MRW-Map {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 300px !important;
+  }
+
+  .MRW-Map .leaflet-container {
+    width: 100% !important;
+    height: 300px !important;
+  }
+
+  /* LISTE CENTRÉE */
+  .MRW-RList {
+    width: 100% !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    overflow: visible !important;
+  }
+
+  .PR-List-Item {
+    width: 94% !important;
+    max-width: 420px !important;
+    margin: 0 auto 14px auto !important;
+    padding: 14px !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+  }
+
+  .MRW-RList[style] {
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* ============================================
+   GLOBAL — AUCUNE HAUTEUR BLOQUÉE
+============================================ */
+html,
+body,
+#__next,
+body > div {
+  height: auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
 }

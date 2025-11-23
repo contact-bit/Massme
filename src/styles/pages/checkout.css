@@ -4,14 +4,14 @@
 
 .checkout-page {
   width: 100%;
-  max-width: 1200px; /* 🔥 élargi toute la zone */
+  max-width: 1200px; /* grande zone */
   margin: 0 auto;
   padding: var(--space-xl) var(--space-md) calc(var(--space-xl) * 2);
   color: var(--color-text);
   font-family: var(--font-main);
 }
 
-/* Titre */
+/* ========= TITRE ========= */
 .checkout-title {
   text-align: center;
   font-size: 2.4rem;
@@ -21,7 +21,7 @@
   margin-bottom: var(--space-xl);
 }
 
-/* Carte du formulaire */
+/* ========= CARTE FORMULAIRE ========= */
 .checkout-card {
   background: var(--color-bg);
   padding: calc(var(--space-lg) * 1.2);
@@ -29,11 +29,11 @@
   box-shadow: var(--shadow-lg);
   border: 1px solid rgba(0, 0, 0, 0.06);
 
-  max-width: 750px;   /* 🔥 limite propre du formulaire */
-  margin: 0 auto;     /* mais centré dans la zone large */
+  max-width: 750px; /* largeur du formulaire */
+  margin: 0 auto;   /* centré */
 }
 
-/* Section titres */
+/* ========= SECTIONS ========= */
 .checkout-section {
   margin-bottom: var(--space-xl);
 }
@@ -46,7 +46,7 @@
   font-family: var(--font-title);
 }
 
-/* Inputs */
+/* ========= INPUTS ========= */
 .checkout-fields {
   display: flex;
   flex-direction: column;
@@ -54,6 +54,7 @@
 }
 
 .checkout-row {
+  display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-md);
 }
@@ -75,7 +76,7 @@
   outline: none;
 }
 
-/* Total */
+/* ========= TOTAL ========= */
 .checkout-total {
   margin-top: var(--space-lg);
   padding-top: var(--space-lg);
@@ -93,7 +94,7 @@
   font-weight: 800;
 }
 
-/* Bouton payer */
+/* ========= BOUTON ========= */
 .checkout-button {
   margin-top: var(--space-lg);
   width: 100%;
@@ -116,7 +117,7 @@
   transform: translateY(0);
 }
 
-/* RESPONSIVE */
+/* ========= RESPONSIVE ========= */
 @media (max-width: 480px) {
   .checkout-title {
     font-size: 2rem;
