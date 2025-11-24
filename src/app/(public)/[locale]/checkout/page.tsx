@@ -5,10 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-import RelayPointInline, { RelayPoint } from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
-import RelayModalPickup from "@/components/RelayWidget";
-// ⚠️ À créer ensuite : composant Colissimo (même principe que Mondial Relay)
-import RelayPointColissimo from "@/components/shipping/colissimo/RelayPointColissimoWidget";
+import SendcloudWidget from "@/components/shipping/sendcloud/SendcloudWidget"; // ⬅️ TON WIDGET UNIQUE
 
 /* ============================================================
    Types
@@ -16,14 +13,11 @@ import RelayPointColissimo from "@/components/shipping/colissimo/RelayPointColis
 
 type Locale = "fr" | "en";
 
-type RelayProvider = "mondialrelay" | "pickup" | "colissimo" | null;
-
 type ShippingMethodFS = {
   name: any;
   delay: any;
   price: any;
-  type: "home" | "relay";
-  relayProvider?: RelayProvider | string | null;
+  type: "relay" | "home";
   isActive: boolean;
 };
 
@@ -32,12 +26,11 @@ type ShippingMethod = {
   name: string;
   delay: string;
   price: number;
-  type: "home" | "relay";
-  relayProvider: RelayProvider;
+  type: "relay" | "home";
 };
 
 /* ============================================================
-   PAGE CHECKOUT
+   CHECKOUT PAGE
 ============================================================ */
 
 export default function CheckoutPage({
@@ -52,9 +45,7 @@ export default function CheckoutPage({
   const [shippingMethods, setShipping] = useState<ShippingMethod[]>([]);
   const [loadingShipping, setLoadingShipping] = useState(true);
 
-  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
-  const [showPickupModal, setShowPickupModal] = useState(false);
-
+  const [relayPoint, setRelayPoint] = useState<any>(null);
   const [isPaying, setIsPaying] = useState(false);
 
   const [form, setForm] = useState({
@@ -68,7 +59,7 @@ export default function CheckoutPage({
   });
 
   /* ============================================================
-     LOAD SHIPPING METHODS (depuis Firestore)
+     LOAD SHIPPING FROM FIRESTORE
   ============================================================ */
   useEffect(() => {
     async function load() {
@@ -91,13 +82,11 @@ export default function CheckoutPage({
             delay: m.delay?.[locale] ?? m.delay?.fr ?? "",
             price,
             type: m.type,
-            relayProvider: (m.relayProvider as RelayProvider) ?? null,
           };
         });
 
       setShipping(list);
 
-      // Méthode par défaut
       if (list.length > 0) {
         setForm((f) => ({ ...f, shippingMethod: list[0].id }));
       }
@@ -111,6 +100,7 @@ export default function CheckoutPage({
   /* ============================================================
      FORM HANDLER
   ============================================================ */
+
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -122,20 +112,24 @@ export default function CheckoutPage({
     (m) => m.id === form.shippingMethod
   );
 
-  const isRelayShipping = currentMethod?.type === "relay";
-  const relayMissing = isRelayShipping && !relayPoint;
+  const relayMissing = currentMethod?.type === "relay" && !relayPoint;
 
   /* ============================================================
      STRIPE CHECKOUT
   ============================================================ */
+
   const handleCheckout = async () => {
     if (!currentMethod) {
-      alert("Méthode invalide.");
+      alert("Méthode invalide");
       return;
     }
 
     if (currentMethod.type === "relay" && !relayPoint) {
-      alert("Veuillez sélectionner et confirmer un point relais.");
+      alert(
+        locale === "fr"
+          ? "Veuillez sélectionner un point relais."
+          : "Please select a relay point."
+      );
       return;
     }
 
@@ -156,14 +150,11 @@ export default function CheckoutPage({
       });
 
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Erreur pendant la redirection vers le paiement.");
-      }
+      if (data.url) window.location.href = data.url;
+      else alert("Erreur pendant la redirection vers Stripe.");
     } catch (err) {
       console.error("Erreur checkout:", err);
-      alert("Erreur inattendue pendant le paiement.");
+      alert("Erreur inattendue.");
     } finally {
       setIsPaying(false);
     }
@@ -174,6 +165,7 @@ export default function CheckoutPage({
   /* ============================================================
      RENDER
   ============================================================ */
+
   return (
     <main className="checkout-page">
       <h1 className="checkout-title">
@@ -221,7 +213,7 @@ export default function CheckoutPage({
           </div>
         </section>
 
-        {/* ========================= SHIPPING METHODS ========================= */}
+        {/* ========================= SHIPPING METHOD ========================= */}
         <section className="checkout-section">
           <h2 className="checkout-section-title">
             {locale === "fr" ? "Méthode de livraison" : "Shipping method"}
@@ -230,7 +222,7 @@ export default function CheckoutPage({
           {loadingShipping ? (
             <p>Chargement…</p>
           ) : shippingMethods.length === 0 ? (
-            <p className="text-sm text-red-500">
+            <p className="text-red-500 text-sm">
               {locale === "fr"
                 ? "Aucune méthode de livraison n’est configurée."
                 : "No shipping method configured."}
@@ -240,10 +232,7 @@ export default function CheckoutPage({
               name="shippingMethod"
               className="checkout-input"
               value={form.shippingMethod}
-              onChange={(e) => {
-                handleChange(e);
-                setRelayPoint(null); // reset du point relais si on change de méthode
-              }}
+              onChange={handleChange}
             >
               {shippingMethods.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -253,65 +242,36 @@ export default function CheckoutPage({
             </select>
           )}
 
-          {/* ========================= UI RELAIS SELON PROVIDER ========================= */}
+          {/* ========================= SENDCLOUD WIDGET UNIQUE ========================= */}
 
-          {/* MONDIAL RELAY INLINE */}
-          {currentMethod?.relayProvider === "mondialrelay" && (
-            <RelayPointInline onSelect={(rp) => setRelayPoint(rp)} />
-          )}
-
-          {/* COLISSIMO INLINE (même logique que Mondial Relay, mais via API La Poste) */}
-          {currentMethod?.relayProvider === "colissimo" && (
-            <RelayPointColissimo
-              onSelect={(rp: RelayPoint) => setRelayPoint(rp)}
-              locale={locale}
+          <div className="mt-4">
+            <SendcloudWidget
+              onSelect={(data: any) => {
+                console.log("📦 Selected in Sendcloud:", data);
+                setRelayPoint(data);
+              }}
             />
-          )}
+          </div>
 
-          {/* PICKUP (modal) */}
-          {currentMethod?.relayProvider === "pickup" && (
-            <>
-              <button
-                className="checkout-button mt-3"
-                onClick={() => setShowPickupModal(true)}
-              >
-                {locale === "fr"
-                  ? "Choisir un point Pickup"
-                  : "Select Pickup point"}
-              </button>
-
-              {showPickupModal && (
-                <RelayModalPickup
-                  onClose={() => setShowPickupModal(false)}
-                  onSelect={(data: RelayPoint) => {
-                    setRelayPoint(data);
-                    setShowPickupModal(false);
-                  }}
-                />
-              )}
-            </>
-          )}
-
-          {/* Message point relais manquant */}
+          {/* Message si point relais manquant */}
           {relayMissing && (
             <p className="mt-2 text-red-600 text-sm">
               {locale === "fr"
-                ? "Veuillez sélectionner et confirmer un point relais."
-                : "Please select and confirm a relay point."}
+                ? "Veuillez sélectionner une méthode de livraison."
+                : "Please select a delivery method."}
             </p>
           )}
 
-          {/* Résumé simple du point relais */}
-          {relayPoint && isRelayShipping && (
+          {/* Résumé */}
+          {relayPoint && (
             <div className="p-3 mt-3 bg-blue-50 border rounded">
               <p className="font-semibold">
                 {locale === "fr"
-                  ? "Point de retrait sélectionné"
-                  : "Selected relay point"}
+                  ? "Méthode de livraison sélectionnée"
+                  : "Selected shipping method"}
               </p>
               <p>{relayPoint.name}</p>
-              <p>{relayPoint.address}</p>
-              {relayPoint.address2 && <p>{relayPoint.address2}</p>}
+              <p>{relayPoint.street}</p>
               <p>
                 {relayPoint.postalCode} {relayPoint.city}
               </p>
@@ -325,7 +285,7 @@ export default function CheckoutPage({
           <span className="checkout-total-amount">{total.toFixed(2)} €</span>
         </section>
 
-        {/* ========================= BUTTON PAY ========================= */}
+        {/* ========================= PAY BUTTON ========================= */}
         <button
           className={`checkout-button ${
             relayMissing || isPaying ? "opacity-50 cursor-not-allowed" : ""
