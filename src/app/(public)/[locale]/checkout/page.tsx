@@ -5,8 +5,10 @@ import { useCart } from "@/context/CartContext";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-import RelayPointInline, { RelayPoint } from "@/components/RelayPointInline";
+import RelayPointInline, { RelayPoint } from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
 import RelayModalPickup from "@/components/RelayWidget";
+// ⚠️ À créer ensuite : composant Colissimo (même principe que Mondial Relay)
+import RelayPointColissimo from "@/components/shipping/colissimo/RelayPointColissimoWidget";
 
 /* ============================================================
    Types
@@ -14,12 +16,14 @@ import RelayModalPickup from "@/components/RelayWidget";
 
 type Locale = "fr" | "en";
 
+type RelayProvider = "mondialrelay" | "pickup" | "colissimo" | null;
+
 type ShippingMethodFS = {
   name: any;
   delay: any;
   price: any;
   type: "home" | "relay";
-  relayProvider?: "mondialrelay" | "pickup" | string | null;
+  relayProvider?: RelayProvider | string | null;
   isActive: boolean;
 };
 
@@ -29,7 +33,7 @@ type ShippingMethod = {
   delay: string;
   price: number;
   type: "home" | "relay";
-  relayProvider: "mondialrelay" | "pickup" | null;
+  relayProvider: RelayProvider;
 };
 
 /* ============================================================
@@ -64,7 +68,7 @@ export default function CheckoutPage({
   });
 
   /* ============================================================
-     LOAD SHIPPING METHODS
+     LOAD SHIPPING METHODS (depuis Firestore)
   ============================================================ */
   useEffect(() => {
     async function load() {
@@ -87,13 +91,13 @@ export default function CheckoutPage({
             delay: m.delay?.[locale] ?? m.delay?.fr ?? "",
             price,
             type: m.type,
-            relayProvider: (m.relayProvider as any) || null,
+            relayProvider: (m.relayProvider as RelayProvider) ?? null,
           };
         });
 
       setShipping(list);
 
-      // Set default method
+      // Méthode par défaut
       if (list.length > 0) {
         setForm((f) => ({ ...f, shippingMethod: list[0].id }));
       }
@@ -225,6 +229,12 @@ export default function CheckoutPage({
 
           {loadingShipping ? (
             <p>Chargement…</p>
+          ) : shippingMethods.length === 0 ? (
+            <p className="text-sm text-red-500">
+              {locale === "fr"
+                ? "Aucune méthode de livraison n’est configurée."
+                : "No shipping method configured."}
+            </p>
           ) : (
             <select
               name="shippingMethod"
@@ -232,7 +242,7 @@ export default function CheckoutPage({
               value={form.shippingMethod}
               onChange={(e) => {
                 handleChange(e);
-                setRelayPoint(null); // Reset relay point
+                setRelayPoint(null); // reset du point relais si on change de méthode
               }}
             >
               {shippingMethods.map((m) => (
@@ -243,9 +253,19 @@ export default function CheckoutPage({
             </select>
           )}
 
+          {/* ========================= UI RELAIS SELON PROVIDER ========================= */}
+
           {/* MONDIAL RELAY INLINE */}
           {currentMethod?.relayProvider === "mondialrelay" && (
             <RelayPointInline onSelect={(rp) => setRelayPoint(rp)} />
+          )}
+
+          {/* COLISSIMO INLINE (même logique que Mondial Relay, mais via API La Poste) */}
+          {currentMethod?.relayProvider === "colissimo" && (
+            <RelayPointColissimo
+              onSelect={(rp: RelayPoint) => setRelayPoint(rp)}
+              locale={locale}
+            />
           )}
 
           {/* PICKUP (modal) */}
@@ -263,7 +283,7 @@ export default function CheckoutPage({
               {showPickupModal && (
                 <RelayModalPickup
                   onClose={() => setShowPickupModal(false)}
-                  onSelect={(data) => {
+                  onSelect={(data: RelayPoint) => {
                     setRelayPoint(data);
                     setShowPickupModal(false);
                   }}
