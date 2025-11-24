@@ -1,33 +1,13 @@
 "use client";
 
-import { use, useEffect, useState, ChangeEvent } from "react";
+import { use, useState, ChangeEvent } from "react";
 import { useCart } from "@/context/CartContext";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-
-import SendcloudWidget from "@/components/shipping/sendcloud/SendcloudWidget"; // ⬅️ TON WIDGET UNIQUE
+import SendcloudWidget from "@/components/shipping/sendcloud/SendcloudWidget";
 
 /* ============================================================
    Types
 ============================================================ */
-
 type Locale = "fr" | "en";
-
-type ShippingMethodFS = {
-  name: any;
-  delay: any;
-  price: any;
-  type: "relay" | "home";
-  isActive: boolean;
-};
-
-type ShippingMethod = {
-  id: string;
-  name: string;
-  delay: string;
-  price: number;
-  type: "relay" | "home";
-};
 
 /* ============================================================
    CHECKOUT PAGE
@@ -41,10 +21,16 @@ export default function CheckoutPage({
   const { locale } = use(params);
   const { items, getTotal } = useCart();
 
-  /* === STATES === */
-  const [shippingMethods, setShipping] = useState<ShippingMethod[]>([]);
-  const [loadingShipping, setLoadingShipping] = useState(true);
+  /* === Hard-coded Sendcloud method === */
+  const sendcloudShippingMethod = {
+    id: "sendcloud",
+    name: locale === "fr" ? "Livraison" : "Shipping",
+    delay: locale === "fr" ? "2-4 jours" : "2-4 days",
+    price: 4.9,
+    type: "relay",
+  };
 
+  /* === STATES === */
   const [relayPoint, setRelayPoint] = useState<any>(null);
   const [isPaying, setIsPaying] = useState(false);
 
@@ -55,80 +41,29 @@ export default function CheckoutPage({
     city: "",
     postalCode: "",
     phone: "",
-    shippingMethod: "",
   });
-
-  /* ============================================================
-     LOAD SHIPPING FROM FIRESTORE
-  ============================================================ */
-  useEffect(() => {
-    async function load() {
-      setLoadingShipping(true);
-
-      const snap = await getDocs(collection(db, "shipping_methods"));
-
-      const list: ShippingMethod[] = snap.docs
-        .map((doc) => ({ id: doc.id, ...(doc.data() as ShippingMethodFS) }))
-        .filter((m) => m.isActive)
-        .map((m) => {
-          const price =
-            typeof m.price === "number"
-              ? m.price
-              : m.price?.[locale] ?? m.price?.fr ?? 0;
-
-          return {
-            id: m.id,
-            name: m.name?.[locale] ?? m.name?.fr ?? "Livraison",
-            delay: m.delay?.[locale] ?? m.delay?.fr ?? "",
-            price,
-            type: m.type,
-          };
-        });
-
-      setShipping(list);
-
-      if (list.length > 0) {
-        setForm((f) => ({ ...f, shippingMethod: list[0].id }));
-      }
-
-      setLoadingShipping(false);
-    }
-
-    load();
-  }, [locale]);
 
   /* ============================================================
      FORM HANDLER
   ============================================================ */
 
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const currentMethod = shippingMethods.find(
-    (m) => m.id === form.shippingMethod
-  );
-
-  const relayMissing = currentMethod?.type === "relay" && !relayPoint;
+  const relayMissing = !relayPoint;
 
   /* ============================================================
      STRIPE CHECKOUT
   ============================================================ */
 
   const handleCheckout = async () => {
-    if (!currentMethod) {
-      alert("Méthode invalide");
-      return;
-    }
-
-    if (currentMethod.type === "relay" && !relayPoint) {
+    if (relayMissing) {
       alert(
         locale === "fr"
-          ? "Veuillez sélectionner un point relais."
-          : "Please select a relay point."
+          ? "Veuillez sélectionner un mode de livraison."
+          : "Please select a delivery method."
       );
       return;
     }
@@ -141,7 +76,7 @@ export default function CheckoutPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items,
-          shippingMethod: currentMethod,
+          shippingMethod: sendcloudShippingMethod,
           customerEmail: form.email,
           shippingAddress: form,
           relayPoint,
@@ -160,7 +95,7 @@ export default function CheckoutPage({
     }
   };
 
-  const total = getTotal() + (currentMethod?.price || 0);
+  const total = getTotal() + sendcloudShippingMethod.price;
 
   /* ============================================================
      RENDER
@@ -213,39 +148,22 @@ export default function CheckoutPage({
           </div>
         </section>
 
-        {/* ========================= SHIPPING METHOD ========================= */}
+        {/* ========================= SHIPPING METHOD (HARD-CODED) ========================= */}
         <section className="checkout-section">
           <h2 className="checkout-section-title">
             {locale === "fr" ? "Méthode de livraison" : "Shipping method"}
           </h2>
 
-          {loadingShipping ? (
-            <p>Chargement…</p>
-          ) : shippingMethods.length === 0 ? (
-            <p className="text-red-500 text-sm">
-              {locale === "fr"
-                ? "Aucune méthode de livraison n’est configurée."
-                : "No shipping method configured."}
-            </p>
-          ) : (
-            <select
-              name="shippingMethod"
-              className="checkout-input"
-              value={form.shippingMethod}
-              onChange={handleChange}
-            >
-              {shippingMethods.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} — {m.price.toFixed(2)} €
-                </option>
-              ))}
-            </select>
-          )}
+          <p className="text-lg font-medium">
+            {sendcloudShippingMethod.name} —{" "}
+            {sendcloudShippingMethod.price.toFixed(2)} €
+          </p>
 
-          {/* ========================= SENDCLOUD WIDGET UNIQUE ========================= */}
+          {/* ========================= SENDCLOUD WIDGET ========================= */}
 
           <div className="mt-4">
             <SendcloudWidget
+              locale={locale}
               onSelect={(data: any) => {
                 console.log("📦 Selected in Sendcloud:", data);
                 setRelayPoint(data);
@@ -253,7 +171,6 @@ export default function CheckoutPage({
             />
           </div>
 
-          {/* Message si point relais manquant */}
           {relayMissing && (
             <p className="mt-2 text-red-600 text-sm">
               {locale === "fr"
@@ -262,7 +179,6 @@ export default function CheckoutPage({
             </p>
           )}
 
-          {/* Résumé */}
           {relayPoint && (
             <div className="p-3 mt-3 bg-blue-50 border rounded">
               <p className="font-semibold">
