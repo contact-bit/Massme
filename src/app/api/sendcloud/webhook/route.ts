@@ -3,16 +3,18 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("📦 Webhook Sendcloud reçu :", body);
+    console.log("Webhook Sendcloud reçu :", body);
 
-    // toujours répondre 200 / 204
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error("Erreur webhook Sendcloud:", e);
-    return new NextResponse("Bad Request", { status: 400 });
+    console.error("Erreur webhook:", e);
+    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 }
 
-export function GET() {
-  return new NextResponse("Method Not Allowed", { status: 405 });
+export async function GET() {
+  return NextResponse.json(
+    { error: "Method Not Allowed" },
+    { status: 405 }
+  );
 }
