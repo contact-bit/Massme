@@ -5,15 +5,14 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log("📦 Webhook Sendcloud reçu :", body);
 
-    // tu pourras traiter ici les notifications Sendcloud
+    // toujours répondre 200 / 204
     return NextResponse.json({ received: true });
-  } catch (err) {
-    console.error("❌ Erreur webhook Sendcloud :", err);
-    return NextResponse.json({ error: "Bad payload" }, { status: 400 });
+  } catch (e) {
+    console.error("Erreur webhook Sendcloud:", e);
+    return new NextResponse("Bad Request", { status: 400 });
   }
 }
 
-// Facultatif mais propre : bloquer les GET
 export function GET() {
-  return NextResponse.json({ error: "Method Not Allowed" }, { status: 405 });
+  return new NextResponse("Method Not Allowed", { status: 405 });
 }
