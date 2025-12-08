@@ -23,16 +23,19 @@ export async function generateInvoicePDF(order: any, orderId: string) {
 
   page.drawText(`Commande : ${orderId}`, { x: 50, y, size: 12, font: regularFont });
   y -= 20;
+
   page.drawText(`Date : ${new Date().toLocaleDateString()}`, {
     x: 50,
     y,
     size: 12,
-    font: regularFont
+    font: regularFont,
   });
 
   y -= 40;
 
-  // Client block
+  // ------------------------------
+  // 🧾 Informations client
+  // ------------------------------
   page.drawText("Informations client :", {
     x: 50,
     y,
@@ -49,8 +52,9 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     `Email : ${a.email}`,
     `Adresse : ${a.address}`,
     `${a.postalCode} ${a.city}`,
+    a.country ? `Pays : ${a.country}` : null, // ✅ AJOUT DU PAYS
     `Téléphone : ${a.phone}`,
-  ];
+  ].filter(Boolean); // supprime les null
 
   info.forEach((line) => {
     page.drawText(line, { x: 50, y, size: 12, font: regularFont });
@@ -59,7 +63,9 @@ export async function generateInvoicePDF(order: any, orderId: string) {
 
   y -= 30;
 
-  // Items
+  // ------------------------------
+  // 🛒 Produits
+  // ------------------------------
   page.drawText("Produits :", {
     x: 50,
     y,
@@ -84,7 +90,9 @@ export async function generateInvoicePDF(order: any, orderId: string) {
 
   y -= 25;
 
-  // Shipping
+  // ------------------------------
+  // 📦 Livraison
+  // ------------------------------
   const shipping = Number(order.shippingMethod?.price || 0);
   total += shipping;
 
@@ -97,7 +105,9 @@ export async function generateInvoicePDF(order: any, orderId: string) {
 
   y -= 40;
 
-  // Total
+  // ------------------------------
+  // 💰 TOTAL
+  // ------------------------------
   page.drawText(`TOTAL : ${total.toFixed(2)} €`, {
     x: 50,
     y,

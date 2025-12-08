@@ -15,12 +15,17 @@ import {
 type Locale = "fr" | "en";
 
 export default function CheckoutPage() {
+  /* -------------------------------------------------------
+     LOCALE & CART
+  ------------------------------------------------------- */
   const pathname = usePathname();
   const locale: Locale = pathname?.startsWith("/en") ? "en" : "fr";
 
   const { items, getTotal } = useCart();
 
-  /* === FORM STATE === */
+  /* -------------------------------------------------------
+     FORM STATE
+  ------------------------------------------------------- */
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -31,23 +36,25 @@ export default function CheckoutPage() {
     phone: "",
   });
 
-  /* === SHIPPING STATE === */
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethod | null>(
-    null
-  );
-  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
-  const [shippingError, setShippingError] = useState<string | null>(null);
+  /* -------------------------------------------------------
+     SHIPPING STATE
+  ------------------------------------------------------- */
+  const [shippingMethod, setShippingMethod] =
+    useState<ShippingMethod | null>(null);
 
-  /* === METHODS FROM FIRESTORE === */
+  const [relayPoint, setRelayPoint] =
+    useState<RelayPoint | null>(null);
+
+  const [shippingError, setShippingError] =
+    useState<string | null>(null);
+
+  /* -------------------------------------------------------
+     FIRESTORE SHIPPING METHODS
+     Auto-filter: by country + active + locale
+  ------------------------------------------------------- */
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
   const [loadingMethods, setLoadingMethods] = useState(false);
 
-  /* === UI STATE === */
-  const [isPaying, setIsPaying] = useState(false);
-
-  /* ============================================================
-     LOAD SHIPPING METHODS FROM FIRESTORE (country + active)
-  ============================================================ */
   useEffect(() => {
     const fetchMethods = async () => {
       setLoadingMethods(true);
@@ -62,6 +69,7 @@ export default function CheckoutPage() {
           where("country", "==", form.country),
           where("isActive", "==", true)
         );
+
         const snap = await getDocs(q);
 
         const list: ShippingMethod[] = snap.docs.map((doc) => {
@@ -108,22 +116,20 @@ export default function CheckoutPage() {
     fetchMethods();
   }, [form.country, locale]);
 
-  /* ============================================================
+  /* -------------------------------------------------------
      FORM HANDLER
-  ============================================================ */
-
+  ------------------------------------------------------- */
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  /* ============================================================
+  /* -------------------------------------------------------
      STRIPE CHECKOUT
-  ============================================================ */
-
+  ------------------------------------------------------- */
   const handleCheckout = async () => {
+    // validations
     if (!shippingMethod) {
       setShippingError(
         locale === "fr"
@@ -136,8 +142,8 @@ export default function CheckoutPage() {
     if (shippingMethod.type === "relay" && !relayPoint) {
       setShippingError(
         locale === "fr"
-          ? "Veuillez choisir un point relais Mondial Relay."
-          : "Please choose a Mondial Relay pickup point."
+          ? "Veuillez choisir un point relais."
+          : "Please choose a relay point."
       );
       return;
     }
@@ -152,9 +158,10 @@ export default function CheckoutPage() {
     }
 
     setShippingError(null);
-    setIsPaying(true);
 
     try {
+      setIsPaying(true);
+
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -170,44 +177,37 @@ export default function CheckoutPage() {
       });
 
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error("Checkout API error:", data);
-        alert(
-          locale === "fr"
-            ? "Erreur pendant la redirection vers Stripe."
-            : "Error while redirecting to Stripe."
-        );
-      }
+      if (data.url) window.location.href = data.url;
+      else alert("Erreur de redirection Stripe.");
     } catch (err) {
       console.error("Erreur checkout:", err);
-      alert(
-        locale === "fr"
-          ? "Erreur inattendue pendant le paiement."
-          : "Unexpected error during checkout."
-      );
+      alert("Erreur inattendue.");
     } finally {
       setIsPaying(false);
     }
   };
 
+  /* -------------------------------------------------------
+     TOTAL
+  ------------------------------------------------------- */
+  const [isPaying, setIsPaying] = useState(false);
   const shippingPrice = shippingMethod?.price ?? 0;
   const cartTotal = getTotal();
   const total = cartTotal + shippingPrice;
 
-  /* ============================================================
+  /* -------------------------------------------------------
      RENDER
-  ============================================================ */
-
+  ------------------------------------------------------- */
   return (
     <main className="checkout-page">
       <h1 className="checkout-title">
-        {locale === "fr" ? "Informations de livraison" : "Shipping details"}
+        {locale === "fr"
+          ? "Informations de livraison"
+          : "Shipping details"}
       </h1>
 
       <div className="checkout-card">
-        {/* ========================= FORMULAIRE ========================= */}
+        {/* FORMULAIRE */}
         <section className="checkout-section">
           <h2 className="checkout-section-title">
             {locale === "fr" ? "Adresse" : "Address"}
@@ -221,6 +221,7 @@ export default function CheckoutPage() {
               value={form.name}
               onChange={handleChange}
             />
+
             <input
               name="email"
               className="checkout-input"
@@ -228,6 +229,7 @@ export default function CheckoutPage() {
               value={form.email}
               onChange={handleChange}
             />
+
             <input
               name="address"
               className="checkout-input"
@@ -235,6 +237,7 @@ export default function CheckoutPage() {
               value={form.address}
               onChange={handleChange}
             />
+
             <input
               name="postalCode"
               className="checkout-input"
@@ -242,6 +245,7 @@ export default function CheckoutPage() {
               value={form.postalCode}
               onChange={handleChange}
             />
+
             <input
               name="city"
               className="checkout-input"
@@ -250,7 +254,7 @@ export default function CheckoutPage() {
               onChange={handleChange}
             />
 
-            {/* PAYS */}
+            {/* 🌍 COUNTRY SELECT */}
             <select
               name="country"
               className="checkout-input"
@@ -290,7 +294,7 @@ export default function CheckoutPage() {
           </div>
         </section>
 
-        {/* ========================= SHIPPING METHODS ========================= */}
+        {/* SHIPPING METHODS */}
         <section className="checkout-section">
           {loadingMethods ? (
             <p className="text-sm text-gray-600">
@@ -301,7 +305,7 @@ export default function CheckoutPage() {
           ) : methods.length === 0 ? (
             <p className="text-sm text-red-600">
               {locale === "fr"
-                ? "Aucune méthode de livraison disponible pour ce pays."
+                ? "Aucune méthode de livraison pour ce pays."
                 : "No shipping methods available for this country."}
             </p>
           ) : (
@@ -321,7 +325,7 @@ export default function CheckoutPage() {
           )}
         </section>
 
-        {/* ========================= TOTAL ========================= */}
+        {/* TOTAL */}
         <section className="checkout-total">
           <div className="flex justify-between text-sm mb-1">
             <span>{locale === "fr" ? "Sous-total :" : "Subtotal:"}</span>
@@ -340,11 +344,13 @@ export default function CheckoutPage() {
             <span>
               {locale === "fr" ? "Total à payer :" : "Total to pay:"}
             </span>
-            <span className="checkout-total-amount">{total.toFixed(2)} €</span>
+            <span className="checkout-total-amount">
+              {total.toFixed(2)} €
+            </span>
           </div>
         </section>
 
-        {/* ========================= PAY BUTTON ========================= */}
+        {/* SUBMIT BUTTON */}
         <button
           className={`checkout-button ${
             isPaying ? "opacity-50 cursor-not-allowed" : ""

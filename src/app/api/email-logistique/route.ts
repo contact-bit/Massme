@@ -72,7 +72,7 @@ export async function POST(req: Request) {
       .join("");
 
     // ---------------------------------------------------------
-    // 🚚 Adresse
+    // 🚚 Adresse (avec pays)
     // ---------------------------------------------------------
     const a = rawOrder.shippingAddress;
 
@@ -83,6 +83,7 @@ export async function POST(req: Request) {
         <p><b>Adresse :</b> ${a.address}</p>
         <p><b>Ville :</b> ${a.city}</p>
         <p><b>Code postal :</b> ${a.postalCode}</p>
+        ${a.country ? `<p><b>Pays :</b> ${a.country}</p>` : ""}
         <p><b>Téléphone :</b> ${a.phone}</p>
       </div>
     `;

@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     }
 
     // ---------------------------------------------------------
-    // 🧹 NORMALISATION — identique webhook + logistique
+    // 🧹 NORMALISATION
     // ---------------------------------------------------------
     const order = {
       ...rawOrder,
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
       .join("");
 
     // ---------------------------------------------------------
-    // 🚚 Adresse de livraison
+    // 🚚 Adresse de livraison (avec PAYS)
     // ---------------------------------------------------------
     const a = rawOrder.shippingAddress;
 
@@ -86,6 +86,7 @@ export async function POST(req: Request) {
         <p><b>Adresse :</b> ${a.address}</p>
         <p><b>Ville :</b> ${a.city}</p>
         <p><b>Code postal :</b> ${a.postalCode}</p>
+        ${a.country ? `<p><b>Pays :</b> ${a.country}</p>` : ""}
         <p><b>Téléphone :</b> ${a.phone}</p>
       </div>
     `;
@@ -135,11 +136,12 @@ export async function POST(req: Request) {
 `;
 
     // ---------------------------------------------------------
-    // 📤 ENVOI EMAIL ADMIN
+    // 📤 ENVOI EMAIL ADMIN (et potentiellement logistique)
     // ---------------------------------------------------------
     await resend.emails.send({
       from: "Massme • Orders <contact@hdconnects.com>",
       to: process.env.ADMIN_EMAIL!,
+      // si tu veux aussi le logisticien : bcc: process.env.LOGISTICS_EMAIL,
       subject: `🛒 Nouvelle commande – #${orderId}`,
       html: htmlTemplate,
       attachments: pdfBase64

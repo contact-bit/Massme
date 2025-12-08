@@ -15,7 +15,7 @@ export default function SuccessPage() {
   const t = (fr: string, en: string) => (locale === "fr" ? fr : en);
 
   /* -------------------------------------------------------
-     🔄 CHARGEMENT DE LA COMMANDE
+     🔄 CHARGEMENT COMMANDE
   ------------------------------------------------------- */
   useEffect(() => {
     if (!sessionId) return;
@@ -61,7 +61,7 @@ export default function SuccessPage() {
     t("client", "customer");
 
   /* -------------------------------------------------------
-     📦 POINT RELAIS : NORMALISATION
+     📦 POINT RELAIS NORMALISÉ
   ------------------------------------------------------- */
   const relay = order?.relayPoint || null;
 
@@ -105,7 +105,6 @@ export default function SuccessPage() {
           )}
         </p>
 
-        {/* LOADING */}
         {loading && (
           <p className="success-loading">
             {t("Chargement de la commande…", "Loading order…")}
@@ -132,7 +131,7 @@ export default function SuccessPage() {
             {/* ADRESSE + MÉTHODE */}
             <div className="success-grid">
 
-              {/* ADRESSE (DYNAMIQUE) */}
+              {/* ⭐ ADRESSE CLIENT AVEC PAYS ⭐ */}
               <div className="success-box-alt">
                 <p className="success-block-title">
                   {isRelayShipping
@@ -151,12 +150,17 @@ export default function SuccessPage() {
                   {order.shippingAddress?.city}
                 </p>
 
+                {/* ⭐ NOUVEAU — LE PAYS ⭐ */}
+                {order.shippingAddress?.country && (
+                  <p>{order.shippingAddress.country}</p>
+                )}
+
                 <p className="success-muted">
                   {order.shippingAddress?.phone}
                 </p>
               </div>
 
-              {/* MÉTHODE */}
+              {/* MÉTHODE DE LIVRAISON */}
               <div className="success-box-alt">
                 <p className="success-block-title">
                   {t("Méthode d’envoi", "Shipping method")}
