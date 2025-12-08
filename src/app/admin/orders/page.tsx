@@ -1,15 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  orderBy,
-  query,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 type Order = {
   id: string;
@@ -17,10 +8,8 @@ type Order = {
   status?: "pending_payment" | "paid";
   createdAt?: any;
 
-  // Stripe
-  amount_total?: number; // total payé en centimes
+  amount_total?: number;
 
-  // Stocké par ton API
   subtotal?: number;
   shippingPrice?: number;
   total?: number;
@@ -31,6 +20,7 @@ type Order = {
     city: string;
     postalCode: string;
     phone: string;
+    country?: string;
   };
 
   shippingMethod?: {
@@ -39,47 +29,76 @@ type Order = {
   };
 
   items: {
-    name: { fr?: string; en?: string };
+    name: { fr?: string; en?: string } | string;
     price: number | { eur?: number };
     quantity: number;
   }[];
 };
 
 export default function OrdersAdminPage() {
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "paid" | "pending_payment">("all");
+  const [filter, setFilter] = useState<"all" | "paid" | "pending_payment">(
+    "all"
+  );
   const [expanded, setExpanded] = useState<string | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
   /* ---------------------------------------------------------
-     🔄 Chargement des commandes (Full + filtrage front-end)
+     🔄 Chargement des commandes via API admin
   --------------------------------------------------------- */
   useEffect(() => {
-    async function loadOrders() {
-      setLoading(true);
+    const loadOrders = async () => {
+      try {
+        setLoading(true);
 
-      const q = query(collection(db, "pending_orders"), orderBy("createdAt", "desc"));
-      const snap = await getDocs(q);
-      const allOrders = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Order[];
+        const res = await fetch("/api/admin/orders"); // ✅ plus de header adminPassword
 
-      // 🔥 Filtrage front-end → FINI les soucis Firestore
-      const filtered =
-        filter === "all" ? allOrders : allOrders.filter((o) => o.status === filter);
+        if (!res.ok) {
+          console.error("Erreur API admin/orders:", await res.text());
+          setAllOrders([]);
+          setOrders([]);
+          return;
+        }
 
-      setOrders(filtered);
-      setLoading(false);
-    }
+        const data = await res.json();
+        const list = (data.orders || []) as Order[];
+
+        setAllOrders(list);
+      } catch (err) {
+        console.error("Erreur Dashboard:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     loadOrders();
-  }, [filter]);
+  }, []);
+
+  /* ---------------------------------------------------------
+     🎯 Filtrage front selon status
+  --------------------------------------------------------- */
+  useEffect(() => {
+    const filtered =
+      filter === "all"
+        ? allOrders
+        : allOrders.filter((o) => o.status === filter);
+
+    setOrders(filtered);
+    setSelectedOrders([]);
+    setExpanded(null);
+  }, [filter, allOrders]);
 
   /* ---------------------------------------------------------
      🧮 Calculs des prix
   --------------------------------------------------------- */
   const getItemPrice = (item: any): number =>
-    typeof item.price === "number" ? item.price :
-    typeof item.price?.eur === "number" ? item.price.eur : 0;
+    typeof item.price === "number"
+      ? item.price
+      : typeof item.price?.eur === "number"
+      ? item.price.eur
+      : 0;
 
   const getSubtotal = (order: Order): number =>
     order.items?.reduce(
@@ -95,23 +114,32 @@ export default function OrdersAdminPage() {
       : 0;
 
   const getTotal = (order: Order): number => {
-    // 1️⃣ Stripe → le plus fiable
     if (typeof order.amount_total === "number") return order.amount_total / 100;
-
-    // 2️⃣ Stocké par ton API
     if (typeof order.total === "number") return order.total;
-
-    // 3️⃣ Recalcul propre
     return getSubtotal(order) + getShippingPrice(order);
   };
 
   /* ---------------------------------------------------------
-     🗑️ Suppression commandes
+     🗑️ Suppression via API
   --------------------------------------------------------- */
   const deleteSingle = async (id: string) => {
     if (!confirm("Supprimer cette commande ?")) return;
-    await deleteDoc(doc(db, "pending_orders", id));
-    setOrders((prev) => prev.filter((o) => o.id !== id));
+
+    try {
+      const res = await fetch(`/api/admin/orders?id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        alert("Erreur lors de la suppression");
+        return;
+      }
+
+      setAllOrders((prev) => prev.filter((o) => o.id !== id));
+    } catch (err) {
+      console.error("Erreur suppression commande:", err);
+      alert("Erreur lors de la suppression");
+    }
   };
 
   const toggleSelectAll = () => {
@@ -122,22 +150,31 @@ export default function OrdersAdminPage() {
   const deleteMultiple = async () => {
     if (selectedOrders.length === 0) return;
 
-    if (!confirm(`Supprimer ${selectedOrders.length} commandes ?`)) return;
+    if (!confirm(`Supprimer ${selectedOrders.length} commande(s) ?`)) return;
 
-    for (const id of selectedOrders) {
-      await deleteDoc(doc(db, "pending_orders", id));
+    try {
+      await Promise.all(
+        selectedOrders.map((id) =>
+          fetch(`/api/admin/orders?id=${id}`, {
+            method: "DELETE",
+          })
+        )
+      );
+
+      setAllOrders((prev) => prev.filter((o) => !selectedOrders.includes(o.id)));
+      setSelectedOrders([]);
+    } catch (err) {
+      console.error("Erreur suppression multiple:", err);
+      alert("Erreur lors de la suppression multiple");
     }
-
-    setOrders((prev) => prev.filter((o) => !selectedOrders.includes(o.id)));
-    setSelectedOrders([]);
   };
 
   /* ---------------------------------------------------------
      UI
   --------------------------------------------------------- */
   return (
-    <main className="max-w-6xl mx-auto py-10 px-4 text-gray-900">
-      <h1 className="text-3xl font-bold mb-8 text-blue-700">🧾 Commandes</h1>
+    <main className="admin-page">
+      <h1 className="admin-title">🧾 Commandes</h1>
 
       {/* FILTRE */}
       <div className="mb-6 flex gap-4">
@@ -193,6 +230,11 @@ export default function OrdersAdminPage() {
             const shipping = getShippingPrice(order);
             const total = getTotal(order);
 
+            const name =
+              typeof order.items?.[0]?.name === "string"
+                ? order.items[0].name
+                : order.shippingAddress?.name || "Client";
+
             return (
               <div
                 key={order.id}
@@ -220,9 +262,11 @@ export default function OrdersAdminPage() {
                     }
                   >
                     <p className="font-semibold">
-                      {order.shippingAddress?.name || "Client"}
+                      {order.shippingAddress?.name || name}
                     </p>
-                    <p className="text-sm text-gray-500">{order.email}</p>
+                    <p className="text-sm text-gray-500">
+                      {order.email || "—"}
+                    </p>
                   </div>
 
                   <div className="text-right mr-4">
@@ -260,6 +304,9 @@ export default function OrdersAdminPage() {
                         {order.shippingAddress?.postalCode}{" "}
                         {order.shippingAddress?.city}
                       </p>
+                      {order.shippingAddress?.country && (
+                        <p>{order.shippingAddress.country}</p>
+                      )}
                       <p>{order.shippingAddress?.phone}</p>
                     </div>
 
@@ -276,6 +323,10 @@ export default function OrdersAdminPage() {
 
                       {order.items?.map((item, i) => {
                         const price = getItemPrice(item);
+                        const itemName =
+                          typeof item.name === "string"
+                            ? item.name
+                            : item.name.fr || item.name.en || "Produit";
 
                         return (
                           <div
@@ -283,9 +334,7 @@ export default function OrdersAdminPage() {
                             className="flex justify-between bg-white border rounded-md p-3 mb-2"
                           >
                             <div>
-                              <p className="font-medium">
-                                {item.name.fr || item.name.en || "Produit"}
-                              </p>
+                              <p className="font-medium">{itemName}</p>
                               <p className="text-xs text-gray-500">
                                 Qté : {item.quantity}
                               </p>
@@ -301,7 +350,9 @@ export default function OrdersAdminPage() {
                     <div className="border-t pt-4 space-y-1 text-sm">
                       <p>Sous-total : {subtotal.toFixed(2)} €</p>
                       <p>Livraison : {shipping.toFixed(2)} €</p>
-                      <p className="font-bold text-lg">Total : {total.toFixed(2)} €</p>
+                      <p className="font-bold text-lg">
+                        Total : {total.toFixed(2)} €
+                      </p>
                     </div>
 
                     <button

@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 export default function ProductEditForm({
   product,
@@ -24,6 +22,13 @@ export default function ProductEditForm({
   const [isActive, setIsActive] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
 
+  // Nouveau : password admin
+  const [adminPassword, setAdminPassword] = useState("");
+
+  // Pour feedback UI
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     setNameFr(product.name?.fr || "");
     setNameEn(product.name?.en || "");
@@ -38,18 +43,39 @@ export default function ProductEditForm({
   const handleSave = async (e: any) => {
     e.preventDefault();
 
-    const ref = doc(db, "products", product.id);
-    await updateDoc(ref, {
-      name: { fr: nameFr, en: nameEn },
-      description: { fr: descFr, en: descEn },
-      price: { eur: parseFloat(price as string) },
-      stock: parseInt(stock as string),
-      isActive,
-      imageUrl: imageUrl || null,
-    });
+    setLoading(true);
+    setError(null);
 
-    onUpdated();
-    onClose();
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+         // adminPassword,
+          data: {
+            name: { fr: nameFr, en: nameEn },
+            description: { fr: descFr, en: descEn },
+            price: { eur: parseFloat(price as string) },
+            stock: parseInt(stock as string),
+            isActive,
+            imageUrl: imageUrl || null,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || "Erreur lors de la mise à jour");
+      }
+
+      onUpdated();
+      onClose();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Erreur inconnue");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -128,13 +154,25 @@ export default function ProductEditForm({
         <span>Produit actif ({isActive ? "🟢 visible" : "🔴 masqué"})</span>
       </label>
 
+      {/* 🔐 Mot de passe admin */}
+      <label className="admin-label mt-4">Mot de passe admin</label>
+      <input
+        type="password"
+        value={adminPassword}
+        onChange={(e) => setAdminPassword(e.target.value)}
+        className="admin-input"
+        placeholder="••••••••"
+      />
+
+      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+
       <div className="admin-form-actions">
         <button type="button" onClick={onClose} className="btn btn-secondary">
           Annuler
         </button>
 
-        <button type="submit" className="btn btn-primary">
-          💾 Enregistrer
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? "Enregistrement…" : "💾 Enregistrer"}
         </button>
       </div>
     </form>
