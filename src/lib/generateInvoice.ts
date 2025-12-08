@@ -21,7 +21,13 @@ export async function generateInvoicePDF(order: any, orderId: string) {
 
   y -= 40;
 
-  page.drawText(`Commande : ${orderId}`, { x: 50, y, size: 12, font: regularFont });
+  page.drawText(`Commande : ${orderId}`, {
+    x: 50,
+    y,
+    size: 12,
+    font: regularFont,
+  });
+
   y -= 20;
 
   page.drawText(`Date : ${new Date().toLocaleDateString()}`, {
@@ -47,14 +53,19 @@ export async function generateInvoicePDF(order: any, orderId: string) {
 
   const a = order.shippingAddress;
 
-  const info = [
+  const info: string[] = [
     `Nom : ${a.name}`,
     `Email : ${a.email}`,
     `Adresse : ${a.address}`,
     `${a.postalCode} ${a.city}`,
-    a.country ? `Pays : ${a.country}` : null, // ✅ AJOUT DU PAYS
-    `Téléphone : ${a.phone}`,
-  ].filter(Boolean); // supprime les null
+  ];
+
+  // ✅ Ajout conditionnel du pays, sans null
+  if (a.country) {
+    info.push(`Pays : ${a.country}`);
+  }
+
+  info.push(`Téléphone : ${a.phone}`);
 
   info.forEach((line) => {
     page.drawText(line, { x: 50, y, size: 12, font: regularFont });
@@ -115,7 +126,6 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     font: boldFont,
   });
 
-  // Return buffer
   const pdfBytes = await pdfDoc.save();
   return Buffer.from(pdfBytes);
 }
