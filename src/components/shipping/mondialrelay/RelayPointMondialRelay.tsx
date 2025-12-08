@@ -1,26 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
-/* ============================================================
-   Type exporté — utilisé dans /checkout
-============================================================ */
-export type RelayPoint = {
-  name: string;
-  address: string;
-  address2?: string | null;
-  city: string;
-  postalCode: string;
-  country: string;
-  latitude?: string | null;
-  longitude?: string | null;
-  raw?: any;
-};
+import { RelayPoint } from "@/components/shipping/types";
 
 /* ============================================================
    Composant Mondial Relay INLINE
 ============================================================ */
-export default function RelayPointInline({
+export default function RelayPointMondialRelay({
   onSelect,
 }: {
   onSelect: (relay: RelayPoint) => void;
@@ -43,7 +29,6 @@ export default function RelayPointInline({
 
     const loadScript = (src: string) =>
       new Promise<void>((resolve, reject) => {
-        // évite de charger 2x le même script
         if (document.querySelector(`script[src="${src}"]`)) {
           return resolve();
         }
@@ -80,7 +65,7 @@ export default function RelayPointInline({
         const $ = (window as any).jQuery;
         const L = (window as any).L;
 
-        if (! $ || !$.fn || !$.fn.MR_ParcelShopPicker) {
+        if (!$ || !$.fn || !$.fn.MR_ParcelShopPicker) {
           console.error("❌ MR_ParcelShopPicker introuvable");
           return;
         }
@@ -96,12 +81,9 @@ export default function RelayPointInline({
             10
           );
 
-          L.tileLayer(
-            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            {
-              attribution: "&copy; OpenStreetMap",
-            }
-          ).addTo(mapInstance.current);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap",
+          }).addTo(mapInstance.current);
 
           marker.current = L.marker([48.8566, 2.3522]).addTo(
             mapInstance.current
@@ -117,6 +99,7 @@ export default function RelayPointInline({
 
           OnParcelShopSelected(data: any) {
             const relay: RelayPoint = {
+              id: data.ID || data.Num || "",
               name: data.Nom,
               address: data.Adresse1,
               address2: data.Adresse2 || null,
@@ -130,15 +113,14 @@ export default function RelayPointInline({
 
             setSelectedPoint(relay);
 
-            // met à jour la carte
             if (
               mapInstance.current &&
               marker.current &&
               relay.latitude &&
               relay.longitude
             ) {
-              const lat = parseFloat(relay.latitude);
-              const lng = parseFloat(relay.longitude);
+              const lat = parseFloat(String(relay.latitude));
+              const lng = parseFloat(String(relay.longitude));
 
               mapInstance.current.setView([lat, lng], 16);
               marker.current.setLatLng([lat, lng]);
@@ -152,7 +134,7 @@ export default function RelayPointInline({
 
     init();
 
-    // Cleanup Leaflet à l’unmount (optionnel mais propre)
+    // Cleanup
     return () => {
       try {
         if (mapInstance.current) {
@@ -178,6 +160,9 @@ export default function RelayPointInline({
         {/* Carte Leaflet custom */}
         <div className="mr-map" ref={mapRef} />
       </div>
+
+      {/* Target caché utilisé par le widget */}
+      <input type="hidden" id="mr-target" />
 
       {/* Bloc de confirmation UX propre */}
       {selectedPoint && (

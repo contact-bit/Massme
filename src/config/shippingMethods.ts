@@ -1,55 +1,37 @@
-export const SHIPPING_METHODS = [
+import { ShippingMethod } from "@/components/shipping/types";
+
+export const shippingMethods: ShippingMethod[] = [
+  {
+    id: "relay_mr",
+    name: "Point Relais Mondial Relay",
+    delay: "3 à 5 jours ouvrés",
+    price: 6.75,
+    type: "relay",
+    isActive: true,
+  },
   {
     id: "home_standard",
+    name: "Livraison à domicile",
+    delay: "2 à 3 jours ouvrés",
+    price: 11.75,
     type: "home",
-    relayProvider: null,
-    name: {
-      fr: "Livraison Standard à domicile",
-      en: "Home Delivery",
-    },
-    delay: {
-      fr: "48-72h",
-      en: "48-72h",
-    },
-    price: {
-      fr: 5.90,
-      en: 5.90,
-    },
+    isActive: true,
   },
-
   {
-    id: "relay_mondialrelay",
-    type: "relay",
-    relayProvider: "mondialrelay",
-    name: {
-      fr: "Mondial Relay – Point Relais",
-      en: "Mondial Relay – Pickup Point",
-    },
-    delay: {
-      fr: "3-5 jours",
-      en: "3-5 days",
-    },
-    price: {
-      fr: 4.90,
-      en: 4.90,
-    },
+    id: "home_express",
+    name: "Livraison Express 24H",
+    delay: "24H ouvrées si commande avant 14H",
+    price: 19.67,
+    type: "home",
+    isActive: true,
   },
-
   {
-    id: "relay_pickup",
-    type: "relay",
-    relayProvider: "pickup",
-    name: {
-      fr: "Pickup Shop2Shop",
-      en: "Pickup Shop2Shop",
-    },
-    delay: {
-      fr: "2-4 jours",
-      en: "2-4 days",
-    },
-    price: {
-      fr: 4.50,
-      en: 4.50,
-    },
+    id: "pickup_mbe",
+    name: "Retrait gratuit chez MBE (St Laurent du Var)",
+    delay: "Retrait boutique",
+    price: 0,
+    type: "local_pickup",
+    moreInfoUrl: "https://share.google/8x4GHOORKMuT3vx2v",
+    isActive: true,
   },
 ];

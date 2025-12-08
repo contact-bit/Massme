@@ -1,38 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-export default function EditMethodModal({
-  data,
-  onClose,
-  onSaved,
-}: {
+const COUNTRY_OPTIONS = [
+  { code: "FR", label: "France" },
+  { code: "BE", label: "Belgique" },
+  { code: "ES", label: "Espagne" },
+  { code: "DE", label: "Allemagne" },
+  { code: "IT", label: "Italie" },
+  { code: "NL", label: "Pays-Bas" },
+  { code: "PT", label: "Portugal" },
+];
+
+type Props = {
   data: any;
   onClose: () => void;
   onSaved: () => void;
-}) {
+};
+
+export default function EditMethodModal({ data, onClose, onSaved }: Props) {
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     name_fr: data.name?.fr || "",
     name_en: data.name?.en || "",
-    price_fr: data.price?.fr || "",
-    price_en: data.price?.en || "",
+    price_fr: data.price?.fr ?? "",
+    price_en: data.price?.en ?? "",
     delay_fr: data.delay?.fr || "",
     delay_en: data.delay?.en || "",
     type: data.type || "home",
     relayProvider: data.relayProvider || "",
+    country: data.country || "FR",
   });
 
-  const handleChange = (e: any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  /* -------------------------------------------------------
-     💾 ENREGISTRER
-  ------------------------------------------------------- */
   const save = async () => {
     try {
       setLoading(true);
@@ -44,14 +53,15 @@ export default function EditMethodModal({
         },
         price: {
           fr: Number(form.price_fr),
-          en: Number(form.price_en),
+          en: Number(form.price_en || form.price_fr),
         },
         delay: {
           fr: form.delay_fr,
-          en: form.delay_en,
+          en: form.delay_en || form.delay_fr,
         },
         type: form.type,
         relayProvider: form.type === "relay" ? form.relayProvider : null,
+        country: form.country, // ✅ pays enregistré
       });
 
       onSaved();
@@ -64,9 +74,6 @@ export default function EditMethodModal({
     }
   };
 
-  /* -------------------------------------------------------
-     🗑️ SUPPRESSION
-  ------------------------------------------------------- */
   const remove = async () => {
     if (!confirm("Supprimer ce transporteur ?")) return;
 
@@ -79,9 +86,6 @@ export default function EditMethodModal({
     }
   };
 
-  /* -------------------------------------------------------
-     🎨 UI
-  ------------------------------------------------------- */
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl">
@@ -110,12 +114,13 @@ export default function EditMethodModal({
             />
           </div>
 
-          {/* Prix */}
+          {/* Prix FR/EN */}
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="block text-sm font-medium">Prix (FR)</label>
               <input
                 name="price_fr"
+                type="number"
                 value={form.price_fr}
                 onChange={handleChange}
                 className="w-full border rounded p-2"
@@ -126,6 +131,7 @@ export default function EditMethodModal({
               <label className="block text-sm font-medium">Prix (EN)</label>
               <input
                 name="price_en"
+                type="number"
                 value={form.price_en}
                 onChange={handleChange}
                 className="w-full border rounded p-2"
@@ -133,7 +139,7 @@ export default function EditMethodModal({
             </div>
           </div>
 
-          {/* Délais */}
+          {/* Délais FR/EN */}
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="block text-sm font-medium">Délai (FR)</label>
@@ -156,6 +162,23 @@ export default function EditMethodModal({
             </div>
           </div>
 
+          {/* Pays */}
+          <div>
+            <label className="block text-sm font-medium">Pays</label>
+            <select
+              name="country"
+              value={form.country}
+              onChange={handleChange}
+              className="w-full border rounded p-2"
+            >
+              {COUNTRY_OPTIONS.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Type */}
           <div>
             <label className="block text-sm font-medium">Type</label>
@@ -167,6 +190,7 @@ export default function EditMethodModal({
             >
               <option value="home">Domicile</option>
               <option value="relay">Point relais</option>
+              <option value="local_pickup">Retrait sur place</option>
             </select>
           </div>
 
@@ -174,7 +198,7 @@ export default function EditMethodModal({
           {form.type === "relay" && (
             <div>
               <label className="block text-sm font-medium">
-                Provider Point Relais
+                Réseau point relais
               </label>
               <select
                 name="relayProvider"
@@ -185,6 +209,8 @@ export default function EditMethodModal({
                 <option value="">—</option>
                 <option value="mondialrelay">Mondial Relay</option>
                 <option value="pickup">Pickup / Shop2Shop</option>
+                <option value="colissimo">Colissimo</option>
+                <option value="relais-colis">Relais Colis</option>
               </select>
             </div>
           )}

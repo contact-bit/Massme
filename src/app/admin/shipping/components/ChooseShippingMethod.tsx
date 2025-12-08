@@ -1,87 +1,99 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { ShippingMethod, RelayPoint } from "@/components/shipping/types";
+import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
+
+type Locale = "fr" | "en";
+
+type Props = {
+  methods: ShippingMethod[];
+  onSelect: (m: ShippingMethod) => void;
+  onRelayChosen: (relay: RelayPoint | null) => void;
+  locale: Locale;
+  error?: string | null;
+};
 
 export default function ChooseShippingMethod({
   methods,
   onSelect,
   onRelayChosen,
-}: {
-  methods: any[];
-  onSelect: (m: any) => void;
-  onRelayChosen: (relay: any) => void;
-}) {
-  const [selected, setSelected] = useState<any | null>(null);
-  const [relayPoint, setRelayPoint] = useState<any | null>(null);
+  locale,
+  error,
+}: Props) {
+  const [selected, setSelected] = useState<ShippingMethod | null>(null);
+  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
 
-  function selectMethod(m: any) {
+  function selectMethod(m: ShippingMethod) {
     setSelected(m);
     onSelect(m);
 
-    // Reset relay choice
     if (m.type !== "relay") {
       setRelayPoint(null);
       onRelayChosen(null);
     }
   }
 
-  function chooseRelay(point: any) {
+  function handleRelayChosen(point: RelayPoint) {
     setRelayPoint(point);
     onRelayChosen(point);
   }
 
+  const t = {
+    title: locale === "fr" ? "Méthode de livraison" : "Shipping method",
+    chooseRelay:
+      locale === "fr"
+        ? "Choisir un point relais Mondial Relay"
+        : "Choose a Mondial Relay pickup point",
+  };
+
   return (
     <div className="space-y-4">
-      <h2 className="font-semibold mb-2 text-lg">Livraison</h2>
+      <h2 className="font-semibold mb-2 text-lg">{t.title}</h2>
+
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       {methods.map((m) => (
-        <div
+        <button
           key={m.id}
+          type="button"
           onClick={() => selectMethod(m)}
-          className={`border p-4 rounded-lg cursor-pointer ${
-            selected?.id === m.id ? "border-blue-600" : "border-gray-300"
+          className={`w-full text-left border p-4 rounded-lg cursor-pointer transition ${
+            selected?.id === m.id
+              ? "border-blue-600 bg-blue-50"
+              : "border-gray-300 bg-white"
           }`}
         >
-          <p className="font-semibold">{m.name}</p>
+          <p className="font-semibold">
+            {m.name} — {m.price.toFixed(2)} €
+          </p>
           <p className="text-sm text-gray-600">{m.delay}</p>
-          <p className="text-sm mt-1">{m.price.toFixed(2)} €</p>
 
           {m.type === "relay" && (
             <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded mt-2 inline-block">
-              Point relais ({m.relayProvider})
+              {locale === "fr"
+                ? "Point relais Mondial Relay"
+                : "Mondial Relay pickup point"}
             </span>
           )}
-        </div>
+        </button>
       ))}
 
-      {/* SI MODE RELAIS → AFFICHER LE PICKER */}
       {selected?.type === "relay" && (
-        <div className="border p-4 rounded-lg mt-4">
-          <h3 className="font-semibold mb-2">Choisir un point relais</h3>
+        <div className="border p-4 rounded-lg mt-4 bg-white shadow-sm">
+          <h3 className="font-semibold mb-2">{t.chooseRelay}</h3>
 
-          {/* Ici tu peux brancher l’API réelle plus tard */}
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-            onClick={() =>
-              chooseRelay({
-                id: "123456",
-                name: "Relais Pickup - Tabac Chez Paul",
-                address: "12 rue du Général Leclerc",
-                city: "Paris",
-                postalCode: "75010",
-              })
-            }
-          >
-            Choisir un point relais (démo)
-          </button>
+          {/* vrai widget Mondial Relay */}
+          <RelayPointMondialRelay onSelect={handleRelayChosen} />
 
           {relayPoint && (
             <div className="mt-3 text-sm bg-gray-100 p-2 rounded">
-              <p>{relayPoint.name}</p>
+              <p className="font-bold">{relayPoint.name}</p>
               <p>{relayPoint.address}</p>
               <p>
                 {relayPoint.postalCode} {relayPoint.city}
               </p>
+              {relayPoint.country && <p>{relayPoint.country}</p>}
             </div>
           )}
         </div>

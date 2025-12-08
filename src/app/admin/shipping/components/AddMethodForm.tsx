@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -15,12 +15,17 @@ export default function AddMethodForm({
     name: "",
     delay: "",
     price: "",
-    type: "home",
+    type: "home",        // "home" | "relay"
     relayProvider: "",
+    country: "FR",       // ✅ pays de destination par défaut
   });
 
-  const handleChange = (e: any) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async () => {
     if (!form.name || !form.price) {
@@ -57,7 +62,8 @@ export default function AddMethodForm({
 
     // ---- ENREGISTREMENT FIRESTORE ----
     await addDoc(collection(db, "shipping_methods"), {
-      zone,
+      zone,                 // ex: "fr" (langue du site)
+      country: form.country, // ✅ pays de destination (FR, BE, ES, …)
       isActive: true,
 
       // champs nécessaires pour checkout
@@ -77,6 +83,7 @@ export default function AddMethodForm({
       price: "",
       type: "home",
       relayProvider: "",
+      country: "FR",
     });
 
     onAdded();
@@ -108,6 +115,23 @@ export default function AddMethodForm({
         value={form.price}
         onChange={handleChange}
       />
+
+      {/* ✅ PAYS DE DESTINATION */}
+      <select
+        name="country"
+        className="admin-input"
+        value={form.country}
+        onChange={handleChange}
+      >
+        <option value="FR">France</option>
+        <option value="BE">Belgique</option>
+        <option value="ES">Espagne</option>
+        <option value="DE">Allemagne</option>
+        <option value="IT">Italie</option>
+        <option value="NL">Pays-Bas</option>
+        <option value="PT">Portugal</option>
+        {/* tu peux en rajouter ici */}
+      </select>
 
       <select
         name="type"

@@ -4,9 +4,7 @@ import { dbAdmin as db } from "@/lib/firebase.admin";
 import { Timestamp } from "firebase-admin/firestore";
 import Stripe from "stripe";
 
-/* ----------------------------------------------
-   Types
----------------------------------------------- */
+type Locale = "fr" | "en";
 
 type CleanItem = {
   id: string;
@@ -15,17 +13,28 @@ type CleanItem = {
   quantity: number;
 };
 
-type RelayPoint = {
+type ShippingMethodType = "relay" | "home" | "local_pickup";
+
+type ShippingMethod = {
+  id: string;
   name: string;
-  street: string;
-  postalCode: string;
-  city: string;
-  country?: string;
+  delay: string;
+  price: number;
+  type: ShippingMethodType;
 };
 
-/* ----------------------------------------------
-   POST /api/checkout (VERSION SENDCLOUD)
----------------------------------------------- */
+type RelayPoint = {
+  id: string;
+  name: string;
+  address: string;
+  address2?: string | null;
+  city: string;
+  postalCode: string;
+  country: string;
+  latitude?: string | number | null;
+  longitude?: string | number | null;
+  raw?: any;
+};
 
 export async function POST(req: Request) {
   try {
@@ -37,34 +46,48 @@ export async function POST(req: Request) {
       locale = "fr",
       customerEmail,
       shippingAddress,
+      shippingMethod,
       relayPoint,
     } = body as {
       items: any[];
       currency: string;
-      locale: "fr" | "en";
+      locale: Locale;
       customerEmail: string;
       shippingAddress: any;
+      shippingMethod: ShippingMethod;
       relayPoint?: RelayPoint | null;
     };
 
-    /* ----------------------------------------------
-       VALIDATIONS
-    ---------------------------------------------- */
-    if (!items?.length)
-      return NextResponse.json({ error: "Missing items" }, { status: 400 });
-
-    if (!customerEmail)
-      return NextResponse.json({ error: "Missing email" }, { status: 400 });
-
-    if (!relayPoint)
+    // ----------------- VALIDATIONS -----------------
+    if (!items?.length) {
       return NextResponse.json(
-        { error: "Missing Sendcloud relay/delivery selection" },
+        { error: "Missing items" },
         { status: 400 }
       );
+    }
 
-    /* ----------------------------------------------
-       NORMALISATION ITEMS
-    ---------------------------------------------- */
+    if (!customerEmail) {
+      return NextResponse.json(
+        { error: "Missing email" },
+        { status: 400 }
+      );
+    }
+
+    if (!shippingMethod) {
+      return NextResponse.json(
+        { error: "Missing shipping method" },
+        { status: 400 }
+      );
+    }
+
+    if (shippingMethod.type === "relay" && !relayPoint) {
+      return NextResponse.json(
+        { error: "Missing relay point for relay shipping" },
+        { status: 400 }
+      );
+    }
+
+    // ----------------- NORMALISATION ITEMS -----------------
     const cleanItems: CleanItem[] = items.map((item) => ({
       id: String(item.id),
       name:
@@ -79,35 +102,24 @@ export async function POST(req: Request) {
       quantity: Number(item.quantity || 1),
     }));
 
-    /* ----------------------------------------------
-       TOTALS
-    ---------------------------------------------- */
+    // ----------------- TOTALS -----------------
     const subtotal = cleanItems.reduce(
       (acc, item) => acc + item.price * item.quantity,
       0
     );
 
-    // 🔥 shipping en dur (Sendcloud)
-    const shippingMethod = {
-      id: "sendcloud",
-      name: locale === "fr" ? "Livraison" : "Shipping",
-      price: 4.9,
-      delay: locale === "fr" ? "2-4 jours" : "2-4 days",
-    };
+    const shippingPrice = shippingMethod.price ?? 0;
+    const total = subtotal + shippingPrice;
 
-    const total = subtotal + shippingMethod.price;
-
-    /* ----------------------------------------------
-       SAVE Firestore → pending_orders
-    ---------------------------------------------- */
+    // ----------------- FIRESTORE SAVE -----------------
     const orderRef = await db.collection("pending_orders").add({
       email: customerEmail,
       items: cleanItems,
       shippingMethod,
       shippingAddress,
-      relayPoint,
+      relayPoint: relayPoint || null,
       subtotal,
-      shippingPrice: shippingMethod.price,
+      shippingPrice,
       total,
       currency,
       locale,
@@ -115,9 +127,7 @@ export async function POST(req: Request) {
       status: "pending_payment",
     });
 
-    /* ----------------------------------------------
-       STRIPE LINE ITEMS
-    ---------------------------------------------- */
+    // ----------------- STRIPE LINE ITEMS -----------------
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] =
       cleanItems.map((item) => ({
         price_data: {
@@ -128,43 +138,46 @@ export async function POST(req: Request) {
         quantity: item.quantity,
       }));
 
-    /* ----------------------------------------------
-       STRIPE SHIPPING LINE
-    ---------------------------------------------- */
+    // Shipping line
     const shippingOption: Stripe.Checkout.SessionCreateParams.ShippingOption = {
       shipping_rate_data: {
         type: "fixed_amount",
         display_name: shippingMethod.name,
         fixed_amount: {
-          amount: Math.round(shippingMethod.price * 100),
+          amount: Math.round(shippingPrice * 100),
           currency,
         },
       },
     };
 
-    /* ----------------------------------------------
-       METADATA (propre & court)
-    ---------------------------------------------- */
+    // ----------------- METADATA -----------------
     const metadata: Record<string, string> = {
       order_id: orderRef.id,
-      sendcloud_relay_name: relayPoint.name,
-      sendcloud_relay_street: relayPoint.street,
-      sendcloud_relay_city: relayPoint.city,
-      sendcloud_relay_postalCode: relayPoint.postalCode,
-      sendcloud_relay_country: relayPoint.country || "FR",
+      shipping_method_id: shippingMethod.id,
+      shipping_method_type: shippingMethod.type,
+      shipping_method_name: shippingMethod.name,
     };
 
-    /* ----------------------------------------------
-       STRIPE SESSION
-    ---------------------------------------------- */
+    if (relayPoint) {
+      metadata.relay_id = relayPoint.id;
+      metadata.relay_name = relayPoint.name;
+      metadata.relay_address = relayPoint.address;
+      metadata.relay_city = relayPoint.city;
+      metadata.relay_postalCode = relayPoint.postalCode;
+      metadata.relay_country = relayPoint.country;
+    }
+
+    // ----------------- STRIPE SESSION -----------------
+    const successBase = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: customerEmail,
       line_items,
       shipping_options: [shippingOption],
       metadata,
-      success_url: `${process.env.NEXT_PUBLIC_URL}/${locale}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL}/${locale}/checkout`,
+      success_url: `${successBase}/${locale}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${successBase}/${locale}/checkout`,
     });
 
     return NextResponse.json({ url: session.url });
