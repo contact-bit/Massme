@@ -1,28 +1,26 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function AdminHeader() {
   const pathname = usePathname();
+  const router = useRouter();
 
-  const titles: Record<string, string> = {
-    "/admin": "Dashboard",
-    "/admin/orders": "Commandes",
-    "/admin/products": "Produits",
-    "/admin/shipping": "Livraison",
+  let title = "Admin";
+  if (pathname.startsWith("/admin/orders")) title = "Commandes";
+  else if (pathname.startsWith("/admin/products")) title = "Produits";
+  else if (pathname.startsWith("/admin/shipping")) title = "Livraison";
+  else if (pathname === "/admin") title = "Dashboard";
+
+  const logout = () => {
+    localStorage.removeItem("admin_token");
+    router.replace("/admin/login");
   };
 
   return (
     <header className="admin-header">
-      <h2>{titles[pathname] || "Admin"}</h2>
-
-      <button
-        onClick={() => {
-          localStorage.removeItem("admin_token");
-          window.location.href = "/admin/login";
-        }}
-        className="btn-logout"
-      >
+      <h2>{title}</h2>
+      <button onClick={logout} className="btn-logout">
         Déconnexion
       </button>
     </header>

@@ -1,39 +1,55 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
+  const router = useRouter();
+
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Si déjà connecté → redirection vers /admin
   useEffect(() => {
-    if (localStorage.getItem("admin_auth") === "true") {
-      window.location.href = "/admin";
+    if (typeof window === "undefined") return;
+
+    const token = localStorage.getItem("admin_token");
+    if (token) {
+      router.replace("/admin");
     }
-  }, []);
+  }, [router]);
 
   const handleLogin = async () => {
+    if (!password) return;
+
     setLoading(true);
 
-    const res = await fetch("/api/admin-login", {
-      method: "POST",
-      body: JSON.stringify({ password }),
-    });
+    try {
+      const res = await fetch("/api/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
 
-    setLoading(false);
+      if (!res.ok) {
+        alert("Mot de passe incorrect 🚫");
+        return;
+      }
 
-    if (res.ok) {
-      localStorage.setItem("admin_auth", "true");
-      window.location.href = "/admin";
-    } else {
-      alert("Mot de passe incorrect 🚫");
+      // ✅ On aligne avec le layout : "admin_token"
+      localStorage.setItem("admin_token", "true");
+      router.replace("/admin");
+    } catch (err) {
+      console.error("Erreur login admin :", err);
+      alert("Erreur de connexion");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="admin-login-wrapper">
       <div className="admin-login-box">
-
         <h1 className="admin-login-title">🔐 Admin MassMe</h1>
 
         <input
