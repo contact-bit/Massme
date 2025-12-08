@@ -8,6 +8,8 @@ export default function AdminLoginPage() {
 
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   // Si déjà connecté → redirection vers /admin
   useEffect(() => {
@@ -23,6 +25,8 @@ export default function AdminLoginPage() {
     if (!password) return;
 
     setLoading(true);
+    setError(null);
+    setInfo(null);
 
     try {
       const res = await fetch("/api/admin-login", {
@@ -31,17 +35,36 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ password }),
       });
 
-      if (!res.ok) {
-        alert("Mot de passe incorrect 🚫");
+      const data = await res.json().catch(() => ({}));
+
+      if (res.status === 429) {
+        const minutes = data.retryAfterMinutes ?? 10;
+        setError(
+          `Trop de tentatives. Réessaie dans environ ${minutes} minute${
+            minutes > 1 ? "s" : ""
+          }.`
+        );
         return;
       }
 
-      // ✅ On aligne avec le layout : "admin_token"
+      if (!res.ok) {
+        if (typeof data.remainingAttempts === "number") {
+          setError(
+            `Mot de passe incorrect 🚫 (Essais restants : ${data.remainingAttempts})`
+          );
+        } else {
+          setError("Mot de passe incorrect 🚫");
+        }
+        return;
+      }
+
+      // ✅ Login OK
       localStorage.setItem("admin_token", "true");
+      setInfo("Connexion réussie, redirection…");
       router.replace("/admin");
     } catch (err) {
       console.error("Erreur login admin :", err);
-      alert("Erreur de connexion");
+      setError("Erreur de connexion. Réessaie plus tard.");
     } finally {
       setLoading(false);
     }
@@ -51,14 +74,40 @@ export default function AdminLoginPage() {
     <div className="admin-login-wrapper">
       <div className="admin-login-box">
         <h1 className="admin-login-title">🔐 Admin MassMe</h1>
+        <p className="admin-login-subtitle">
+          Accès réservé &mdash; tentative limitée pour des raisons de sécurité.
+        </p>
 
-        <input
-          type="password"
-          placeholder="Mot de passe"
-          className="admin-login-input"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="admin-login-field">
+          <label className="admin-login-label" htmlFor="admin-password">
+            Mot de passe
+          </label>
+          <input
+            id="admin-password"
+            type="password"
+            placeholder="Entrez le mot de passe admin"
+            className="admin-login-input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleLogin();
+              }
+            }}
+          />
+        </div>
+
+        {error && (
+          <p className="admin-login-error">
+            {error}
+          </p>
+        )}
+
+        {info && !error && (
+          <p className="admin-login-info">
+            {info}
+          </p>
+        )}
 
         <button
           className="admin-login-button"
@@ -67,6 +116,11 @@ export default function AdminLoginPage() {
         >
           {loading ? "Connexion…" : "Se connecter"}
         </button>
+
+        <p className="admin-login-footnote">
+          Pour toute tentative non autorisée, l’accès peut être temporairement
+          bloqué.
+        </p>
       </div>
     </div>
   );
