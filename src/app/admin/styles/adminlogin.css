@@ -1,0 +1,113 @@
+/* =========================================================
+   🔐 PAGE LOGIN ADMIN
+========================================================= */
+.admin-login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, #e0f2fe, #f9fafb);
+  padding: 16px;
+  font-family: var(--font-main);
+}
+
+.admin-login-box {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 28px 24px 22px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+}
+
+.admin-login-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.admin-login-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.admin-login-field {
+  margin-bottom: 12px;
+}
+
+.admin-login-label {
+  display: block;
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+.admin-login-input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-login-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
+}
+
+.admin-login-button {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 14px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s;
+}
+
+.admin-login-button:hover:not(:disabled) {
+  background: #1d4ed8;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+}
+
+.admin-login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-login-error {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.admin-login-info {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #065f46;
+  background: #ecfdf5;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.admin-login-footnote {
+  margin-top: 14px;
+  font-size: 11px;
+  color: #9ca3af;
+  text-align: center;
+}
