@@ -1,38 +1,38 @@
 "use client";
 
+import type { ShippingMethod } from "../page";
 import { useState } from "react";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 export default function ToggleActivation({
-  id,
-  initial,
-  onChanged,
+  method,
+  onUpdated,
 }: {
-  id: string;
-  initial: boolean;
-  onChanged?: () => void;
+  method: ShippingMethod;
+  onUpdated: (m: ShippingMethod) => void;
 }) {
-  const [enabled, setEnabled] = useState(initial);
   const [loading, setLoading] = useState(false);
 
   const toggle = async () => {
-    if (loading) return;
-
-    const newState = !enabled;
-    setEnabled(newState);
     setLoading(true);
-
     try {
-      await updateDoc(doc(db, "shipping_methods", id), {
-        isActive: newState,
+      const res = await fetch(`/api/admin/shipping-methods/${method.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data: { isActive: !method.isActive },
+        }),
       });
 
-      if (onChanged) onChanged();
-    } catch (err) {
-      console.error("❌ Erreur Firestore :", err);
-      alert("Impossible de mettre à jour.");
-      setEnabled(enabled); // revert
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.ok) {
+        alert("Erreur lors de la mise à jour de l'état");
+        return;
+      }
+
+      onUpdated({ ...method, isActive: !method.isActive });
+    } catch (e) {
+      console.error("Erreur toggle activation:", e);
+      alert("Erreur lors de la mise à jour de l'état");
     } finally {
       setLoading(false);
     }
@@ -42,15 +42,15 @@ export default function ToggleActivation({
     <button
       onClick={toggle}
       disabled={loading}
-      className={`relative inline-flex h-6 w-12 items-center rounded-full transition ${
-        enabled ? "bg-green-500" : "bg-gray-400"
+      className={`px-3 py-1 text-sm rounded-md ${
+        method.isActive ? "bg-green-100 text-green-700" : "bg-gray-200"
       }`}
     >
-      <span
-        className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-          enabled ? "translate-x-6" : "translate-x-1"
-        }`}
-      ></span>
+      {loading
+        ? "..."
+        : method.isActive
+        ? "Désactiver"
+        : "Activer"}
     </button>
   );
 }

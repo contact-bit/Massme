@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useEffect, useState, ChangeEvent } from "react";
+import type { ShippingMethod } from "../page";
 
 const COUNTRY_OPTIONS = [
   { code: "FR", label: "France" },
@@ -15,7 +14,7 @@ const COUNTRY_OPTIONS = [
 ];
 
 type Props = {
-  data: any;
+  data: ShippingMethod;
   onClose: () => void;
   onSaved: () => void;
 };
@@ -24,16 +23,30 @@ export default function EditMethodModal({ data, onClose, onSaved }: Props) {
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    name_fr: data.name?.fr || "",
-    name_en: data.name?.en || "",
-    price_fr: data.price?.fr ?? "",
-    price_en: data.price?.en ?? "",
-    delay_fr: data.delay?.fr || "",
-    delay_en: data.delay?.en || "",
-    type: data.type || "home",
-    relayProvider: data.relayProvider || "",
-    country: data.country || "FR",
+    name_fr: "",
+    name_en: "",
+    price_fr: "",
+    price_en: "",
+    delay_fr: "",
+    delay_en: "",
+    type: "home" as "home" | "relay" | "local_pickup",
+    relayProvider: "",
+    country: "FR",
   });
+
+  useEffect(() => {
+    setForm({
+      name_fr: data.nameFr || "",
+      name_en: data.nameEn || "",
+      price_fr: data.priceFr.toString(),
+      price_en: data.priceEn.toString(),
+      delay_fr: data.delayFr || "",
+      delay_en: data.delayEn || "",
+      type: data.type || "home",
+      relayProvider: data.relayProvider || "",
+      country: data.country || "FR",
+    });
+  }, [data]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -46,23 +59,37 @@ export default function EditMethodModal({ data, onClose, onSaved }: Props) {
     try {
       setLoading(true);
 
-      await updateDoc(doc(db, "shipping_methods", data.id), {
+      const payload = {
         name: {
           fr: form.name_fr,
           en: form.name_en,
         },
         price: {
-          fr: Number(form.price_fr),
-          en: Number(form.price_en || form.price_fr),
+          fr: Number(form.price_fr || 0),
+          en: Number(form.price_en || 0),
         },
         delay: {
           fr: form.delay_fr,
-          en: form.delay_en || form.delay_fr,
+          en: form.delay_en,
         },
         type: form.type,
         relayProvider: form.type === "relay" ? form.relayProvider : null,
-        country: form.country, // ✅ pays enregistré
+        country: form.country,
+      };
+
+      const res = await fetch(`/api/admin/shipping-methods/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: payload }),
       });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok || !json.ok) {
+        console.error("❌ Erreur API PATCH:", json);
+        alert("Erreur lors de l’enregistrement");
+        return;
+      }
 
       onSaved();
       onClose();
@@ -78,18 +105,32 @@ export default function EditMethodModal({ data, onClose, onSaved }: Props) {
     if (!confirm("Supprimer ce transporteur ?")) return;
 
     try {
-      await deleteDoc(doc(db, "shipping_methods", data.id));
+      const res = await fetch(`/api/admin/shipping-methods/${data.id}`, {
+        method: "DELETE",
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok || !json.ok) {
+        console.error("❌ Erreur API DELETE:", json);
+        alert("Erreur lors de la suppression");
+        return;
+      }
+
       onSaved();
       onClose();
     } catch (err) {
       console.error("❌ Erreur suppression :", err);
+      alert("Erreur lors de la suppression");
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl">
-        <h2 className="text-xl font-semibold mb-4">Modifier la méthode</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          Configuration : {form.name_fr || form.name_en || "Méthode"}
+        </h2>
 
         <div className="space-y-3">
           {/* Nom FR */}
