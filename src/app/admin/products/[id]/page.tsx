@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -9,42 +9,31 @@ import ProductEditForm from "../ProductEditForm";
 export default function EditProductPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const { id } = params;
+
+  // ⬅️ Next 16 : params est une Promise → on l’unwrap avec React.use()
+  const { id } = React.use(params);
 
   const [product, setProduct] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 🔐 check login admin côté client
-    if (typeof window === "undefined") return;
-
-    const token = localStorage.getItem("admin_token");
-    if (token !== "true") {
-      router.replace("/admin/login");
-      return;
-    }
-
-    const loadProduct = async () => {
+    async function loadProduct() {
       try {
         const ref = doc(db, "products", id);
         const snap = await getDoc(ref);
         if (snap.exists()) {
           setProduct({ id, ...snap.data() });
-        } else {
-          console.warn("Produit introuvable");
         }
-      } catch (e) {
-        console.error("Erreur chargement produit:", e);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     loadProduct();
-  }, [id, router]);
+  }, [id]);
 
   return (
     <div className="admin-content admin-page">
