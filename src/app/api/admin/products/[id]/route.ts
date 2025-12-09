@@ -6,6 +6,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    // ⬅️ Next 16 : params est une Promise, on l’await
     const { id } = await context.params;
 
     let body: any;
@@ -28,6 +29,7 @@ export async function PATCH(
       );
     }
 
+    // 🔐 Admin SDK → ne dépend PAS des règles Firestore client
     await dbAdmin.collection("products").doc(id).update(data);
 
     console.log("✅ Produit mis à jour avec succès");

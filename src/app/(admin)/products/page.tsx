@@ -1,14 +1,94 @@
-import { NextResponse } from "next/server";
-import { dbAdmin } from "@/lib/firebase.admin";
+"use client";
 
-export async function GET() {
-  try {
-    const snap = await dbAdmin.collection("products").get();
-    const products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
-    return NextResponse.json({ ok: true, products });
-  } catch (e) {
-    console.error("❌ Admin products error:", e);
-    return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
-  }
+type Product = {
+  id: string;
+  name?: { fr?: string; en?: string } | string;
+  price?: { eur?: number } | number;
+  isActive?: boolean;
+};
+
+export default function ProductsAdminPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const res = await fetch("/api/admin/products");
+        const json = await res.json();
+        if (json.ok) {
+          setProducts(json.products || []);
+        } else {
+          console.error("API admin/products error:", json.error);
+        }
+      } catch (e) {
+        console.error("Erreur chargement produits admin:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProducts();
+  }, []);
+
+  const getName = (p: Product) =>
+    typeof p.name === "string"
+      ? p.name
+      : p.name?.fr || p.name?.en || "Produit";
+
+  const getPrice = (p: Product) =>
+    typeof p.price === "number"
+      ? p.price
+      : typeof p.price?.eur === "number"
+      ? p.price.eur
+      : 0;
+
+  return (
+    <main className="admin-page">
+      <h1 className="admin-title">📦 Produits</h1>
+
+      <div className="mb-4">
+        <Link href="/admin/products/new" className="btn btn-primary">
+          ➕ Ajouter un produit
+        </Link>
+      </div>
+
+      {loading ? (
+        <p>Chargement…</p>
+      ) : products.length === 0 ? (
+        <p>Aucun produit.</p>
+      ) : (
+        <ul className="space-y-3">
+          {products.map((p) => (
+            <li
+              key={p.id}
+              className="flex items-center justify-between border p-3 rounded"
+            >
+              <div>
+                <p className="font-semibold">{getName(p)}</p>
+                <p className="text-sm text-gray-500">
+                  {getPrice(p).toFixed(2)} €
+                  {p.isActive === false && (
+                    <span className="ml-2 text-xs text-red-500">
+                      (désactivé)
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              <Link
+                href={`/admin/products/${p.id}`}
+                className="text-blue-600 underline text-sm"
+              >
+                Modifier
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </main>
+  );
 }
