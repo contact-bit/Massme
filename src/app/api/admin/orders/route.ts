@@ -1,9 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+/**
+ * Petite fonction utilitaire pour vérifier le header x-admin-password
+ */
+function isAuthorized(req: NextRequest) {
+  if (!ADMIN_PASSWORD) {
+    console.error("❌ ADMIN_PASSWORD manquant dans l'environnement");
+    return false;
+  }
+  const header = req.headers.get("x-admin-password") || "";
+  return header === ADMIN_PASSWORD;
+}
+
 // 🧾 Récupérer la liste des commandes (orders + pending_orders)
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
+    // 🔐 Check admin
+    if (!isAuthorized(req)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const ordersSnap = await dbAdmin.collection("orders").get();
     const pendingSnap = await dbAdmin.collection("pending_orders").get();
 
@@ -16,7 +35,7 @@ export async function GET(_req: NextRequest) {
       return {
         ...data,
         stripeSessionId: data.id ?? null,
-        id: doc.id,          // ID Firestore unique pour React
+        id: doc.id, // ID Firestore unique pour React
         source: "orders",
       };
     });
@@ -46,6 +65,11 @@ export async function GET(_req: NextRequest) {
 // 🗑️ Supprimer une commande (id passé dans l'URL : ?id=...)
 export async function DELETE(req: NextRequest) {
   try {
+    // 🔐 Check admin
+    if (!isAuthorized(req)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const id = req.nextUrl.searchParams.get("id");
 
     if (!id) {

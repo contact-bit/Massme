@@ -13,19 +13,29 @@ type Product = {
 export default function ProductsAdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadProducts() {
       try {
+        setLoading(true);
+        setError(null);
+
         const res = await fetch("/api/admin/products");
-        const json = await res.json();
-        if (json.ok) {
-          setProducts(json.products || []);
-        } else {
+        const json = await res.json().catch(() => ({}));
+
+        if (!res.ok || !json.ok) {
           console.error("API admin/products error:", json.error);
+          setError("Impossible de charger la liste des produits.");
+          setProducts([]);
+          return;
         }
+
+        setProducts(json.products || []);
       } catch (e) {
         console.error("Erreur chargement produits admin:", e);
+        setError("Erreur réseau lors du chargement des produits.");
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -50,7 +60,7 @@ export default function ProductsAdminPage() {
     <main className="admin-page">
       <h1 className="admin-title">📦 Produits</h1>
 
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <Link href="/admin/products/new" className="btn btn-primary">
           ➕ Ajouter un produit
         </Link>
@@ -58,6 +68,8 @@ export default function ProductsAdminPage() {
 
       {loading ? (
         <p>Chargement…</p>
+      ) : error ? (
+        <p className="text-red-600 text-sm">{error}</p>
       ) : products.length === 0 ? (
         <p>Aucun produit.</p>
       ) : (
@@ -65,7 +77,7 @@ export default function ProductsAdminPage() {
           {products.map((p) => (
             <li
               key={p.id}
-              className="flex items-center justify-between border p-3 rounded"
+              className="flex items-center justify-between border p-3 rounded bg-white"
             >
               <div>
                 <p className="font-semibold">{getName(p)}</p>

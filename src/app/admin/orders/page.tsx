@@ -9,7 +9,6 @@ type Order = {
   createdAt?: any;
 
   amount_total?: number;
-
   subtotal?: number;
   shippingPrice?: number;
   total?: number;
@@ -46,14 +45,27 @@ export default function OrdersAdminPage() {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
   /* ---------------------------------------------------------
-     🔄 Chargement des commandes via API admin
+     🔄 Chargement des commandes via API admin sécurisée
   --------------------------------------------------------- */
   useEffect(() => {
     const loadOrders = async () => {
       try {
         setLoading(true);
 
-        const res = await fetch("/api/admin/orders"); // ✅ plus de header adminPassword
+        if (typeof window === "undefined") return;
+
+        const adminPassword = localStorage.getItem("admin_password");
+        if (!adminPassword) {
+          // Session admin expirée ou pas loggé
+          window.location.href = "/admin-login";
+          return;
+        }
+
+        const res = await fetch("/api/admin/orders", {
+          headers: {
+            "x-admin-password": adminPassword,
+          },
+        });
 
         if (!res.ok) {
           console.error("Erreur API admin/orders:", await res.text());
@@ -120,14 +132,28 @@ export default function OrdersAdminPage() {
   };
 
   /* ---------------------------------------------------------
-     🗑️ Suppression via API
+     🗑️ Suppression via API sécurisée
   --------------------------------------------------------- */
   const deleteSingle = async (id: string) => {
     if (!confirm("Supprimer cette commande ?")) return;
 
     try {
+      const adminPassword =
+        typeof window !== "undefined"
+          ? localStorage.getItem("admin_password")
+          : null;
+
+      if (!adminPassword) {
+        alert("Session admin expirée, reconnecte-toi.");
+        window.location.href = "/admin-login";
+        return;
+      }
+
       const res = await fetch(`/api/admin/orders?id=${id}`, {
         method: "DELETE",
+        headers: {
+          "x-admin-password": adminPassword,
+        },
       });
 
       if (!res.ok) {
@@ -153,10 +179,24 @@ export default function OrdersAdminPage() {
     if (!confirm(`Supprimer ${selectedOrders.length} commande(s) ?`)) return;
 
     try {
+      const adminPassword =
+        typeof window !== "undefined"
+          ? localStorage.getItem("admin_password")
+          : null;
+
+      if (!adminPassword) {
+        alert("Session admin expirée, reconnecte-toi.");
+        window.location.href = "/admin-login";
+        return;
+      }
+
       await Promise.all(
         selectedOrders.map((id) =>
           fetch(`/api/admin/orders?id=${id}`, {
             method: "DELETE",
+            headers: {
+              "x-admin-password": adminPassword,
+            },
           })
         )
       );

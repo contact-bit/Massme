@@ -1,3 +1,4 @@
+// src/app/api/admin/products/[id]/route.ts
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 
@@ -6,7 +7,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ⬅️ Next 16 : params est une Promise, on l’await
+    // ⬅️ Next 16 : params est une Promise
     const { id } = await context.params;
 
     let body: any;
@@ -29,7 +30,7 @@ export async function PATCH(
       );
     }
 
-    // 🔐 Admin SDK → ne dépend PAS des règles Firestore client
+    // Admin SDK → bypass les règles Firestore client
     await dbAdmin.collection("products").doc(id).update(data);
 
     console.log("✅ Produit mis à jour avec succès");

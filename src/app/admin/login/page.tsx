@@ -60,6 +60,9 @@ export default function AdminLoginPage() {
 
       // ✅ Login OK
       localStorage.setItem("admin_token", "true");
+      // 🔐 On garde aussi le mot de passe pour signer les requêtes admin
+      localStorage.setItem("admin_password", password);
+
       setInfo("Connexion réussie, redirection…");
       router.replace("/admin");
     } catch (err) {
@@ -97,17 +100,9 @@ export default function AdminLoginPage() {
           />
         </div>
 
-        {error && (
-          <p className="admin-login-error">
-            {error}
-          </p>
-        )}
+        {error && <p className="admin-login-error">{error}</p>}
 
-        {info && !error && (
-          <p className="admin-login-info">
-            {info}
-          </p>
-        )}
+        {info && !error && <p className="admin-login-info">{info}</p>}
 
         <button
           className="admin-login-button"
@@ -125,3 +120,4 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+  

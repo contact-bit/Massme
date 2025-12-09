@@ -22,10 +22,10 @@ export default function ProductEditForm({
   const [isActive, setIsActive] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
 
-  // Nouveau : password admin
+  // Mot de passe admin saisi dans le formulaire
   const [adminPassword, setAdminPassword] = useState("");
 
-  // Pour feedback UI
+  // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,15 +43,23 @@ export default function ProductEditForm({
   const handleSave = async (e: any) => {
     e.preventDefault();
 
-    setLoading(true);
     setError(null);
+
+    if (!adminPassword) {
+      setError("Merci d’entrer le mot de passe admin.");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const res = await fetch(`/api/admin/products/${product.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-password": adminPassword, // ✅ utilisé côté API
+        },
         body: JSON.stringify({
-         // adminPassword,
           data: {
             name: { fr: nameFr, en: nameEn },
             description: { fr: descFr, en: descEn },
