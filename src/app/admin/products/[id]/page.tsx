@@ -10,14 +10,15 @@ export default function EditProductPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // On unwrap les params depuis la promesse Next.js
+  // Next 16 : params est une Promise → on l’unwrap avec React.use()
   const { id } = React.use(params);
 
   const [product, setProduct] = useState<any | null>(null);
 
   useEffect(() => {
     async function loadProduct() {
-      const snap = await getDoc(doc(db, "products", id));
+      const ref = doc(db, "products", id);
+      const snap = await getDoc(ref);
       if (snap.exists()) {
         setProduct({ id, ...snap.data() });
       }
