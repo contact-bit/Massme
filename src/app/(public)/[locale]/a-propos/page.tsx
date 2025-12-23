@@ -5,75 +5,59 @@ export const dynamic = "force-dynamic";
 // --- CONTENU FR & EN STRUCTURÉ --- //
 const CONTENT = {
   fr: {
-    title: "À propos de MassMe",
-    subtitle: "L’appui-tête universel de massage et de relaxation — conçu, fabriqué & assemblé en France",
+    title: "À propos d’OculaRest",
+    subtitle:
+      "Le dispositif conçu pour accompagner la convalescence après vitrectomie avec injection de gaz",
 
     sections: [
       {
-        heading: "Comment est né MassMe ?",
+        heading: "Pourquoi OculaRest a été créé ?",
         text: `
-MassMe est né d’une conviction simple : le massage, la relaxation et le bon positionnement du corps améliorent profondément le bien-être et la qualité de vie.
+OculaRest est né d’un constat simple : après une vitrectomie avec injection de gaz, le respect strict de la position post-opératoire est essentiel.
 
-Très rapidement, nous avons réalisé que la posture du massé est aussi importante que les mains du masseur.
+Pour de nombreux patients, maintenir cette position pendant plusieurs jours (parfois plus) est difficile. L’inconfort, les tensions cervicales et la fatigue rendent la convalescence plus éprouvante.
 
-À domicile, impossible d'obtenir une position comparable à celle d’une table de massage professionnelle : torsions cervicales, respiration comprimée, muscles qui ne se relâchent pas, inconfort.
-
-Nous avons donc décidé de réinventer la posture.
-
-Notre objectif : créer un appui-tête universel permettant d’éviter les torsions cervicales, de favoriser un relâchement musculaire profond, de permettre une respiration fluide, et d’apporter une ergonomie professionnelle directement à la maison.
-
-Ainsi est né MassMe : un appui-tête innovant, compatible avec tous les lits et toutes les hauteurs de matelas, sans installation complexe.
+OculaRest a été conçu pour faciliter le maintien de la position prescrite tout en améliorant le confort au quotidien.
         `,
       },
 
       {
-        heading: "Notre mission",
+        heading: "À quoi sert OculaRest pendant la convalescence ?",
         text: `
-Aujourd’hui, LazurCo – notre start-up basée à Nice – conçoit des appuis-tête adaptés à la relaxation, au massage, au bien-être au travail, à la convalescence post-vitrectomie et au soulagement des douleurs cervicales.
+OculaRest aide à maintenir plus facilement la posture recommandée par le chirurgien afin d’optimiser les conditions de récupération.
 
-Notre mission : rendre le bien-être accessible, ergonomique et efficace pour tous.
+En réduisant les contraintes liées à la position, il permet au patient de mieux tenir la durée nécessaire, avec moins de douleurs et moins de compensations musculaires.
+
+L’objectif est simple : aider le patient à rester correctement positionné, plus longtemps, et dans de meilleures conditions.
         `,
       },
 
       {
-        heading: "Un produit éco-responsable",
+        heading: "Confort et stabilité",
         text: `
-Nos valeurs guident chacune de nos créations :
+OculaRest a été pensé pour offrir un bon maintien, de jour comme de nuit, tout en favorisant une posture plus stable.
 
-• Production raisonnée et fabrication française  
-• Réduction de l’impact carbone grâce à des matériaux locaux  
-• Conformité REACH garantissant sécurité et durabilité  
-• Emballages recyclables et encres végétales  
-• Collaboration avec le réseau Citéo
+Il contribue à diminuer les tensions au niveau du cou et des épaules, souvent liées au maintien prolongé de la position.
 
-MassMe est pensé pour durer, pour respecter les utilisateurs et l’environnement.
+Chaque élément a été conçu pour être simple à utiliser et rassurant pendant la période post-opératoire.
         `,
       },
 
       {
-        heading: "Comment utiliser MassMe au quotidien ?",
+        heading: "Pour qui est conçu OculaRest ?",
         text: `
-MassMe transforme l’expérience du massage à la maison :
+OculaRest s’adresse aux patients opérés d’une vitrectomie avec injection de gaz, lorsque le chirurgien prescrit une position post-opératoire.
 
-• Alignement naturel de la tête et de la colonne  
-• Respiration fluide  
-• Relâchement musculaire total  
-• Fini les torsions cervicales  
-• Réglage de la hauteur et de l’inclinaison  
-• Compatible avec tous les lits
-
-Il est aussi idéal pour les professionnels du massage, les spas, les hôtels, les locations saisonnières, les entreprises et les collectivités.
-
-Sur un bureau, MassMe devient un outil de bien-être au travail permettant une pause ressourçante à tout moment.
+Il est également utile pour les personnes qui souhaitent une solution plus confortable afin de respecter au mieux les recommandations médicales pendant la convalescence.
         `,
       },
 
       {
-        heading: "Le fondateur",
+        heading: "Important",
         text: `
-« J’ai créé MassMe pour apporter à chacun un accès simple, ergonomique et professionnel au bien-être. »
+OculaRest ne remplace pas un avis médical.
 
-— Olivier PETRI, Fondateur de LazurCo
+La position à respecter, la durée et les consignes dépendent de votre situation et doivent être validées par votre chirurgien ou votre équipe médicale.
         `,
       },
     ],
@@ -81,69 +65,59 @@ Sur un bureau, MassMe devient un outil de bien-être au travail permettant une p
 
   /* -------------------- VERSION EN ---------------------- */
   en: {
-    title: "About MassMe",
-    subtitle: "The universal headrest for massage & relaxation — designed, manufactured & assembled in France",
+    title: "About OculaRest",
+    subtitle:
+      "The device designed to support recovery after vitrectomy with gas injection",
 
     sections: [
       {
-        heading: "How was MassMe created?",
+        heading: "Why was OculaRest created?",
         text: `
-MassMe was born from a simple belief: massage, relaxation and proper body alignment significantly improve comfort and well-being.
+OculaRest was created from a simple observation: after a vitrectomy with gas injection, strictly maintaining the post-operative position is essential.
 
-At home, achieving the ergonomics of a professional massage table is nearly impossible: neck torsion, restricted breathing and limited muscle release.
+For many patients, holding this position for several days (sometimes longer) can be difficult. Discomfort, neck strain and fatigue can make recovery more challenging.
 
-We wanted to change that.
-
-Our goal was to create a universal ergonomic headrest that prevents cervical torsion, enhances muscle relaxation, allows natural breathing and offers professional-grade comfort at home.
-
-MassMe is compatible with any bed, any mattress height, and requires no complex installation.
+OculaRest was designed to make it easier to maintain the prescribed position while improving everyday comfort.
         `,
       },
-      {
-        heading: "Our mission",
-        text: `
-LazurCo, our company based in Nice (France), designs headrests dedicated to relaxation, massage, workplace wellbeing, post-vitrectomy recovery and cervical pain relief.
 
-Our mission: making well-being accessible, ergonomic and effective for everyone.
+      {
+        heading: "What is OculaRest used for during recovery?",
+        text: `
+OculaRest helps patients maintain the position recommended by their surgeon in order to support optimal recovery conditions.
+
+By reducing physical constraints associated with prolonged positioning, it helps patients hold the required posture longer, with less pain and fewer muscular compensations.
+
+The goal is simple: help patients stay correctly positioned for longer periods, in better conditions.
         `,
       },
+
       {
-        heading: "Eco-responsible manufacturing",
+        heading: "Comfort and stability",
         text: `
-Our values lead each creation:
+OculaRest is designed to provide stable support, day and night, while promoting a more consistent posture.
 
-• French manufacturing & local suppliers  
-• Low-carbon materials  
-• REACH-compliant components  
-• Recyclable packaging with vegetable inks  
-• Partnership with Citéo
+It can help reduce strain in the neck and shoulders, which often occurs when maintaining the recovery position.
 
-MassMe is built to last, respectful of both users and the planet.
+Every detail is designed to be easy to use and reassuring throughout the post-operative period.
         `,
       },
+
       {
-        heading: "Daily use of MassMe",
+        heading: "Who is OculaRest designed for?",
         text: `
-MassMe improves the massage experience at home:
+OculaRest is intended for patients who have undergone a vitrectomy with gas injection when a specific post-operative position is prescribed by the surgeon.
 
-• Natural head & spine alignment  
-• Comfortable breathing  
-• Deep muscular relaxation  
-• No more neck pain  
-• Adjustable height & angle  
-• Fits any bed
-
-Perfect for massage therapists, spas, hotels, rentals, companies and wellness rooms.
-
-On a desk, MassMe becomes a workplace-wellness tool for restorative micro-breaks.
+It is also helpful for anyone looking for a more comfortable solution to follow medical positioning instructions during recovery.
         `,
       },
-      {
-        heading: "The founder",
-        text: `
-“I created MassMe to offer everyone a simple, ergonomic and professional access to well-being.”
 
-— Olivier PETRI, Founder of LazurCo
+      {
+        heading: "Important",
+        text: `
+OculaRest does not replace medical advice.
+
+The position to follow, the duration and instructions depend on your individual case and must be confirmed by your surgeon or medical team.
         `,
       },
     ],

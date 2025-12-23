@@ -9,38 +9,19 @@ import { ShoppingCart } from "lucide-react";
 import "@/styles/components/navbar.css";
 
 /* ------------------------------------------
-   🔥 TYPES STRICTS
+   🔥 LOGO CLOUDFlARE
 ------------------------------------------ */
-
-type Locale = "fr" | "en";
-
-type NeedSlug =
-  | "vitrectomie"
-  | "cervicales"
-  | "domicile"
-  | "pro"
-  | "cadeaux"
-  | "travail"
-  | "dormir-ventre";
+const LOGO_URL =
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2456d5ba-af23-4219-7115-f54286a7c600/public";
 
 /* ------------------------------------------
-   🔥 LINKS 100% TYPÉS
+   🔥 TYPES STRICTS
 ------------------------------------------ */
-
-const NEEDS_LINKS: { slug: NeedSlug }[] = [
-  { slug: "vitrectomie" },
-  { slug: "cervicales" },
-  { slug: "domicile" },
-  { slug: "pro" },
-  { slug: "cadeaux" },
-  { slug: "travail" },
-  { slug: "dormir-ventre" },
-];
+type Locale = "fr" | "en";
 
 /* ------------------------------------------
    🔥 TRADUCTIONS 100% TYPÉES
 ------------------------------------------ */
-
 const TRANSLATIONS: Record<
   Locale,
   {
@@ -48,75 +29,57 @@ const TRANSLATIONS: Record<
       home: string;
       about: string;
       products: string;
-      needs: string;
-      blog: string;
       contact: string;
     };
-    needs: Record<NeedSlug, string>;
+    cartLabel: string;
   }
 > = {
   fr: {
     nav: {
       home: "Accueil",
-      about: "À propos",
-      products: "Produits",
-      needs: "Vos besoins",
-      blog: "Blog",
+      about: "Fonctionnement",
+      products: "Commander",
       contact: "Contact",
     },
-    needs: {
-      vitrectomie: "Vitrectomie",
-      cervicales: "Douleurs cervicales",
-      domicile: "Bien-être à domicile",
-      pro: "Usage professionnel",
-      cadeaux: "Idées cadeaux",
-      travail: "Bien-être au travail",
-      "dormir-ventre": "Dormir sur le ventre",
-    },
+    cartLabel: "Panier",
   },
-
   en: {
     nav: {
       home: "Home",
-      about: "About",
-      products: "Products",
-      needs: "Your needs",
-      blog: "Blog",
+      about: "How it works",
+      products: "Order",
       contact: "Contact",
     },
-    needs: {
-      vitrectomie: "Vitrectomy recovery",
-      cervicales: "Neck pain relief",
-      domicile: "Home wellness",
-      pro: "Professional use",
-      cadeaux: "Gift ideas",
-      travail: "Work wellness",
-      "dormir-ventre": "Sleeping on stomach",
-    },
+    cartLabel: "Cart",
   },
 };
 
 export default function Navbar() {
   const pathname = usePathname();
 
-  // Extraire la locale depuis l’URL
   const raw = pathname?.split("/")[1];
   const locale: Locale = raw === "en" ? "en" : "fr";
 
   const { items, toggleCart } = useCart();
   const [open, setOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(false);
 
   const t = TRANSLATIONS[locale];
+
+  const langHref = pathname
+    ? pathname.replace(`/${locale}`, locale === "fr" ? "/en" : "/fr")
+    : `/${locale === "fr" ? "en" : "fr"}`;
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
-
         {/* LOGO */}
         <Link href={`/${locale}`} className="navbar-logo">
-          <div className="navbar-logo-badge">M</div>
-          MassMe
+          <img
+            src={LOGO_URL}
+            alt="OculaRest logo"
+            className="navbar-logo-img"
+            loading="eager"
+          />
         </Link>
 
         {/* DESKTOP NAV */}
@@ -124,49 +87,15 @@ export default function Navbar() {
           <NavLink href={`/${locale}`}>{t.nav.home}</NavLink>
           <NavLink href={`/${locale}/a-propos`}>{t.nav.about}</NavLink>
           <NavLink href={`/${locale}/products`}>{t.nav.products}</NavLink>
-
-          {/* DROPDOWN */}
-          <div className="nav-dropdown">
-            <button
-              className="nav-dropdown-btn"
-              onClick={() => setOpenDropdown(!openDropdown)}
-            >
-              {t.nav.needs}
-              <span className={openDropdown ? "rotate-180" : "rotate-0"}>▼</span>
-            </button>
-
-            {openDropdown && (
-              <div className="nav-dropdown-menu">
-                {NEEDS_LINKS.map((item) => (
-                  <Link
-                    key={item.slug}
-                    href={`/${locale}/besoins/${item.slug}`}
-                    className="nav-dropdown-item"
-                    onClick={() => setOpenDropdown(false)}
-                  >
-                    {t.needs[item.slug]}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <NavLink href={`/${locale}/blog`}>{t.nav.blog}</NavLink>
           <NavLink href={`/${locale}/contact`}>{t.nav.contact}</NavLink>
 
           {/* LANG TOGGLE */}
-          <Link
-            href={pathname.replace(
-              `/${locale}`,
-              locale === "fr" ? "/en" : "/fr"
-            )}
-            className="nav-lang"
-          >
+          <Link href={langHref} className="nav-lang">
             {locale === "fr" ? "EN" : "FR"}
           </Link>
 
           {/* PANIER */}
-          <button className="nav-cart-btn" onClick={toggleCart}>
+          <button className="nav-cart-btn" onClick={toggleCart} type="button">
             <ShoppingCart size={22} />
             {items.length > 0 && (
               <span className="nav-cart-badge">{items.length}</span>
@@ -177,52 +106,46 @@ export default function Navbar() {
         {/* MOBILE MENU BUTTON */}
         <button
           className="navbar-mobile-btn nav-mobile-only"
-          onClick={() => setOpen(!open)}
+          onClick={() => setOpen((v) => !v)}
+          type="button"
         >
           ☰
         </button>
       </div>
 
-      {/* MOBILE MENU */}
       {open && (
         <div className="mobile-menu nav-mobile-only">
-          <MobileLink href={`/${locale}`} label={t.nav.home} />
-          <MobileLink href={`/${locale}/a-propos`} label={t.nav.about} />
-          <MobileLink href={`/${locale}/products`} label={t.nav.products} />
-
-          <details className="mobile-dropdown">
-            <summary>{t.nav.needs}</summary>
-            <div className="mobile-dropdown-content">
-              {NEEDS_LINKS.map((item) => (
-                <Link
-                  key={item.slug}
-                  href={`/${locale}/besoins/${item.slug}`}
-                  className="mobile-link"
-                >
-                  {t.needs[item.slug]}
-                </Link>
-              ))}
-            </div>
-          </details>
-
-          <MobileLink href={`/${locale}/blog`} label={t.nav.blog} />
-          <MobileLink href={`/${locale}/contact`} label={t.nav.contact} />
+          <MobileLink
+            href={`/${locale}`}
+            label={t.nav.home}
+            onClick={() => setOpen(false)}
+          />
+          <MobileLink
+            href={`/${locale}/a-propos`}
+            label={t.nav.about}
+            onClick={() => setOpen(false)}
+          />
+          <MobileLink
+            href={`/${locale}/products`}
+            label={t.nav.products}
+            onClick={() => setOpen(false)}
+          />
+          <MobileLink
+            href={`/${locale}/contact`}
+            label={t.nav.contact}
+            onClick={() => setOpen(false)}
+          />
 
           <div className="mobile-lang">
-            <Link
-              href={pathname.replace(
-                `/${locale}`,
-                locale === "fr" ? "/en" : "/fr"
-              )}
-            >
+            <Link href={langHref} onClick={() => setOpen(false)}>
               {locale === "fr" ? "Switch to English" : "Passer en Français"}
             </Link>
           </div>
 
-          <button className="mobile-cart" onClick={toggleCart}>
+          <button className="mobile-cart" onClick={toggleCart} type="button">
             <ShoppingCart size={22} />
             <span>
-              {locale === "fr" ? "Panier" : "Cart"} ({items.length})
+              {t.cartLabel} ({items.length})
             </span>
           </button>
         </div>
@@ -230,8 +153,6 @@ export default function Navbar() {
     </nav>
   );
 }
-
-/* Small reusable components */
 
 const NavLink = ({ href, children }: { href: string; children: any }) => (
   <Link href={href} className="nav-link">
@@ -242,7 +163,13 @@ const NavLink = ({ href, children }: { href: string; children: any }) => (
 const MobileLink = ({
   href,
   label,
+  onClick,
 }: {
   href: string;
   label: string;
-}) => <Link href={href} className="mobile-link">{label}</Link>;
+  onClick?: () => void;
+}) => (
+  <Link href={href} className="mobile-link" onClick={onClick}>
+    {label}
+  </Link>
+);

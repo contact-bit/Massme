@@ -9,8 +9,8 @@
   /* Neutres */
   --color-bg: #ffffff;
   --color-bg-alt: #f3f4f6;
-  --color-text: #111827;
-  --color-muted: #6b7280;
+  --color-text: #000000;
+  --color-muted: #0e53dd;
 
   /* États */
   --color-success: #10b981;
@@ -18,7 +18,7 @@
   --color-warning: #f59e0b;
 
   /* Typographies */
-  --font-main: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-main: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-title: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* Rayons */

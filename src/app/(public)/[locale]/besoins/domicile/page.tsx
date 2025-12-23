@@ -3,62 +3,36 @@ import BesoinPageTemplate from "@/components/BesoinPage";
 export default function MassageBienEtrePage() {
   return (
     <BesoinPageTemplate
-      title="Massage & Bien-être"
-      subtitle="Transformez votre lit ou votre table en véritable espace de massage."
+      title="Convalescence & confort au quotidien"
+      subtitle="OculaRest est conçu exclusivement pour accompagner la convalescence après vitrectomie avec injection de gaz."
       paragraphs={[
         // INTRO
-        "Dans un quotidien de plus en plus stressant, créer un espace de bien-être à domicile est devenu essentiel. MassMe est l’accessoire idéal pour transformer n’importe quel lit, table ou bureau en zone de relaxation ou de massage, sans installation complexe.",
+        "Après une vitrectomie avec injection de gaz, il est souvent nécessaire de maintenir une position post-opératoire stricte pendant plusieurs jours.",
+        "Cette période peut être difficile à vivre : inconfort, fatigue, tensions musculaires et difficulté à rester correctement positionné dans les situations du quotidien.",
 
-        // UTILISATIONS
-        "Utilisé comme coussin facial ou appui-tête ergonomique, MassMe s’adapte à toutes vos postures : massage du dos, massage facial, relaxation allongée, micro-sieste ou séance de détente en position assise.",
+        // OBJECTIF
+        "OculaRest a été conçu pour faciliter le maintien de la position prescrite par le chirurgien, tout en améliorant le confort pendant la convalescence.",
+        "L’objectif est d’aider le patient à tenir la durée nécessaire dans de meilleures conditions, sans multiplier les ajustements posturaux inconfortables.",
 
-        // SIMPLICITÉ VS TABLE DE MASSAGE
-        "Si une table de massage est encombrante, lourde et difficile à installer, MassMe est la solution zéro contrainte. Il s’installe en moins de 15 secondes, sans encombrement au sol, sans pliage de pieds, et se range instantanément.",
-        "C’est l’alternative parfaite pour ceux qui abandonnent les tables de massage pliantes trop volumineuses ou difficiles à transporter.",
+        // USAGES COMPATIBLES AVEC LA CONVALESCENCE
+        "Pendant la récupération, certaines activités simples peuvent rester possibles selon les consignes médicales : se reposer, s’installer confortablement, organiser son espace et limiter les mouvements inutiles.",
+        "OculaRest aide à conserver une posture plus stable pendant ces temps de repos, de jour comme de nuit, en s’intégrant dans l’environnement à domicile.",
 
-        // COMPARAISON
-        "Comparé à une table de massage pliante qui occupe une pièce entière, MassMe offre :",
-        "• installation immédiate,",
-        "• aucun espace utilisé,",
-        "• rangement compact,",
-        "• robustesse certifiée (testé sur 3000 utilisations),",
-        "• fabrication française haut de gamme.",
+        // CONFORT & STABILITE
+        "Le maintien prolongé de la position post-opératoire peut solliciter fortement la nuque, les épaules et le haut du dos.",
+        "OculaRest vise à réduire ces contraintes en offrant un appui plus constant et mieux réparti, ce qui peut limiter les tensions liées à la posture.",
 
-        // ESPACE MASSAGE À DOMICILE
-        "Pour créer votre espace détente, MassMe utilise votre mobilier existant. Il s’installe sur un lit, un canapé, une table de salon, une table de jardin, un bureau, un tabouret, ou même un plan de travail.",
-        "Il devient un véritable appui-tête multifonction : oreiller facial sur lit, coussin de relaxation assis au bureau, têtière de massage sur table…",
+        // PREPARATION
+        "Il est recommandé d’anticiper l’organisation de la convalescence avant l’intervention : espace de repos, accessoires nécessaires, et installation permettant de respecter plus facilement la position prescrite.",
+        "Disposer d’OculaRest avant l’opération peut contribuer à aborder la récupération de façon plus sereine.",
 
-        // MASSAGE EN COUPLE
-        "MassMe est également un accessoire idéal pour les massages en couple. Il facilite les séances détente à deux, crée un moment de partage sensoriel et stimule la complicité grâce au toucher.",
-        "Il peut même être offert comme coffret bien-être ou cadeau romantique pour la Saint-Valentin ou un mariage.",
-
-        // UTILISATION PAR PROS
-        "Que vous soyez massé avec votre partenaire ou par un professionnel à domicile, MassMe améliore la posture, évite les torticolis et supprime les pressions sur le visage grâce à sa mousse à mémoire de forme respirante.",
-        "Il permet de respirer, parler et voir sans aucune compression, même en cas de port de lunettes.",
-
-        // MASSAGES POSSIBLES
-        "MassMe est adapté à de nombreux types de massages : massages relaxants, shiatsu, thaïlandais, massages énergétiques, massages du cuir chevelu, réflexologie, massages du dos ou des cervicales.",
-
-        // RELAXATION ET ANTI-STRESS
-        "En dehors des massages, MassMe est un véritable outil antistress. Il permet de libérer les tensions, soulager les migraines, réduire la fatigue, améliorer la respiration et faciliter la détente musculaire.",
-        "15 minutes suffisent pour retrouver énergie, concentration et bien-être, même après une longue journée de travail.",
-
-        // USAGE QUOTIDIEN
-        "Au quotidien, MassMe est parfait pour :",
-        "• micro-siestes au bureau,",
-        "• relaxations profondes,",
-        "• soulagement des cervicales,",
-        "• pauses bien-être à la maison,",
-        "• détente après le sport,",
-        "• voyages ou week-ends.",
-
-        // AVANTAGES TECHNIQUES
-        "Léger, compact, autoporté et muni d’une poignée de transport, MassMe vous suit partout. Il s’installe sans outil, se règle en quelques secondes et reste toujours prêt à l’emploi.",
-        "Sa mousse haute qualité et son textile Oeko-Tex® offrent un confort exceptionnel et une hygiène irréprochable.",
+        // IMPORTANT
+        "OculaRest ne remplace pas un avis médical. La position à respecter, la durée et les consignes associées dépendent de votre situation et doivent être confirmées par votre chirurgien ou votre équipe médicale.",
+        "En cas de douleur inhabituelle, de gêne importante ou de doute sur la posture, il est essentiel de contacter un professionnel de santé.",
 
         // CONCLUSION
-        "Que ce soit pour les massages, la relaxation quotidienne, la détente en couple ou un moment de bien-être après une journée intense, MassMe transforme chaque espace de votre maison en véritable salon de massage.",
-        "MassMe, l’accessoire bien-être indispensable pour prendre soin de votre corps et de votre esprit."
+        "OculaRest est conçu exclusivement pour accompagner la convalescence après vitrectomie avec injection de gaz, en facilitant le maintien de la position post-opératoire.",
+        "Son rôle est d’améliorer le confort durant cette période, afin d’aider le patient à suivre plus facilement les recommandations médicales."
       ]}
     />
   );

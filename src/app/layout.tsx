@@ -2,8 +2,8 @@ import "./globals.css";
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "Massme",
-  description: "Boutique Massme",
+  title: "OculaRest",
+  description: "Boutique OculaRest",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

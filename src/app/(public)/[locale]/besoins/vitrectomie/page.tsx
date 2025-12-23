@@ -4,37 +4,37 @@ export default function VitrectomiePage() {
   return (
     <BesoinPageTemplate
       title="Vitrectomie"
-      subtitle="Le 1er dispositif médical certifié CE pour maintenir la position prescrite après vitrectomie."
+      subtitle="OculaRest est un dispositif conçu pour aider au maintien de la position prescrite après une vitrectomie avec injection de gaz."
       paragraphs={[
         // INTRO
-        "Après une vitrectomie, il est indispensable de maintenir une position tête parallèle au sol (position bulle) pour favoriser la cicatrisation de la macula.",
-        "Le coussin post-vitrectomie MassMe est le premier dispositif médical certifié CE, 100% fabriqué en France, conçu pour faciliter cette posture de jour comme de nuit.",
+        "Après une vitrectomie avec injection de gaz, le respect strict de la position post-opératoire est essentiel pour favoriser la bonne cicatrisation de la rétine.",
+        "Cette position, souvent appelée « position bulle », consiste à maintenir la tête orientée vers le sol afin que le gaz intraoculaire exerce la pression nécessaire sur la zone traitée.",
 
         // SECTION 1
-        "Grâce à son design ergonomique, MassMe soutient votre visage sans pression cervicale, améliore le confort respiratoire et réduit les douleurs musculaires liées à la posture prolongée.",
+        "Maintenir cette posture pendant plusieurs jours peut s’avérer difficile dans la vie quotidienne. L’inconfort, les tensions cervicales et la fatigue rendent parfois la convalescence éprouvante.",
 
-        // SECTION 2 : avantages
-        "Pure extension de votre mobilier, il vous permet de continuer à vivre presque normalement pendant votre convalescence : manger, lire, écrire, discuter, regarder, dormir… tout en respectant la position prescrite par le chirurgien rétinologue.",
+        // SECTION 2 : rôle d’OculaRest
+        "OculaRest a été conçu pour accompagner les patients durant cette période délicate. Il aide à maintenir la position prescrite plus facilement, tout en améliorant le confort au repos, de jour comme de nuit.",
 
-        // SECTION 3 : positions
-        "MassMe propose 3 positions ergonomiques : hors-matelas, posé sur le matelas, ou en position assise sur une table ou un bureau. Il s’installe en quelques secondes et s’adapte à tous les lits, toutes les hauteurs de matelas et tous les intérieurs.",
+        // SECTION 3 : usages quotidiens
+        "Intégré à l’environnement domestique, OculaRest permet de conserver une posture plus stable pendant les activités du quotidien compatibles avec la convalescence, tout en respectant les recommandations médicales.",
 
-        // SECTION 4 : bénéfices
-        "La mousse à mémoire de forme, la housse en bambou Oeko-Tex® antibactérienne, l’insertion possible de lunettes et la large ouverture respiratoire garantissent confort et hygiène optimale.",
-        "Compact, léger (1,2 kg) et facilement transportable, il suit tous vos déplacements pendant la convalescence.",
-        "Contrairement à la location de matériel, MassMe est durable et pourra être réutilisé : massage, relaxations, siestes, seconde intervention éventuelle.",
+        // SECTION 4 : conception & confort
+        "Sa conception vise à réduire les contraintes au niveau du cou et des épaules, fréquemment sollicitées lors du maintien prolongé de la position post-opératoire.",
+        "Chaque élément a été pensé pour être simple à installer, facile à utiliser et rassurant pendant toute la durée de la récupération.",
 
-        // SECTION 5 : récupération
-        "En maintenant correctement la tête dans la position bulle, MassMe optimise la pression du gaz intraoculaire sur la macula, améliorant ainsi les chances de récupération visuelle après trou maculaire ou décollement de rétine.",
+        // SECTION 5 : accompagnement de la récupération
+        "En facilitant le respect de la position prescrite par le chirurgien, OculaRest contribue à créer de meilleures conditions pour la phase de récupération après une vitrectomie.",
+        "Il s’inscrit comme un outil d’accompagnement destiné à améliorer le confort du patient durant cette période.",
 
-        // SECTION 6 : Q&A simplifié
-        "Combien de temps dure la position bulle ? Généralement de 5 à 21 jours selon la pathologie et le type de gaz utilisé.",
-        "Comment dormir après une vitrectomie ? Toujours face vers le sol : MassMe permet de maintenir cette position confortablement toute la nuit.",
-        "Comment se préparer ? Il est essentiel de disposer du matériel avant l’opération pour organiser sereinement la convalescence à domicile.",
+        // SECTION 6 : questions fréquentes (neutres)
+        "Combien de temps faut-il maintenir la position post-opératoire ? La durée dépend de la pathologie et des indications données par le chirurgien.",
+        "Est-il possible de dormir après une vitrectomie ? Oui, à condition de respecter la position prescrite. OculaRest aide à maintenir cette posture plus confortablement.",
+        "Quand se préparer ? Il est recommandé d’organiser son environnement et son matériel avant l’intervention afin d’aborder la convalescence plus sereinement.",
 
         // SECTION 7 : conclusion
-        "MassMe est le dispositif médical indispensable pour respecter les indications post-opératoires, réduire les douleurs et favoriser une guérison rapide et stable.",
-        "Commandez maintenant votre appui-tête vitrectomie MassMe pour aborder votre convalescence en toute sérénité."
+        "OculaRest est conçu pour accompagner les patients durant la convalescence après vitrectomie, en facilitant le maintien de la position post-opératoire.",
+        "Pour toute question concernant votre situation personnelle, il est essentiel de suivre les recommandations de votre chirurgien ou de votre équipe médicale."
       ]}
     />
   );

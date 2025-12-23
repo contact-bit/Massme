@@ -12,10 +12,10 @@ export default function Footer() {
   const T = {
     fr: {
       col1: {
-        title: "À propos de MassMe",
+        title: "À propos de OculaRest",
         p1: "LazurCo est une société Française basée à Nice qui conçoit, industrialise et distribue ses créations autour de valeurs fondatrices éco-responsables.",
         p2: "Savoir-faire Français | Production raisonnée | Développement durable",
-        p3: "MassMe est une création LazurCo",
+        p3: "OculaRest est une création LazurCo",
       },
       col2: {
         title: "Informations légales",
@@ -24,21 +24,19 @@ export default function Footer() {
       },
       col3: {
         title: "Navigation",
-        prod: "Appui-tête Universel – MassMe",
-        vitrec: "Le coussin vitrectomie MassMe",
+        prod: "Appui-tête Universel – OculaRest",
+        vitrec: "Le coussin vitrectomie OculaRest",
         pay: "Paiement",
         contact: "Contact",
       },
-      copyright: "© Copyright Massme — Tous droits réservés",
-      photos: "Photos Alexis Machairas",
     },
 
     en: {
       col1: {
-        title: "About MassMe",
+        title: "About OculaRest",
         p1: "LazurCo is a French company based in Nice designing and manufacturing eco-responsible wellness products.",
         p2: "French craftsmanship | Sustainable production | Eco-design",
-        p3: "MassMe is a creation of LazurCo",
+        p3: "OculaRest is a creation of LazurCo",
       },
       col2: {
         title: "Legal",
@@ -47,13 +45,11 @@ export default function Footer() {
       },
       col3: {
         title: "Navigation",
-        prod: "Universal Headrest – MassMe",
+        prod: "Universal Headrest – OculaRest",
         vitrec: "Vitrectomy Head Cushion",
         pay: "Payment",
         contact: "Contact",
       },
-      copyright: "© Copyright Massme — All Rights Reserved",
-      photos: "Photos Alexis Machairas",
     },
   }[locale];
 
@@ -83,17 +79,6 @@ export default function Footer() {
           <Link href={`/${locale}/besoins/vitrectomie`}>{T.col3.vitrec}</Link>
           <Link href={`/${locale}/checkout`}>{T.col3.pay}</Link>
           <Link href={`/${locale}/contact`}>{T.col3.contact}</Link>
-        </div>
-      </div>
-
-      {/* BOTTOM */}
-      <div className="footer-bottom">
-        <p>{T.copyright} | {T.photos}</p>
-
-        <div className="footer-socials">
-          <Link href="https://facebook.com" target="_blank">📘</Link>
-          <Link href="https://youtube.com" target="_blank">▶️</Link>
-          <Link href="https://instagram.com" target="_blank">📸</Link>
         </div>
       </div>
     </footer>
