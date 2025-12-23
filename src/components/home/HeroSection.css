@@ -1,14 +1,17 @@
 /* =========================
    HERO — OculaRest (section top)
+   ✅ Tout centré (logo, titres, textes, CTA)
+   ✅ Colonnes homogènes + image plus grande
+   ✅ Compatible overlap/vague (overflow visible + z-index)
 ========================= */
 
 .hero {
   position: relative;
-  overflow: visible;   /* pour la vague qui remonte */
+  overflow: visible;
   z-index: 5;
 }
 
-/* fond léger */
+/* Fond */
 .hero::before {
   content: "";
   position: absolute;
@@ -19,29 +22,36 @@
 .hero-inner {
   position: relative;
   z-index: 2;
-  max-width: 1180px;     /* un peu plus large = rendu “aéré” comme ta capture */
+  max-width: 1180px;
   margin: 0 auto;
   padding: 52px 20px 42px;
 }
 
-/* 2 colonnes homogènes */
+/* 2 colonnes équilibrées */
 .hero-grid {
   display: grid;
   grid-template-columns: minmax(460px, 1fr) minmax(460px, 1fr);
   gap: 56px;
   align-items: center;
+  justify-items: center; /* ✅ centre les colonnes dans la grille */
 }
 
 /* ========== LEFT ========== */
 .hero-left {
-  justify-self: center;   /* ✅ centre le bloc texte dans sa colonne */
   width: 100%;
+  max-width: 620px;            /* ✅ un peu plus large pour un rendu homogène */
+  display: flex;
+  flex-direction: column;
+  align-items: center;         /* ✅ centre tous les éléments */
+  text-align: center;          /* ✅ centre le texte */
 }
 
+/* Logo */
 .hero-logo {
+  height: 64px;
   width: auto;
   display: block;
-  margin: 0 auto 18px;    /* logo centré */
+  margin: 0 auto 18px;
 }
 
 .hero-title {
@@ -50,15 +60,18 @@
   font-weight: 850;
   letter-spacing: -0.02em;
   color: #0b1220;
+  margin: 0;
 }
 
+/* Petit texte (centré visuellement grâce à margin-inline auto) */
 .hero-subtitle {
   margin-top: 12px;
   font-size: 16px;
   line-height: 1.55;
   font-weight: 650;
   color: rgba(11, 18, 32, 0.78);
-  max-width: 52ch;
+  max-width: 56ch;
+  margin-inline: auto; /* ✅ centre le bloc */
 }
 
 .hero-body {
@@ -66,37 +79,43 @@
   font-size: 15px;
   line-height: 1.7;
   color: rgba(11, 18, 32, 0.68);
-  max-width: 60ch;
+  max-width: 62ch;
+  margin-inline: auto; /* ✅ centre le bloc */
 }
 
+/* CTA */
 .hero-ctas {
   margin-top: 22px;
   display: flex;
   gap: 14px;
   flex-wrap: wrap;
+  justify-content: center; /* ✅ centre les boutons */
 }
 
 /* ========== RIGHT ========== */
 .hero-right {
-  justify-self: center;   /* ✅ centre la carte dans sa colonne */
   width: 100%;
   display: flex;
-  justify-content: center; /* ✅ plus collé à droite */
+  justify-content: center;
 }
 
+/* Carte produit (bleu + ombre) */
 .hero-card {
-  width: min(520px, 100%);  /* ✅ plus grand */
+  width: min(560px, 100%); /* ✅ plus grande => image plus présente */
   border-radius: 28px;
+  background: #bcd8ff70;
   padding: 26px;
+  box-shadow: 0 18px 45px rgba(11, 18, 32, 0.10);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Image */
 .hero-product {
   position: relative;
   width: 100%;
-  height: clamp(340px, 34vw, 460px); /* ✅ l’image grossit sur desktop */
+  height: clamp(360px, 34vw, 520px); /* ✅ plus grande */
 }
 
 .hero-product-img {
@@ -111,11 +130,11 @@
   }
 
   .hero-card {
-    width: min(480px, 100%);
+    width: min(520px, 100%);
   }
 
   .hero-product {
-    height: clamp(320px, 36vw, 420px);
+    height: clamp(320px, 38vw, 460px);
   }
 }
 
@@ -132,11 +151,6 @@
 
   .hero-left {
     max-width: 100%;
-    text-align: center;
-  }
-
-  .hero-ctas {
-    justify-content: center;
   }
 
   .hero-card {
