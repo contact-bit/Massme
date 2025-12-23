@@ -16,7 +16,7 @@ export default function AdminSidebar() {
 
   return (
     <aside className="admin-sidebar">
-      <div className="admin-logo">MassMe Admin</div>
+      <div className="admin-logo">OculaRest Admin</div>
 
       <nav className="admin-nav">
         {nav.map((item) => (
