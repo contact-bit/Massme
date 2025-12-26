@@ -1,6 +1,14 @@
 import { notFound } from "next/navigation";
 import HeroSection from "@/components/home/HeroSection";
 import PostureSection from "@/components/home/PostureSection";
+import CredibilityStrip from "@/components/home/CredibilityStrip";
+import RecoverySupportSection from "@/components/home/RecoverySupportSection";
+import StepsSection from "@/components/home/StepsSection";
+import WhyDifferentSection from "@/components/home/WhyDifferentSection";
+import DeviceInfoSection from "@/components/home/DeviceInfoSection";
+import FaqSection from "@/components/home/FaqSection";
+import FinalCtaSection from "@/components/home/FinalCtaSection";
+
 
 const CONTENT = {
   fr: {
@@ -40,7 +48,14 @@ export default async function HomePage({
       {/* Image posture juste après le hero */}
       <PostureSection />
 
-      {/* prochaines sections */}
+    <CredibilityStrip locale={locale as "fr" | "en"} />
+    <RecoverySupportSection locale={locale as "fr" | "en"} />
+    <StepsSection locale={locale as "fr" | "en"} />
+    <WhyDifferentSection locale={locale as "fr" | "en"} />
+    <DeviceInfoSection locale={locale as "fr" | "en"} />
+    <FaqSection locale={locale as "fr" | "en"} />
+<FinalCtaSection locale={locale as "fr" | "en"} />
+
     </main>
   );
 }

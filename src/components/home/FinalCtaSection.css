@@ -1,0 +1,104 @@
+/* =========================
+   FINAL CTA
+========================= */
+
+.fcta {
+  background: #ffffff;
+}
+
+.fcta-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 26px 20px 44px;
+  text-align: center;
+}
+
+.fcta-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #0b1220;
+}
+
+.fcta-text {
+  margin: 0 auto 18px;
+  max-width: 78ch;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: rgba(11, 18, 32, 0.72);
+}
+
+.fcta-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 900;
+  color: #1e63ff;
+}
+
+.fcta-mini {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+/* buttons */
+.fcta-actions {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+}
+
+.fcta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 12.5px;
+  line-height: 1;
+
+  padding: 12px 18px;
+  border-radius: 10px;
+
+  min-width: 260px;
+}
+
+.fcta-btn-outline {
+  border: 2px solid #2f6efb;
+  color: #2f6efb;
+  background: #ffffff;
+}
+
+.fcta-btn-solid {
+  border: 0;
+  color: #ffffff;
+  background: #2f6efb;
+  box-shadow: 0 10px 22px rgba(11, 18, 32, 0.10);
+}
+
+/* desktop */
+@media (min-width: 720px) {
+  .fcta-actions {
+    gap: 14px;
+  }
+
+  .fcta-btn {
+    min-width: 320px;
+  }
+}
+
+/* mobile */
+@media (max-width: 520px) {
+  .fcta-inner {
+    padding: 22px 16px 38px;
+  }
+
+  .fcta-btn {
+    width: 100%;
+    min-width: 0;
+    max-width: 360px;
+  }
+}

@@ -18,6 +18,7 @@ export default function HeroSection({ locale, title, subtitle, body }: HeroProps
   return (
     <section className="hero">
       <div className="hero-inner">
+       
         <div className="hero-grid">
           <div className="hero-left">
             <Image

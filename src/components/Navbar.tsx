@@ -71,6 +71,14 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
+      {/* 🔧 BANDEAU INFO */}
+<div className="site-notice">
+  {locale === "fr"
+    ? "🚧 Site en construction — certaines fonctionnalités peuvent être indisponibles."
+    : "🚧 Website under construction — some features may be unavailable."}
+</div>
+
+
       <div className="navbar-container">
         {/* LOGO */}
         <Link href={`/${locale}`} className="navbar-logo">

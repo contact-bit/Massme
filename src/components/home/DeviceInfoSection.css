@@ -1,0 +1,85 @@
+/* =========================
+   DEVICE INFO SECTION
+========================= */
+
+.dev {
+  background: #ffffff;
+}
+
+.dev-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 26px 20px 34px;
+  text-align: center;
+}
+
+.dev-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #0b1220;
+}
+
+.dev-p {
+  margin: 10px auto 0;
+  max-width: 82ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(11, 18, 32, 0.74);
+}
+
+.dev-made {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #1e63ff;
+}
+
+/* second block */
+.dev-title2 {
+  margin: 18px 0 10px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #0b1220;
+}
+
+.dev-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #1e63ff;
+}
+
+.dev-mini {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+/* bullets */
+.dev-list {
+  list-style: disc;
+  padding-left: 22px;
+  margin: 0 auto;
+  max-width: 680px;
+  text-align: left; /* comme la capture */
+  display: grid;
+  gap: 6px;
+}
+
+.dev-li {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(11, 18, 32, 0.74);
+}
+
+/* mobile */
+@media (max-width: 520px) {
+  .dev-inner {
+    padding: 22px 16px 28px;
+  }
+
+  .dev-title {
+    font-size: 13px;
+  }
+}
