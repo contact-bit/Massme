@@ -20,3 +20,8 @@
 
 /* 6) Login page */
 @import "./admin-login.css";
+
+@import "./admin.tokens.css";
+@import "./admin.shell.css";
+@import "./admin.components.css";
+@import "./admin.dashboard.css";

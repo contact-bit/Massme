@@ -27,3 +27,26 @@
 
   --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
 }
+:root {
+  --bg: #f6f8fc;
+  --panel: rgba(255,255,255,0.86);
+  --panel-solid: #ffffff;
+  --border: rgba(17, 24, 39, 0.10);
+
+  --text: #0b1220;
+  --muted: rgba(11, 18, 32, 0.62);
+
+  --primary: #2563eb;
+  --primary2: #60a5fa;
+
+  --danger: #ef4444;
+  --success: #16a34a;
+
+  --radius: 16px;
+  --radius2: 22px;
+
+  --shadow: 0 18px 50px rgba(15, 23, 42, 0.10);
+  --shadow2: 0 8px 22px rgba(15, 23, 42, 0.08);
+
+  --font: system-ui, -apple-system, Segoe UI, Roboto, "Inter", sans-serif;
+}
