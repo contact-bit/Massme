@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 
 type Order = {
   id: string;
@@ -35,14 +36,25 @@ type Order = {
 };
 
 export default function OrdersAdminPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // ✅ q vient de l’URL (recherche rapide navbar)
+  const qFromUrl = (searchParams.get("q") ?? "").trim();
+
   const [allOrders, setAllOrders] = useState<Order[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "paid" | "pending_payment">(
-    "all"
-  );
+
+  const [filter, setFilter] = useState<"all" | "paid" | "pending_payment">("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+
+  // ✅ champ recherche visible sur la page (synchro avec q URL)
+  const [search, setSearch] = useState(qFromUrl);
+
+  useEffect(() => {
+    setSearch(qFromUrl);
+  }, [qFromUrl]);
 
   /* ---------------------------------------------------------
      🔄 Chargement des commandes via API admin sécurisée
@@ -56,30 +68,25 @@ export default function OrdersAdminPage() {
 
         const adminPassword = localStorage.getItem("admin_password");
         if (!adminPassword) {
-          // Session admin expirée ou pas loggé
           window.location.href = "/admin-login";
           return;
         }
 
         const res = await fetch("/api/admin/orders", {
-          headers: {
-            "x-admin-password": adminPassword,
-          },
+          headers: { "x-admin-password": adminPassword },
+          cache: "no-store",
         });
 
         if (!res.ok) {
           console.error("Erreur API admin/orders:", await res.text());
           setAllOrders([]);
-          setOrders([]);
           return;
         }
 
         const data = await res.json();
-        const list = (data.orders || []) as Order[];
-
-        setAllOrders(list);
+        setAllOrders((data.orders || []) as Order[]);
       } catch (err) {
-        console.error("Erreur Dashboard:", err);
+        console.error("Erreur Orders:", err);
       } finally {
         setLoading(false);
       }
@@ -87,20 +94,6 @@ export default function OrdersAdminPage() {
 
     loadOrders();
   }, []);
-
-  /* ---------------------------------------------------------
-     🎯 Filtrage front selon status
-  --------------------------------------------------------- */
-  useEffect(() => {
-    const filtered =
-      filter === "all"
-        ? allOrders
-        : allOrders.filter((o) => o.status === filter);
-
-    setOrders(filtered);
-    setSelectedOrders([]);
-    setExpanded(null);
-  }, [filter, allOrders]);
 
   /* ---------------------------------------------------------
      🧮 Calculs des prix
@@ -113,10 +106,7 @@ export default function OrdersAdminPage() {
       : 0;
 
   const getSubtotal = (order: Order): number =>
-    order.items?.reduce(
-      (sum, item) => sum + getItemPrice(item) * item.quantity,
-      0
-    ) || 0;
+    order.items?.reduce((sum, item) => sum + getItemPrice(item) * item.quantity, 0) || 0;
 
   const getShippingPrice = (order: Order): number =>
     typeof order.shippingMethod?.price === "number"
@@ -132,17 +122,46 @@ export default function OrdersAdminPage() {
   };
 
   /* ---------------------------------------------------------
+     🔎 Filtrage combiné: status + search (q)
+  --------------------------------------------------------- */
+  const visibleOrders = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    return allOrders.filter((o) => {
+      // 1) status
+      if (filter !== "all" && o.status !== filter) return false;
+
+      // 2) search (id / email / nom / statut)
+      if (!term) return true;
+
+      const id = (o.id ?? "").toLowerCase();
+      const email = (o.email ?? "").toLowerCase();
+      const name = (o.shippingAddress?.name ?? "").toLowerCase();
+      const status = (o.status ?? "").toLowerCase();
+
+      return (
+        id.includes(term) ||
+        email.includes(term) ||
+        name.includes(term) ||
+        status.includes(term)
+      );
+    });
+  }, [allOrders, filter, search]);
+
+  // Reset selections quand la liste visible change
+  useEffect(() => {
+    setSelectedOrders([]);
+    setExpanded(null);
+  }, [filter, search]);
+
+  /* ---------------------------------------------------------
      🗑️ Suppression via API sécurisée
   --------------------------------------------------------- */
   const deleteSingle = async (id: string) => {
     if (!confirm("Supprimer cette commande ?")) return;
 
     try {
-      const adminPassword =
-        typeof window !== "undefined"
-          ? localStorage.getItem("admin_password")
-          : null;
-
+      const adminPassword = localStorage.getItem("admin_password");
       if (!adminPassword) {
         alert("Session admin expirée, reconnecte-toi.");
         window.location.href = "/admin-login";
@@ -151,9 +170,7 @@ export default function OrdersAdminPage() {
 
       const res = await fetch(`/api/admin/orders?id=${id}`, {
         method: "DELETE",
-        headers: {
-          "x-admin-password": adminPassword,
-        },
+        headers: { "x-admin-password": adminPassword },
       });
 
       if (!res.ok) {
@@ -169,21 +186,17 @@ export default function OrdersAdminPage() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedOrders.length === orders.length) setSelectedOrders([]);
-    else setSelectedOrders(orders.map((o) => o.id));
+    // ✅ sélectionne uniquement la liste affichée (visibleOrders)
+    if (selectedOrders.length === visibleOrders.length) setSelectedOrders([]);
+    else setSelectedOrders(visibleOrders.map((o) => o.id));
   };
 
   const deleteMultiple = async () => {
     if (selectedOrders.length === 0) return;
-
     if (!confirm(`Supprimer ${selectedOrders.length} commande(s) ?`)) return;
 
     try {
-      const adminPassword =
-        typeof window !== "undefined"
-          ? localStorage.getItem("admin_password")
-          : null;
-
+      const adminPassword = localStorage.getItem("admin_password");
       if (!adminPassword) {
         alert("Session admin expirée, reconnecte-toi.");
         window.location.href = "/admin-login";
@@ -194,9 +207,7 @@ export default function OrdersAdminPage() {
         selectedOrders.map((id) =>
           fetch(`/api/admin/orders?id=${id}`, {
             method: "DELETE",
-            headers: {
-              "x-admin-password": adminPassword,
-            },
+            headers: { "x-admin-password": adminPassword },
           })
         )
       );
@@ -209,12 +220,37 @@ export default function OrdersAdminPage() {
     }
   };
 
-  /* ---------------------------------------------------------
-     UI
-  --------------------------------------------------------- */
+  // ✅ Met à jour l’URL quand tu tapes dans la barre (optionnel)
+  const applyUrlSearch = (value: string) => {
+    const v = value.trim();
+    if (!v) router.push("/admin/orders");
+    else router.push(`/admin/orders?q=${encodeURIComponent(v)}`);
+  };
+
   return (
     <main className="admin-page">
       <h1 className="admin-title">🧾 Commandes</h1>
+
+      {/* ✅ Barre de recherche (synchro avec ?q=) */}
+      <div className="mb-4 flex gap-3 items-center">
+        <input
+          className="admin-input"
+          placeholder="Rechercher (id, email, nom, statut)…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") applyUrlSearch(search);
+          }}
+        />
+        <button className="btn-secondary" onClick={() => applyUrlSearch(search)}>
+          Rechercher
+        </button>
+        {qFromUrl ? (
+          <button className="btn-secondary" onClick={() => applyUrlSearch("")}>
+            Effacer
+          </button>
+        ) : null}
+      </div>
 
       {/* FILTRE */}
       <div className="mb-6 flex gap-4">
@@ -223,16 +259,10 @@ export default function OrdersAdminPage() {
             key={type}
             onClick={() => setFilter(type as any)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-              filter === type
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 hover:bg-gray-200"
+              filter === type ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-200"
             }`}
           >
-            {type === "all"
-              ? "Toutes"
-              : type === "paid"
-              ? "Payées"
-              : "En attente"}
+            {type === "all" ? "Toutes" : type === "paid" ? "Payées" : "En attente"}
           </button>
         ))}
       </div>
@@ -243,7 +273,7 @@ export default function OrdersAdminPage() {
           onClick={toggleSelectAll}
           className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
         >
-          {selectedOrders.length === orders.length
+          {selectedOrders.length === visibleOrders.length && visibleOrders.length > 0
             ? "Tout désélectionner"
             : "Tout sélectionner"}
         </button>
@@ -261,11 +291,11 @@ export default function OrdersAdminPage() {
       {/* LISTE COMMANDES */}
       {loading ? (
         <p className="text-center py-20 text-gray-500">Chargement…</p>
-      ) : orders.length === 0 ? (
+      ) : visibleOrders.length === 0 ? (
         <p className="text-gray-600">Aucune commande.</p>
       ) : (
         <div className="space-y-4">
-          {orders.map((order) => {
+          {visibleOrders.map((order) => {
             const subtotal = getSubtotal(order);
             const shipping = getShippingPrice(order);
             const total = getTotal(order);
@@ -276,10 +306,7 @@ export default function OrdersAdminPage() {
                 : order.shippingAddress?.name || "Client";
 
             return (
-              <div
-                key={order.id}
-                className="bg-white border rounded-xl shadow-sm overflow-hidden"
-              >
+              <div key={order.id} className="bg-white border rounded-xl shadow-sm overflow-hidden">
                 {/* HEADER */}
                 <div className="flex items-center p-4">
                   <input
@@ -297,23 +324,17 @@ export default function OrdersAdminPage() {
 
                   <div
                     className="flex-1 cursor-pointer"
-                    onClick={() =>
-                      setExpanded(expanded === order.id ? null : order.id)
-                    }
+                    onClick={() => setExpanded(expanded === order.id ? null : order.id)}
                   >
-                    <p className="font-semibold">
-                      {order.shippingAddress?.name || name}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {order.email || "—"}
-                    </p>
+                    <p className="font-semibold">{order.shippingAddress?.name || name}</p>
+                    <p className="text-sm text-gray-500">{order.email || "—"}</p>
+                    <p className="text-xs text-gray-400">{order.id}</p>
                   </div>
 
                   <div className="text-right mr-4">
                     <p className="font-semibold">{total.toFixed(2)} €</p>
-
                     <p
-                      className={`text-xs px-2 py-1 rounded-full ${
+                      className={`text-xs px-2 py-1 rounded-full inline-block ${
                         order.status === "paid"
                           ? "bg-green-100 text-green-700"
                           : "bg-yellow-100 text-yellow-700"
@@ -324,9 +345,7 @@ export default function OrdersAdminPage() {
                   </div>
 
                   <button
-                    onClick={() =>
-                      setExpanded(expanded === order.id ? null : order.id)
-                    }
+                    onClick={() => setExpanded(expanded === order.id ? null : order.id)}
                     className="text-blue-600 w-6"
                   >
                     {expanded === order.id ? "▲" : "▼"}
@@ -341,21 +360,16 @@ export default function OrdersAdminPage() {
                       <p>{order.shippingAddress?.name}</p>
                       <p>{order.shippingAddress?.address}</p>
                       <p>
-                        {order.shippingAddress?.postalCode}{" "}
-                        {order.shippingAddress?.city}
+                        {order.shippingAddress?.postalCode} {order.shippingAddress?.city}
                       </p>
-                      {order.shippingAddress?.country && (
-                        <p>{order.shippingAddress.country}</p>
-                      )}
+                      {order.shippingAddress?.country ? <p>{order.shippingAddress.country}</p> : null}
                       <p>{order.shippingAddress?.phone}</p>
                     </div>
 
                     <div>
                       <h3 className="text-sm font-bold mb-1">Livraison</h3>
                       <p>{order.shippingMethod?.name || "—"}</p>
-                      <p className="font-semibold">
-                        {shipping.toFixed(2)} €
-                      </p>
+                      <p className="font-semibold">{shipping.toFixed(2)} €</p>
                     </div>
 
                     <div>
@@ -375,13 +389,9 @@ export default function OrdersAdminPage() {
                           >
                             <div>
                               <p className="font-medium">{itemName}</p>
-                              <p className="text-xs text-gray-500">
-                                Qté : {item.quantity}
-                              </p>
+                              <p className="text-xs text-gray-500">Qté : {item.quantity}</p>
                             </div>
-                            <p className="font-semibold">
-                              {price.toFixed(2)} €
-                            </p>
+                            <p className="font-semibold">{price.toFixed(2)} €</p>
                           </div>
                         );
                       })}
@@ -390,9 +400,7 @@ export default function OrdersAdminPage() {
                     <div className="border-t pt-4 space-y-1 text-sm">
                       <p>Sous-total : {subtotal.toFixed(2)} €</p>
                       <p>Livraison : {shipping.toFixed(2)} €</p>
-                      <p className="font-bold text-lg">
-                        Total : {total.toFixed(2)} €
-                      </p>
+                      <p className="font-bold text-lg">Total : {total.toFixed(2)} €</p>
                     </div>
 
                     <button

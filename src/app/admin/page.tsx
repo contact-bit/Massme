@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import AdminKpiCard from "./components/AdminKpiCard";
-import { AdminState } from "./components/AdminState";
 
-type Payload = {
+type StatsResponse = {
   kpis: {
     productsCount: number;
     activeProducts: number;
@@ -15,244 +13,283 @@ type Payload = {
     revenuePrev7: number;
     revenueToday: number;
     revenueYesterday: number;
+    aov: number;
   };
   deltas: {
     revenue7dPct: number;
     revenueDayPct: number;
   };
   series: { day: string; revenue: number }[];
-  lastOrders: { id: string; status: string; total: number; email: string; createdAt: string | null }[];
+  lastOrders: {
+    id: string;
+    status: string;
+    total: number;
+    email: string;
+    createdAt: string | null;
+  }[];
   lowStock: { id: string; name: string; stock: number }[];
   alerts: { tone: "info" | "warn" | "danger"; title: string; desc: string }[];
 };
 
-function fmtEUR(n: number) {
-  return n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+function eur(n: number) {
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(n);
 }
 
-function trendLabel(pct: number) {
-  const sign = pct > 0 ? "+" : "";
-  return `${sign}${pct}%`;
+function shortDate(iso: string | null) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
 }
 
-export default function DashboardPage() {
-  const [data, setData] = useState<Payload | null>(null);
+function deltaLabel(current: number, previous: number, pct: number) {
+  if (previous === 0 && current > 0) return { text: "Nouveau", tone: "pos" as const };
+  if (pct === 0) return { text: "0%", tone: "neu" as const };
+  if (pct > 0) return { text: `+${pct.toFixed(1)}%`, tone: "pos" as const };
+  return { text: `${pct.toFixed(1)}%`, tone: "neg" as const };
+}
+
+export default function AdminDashboardPage() {
+  const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  async function load() {
-    setLoading(true);
-    setErr(null);
-    try {
-      const res = await fetch("/api/admin/stats", { cache: "no-store" });
-      const json = (await res.json()) as Payload & { error?: string };
-      if (!res.ok) throw new Error(json?.error ?? "Erreur stats");
-      setData(json as Payload);
-    } catch (e: any) {
-      setErr(e?.message ?? "Erreur inconnue");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
+    let alive = true;
+
+    async function load() {
+      try {
+        setLoading(true);
+        setErr(null);
+
+        const res = await fetch("/api/admin/stats", { cache: "no-store" });
+        const json = await res.json();
+
+        if (!res.ok) {
+          throw new Error(json?.error ?? "Erreur stats");
+        }
+
+        if (alive) setData(json);
+      } catch (e: any) {
+        if (alive) setErr(e?.message ?? "Erreur inconnue");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+
     load();
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  const headline = useMemo(() => {
-    if (!data) return null;
-    const { revenueToday, revenueYesterday } = data.kpis;
-    const delta = data.deltas.revenueDayPct;
-    return {
-      title: "Performance du jour",
-      desc: `${fmtEUR(revenueToday)} aujourd’hui • ${trendLabel(delta)} vs hier (${fmtEUR(revenueYesterday)})`,
-    };
+  const maxRevenue = useMemo(() => {
+    const max = Math.max(...(data?.series?.map((s) => s.revenue) ?? [0]));
+    return max <= 0 ? 1 : max;
   }, [data]);
 
   if (loading) {
     return (
-      <AdminState
-        title="Chargement du dashboard…"
-        desc="Récupération Firestore et calculs des indicateurs."
-      />
+      <div className="admin-page">
+        <div className="dash-head">
+          <h1 className="admin-title">📊 Dashboard</h1>
+          <p className="dash-sub">Chargement…</p>
+        </div>
+        <div className="dash-skeleton-grid">
+          <div className="dash-skel" />
+          <div className="dash-skel" />
+          <div className="dash-skel" />
+          <div className="dash-skel" />
+        </div>
+      </div>
     );
   }
 
-  if (err) {
+  if (err || !data) {
     return (
-      <AdminState
-        title="Impossible de charger le dashboard"
-        desc={err}
-        action={
-          <button className="admin-btn admin-btn-ghost" onClick={load} type="button">
-            Réessayer
+      <div className="admin-page">
+        <div className="dash-head">
+          <h1 className="admin-title">📊 Dashboard</h1>
+          <p className="dash-sub">Impossible de charger les stats.</p>
+        </div>
+
+        <div className="dash-error">
+          <div className="dash-error-title">Erreur</div>
+          <div className="dash-error-msg">{err ?? "—"}</div>
+          <button className="btn-primary" onClick={() => location.reload()}>
+            Recharger
           </button>
-        }
-      />
+        </div>
+      </div>
     );
   }
 
-  if (!data) {
-    return <AdminState title="Aucune donnée" desc="Pas de statistiques disponibles." />;
-  }
+  const d7 = deltaLabel(data.kpis.revenueLast7, data.kpis.revenuePrev7, data.deltas.revenue7dPct);
+  const dd = deltaLabel(data.kpis.revenueToday, data.kpis.revenueYesterday, data.deltas.revenueDayPct);
 
   return (
-    <div className="dash">
-      {/* Header small */}
+    <div className="admin-page">
       <div className="dash-head">
         <div>
-          <div className="dash-eyebrow">Vue d’ensemble</div>
-          <h2 className="dash-title">{headline?.title}</h2>
-          <p className="dash-sub">{headline?.desc}</p>
+          <h1 className="admin-title">📊 Dashboard</h1>
+          <p className="dash-sub">Vue rapide sur ton activité (Europe/Paris).</p>
         </div>
 
         <div className="dash-actions">
-          <button className="admin-btn admin-btn-ghost" onClick={load} type="button">
+          <button className="btn-secondary" onClick={() => location.reload()}>
             Actualiser
           </button>
-          <a className="admin-btn admin-btn-ghost" href="/admin/orders">
-            Voir les commandes
+          <a className="btn-primary" href="/admin/orders">
+            Voir commandes
           </a>
         </div>
       </div>
 
       {/* Alerts */}
-      {data.alerts?.length ? (
+      {data.alerts?.length > 0 && (
         <div className="dash-alerts">
-          {data.alerts.map((a, idx) => (
-            <div key={idx} className={`dash-alert ${a.tone}`}>
+          {data.alerts.map((a, i) => (
+            <div key={i} className={`dash-alert tone-${a.tone}`}>
               <div className="dash-alert-title">{a.title}</div>
               <div className="dash-alert-desc">{a.desc}</div>
             </div>
           ))}
         </div>
-      ) : null}
+      )}
 
-      {/* KPIs */}
-      <div className="dashboard-kpis">
-        <AdminKpiCard
-          label="Produits"
-          value={String(data.kpis.productsCount)}
-          sub={`${data.kpis.activeProducts} actif(s)`}
-          tone="primary"
-        />
-        <AdminKpiCard
-          label="Commandes"
-          value={String(data.kpis.ordersCount)}
-          sub={`${data.kpis.pendingCount} à traiter`}
-        />
-        <AdminKpiCard
-          label="Payées"
-          value={String(data.kpis.paidOrdersCount)}
-          sub={`7j: ${trendLabel(data.deltas.revenue7dPct)} CA`}
-          tone="success"
-        />
-        <AdminKpiCard
-          label="CA (7 jours)"
-          value={fmtEUR(data.kpis.revenueLast7)}
-          sub={`vs prev: ${fmtEUR(data.kpis.revenuePrev7)} (${trendLabel(data.deltas.revenue7dPct)})`}
-          tone="primary"
-        />
+      {/* KPI Cards */}
+      <div className="dash-kpis">
+        <div className="dash-card">
+          <div className="dash-card-top">
+            <span className="dash-label">Produits</span>
+            <span className="dash-chip">{data.kpis.activeProducts}/{data.kpis.productsCount} actifs</span>
+          </div>
+          <div className="dash-value">{data.kpis.productsCount}</div>
+          <div className="dash-foot">Catalogue total</div>
+        </div>
+
+        <div className="dash-card">
+          <div className="dash-card-top">
+            <span className="dash-label">Commandes</span>
+            {data.kpis.pendingCount > 0 ? (
+              <span className="dash-chip warn">{data.kpis.pendingCount} en attente</span>
+            ) : (
+              <span className="dash-chip ok">Tout OK</span>
+            )}
+          </div>
+          <div className="dash-value">{data.kpis.ordersCount}</div>
+          <div className="dash-foot">{data.kpis.paidOrdersCount} payée(s)</div>
+        </div>
+
+        <div className="dash-card highlight">
+          <div className="dash-card-top">
+            <span className="dash-label">CA (7 jours)</span>
+            <span className={`dash-badge ${d7.tone}`}>{d7.text}</span>
+          </div>
+          <div className="dash-value">{eur(data.kpis.revenueLast7)}</div>
+          <div className="dash-foot">AOV: {eur(data.kpis.aov)}</div>
+        </div>
+
+        <div className="dash-card">
+          <div className="dash-card-top">
+            <span className="dash-label">CA (aujourd’hui)</span>
+            <span className={`dash-badge ${dd.tone}`}>{dd.text}</span>
+          </div>
+          <div className="dash-value">{eur(data.kpis.revenueToday)}</div>
+          <div className="dash-foot">Hier: {eur(data.kpis.revenueYesterday)}</div>
+        </div>
       </div>
 
-      {/* Grid sections */}
+      {/* Grid main */}
       <div className="dash-grid">
-        {/* Mini chart (simple bars) */}
-        <section className="admin-card dash-panel">
+        {/* Chart */}
+        <div className="dash-panel">
           <div className="dash-panel-head">
-            <h3 className="dash-panel-title">CA — 7 derniers jours</h3>
-            <div className="dash-panel-meta">Objectif: suivre la tendance</div>
+            <h2 className="dash-panel-title">Revenu — 7 derniers jours</h2>
+            <div className="dash-panel-meta">{eur(data.kpis.revenueLast7)}</div>
           </div>
 
-          <div className="dash-bars" aria-label="Revenue chart">
-            {data.series.map((p) => (
-              <div key={p.day} className="dash-bar">
-                <div className="dash-bar-top">{fmtEUR(p.revenue)}</div>
-                <div
-                  className="dash-bar-fill"
-                  style={{ height: `${Math.min(100, (p.revenue / Math.max(...data.series.map(s => s.revenue), 1)) * 100)}%` }}
-                />
-                <div className="dash-bar-label">{p.day.slice(5)}</div>
-              </div>
-            ))}
+          <div className="dash-chart">
+            {data.series.map((s) => {
+              const h = Math.round((s.revenue / maxRevenue) * 100);
+              return (
+                <div key={s.day} className="dash-bar">
+                  <div className="dash-bar-col">
+                    <div className="dash-bar-fill" style={{ height: `${h}%` }} />
+                  </div>
+                  <div className="dash-bar-day">{s.day.slice(5)}</div>
+                  <div className="dash-bar-val">{s.revenue > 0 ? eur(s.revenue) : ""}</div>
+                </div>
+              );
+            })}
           </div>
-        </section>
+        </div>
 
         {/* Last orders */}
-        <section className="admin-card dash-panel">
+        <div className="dash-panel">
           <div className="dash-panel-head">
-            <h3 className="dash-panel-title">Dernières commandes</h3>
+            <h2 className="dash-panel-title">Dernières commandes</h2>
             <a className="dash-link" href="/admin/orders">
               Ouvrir →
             </a>
           </div>
 
-          {data.lastOrders.length === 0 ? (
-            <div className="dash-empty">Aucune commande pour le moment.</div>
-          ) : (
-            <div className="dash-table">
-              <div className="dash-row dash-row-head">
-                <div>ID</div>
-                <div>Client</div>
-                <div>Statut</div>
-                <div className="right">Total</div>
-              </div>
+          <div className="dash-table">
+            <div className="dash-row dash-row-head">
+              <div>ID</div>
+              <div>Client</div>
+              <div>Statut</div>
+              <div>Montant</div>
+              <div>Date</div>
+            </div>
 
-              {data.lastOrders.map((o) => (
+            {data.lastOrders.length === 0 ? (
+              <div className="dash-empty">Aucune commande.</div>
+            ) : (
+              data.lastOrders.map((o) => (
                 <div key={o.id} className="dash-row">
-                  <div className="mono">{o.id.slice(0, 8)}…</div>
+                  <div className="mono">{o.id.slice(0, 6)}…</div>
                   <div className="truncate">{o.email || "—"}</div>
                   <div>
-                    <span className={`badge ${o.status === "paid" ? "paid" : "pending"}`}>
-                      {o.status === "paid" ? "Payée" : "En attente"}
+                    <span className={`status-pill ${o.status === "paid" ? "paid" : "pending"}`}>
+                      {o.status}
                     </span>
                   </div>
-                  <div className="right">{fmtEUR(o.total)}</div>
+                  <div className="strong">{eur(o.total)}</div>
+                  <div className="muted">{shortDate(o.createdAt)}</div>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
 
-        {/* Low stock */}
-        <section className="admin-card dash-panel">
+      {/* Low stock */}
+      {data.lowStock?.length > 0 && (
+        <div className="dash-panel">
           <div className="dash-panel-head">
-            <h3 className="dash-panel-title">Stock faible</h3>
+            <h2 className="dash-panel-title">Stock faible</h2>
             <a className="dash-link" href="/admin/products">
               Gérer →
             </a>
           </div>
 
-          {data.lowStock.length === 0 ? (
-            <div className="dash-empty">Aucun produit en stock faible ✅</div>
-          ) : (
-            <div className="dash-list">
-              {data.lowStock.map((p) => (
-                <div key={p.id} className="dash-list-item">
-                  <div className="truncate">{p.name}</div>
-                  <div className={`stock ${p.stock <= 1 ? "danger" : "warn"}`}>
-                    {p.stock}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Quick actions */}
-        <section className="admin-card dash-panel">
-          <div className="dash-panel-head">
-            <h3 className="dash-panel-title">Actions rapides</h3>
-            <div className="dash-panel-meta">Gagner du temps</div>
+          <div className="dash-lowstock">
+            {data.lowStock.map((p) => (
+              <div key={p.id} className="dash-lowstock-item">
+                <div className="truncate">{p.name}</div>
+                <div className="dash-chip warn">stock {p.stock}</div>
+              </div>
+            ))}
           </div>
-
-          <div className="dash-quick">
-            <a className="quick" href="/admin/products">➕ Ajouter un produit</a>
-            <a className="quick" href="/admin/orders">📦 Traiter les commandes</a>
-            <a className="quick" href="/admin/shipping">🚚 Configurer livraisons</a>
-          </div>
-        </section>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

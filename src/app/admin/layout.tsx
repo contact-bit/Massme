@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import "./styles/admin.css";
@@ -21,10 +21,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
     const token = localStorage.getItem("admin_token");
 
+    // 🔐 Pas connecté => tout sauf /admin/login redirige vers login
     if (!token && !isLogin) {
       router.replace("/admin/login");
       return;
     }
+
+    // ✅ Déjà connecté => si on est sur login, on renvoie vers /admin
     if (token && isLogin) {
       router.replace("/admin");
       return;
@@ -33,8 +36,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     setAuthChecked(true);
   }, [router, isLogin]);
 
+  // ⏳ Evite flash de pages protégées
   if (!authChecked && !isLogin) return null;
+
+  // 🧾 Login = pas de shell
   if (isLogin) return <>{children}</>;
 
+  // ✅ Pages admin = shell (navbar + tabs + search + logout + content)
   return <AdminShell>{children}</AdminShell>;
 }
