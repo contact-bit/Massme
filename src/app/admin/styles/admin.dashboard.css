@@ -1,0 +1,37 @@
+/* =========================================================
+   📊 DASHBOARD
+========================================================= */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 32px;
+}
+
+.dashboard-card {
+  background: #ffffff;
+  padding: 18px 16px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid var(--color-border);
+}
+
+.dashboard-card.primary {
+  border-left-color: var(--color-primary);
+}
+
+.dashboard-card.success {
+  border-left-color: #16a34a;
+}
+
+.dashboard-card h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+}
+
+.dashboard-number {
+  font-size: 1.7rem;
+  font-weight: 700;
+}

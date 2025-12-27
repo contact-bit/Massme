@@ -5,14 +5,13 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import "./styles/admin.css";
-import "./styles/adminlogin.css";
-import AdminSidebar from "./components/AdminSidebar";
-import AdminHeader from "./components/AdminHeader";
+import "./styles/admin-login.css";
+
+import AdminNavbar from "./components/AdminNavbar";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
@@ -35,25 +34,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     setAuthChecked(true);
   }, [pathname, router]);
 
-  // ⏳ On attend d'avoir vérifié l'auth avant d'afficher les pages protégées
+  // ⏳ On attend la vérif auth pour éviter le flash
   if (!authChecked && pathname !== "/admin/login") {
     return null;
   }
 
-  // 🧾 Page de login → pas de sidebar / header
+  // 🧾 Login → pas de navbar
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
 
-  // 🎨 Layout admin normal pour tout le reste
+  // ✅ Layout admin normal (navbar)
   return (
-    <div className="admin-layout">
-      <AdminSidebar />
-
-      <div className="admin-content">
-        <AdminHeader />
-        <div className="admin-page">{children}</div>
-      </div>
+    <div className="admin-shell">
+      <AdminNavbar />
+      <main className="admin-main">{children}</main>
     </div>
   );
 }

@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, where, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 type Stats = {
   products: number;
@@ -18,109 +16,48 @@ export default function DashboardPage() {
     paidOrders: 0,
     revenue: 0,
   });
-
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        // -----------------------------------------
-        // 🔵 PRODUITS
-        // -----------------------------------------
-        const productsSnap = await getDocs(collection(db, "products"));
-        const productsCount = productsSnap.size;
+  async function loadStats() {
+    setLoading(true);
+    setError(null);
 
-        // -----------------------------------------
-        // 🟡 COMMANDES (toutes)
-        // -----------------------------------------
-        const ordersSnap = await getDocs(collection(db, "pending_orders"));
-        const ordersCount = ordersSnap.size;
+    try {
+      const res = await fetch("/api/admin/stats", { cache: "no-store" });
+      const json = await res.json();
 
-        // -----------------------------------------
-        // 🟢 COMMANDES PAYÉES
-        // -----------------------------------------
-        const paidQuery = query(
-          collection(db, "pending_orders"),
-          where("status", "==", "paid")
-        );
-        const paidSnap = await getDocs(paidQuery);
-        const paidCount = paidSnap.size;
-
-        // -----------------------------------------
-        // 💶 REVENUS
-        // -----------------------------------------
-        let revenue = 0;
-
-        paidSnap.forEach((docSnap) => {
-          const order = docSnap.data();
-
-          // Cas 1 : total enregistré dans la commande
-          if (typeof order.total === "number") {
-            revenue += order.total;
-            return;
-          }
-
-          // Cas 2 : Stripe amount_total
-          if (typeof order.amount_total === "number") {
-            revenue += order.amount_total / 100;
-            return;
-          }
-
-          // Cas 3 : Recalcul manuel
-          const subtotal =
-            order.items?.reduce(
-              (sum: number, item: any) =>
-                sum +
-                ((typeof item.price === "number"
-                  ? item.price
-                  : item.price?.eur ?? 0) *
-                  (item.quantity ?? 1)),
-              0
-            ) ?? 0;
-
-          const shipping =
-            typeof order.shippingMethod?.price === "number"
-              ? order.shippingMethod.price
-              : Number(order.shippingMethod?.price?.eur ?? 0);
-
-          revenue += subtotal + shipping;
-        });
-
-        setStats({
-          products: productsCount,
-          orders: ordersCount,
-          paidOrders: paidCount,
-          revenue,
-        });
-
-      } catch (error) {
-        console.error("Erreur Dashboard:", error);
-      } finally {
-        setLoading(false);
-      }
+      if (!res.ok) throw new Error(json?.error ?? "Erreur stats");
+      setStats(json);
+    } catch (e: any) {
+      console.error("Erreur Dashboard:", e);
+      setError(e?.message ?? "Erreur inconnue");
+    } finally {
+      setLoading(false);
     }
-
-    loadStats();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="admin-page">
-        <h1 className="admin-page-title">📊 Tableau de bord</h1>
-        <p>Chargement…</p>
-      </div>
-    );
   }
 
-  // -----------------------------------------
-  // 🔥 UI DASHBOARD
-  // -----------------------------------------
+  useEffect(() => {
+    loadStats();
+
+    // ✅ auto refresh (tu peux enlever si tu veux)
+    const interval = setInterval(loadStats, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="admin-page">
-      <h1 className="admin-page-title">📊 Tableau de bord</h1>
+      <div className="dashboard-header">
+        <h1 className="admin-page-title">📊 Tableau de bord</h1>
+        <button className="dashboard-refresh" onClick={loadStats} type="button">
+          ↻ Rafraîchir
+        </button>
+      </div>
+
+      {loading ? <p>Chargement…</p> : null}
+      {error ? <p style={{ color: "crimson" }}>❌ {error}</p> : null}
 
       <div className="dashboard-grid">
-
         <div className="dashboard-card primary">
           <h3>Produits</h3>
           <p className="dashboard-number">{stats.products}</p>
@@ -138,9 +75,10 @@ export default function DashboardPage() {
 
         <div className="dashboard-card">
           <h3>Revenu total (€)</h3>
-          <p className="dashboard-number">{stats.revenue.toFixed(2)}</p>
+          <p className="dashboard-number">
+            {Number(stats.revenue).toFixed(2)}
+          </p>
         </div>
-
       </div>
 
       {/* QUICK ACTIONS */}
