@@ -20,13 +20,10 @@ type Order = {
   email?: string;
   status?: string;
   createdAt?: any;
-
   amount_total?: number;
   total?: number;
-
   shippingMethod?: { name?: string; price?: number | { eur?: number } };
   shippingPrice?: number;
-
   items?: OrderItem[];
 };
 
@@ -39,7 +36,7 @@ function assertAdmin(req: Request) {
   return null;
 }
 
-/* ---------- Date helpers ---------- */
+/* ---------- Dates ---------- */
 function startOfDay(d: Date) {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -56,10 +53,8 @@ function startOfMonth(year: number, month1to12: number) {
 function endOfMonth(year: number, month1to12: number) {
   return new Date(year, month1to12, 0, 23, 59, 59, 999);
 }
-
 function parseCreatedAt(value: any): Date | null {
   if (!value) return null;
-
   if (value instanceof Timestamp) return value.toDate();
   if (typeof value === "object" && typeof value.toDate === "function") {
     try {
@@ -78,7 +73,7 @@ function parseCreatedAt(value: any): Date | null {
   return null;
 }
 
-/* ---------- Money helpers ---------- */
+/* ---------- Money ---------- */
 function getItemPrice(it: OrderItem): number {
   const p = it?.price;
   if (typeof p === "number") return p;
@@ -116,15 +111,15 @@ function toCSV(headers: string[], rows: string[][]) {
 }
 
 /* ---------- Fonts ---------- */
-function getFontPath(rel: string) {
+function mustFont(rel: string) {
   const p = path.join(process.cwd(), rel);
   if (!fs.existsSync(p)) {
-    throw new Error(`Font file missing: ${rel} (resolved: ${p})`);
+    throw new Error(`Font missing in build: ${rel} (resolved: ${p})`);
   }
   return p;
 }
 
-/* ---------- PDF table (NO Helvetica) ---------- */
+/* ---------- PDF table (Body / BodyBold only) ---------- */
 function drawPDFTable(
   doc: any,
   title: string,
@@ -205,13 +200,13 @@ function drawPDFTable(
 
 async function loadOrders(): Promise<Order[]> {
   const snap = await dbAdmin.collection("pending_orders").orderBy("createdAt", "desc").get();
-  const out: Order[] = [];
-  snap.forEach((d) => out.push({ id: d.id, ...(d.data() as any) }));
-  return out;
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as any;
 }
 
 export async function GET(req: Request) {
   try {
+    console.log("[EXPORT vFINAL] HIT ✅", new Date().toISOString());
+
     const auth = assertAdmin(req);
     if (auth) return auth;
 
@@ -252,9 +247,8 @@ export async function GET(req: Request) {
     }
 
     const all = await loadOrders();
-
     const filtered = all.filter((o) => {
-      const d = parseCreatedAt(o.createdAt);
+      const d = parseCreatedAt((o as any).createdAt);
       if (!d) return false;
       const t = d.getTime();
       return t >= fromDate.getTime() && t <= toDate.getTime();
@@ -276,8 +270,7 @@ export async function GET(req: Request) {
           ? "—"
           : items
               .map((it) => {
-                const n =
-                  typeof it?.name === "string" ? it.name : it?.name?.fr || it?.name?.en || "Produit";
+                const n = typeof it?.name === "string" ? it.name : it?.name?.fr || it?.name?.en || "Produit";
                 const q = it?.quantity ?? 1;
                 return `${n} x${q}`;
               })
@@ -297,7 +290,6 @@ export async function GET(req: Request) {
 
     const filenameBase = `orders_${fromDate.toISOString().slice(0, 10)}_${toDate.toISOString().slice(0, 10)}`;
 
-    // CSV
     if (format === "csv") {
       const csv = toCSV(headers, rows);
       return new Response(csv, {
@@ -310,16 +302,14 @@ export async function GET(req: Request) {
       });
     }
 
-    // PDF
-    const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate
-      .toISOString()
-      .slice(0, 10)}`;
+    const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate.toISOString().slice(0, 10)}`;
 
+    // ✅ Create doc FIRST, then register fonts BEFORE any text
     const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 40 });
 
-    // ✅ Register fonts BEFORE writing text
-    const fontRegular = getFontPath("src/assets/fonts/Inter-Regular.ttf");
-    const fontBold = getFontPath("src/assets/fonts/Inter-Bold.ttf");
+    const fontRegular = mustFont("src/assets/fonts/Inter-Regular.ttf");
+    const fontBold = mustFont("src/assets/fonts/Inter-Bold.ttf");
+
     doc.registerFont("Body", fontRegular);
     doc.registerFont("BodyBold", fontBold);
     doc.font("Body");
@@ -329,7 +319,7 @@ export async function GET(req: Request) {
 
     const done = new Promise<Buffer>((resolve, reject) => {
       doc.on("end", () => resolve(Buffer.concat(chunks)));
-      doc.on("error", (err: any) => reject(err));
+      doc.on("error", reject);
     });
 
     drawPDFTable(
