@@ -1,10 +1,7 @@
-// src/app/api/admin/orders/export/route.ts
 import { NextResponse } from "next/server";
-import PDFDocument from "pdfkit";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { Timestamp } from "firebase-admin/firestore";
-import path from "path";
-import fs from "fs";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -56,9 +53,9 @@ function startOfMonth(year: number, month1to12: number) {
 function endOfMonth(year: number, month1to12: number) {
   return new Date(year, month1to12, 0, 23, 59, 59, 999);
 }
-
 function parseCreatedAt(value: any): Date | null {
   if (!value) return null;
+
   if (value instanceof Timestamp) return value.toDate();
   if (typeof value === "object" && typeof value.toDate === "function") {
     try {
@@ -114,97 +111,132 @@ function toCSV(headers: string[], rows: string[][]) {
   return [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\n");
 }
 
-/* ---------- Fonts ---------- */
-function mustFont(rel: string) {
-  const p = path.join(process.cwd(), rel);
-  if (!fs.existsSync(p)) {
-    throw new Error(`Font missing in build: ${rel} (resolved: ${p})`);
-  }
-  return p;
+async function loadOrders(): Promise<Order[]> {
+  const snap = await dbAdmin.collection("pending_orders").orderBy("createdAt", "desc").get();
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as any;
 }
 
-/* ---------- PDF table (Body / BodyBold only) ---------- */
-function drawPDFTable(
-  doc: any,
-  title: string,
-  periodLabel: string,
-  headers: string[],
-  rows: string[][],
-  totals: { subtotal: number; shipping: number; total: number }
-) {
-  const margin = 40;
-  const pageWidth = doc.page.width;
-  const usable = pageWidth - margin * 2;
+/* ---------- PDF (pdf-lib) ---------- */
+async function buildOrdersPdf(opts: {
+  title: string;
+  periodLabel: string;
+  headers: string[];
+  rows: string[][];
+  totals: { subtotal: number; shipping: number; total: number };
+}) {
+  const pdfDoc = await PDFDocument.create();
 
-  const baseW = [85, 115, 170, 90, 220, 60, 60, 60];
-  const sumW = baseW.reduce((a: number, b: number) => a + b, 0);
-  const scale = sumW > usable ? usable / sumW : 1;
-  const widths = baseW.map((w: number) => Math.floor(w * scale));
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  let y = margin;
+  const pageSize: [number, number] = [842, 595]; // A4 landscape
+  let page = pdfDoc.addPage(pageSize);
+
+  const margin = 32;
+  const width = page.getWidth();
+  const height = page.getHeight();
+
+  const usableW = width - margin * 2;
+
+  // column widths (approx)
+  const colW = [90, 140, 180, 90, 220, 60, 60, 70]; // sum ~910 -> scaled below
+  const sum = colW.reduce((a, b) => a + b, 0);
+  const scale = sum > usableW ? usableW / sum : 1;
+  const widths = colW.map((w) => w * scale);
+
+  const rowH = 16;
+  let y = height - margin;
+
+  const drawText = (text: string, x: number, y: number, bold = false, size = 9, color = rgb(0, 0, 0)) => {
+    page.drawText(text ?? "", { x, y, size, font: bold ? fontBold : font, color });
+  };
 
   const newPage = () => {
-    doc.addPage();
-    y = margin;
+    page = pdfDoc.addPage(pageSize);
+    y = height - margin;
   };
 
   const drawHeader = () => {
-    doc.font("BodyBold").fontSize(16).fillColor("#0b1220").text(title, margin, y);
-    y += 18;
+    drawText(opts.title, margin, y, true, 16, rgb(0.04, 0.07, 0.13));
+    y -= 18;
+    drawText(opts.periodLabel, margin, y, false, 10, rgb(0.42, 0.45, 0.50));
+    y -= 18;
 
-    doc.font("Body").fontSize(10).fillColor("#6b7280").text(periodLabel, margin, y);
-    y += 18;
+    // header background bar (light)
+    page.drawRectangle({
+      x: margin,
+      y: y - 10,
+      width: usableW,
+      height: 18,
+      color: rgb(0.93, 0.95, 1),
+    });
 
-    doc.fillColor("#eef2ff").rect(margin, y, usable, 22).fill();
-
-    doc.fillColor("#0b1220").font("BodyBold").fontSize(9);
     let x = margin;
-    for (let i = 0; i < headers.length; i++) {
-      doc.text(headers[i], x + 4, y + 6, { width: widths[i] - 8, ellipsis: true });
+    for (let i = 0; i < opts.headers.length; i++) {
+      drawText(opts.headers[i], x + 3, y - 6, true, 9, rgb(0.04, 0.07, 0.13));
       x += widths[i];
     }
-
-    y += 24;
-    doc.font("Body").fontSize(9).fillColor("#111827");
+    y -= 22;
   };
 
-  const rowH = 18;
   drawHeader();
 
-  rows.forEach((r, idx) => {
-    if (y + rowH > doc.page.height - margin - 80) {
+  // rows
+  for (let r = 0; r < opts.rows.length; r++) {
+    if (y < margin + 80) {
       newPage();
       drawHeader();
     }
 
-    if (idx % 2 === 1) {
-      doc.fillColor("#fafafa").rect(margin, y - 2, usable, rowH).fill();
-      doc.fillColor("#111827");
+    const row = opts.rows[r];
+
+    // zebra
+    if (r % 2 === 1) {
+      page.drawRectangle({
+        x: margin,
+        y: y - 2,
+        width: usableW,
+        height: rowH,
+        color: rgb(0.98, 0.98, 0.98),
+      });
     }
 
     let x = margin;
-    for (let i = 0; i < r.length; i++) {
-      doc.text(r[i], x + 4, y, { width: widths[i] - 8, ellipsis: true });
-      x += widths[i];
+    for (let c = 0; c < row.length; c++) {
+      const t = String(row[c] ?? "");
+      // simple truncate
+      const maxChars = c === 4 ? 40 : c === 2 ? 26 : 18;
+      const s = t.length > maxChars ? t.slice(0, maxChars - 1) + "…" : t;
+
+      drawText(s, x + 3, y, false, 9, rgb(0.07, 0.09, 0.12));
+      x += widths[c];
     }
-    y += rowH;
+
+    y -= rowH;
+  }
+
+  // totals box
+  if (y < margin + 60) {
+    newPage();
+  }
+
+  page.drawRectangle({
+    x: margin,
+    y: y - 40,
+    width: usableW,
+    height: 48,
+    borderColor: rgb(0.9, 0.9, 0.9),
+    borderWidth: 1,
+    color: rgb(1, 1, 1),
   });
 
-  if (y + 70 > doc.page.height - margin) newPage();
+  drawText("Totaux", margin + 10, y - 22, true, 10, rgb(0.04, 0.07, 0.13));
+  drawText(`Sous-total: ${euro(opts.totals.subtotal)} €`, margin + 120, y - 22, false, 10);
+  drawText(`Livraison: ${euro(opts.totals.shipping)} €`, margin + 340, y - 22, false, 10);
+  drawText(`Total: ${euro(opts.totals.total)} €`, margin + 560, y - 22, true, 10);
 
-  doc.fillColor("#ffffff").rect(margin, y + 12, usable, 54).fillAndStroke("#ffffff", "#e5e7eb");
-
-  doc.fillColor("#0b1220").font("BodyBold").fontSize(10).text("Totaux", margin + 10, y + 18);
-
-  doc.font("Body").fontSize(10).fillColor("#111827");
-  doc.text(`Sous-total: ${euro(totals.subtotal)} €`, margin + 120, y + 18);
-  doc.text(`Livraison: ${euro(totals.shipping)} €`, margin + 320, y + 18);
-  doc.font("BodyBold").text(`Total: ${euro(totals.total)} €`, margin + 480, y + 18);
-}
-
-async function loadOrders(): Promise<Order[]> {
-  const snap = await dbAdmin.collection("pending_orders").orderBy("createdAt", "desc").get();
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as any;
+  const bytes = await pdfDoc.save();
+  return Buffer.from(bytes);
 }
 
 export async function GET(req: Request) {
@@ -213,8 +245,8 @@ export async function GET(req: Request) {
     if (auth) return auth;
 
     const { searchParams } = new URL(req.url);
-    const format = (searchParams.get("format") || "pdf").toLowerCase();
 
+    const format = (searchParams.get("format") || "pdf").toLowerCase();
     const day = searchParams.get("day");
     const month = searchParams.get("month");
     const from = searchParams.get("from");
@@ -236,7 +268,7 @@ export async function GET(req: Request) {
     } else if (from && to) {
       const a = new Date(from);
       const b = new Date(to);
-      if (isNaN(a.getTime()) || isNaN(b.getTime()))
+      if (isNaN(a.getTime()) || isNaN(b.getTime()) || a > b)
         return NextResponse.json({ error: "Invalid range" }, { status: 400 });
       fromDate = startOfDay(a);
       toDate = endOfDay(b);
@@ -248,6 +280,7 @@ export async function GET(req: Request) {
       fromDate = startOfDay(past);
     }
 
+    const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate.toISOString().slice(0, 10)}`;
     const all = await loadOrders();
 
     const filtered = all.filter((o) => {
@@ -293,7 +326,6 @@ export async function GET(req: Request) {
 
     const filenameBase = `orders_${fromDate.toISOString().slice(0, 10)}_${toDate.toISOString().slice(0, 10)}`;
 
-    // CSV
     if (format === "csv") {
       const csv = toCSV(headers, rows);
       return new Response(csv, {
@@ -306,55 +338,16 @@ export async function GET(req: Request) {
       });
     }
 
-    // PDF
-    const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate.toISOString().slice(0, 10)}`;
-
-    /**
-     * 🔑 IMPORTANT:
-     * - autoFirstPage:false empêche PDFKit de créer une page automatiquement (sinon fallback Helvetica)
-     * - on register les fonts AVANT doc.addPage()
-     */
-    const doc = new PDFDocument({
-      size: "A4",
-      layout: "landscape",
-      margin: 40,
-      autoFirstPage: false,
-    });
-
-    // ✅ Register fonts BEFORE any page/text
-    const fontRegular = mustFont("src/assets/fonts/Inter-Regular.ttf");
-    const fontBold = mustFont("src/assets/fonts/Inter-Bold.ttf");
-
-    doc.registerFont("Body", fontRegular);
-    doc.registerFont("BodyBold", fontBold);
-
-    // ✅ Create first page AFTER fonts
-    doc.addPage();
-    doc.font("Body");
-
-    const chunks: Buffer[] = [];
-    doc.on("data", (c: Buffer) => chunks.push(c));
-
-    const done = new Promise<Buffer>((resolve, reject) => {
-      doc.on("end", () => resolve(Buffer.concat(chunks)));
-      doc.on("error", reject);
-    });
-
-    drawPDFTable(
-      doc,
-      "Export commandes",
-      `${periodLabel} • ${filtered.length} commande(s)`,
+    // PDF via pdf-lib (no pdfkit)
+    const pdfBuffer = await buildOrdersPdf({
+      title: "Export commandes",
+      periodLabel: `${periodLabel} • ${filtered.length} commande(s)`,
       headers,
       rows,
-      { subtotal: sumSubtotal, shipping: sumShip, total: sumTotal }
-    );
+      totals: { subtotal: sumSubtotal, shipping: sumShip, total: sumTotal },
+    });
 
-    doc.end();
-
-    const pdfBuffer = await done;
-    const pdfBytes = new Uint8Array(pdfBuffer);
-
-    return new Response(pdfBytes, {
+    return new Response(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
@@ -365,11 +358,7 @@ export async function GET(req: Request) {
   } catch (err: any) {
     console.error("[export] ERROR:", err);
     return NextResponse.json(
-      {
-        error: "Export failed",
-        message: err?.message || String(err),
-        stack: process.env.NODE_ENV === "development" ? err?.stack : undefined,
-      },
+      { error: "Export failed", message: err?.message || String(err) },
       { status: 500 }
     );
   }
