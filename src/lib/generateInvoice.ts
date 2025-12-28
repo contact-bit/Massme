@@ -1,13 +1,16 @@
 // src/lib/generateInvoice.ts
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
+type InvoiceItem = { ref: string; name: string; desc: string; qty: number; unit: number };
+
 export async function generateInvoicePDF(order: any, orderId: string) {
   // =========================
   // Helpers
   // =========================
   const safe = (v: any) => (v == null ? "" : String(v));
   const upper = (v: any) => safe(v).trim().toUpperCase();
-  const money = (n: number) => (Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100).toFixed(2);
+  const money = (n: number) =>
+    (Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100).toFixed(2);
 
   const fmtDateFR = (d = new Date()) => {
     const dd = String(d.getDate()).padStart(2, "0");
@@ -16,11 +19,18 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     return `${dd}/${mm}/${yy}`;
   };
 
-  const widthOf = (font: any, text: string, size: number) => font.widthOfTextAtSize(text, size);
+  const widthOf = (font: any, text: string, size: number) =>
+    font.widthOfTextAtSize(text, size);
 
   const wrap = (font: any, text: string, size: number, maxW: number) => {
-    const words = safe(text).replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+    const words = safe(text)
+      .replace(/\s+/g, " ")
+      .trim()
+      .split(" ")
+      .filter(Boolean);
+
     if (!words.length) return [""];
+
     const lines: string[] = [];
     let cur = "";
     for (const w of words) {
@@ -47,12 +57,14 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     page.drawText(safe(text), { x, y, size, font, color });
   };
 
-  const drawBox = (page: any, x: number, y: number, w: number, h: number, opts?: {
-    fill?: any;
-    stroke?: any;
-    strokeWidth?: number;
-    r?: number;
-  }) => {
+  const drawBox = (
+    page: any,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    opts?: { fill?: any; stroke?: any; strokeWidth?: number; r?: number }
+  ) => {
     page.drawRectangle({
       x,
       y,
@@ -65,18 +77,29 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     });
   };
 
-  const drawLine = (page: any, x1: number, y1: number, x2: number, y2: number, color = rgb(0.8, 0.8, 0.8)) => {
-    page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: 1, color });
+  const drawLine = (
+    page: any,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    color = rgb(0.8, 0.8, 0.8)
+  ) => {
+    page.drawLine({
+      start: { x: x1, y: y1 },
+      end: { x: x2, y: y2 },
+      thickness: 1,
+      color,
+    });
   };
 
   // =========================
   // Data normalization
   // =========================
   const a = order?.shippingAddress || {};
-  const items = Array.isArray(order?.items) ? order.items : [];
+  const itemsRaw = Array.isArray(order?.items) ? order.items : [];
 
-  // Assumption: item.price is already EUR (HT) in your data (as in your current generator)
-  const itemsNorm = items.map((it: any) => {
+  const itemsNorm: InvoiceItem[] = itemsRaw.map((it: any): InvoiceItem => {
     const name = safe(it?.name || "Produit");
     const desc = safe(it?.description || "");
     const qty = Number(it?.quantity || 1);
@@ -86,14 +109,25 @@ export async function generateInvoicePDF(order: any, orderId: string) {
 
   const shipping = Number(order?.shippingMethod?.price || 0);
 
-  const totalHT_items = itemsNorm.reduce((s, it) => s + it.unit * it.qty, 0);
+  // ✅ Fix TS implicit any
+  const totalHT_items = itemsNorm.reduce<number>(
+    (sum: number, it: InvoiceItem) => sum + it.unit * it.qty,
+    0
+  );
+
   const totalHT = totalHT_items + shipping;
 
-  const VAT_RATE = 0.2; // 20% comme sur l’exemple (tu peux le rendre dynamique plus tard)
+  const VAT_RATE = 0.2; // 20%
   const vat = totalHT * VAT_RATE;
   const totalTTC = totalHT + vat;
 
-  const invoiceNumber = order?.invoiceNumber || `F${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}`;
+  const invoiceNumber =
+    order?.invoiceNumber ||
+    `F${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(
+      2,
+      "0"
+    )}${String(new Date().getDate()).padStart(2, "0")}`;
+
   const invoiceDate = order?.invoiceDate ? new Date(order.invoiceDate) : new Date();
 
   // =========================
@@ -104,25 +138,24 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Colors (proche du modèle)
+  // Colors
   const ink = rgb(0.07, 0.07, 0.07);
   const muted = rgb(0.35, 0.35, 0.35);
   const border = rgb(0.78, 0.78, 0.78);
   const bar = rgb(0.33, 0.29, 0.23);
   const soft = rgb(0.97, 0.97, 0.97);
   const red = rgb(0.78, 0.12, 0.12);
-  const gold = rgb(0.98, 0.72, 0.30);
+  const gold = rgb(0.98, 0.72, 0.3);
 
   const M = 42;
 
   // =========================
   // Header left (company)
   // =========================
-  // "Logo" texte (pas d'image)
   drawText(page, regularFont, "LazurCo", M, 800, 30, gold);
 
   let yL = 780;
-  const companyLines = [
+  const companyLines: string[] = [
     "189 avenue de Fabron",
     "La Tropezienne",
     "06200 Nice",
@@ -147,9 +180,6 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     yL -= 12;
   }
 
-  // ✅ QR CODE supprimé : on laisse simplement un “bloc vide” comme placeholder (ou tu peux le retirer)
-  // Ici on l’enlève totalement : pas de rectangle.
-
   // =========================
   // Header right (FACTURE + Client)
   // =========================
@@ -158,7 +188,11 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const titleX = 595 - M - titleBoxW;
   const titleY = 842 - M - titleBoxH;
 
-  drawBox(page, titleX, titleY, titleBoxW, titleBoxH, { stroke: rgb(0.2, 0.2, 0.2), strokeWidth: 1, r: 8 });
+  drawBox(page, titleX, titleY, titleBoxW, titleBoxH, {
+    stroke: rgb(0.2, 0.2, 0.2),
+    strokeWidth: 1,
+    r: 8,
+  });
   drawText(page, boldFont, "FACTURE", titleX + 112, titleY + 16, 12, ink);
 
   const clientBoxW = 320;
@@ -166,10 +200,20 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const clientX = 595 - M - clientBoxW;
   const clientY = titleY - 22 - clientBoxH;
 
-  drawBox(page, clientX, clientY, clientBoxW, clientBoxH, { stroke: border, strokeWidth: 1, r: 0 });
-  // bande "Client"
-  drawBox(page, clientX, clientY + clientBoxH - 20, clientBoxW, 20, { fill: bar, r: 0 });
-  drawText(page, boldFont, "Client", clientX + clientBoxW / 2 - 18, clientY + clientBoxH - 14, 9, rgb(1, 1, 1));
+  drawBox(page, clientX, clientY, clientBoxW, clientBoxH, {
+    stroke: border,
+    strokeWidth: 1,
+  });
+  drawBox(page, clientX, clientY + clientBoxH - 20, clientBoxW, 20, { fill: bar });
+  drawText(
+    page,
+    boldFont,
+    "Client",
+    clientX + clientBoxW / 2 - 18,
+    clientY + clientBoxH - 14,
+    9,
+    rgb(1, 1, 1)
+  );
 
   const clientLines = [
     upper(a.name),
@@ -203,7 +247,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const greyY = lineY - 76;
   const greyH = 72;
   const greyW = 595 - M * 2;
-  drawBox(page, M, greyY, greyW, greyH, { fill: soft, stroke: border, strokeWidth: 1, r: 0 });
+  drawBox(page, M, greyY, greyW, greyH, { fill: soft, stroke: border, strokeWidth: 1 });
 
   drawText(page, regularFont, "Votre commande", M + 10, greyY + greyH - 22, 8, muted);
   drawText(page, boldFont, "www.massme.fr", M + 10, greyY + greyH - 34, 8, ink);
@@ -220,7 +264,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const tableW = 595 - M * 2;
   const tableTop = greyY - 18;
 
-  // column widths (like screenshot)
+  // columns
   const colRef = 75;
   const colQty = 60;
   const colUnit = 90;
@@ -230,8 +274,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const headH = 18;
   const rowH = 18;
 
-  // Header bar
-  drawBox(page, tableX, tableTop - headH, tableW, headH, { fill: bar, r: 0 });
+  drawBox(page, tableX, tableTop - headH, tableW, headH, { fill: bar });
   drawText(page, boldFont, "Reference", tableX + 6, tableTop - 12, 8, rgb(1, 1, 1));
   drawText(page, boldFont, "Designation", tableX + colRef + 6, tableTop - 12, 8, rgb(1, 1, 1));
   drawText(page, boldFont, "Quantite", tableX + colRef + colDes + 6, tableTop - 12, 8, rgb(1, 1, 1));
@@ -243,10 +286,8 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const xQty = xDes + colQty;
   const xUnit = xQty + colUnit;
 
-  const lines = [...itemsNorm];
-  if (shipping > 0) {
-    lines.push({ ref: "", name: "Livraison a domicile", desc: "", qty: 1, unit: shipping });
-  }
+  const lines: InvoiceItem[] = [...itemsNorm];
+  if (shipping > 0) lines.push({ ref: "", name: "Livraison a domicile", desc: "", qty: 1, unit: shipping });
 
   const maxRows = Math.max(6, lines.length);
   let y = tableTop - headH;
@@ -254,8 +295,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   for (let i = 0; i < maxRows; i++) {
     const rowY = y - rowH;
 
-    // alternate
-    if (i % 2 === 1) drawBox(page, tableX, rowY, tableW, rowH, { fill: soft, r: 0 });
+    if (i % 2 === 1) drawBox(page, tableX, rowY, tableW, rowH, { fill: soft });
 
     // grid
     drawLine(page, tableX, rowY, tableX + tableW, rowY, border);
@@ -283,10 +323,9 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     y = rowY;
   }
 
-  // bottom line
   drawLine(page, tableX, y, tableX + tableW, y, border);
 
-  // Totals (right section)
+  // Totals
   const totalsW = 240;
   const totalsX = tableX + tableW - totalsW;
   const totalsY = y - 60;
@@ -302,14 +341,12 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   drawText(page, boldFont, "Total TTC", totalsX + 10, totalsY + 8, 9, ink);
   drawText(page, boldFont, `${money(totalTTC)} €`, totalsX + 140, totalsY + 8, 9, ink);
 
-  // =========================
   // Payment conditions + stamp
-  // =========================
   const payY = totalsY - 70;
 
   drawText(page, boldFont, "Conditions de paiement :", M, payY + 44, 9, ink);
 
-  const payLines = [
+  const payLines: string[] = [
     `Mode de paiement : ${safe(order?.paymentMethod) || "Carte bancaire"}`,
     `Paiement recu le : ${fmtDateFR(order?.paidAt ? new Date(order.paidAt) : invoiceDate)}`,
     `Escompte pour paiement anticipe : neant`,
@@ -328,13 +365,12 @@ export async function generateInvoicePDF(order: any, orderId: string) {
 
   drawText(page, boldFont, "FACTURE ACQUITTEE", 595 / 2 + 40, payY + 10, 10, red);
 
-  // =========================
   // Footer
-  // =========================
   const footerBarY = 56;
-  drawBox(page, M, footerBarY, 595 - M * 2, 10, { fill: bar, r: 0 });
+  drawBox(page, M, footerBarY, 595 - M * 2, 10, { fill: bar });
 
   drawText(page, boldFont, "Reserve de propriete", 595 / 2 - 56, footerBarY - 18, 8, ink);
+
   const footerTxt =
     "LazurCo SASU conserve l'entière propriete des biens jusqu'au paiement complet de la commande (loi 80335 du 12 mai 1980)";
   const footerLines = wrap(regularFont, footerTxt, 7.6, 595 - M * 2).slice(0, 2);
@@ -345,7 +381,6 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     yF -= 10;
   }
 
-  // Save
   const pdfBytes = await pdfDoc.save();
   return Buffer.from(pdfBytes);
 }
