@@ -20,10 +20,13 @@ type Order = {
   email?: string;
   status?: string;
   createdAt?: any;
+
   amount_total?: number;
   total?: number;
+
   shippingMethod?: { name?: string; price?: number | { eur?: number } };
   shippingPrice?: number;
+
   items?: OrderItem[];
 };
 
@@ -36,7 +39,7 @@ function assertAdmin(req: Request) {
   return null;
 }
 
-/* ---------- Dates ---------- */
+/* ---------- Date helpers ---------- */
 function startOfDay(d: Date) {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -53,6 +56,7 @@ function startOfMonth(year: number, month1to12: number) {
 function endOfMonth(year: number, month1to12: number) {
   return new Date(year, month1to12, 0, 23, 59, 59, 999);
 }
+
 function parseCreatedAt(value: any): Date | null {
   if (!value) return null;
   if (value instanceof Timestamp) return value.toDate();
@@ -73,7 +77,7 @@ function parseCreatedAt(value: any): Date | null {
   return null;
 }
 
-/* ---------- Money ---------- */
+/* ---------- Money helpers ---------- */
 function getItemPrice(it: OrderItem): number {
   const p = it?.price;
   if (typeof p === "number") return p;
@@ -205,8 +209,6 @@ async function loadOrders(): Promise<Order[]> {
 
 export async function GET(req: Request) {
   try {
-    console.log("[EXPORT vFINAL] HIT ✅", new Date().toISOString());
-
     const auth = assertAdmin(req);
     if (auth) return auth;
 
@@ -247,8 +249,9 @@ export async function GET(req: Request) {
     }
 
     const all = await loadOrders();
+
     const filtered = all.filter((o) => {
-      const d = parseCreatedAt((o as any).createdAt);
+      const d = parseCreatedAt(o.createdAt);
       if (!d) return false;
       const t = d.getTime();
       return t >= fromDate.getTime() && t <= toDate.getTime();
@@ -290,6 +293,7 @@ export async function GET(req: Request) {
 
     const filenameBase = `orders_${fromDate.toISOString().slice(0, 10)}_${toDate.toISOString().slice(0, 10)}`;
 
+    // CSV
     if (format === "csv") {
       const csv = toCSV(headers, rows);
       return new Response(csv, {
@@ -302,16 +306,30 @@ export async function GET(req: Request) {
       });
     }
 
+    // PDF
     const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate.toISOString().slice(0, 10)}`;
 
-    // ✅ Create doc FIRST, then register fonts BEFORE any text
-    const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 40 });
+    /**
+     * 🔑 IMPORTANT:
+     * - autoFirstPage:false empêche PDFKit de créer une page automatiquement (sinon fallback Helvetica)
+     * - on register les fonts AVANT doc.addPage()
+     */
+    const doc = new PDFDocument({
+      size: "A4",
+      layout: "landscape",
+      margin: 40,
+      autoFirstPage: false,
+    });
 
+    // ✅ Register fonts BEFORE any page/text
     const fontRegular = mustFont("src/assets/fonts/Inter-Regular.ttf");
     const fontBold = mustFont("src/assets/fonts/Inter-Bold.ttf");
 
     doc.registerFont("Body", fontRegular);
     doc.registerFont("BodyBold", fontBold);
+
+    // ✅ Create first page AFTER fonts
+    doc.addPage();
     doc.font("Body");
 
     const chunks: Buffer[] = [];
