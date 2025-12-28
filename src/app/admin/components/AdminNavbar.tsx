@@ -8,7 +8,7 @@ type Tab = { href: string; label: string };
 
 type AlertTone = "info" | "warning" | "success" | "danger";
 type AlertItem = {
-  id: string;                 // ✅ id stable
+  id: string;
   tone: AlertTone;
   title: string;
   desc: string;
@@ -79,7 +79,6 @@ function toneIcon(t: AlertTone) {
   if (t === "danger") return "⚠";
   return "i";
 }
-
 function buildId(prefix: string, parts: (string | number | undefined)[]) {
   return `${prefix}:${parts.map((p) => String(p ?? "")).join("|")}`;
 }
@@ -102,6 +101,7 @@ export default function AdminNavbar() {
       { href: "/admin/orders", label: "Commandes" },
       { href: "/admin/products", label: "Produits" },
       { href: "/admin/shipping", label: "Livraison" },
+      { href: "/admin/export", label: "Export" }, // ✅ ICI
     ],
     []
   );
@@ -114,6 +114,7 @@ export default function AdminNavbar() {
     );
   }, [pathname, tabs]);
 
+  // Quick search
   const [q, setQ] = useState("");
 
   // Notifs
@@ -152,7 +153,11 @@ export default function AdminNavbar() {
       if (adminPassword) headers["x-admin-password"] = adminPassword;
       if (adminToken) headers["x-admin-token"] = adminToken;
 
-      const res = await fetch("/api/admin/stats", { headers, cache: "no-store" });
+      const res = await fetch("/api/admin/stats", {
+        headers,
+        cache: "no-store",
+      });
+
       if (!res.ok) return;
 
       const json = (await res.json()) as StatsResponse;
@@ -162,7 +167,7 @@ export default function AdminNavbar() {
 
       const computed: AlertItem[] = [];
 
-      // 1) Alerts backend -> notifs UI
+      // 1) Alerts backend
       for (const a of baseAlerts) {
         computed.push({
           id: buildId("alert", [a.tone, a.title, a.desc]),
@@ -173,12 +178,13 @@ export default function AdminNavbar() {
         });
       }
 
-      // 2) Notifs “smart” sur commandes (même si alerts=[])
+      // 2) Smart notif newest order
       const newest = lastOrders[0];
       const newestAt = newest?.createdAt ? Date.parse(newest.createdAt) : 0;
 
       if (newest && newestAt) {
         const isPaid = (newest.status || "") === "paid";
+
         const n: AlertItem = {
           id: buildId("order", [newest.id, newest.status, newestAt]),
           tone: isPaid ? "success" : "warning",
@@ -192,12 +198,13 @@ export default function AdminNavbar() {
             createdAt: newest.createdAt,
           },
         };
+
         computed.unshift(n);
 
-        // Toast “live” si nouvelle commande depuis la dernière vue
+        // Toast live si nouvelle depuis dernière vue
         const lastSeen = getLastSeenAt();
-        const lastOrderId = getLastOrderId();
-        const isNew = newestAt > lastSeen && newest.id !== lastOrderId;
+        const lastId = getLastOrderId();
+        const isNew = newestAt > lastSeen && newest.id !== lastId;
 
         if (isNew && reason !== "manual") {
           pushToast({
@@ -206,15 +213,12 @@ export default function AdminNavbar() {
             desc: n.desc,
             href: n.actionHref,
           });
-
-          // Option son (décommente si tu veux)
-          // try { new Audio("/notif.mp3").play(); } catch {}
         }
 
         setLastOrderId(newest.id);
       }
 
-      // 3) Low stock -> notif
+      // 3) Low stock
       if (Array.isArray(json.lowStock) && json.lowStock.length > 0) {
         computed.push({
           id: buildId("stock", [json.lowStock.length]),
@@ -225,14 +229,13 @@ export default function AdminNavbar() {
         });
       }
 
-      // ✅ merge read set (ne pas perdre ce qui est déjà lu)
       setNotifs(computed);
     } catch {
       // no-op
     }
   };
 
-  // Initial + polling
+  // initial + polling
   useEffect(() => {
     fetchNotifs("poll");
     const id = window.setInterval(() => fetchNotifs("poll"), 20_000);
@@ -240,7 +243,7 @@ export default function AdminNavbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Focus refresh
+  // refresh when tab becomes visible
   useEffect(() => {
     const onVis = () => {
       if (document.visibilityState === "visible") fetchNotifs("focus");
@@ -250,7 +253,7 @@ export default function AdminNavbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Click outside close
+  // close on outside click
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
@@ -264,11 +267,12 @@ export default function AdminNavbar() {
     return () => window.removeEventListener("mousedown", onDown);
   }, [open]);
 
-  // Ctrl/Cmd+K focus search + Esc close
+  // Ctrl/Cmd+K + Esc
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const key = typeof e.key === "string" ? e.key : "";
       if (!key) return;
+
       // @ts-ignore
       if (e.isComposing) return;
 
@@ -278,6 +282,7 @@ export default function AdminNavbar() {
       }
       if (key === "Escape") setOpen(false);
     };
+
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
@@ -320,9 +325,7 @@ export default function AdminNavbar() {
             key={t.id}
             type="button"
             className={`admin-toast tone-${t.tone}`}
-            onClick={() => {
-              if (t.href) router.push(t.href);
-            }}
+            onClick={() => t.href && router.push(t.href)}
             title="Ouvrir"
           >
             <div className="admin-toast-ic">{toneIcon(t.tone)}</div>
@@ -431,10 +434,9 @@ export default function AdminNavbar() {
                                 </div>
                                 <div className="admin-notif-desc">{n.desc}</div>
 
-                                {/* actions rapides */}
-                                {n.meta?.email || n.meta?.orderId ? (
+                                {(n.meta?.email || n.meta?.orderId) && (
                                   <div className="admin-notif-actions">
-                                    {n.meta?.orderId ? (
+                                    {n.meta?.orderId && (
                                       <button
                                         type="button"
                                         className="admin-notif-chip"
@@ -442,36 +444,31 @@ export default function AdminNavbar() {
                                           e.stopPropagation();
                                           markOneRead(n.id);
                                           setOpen(false);
-                                          router.push(`/admin/orders?q=${encodeURIComponent(n.meta!.orderId!)}`);
+                                          router.push(`/admin/orders?q=${encodeURIComponent(n.meta.orderId!)}`);
                                         }}
                                       >
                                         Voir
                                       </button>
-                                    ) : null}
+                                    )}
 
-                                    {n.meta?.email ? (
+                                    {n.meta?.email && (
                                       <button
                                         type="button"
                                         className="admin-notif-chip"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          navigator.clipboard?.writeText(n.meta!.email!);
-                                          pushToast({
-                                            tone: "info",
-                                            title: "Copié",
-                                            desc: n.meta!.email!,
-                                          });
+                                          navigator.clipboard?.writeText(n.meta.email!);
+                                          pushToast({ tone: "info", title: "Copié", desc: n.meta.email! });
                                         }}
                                       >
                                         Copier email
                                       </button>
-                                    ) : null}
+                                    )}
                                   </div>
-                                ) : null}
+                                )}
                               </div>
                             </button>
 
-                            {/* bouton "lu" */}
                             <button
                               type="button"
                               className="admin-notif-mark"
@@ -501,9 +498,7 @@ export default function AdminNavbar() {
         <div className="admin-tabs">
           <div className="admin-tabs-inner">
             {tabs.map((t) => {
-              const active =
-                t.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(t.href);
-
+              const active = t.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(t.href);
               return (
                 <Link key={t.href} href={t.href} className={`admin-tab ${active ? "active" : ""}`}>
                   {t.label}
