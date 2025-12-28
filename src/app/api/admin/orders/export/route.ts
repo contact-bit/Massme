@@ -36,7 +36,7 @@ function assertAdmin(req: Request) {
   return null;
 }
 
-// ---------- Date helpers ----------
+/* ---------- Date helpers ---------- */
 function startOfDay(d: Date) {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -75,7 +75,7 @@ function parseCreatedAt(value: any): Date | null {
   return null;
 }
 
-// ---------- Money helpers ----------
+/* ---------- Money helpers ---------- */
 function getItemPrice(it: OrderItem): number {
   const p = it?.price;
   if (typeof p === "number") return p;
@@ -102,7 +102,7 @@ function euro(n: number) {
   return (Math.round(n * 100) / 100).toFixed(2);
 }
 
-// ---------- CSV ----------
+/* ---------- CSV ---------- */
 function toCSV(headers: string[], rows: string[][]) {
   const esc = (v: string) => {
     const s = String(v ?? "");
@@ -112,7 +112,7 @@ function toCSV(headers: string[], rows: string[][]) {
   return [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\n");
 }
 
-// ---------- PDF table (doc:any => plus d'erreur TS) ----------
+/* ---------- PDF table (doc:any = pas de souci TS pdfkit) ---------- */
 function drawPDFTable(
   doc: any,
   title: string,
@@ -243,6 +243,7 @@ export async function GET(req: Request) {
   const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate.toISOString().slice(0, 10)}`;
 
   const all = await loadOrders();
+
   const filtered = all.filter((o) => {
     const d = parseCreatedAt(o.createdAt);
     if (!d) return false;
@@ -301,10 +302,11 @@ export async function GET(req: Request) {
 
   // PDF
   const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 40 });
-  const chunks: Buffer[] = [];
-  doc.on("data", (c: Buffer) => chunks.push(c));
+  const chunks: Uint8Array[] = [];
 
-  const done = new Promise<Buffer>((resolve) => {
+  doc.on("data", (c: Uint8Array) => chunks.push(c));
+
+  const done = new Promise<Uint8Array>((resolve) => {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
   });
 
@@ -318,9 +320,11 @@ export async function GET(req: Request) {
   );
 
   doc.end();
-  const pdfBuffer = await done;
 
-  return new NextResponse(pdfBuffer, {
+  const pdfBytes = await done;
+
+  // ✅ IMPORTANT : NextResponse accepte Uint8Array / ArrayBuffer, pas Buffer (types)
+  return new NextResponse(pdfBytes, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
