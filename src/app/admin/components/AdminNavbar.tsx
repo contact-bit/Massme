@@ -101,7 +101,7 @@ export default function AdminNavbar() {
       { href: "/admin/orders", label: "Commandes" },
       { href: "/admin/products", label: "Produits" },
       { href: "/admin/shipping", label: "Livraison" },
-      { href: "/admin/export", label: "Export" }, // ✅ ICI
+      { href: "/admin/export", label: "Export" },
     ],
     []
   );
@@ -153,11 +153,7 @@ export default function AdminNavbar() {
       if (adminPassword) headers["x-admin-password"] = adminPassword;
       if (adminToken) headers["x-admin-token"] = adminToken;
 
-      const res = await fetch("/api/admin/stats", {
-        headers,
-        cache: "no-store",
-      });
-
+      const res = await fetch("/api/admin/stats", { headers, cache: "no-store" });
       if (!res.ok) return;
 
       const json = (await res.json()) as StatsResponse;
@@ -174,7 +170,9 @@ export default function AdminNavbar() {
           tone: a.tone,
           title: a.title,
           desc: a.desc,
-          actionHref: a.title.toLowerCase().includes("commande") ? "/admin/orders" : "/admin",
+          actionHref: a.title.toLowerCase().includes("commande")
+            ? "/admin/orders"
+            : "/admin",
         });
       }
 
@@ -235,7 +233,7 @@ export default function AdminNavbar() {
     }
   };
 
-  // initial + polling
+  // Initial + polling
   useEffect(() => {
     fetchNotifs("poll");
     const id = window.setInterval(() => fetchNotifs("poll"), 20_000);
@@ -243,7 +241,7 @@ export default function AdminNavbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // refresh when tab becomes visible
+  // Refresh when tab becomes visible
   useEffect(() => {
     const onVis = () => {
       if (document.visibilityState === "visible") fetchNotifs("focus");
@@ -253,7 +251,7 @@ export default function AdminNavbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // close on outside click
+  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
@@ -415,6 +413,10 @@ export default function AdminNavbar() {
                       notifs.map((n) => {
                         const isUnread = !read.has(n.id);
 
+                        // ✅ capture meta values to satisfy TS
+                        const orderId = n.meta?.orderId;
+                        const email = n.meta?.email;
+
                         return (
                           <div key={n.id} className={`admin-notif-row ${isUnread ? "unread" : ""}`}>
                             <button
@@ -434,9 +436,9 @@ export default function AdminNavbar() {
                                 </div>
                                 <div className="admin-notif-desc">{n.desc}</div>
 
-                                {(n.meta?.email || n.meta?.orderId) && (
+                                {(email || orderId) && (
                                   <div className="admin-notif-actions">
-                                    {n.meta?.orderId && (
+                                    {orderId && (
                                       <button
                                         type="button"
                                         className="admin-notif-chip"
@@ -444,21 +446,23 @@ export default function AdminNavbar() {
                                           e.stopPropagation();
                                           markOneRead(n.id);
                                           setOpen(false);
-                                          router.push(`/admin/orders?q=${encodeURIComponent(n.meta.orderId!)}`);
+                                          router.push(
+                                            `/admin/orders?q=${encodeURIComponent(orderId)}`
+                                          );
                                         }}
                                       >
                                         Voir
                                       </button>
                                     )}
 
-                                    {n.meta?.email && (
+                                    {email && (
                                       <button
                                         type="button"
                                         className="admin-notif-chip"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          navigator.clipboard?.writeText(n.meta.email!);
-                                          pushToast({ tone: "info", title: "Copié", desc: n.meta.email! });
+                                          navigator.clipboard?.writeText(email);
+                                          pushToast({ tone: "info", title: "Copié", desc: email });
                                         }}
                                       >
                                         Copier email
@@ -498,7 +502,8 @@ export default function AdminNavbar() {
         <div className="admin-tabs">
           <div className="admin-tabs-inner">
             {tabs.map((t) => {
-              const active = t.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(t.href);
+              const active =
+                t.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(t.href);
               return (
                 <Link key={t.href} href={t.href} className={`admin-tab ${active ? "active" : ""}`}>
                   {t.label}
