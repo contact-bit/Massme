@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import PDFDocument from "pdfkit";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { Timestamp } from "firebase-admin/firestore";
+import path from "path";
+import fs from "fs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -113,7 +115,16 @@ function toCSV(headers: string[], rows: string[][]) {
   return [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\n");
 }
 
-/* ---------- PDF table ---------- */
+/* ---------- Fonts ---------- */
+function getFontPath(rel: string) {
+  const p = path.join(process.cwd(), rel);
+  if (!fs.existsSync(p)) {
+    throw new Error(`Font file missing: ${rel} (resolved: ${p})`);
+  }
+  return p;
+}
+
+/* ---------- PDF table (NO Helvetica) ---------- */
 function drawPDFTable(
   doc: any,
   title: string,
@@ -139,15 +150,15 @@ function drawPDFTable(
   };
 
   const drawHeader = () => {
-    doc.font("Helvetica-Bold").fontSize(16).fillColor("#0b1220").text(title, margin, y);
+    doc.font("BodyBold").fontSize(16).fillColor("#0b1220").text(title, margin, y);
     y += 18;
 
-    doc.font("Helvetica").fontSize(10).fillColor("#6b7280").text(periodLabel, margin, y);
+    doc.font("Body").fontSize(10).fillColor("#6b7280").text(periodLabel, margin, y);
     y += 18;
 
     doc.fillColor("#eef2ff").rect(margin, y, usable, 22).fill();
 
-    doc.fillColor("#0b1220").font("Helvetica-Bold").fontSize(9);
+    doc.fillColor("#0b1220").font("BodyBold").fontSize(9);
     let x = margin;
     for (let i = 0; i < headers.length; i++) {
       doc.text(headers[i], x + 4, y + 6, { width: widths[i] - 8, ellipsis: true });
@@ -155,7 +166,7 @@ function drawPDFTable(
     }
 
     y += 24;
-    doc.font("Helvetica").fontSize(9).fillColor("#111827");
+    doc.font("Body").fontSize(9).fillColor("#111827");
   };
 
   const rowH = 18;
@@ -183,11 +194,13 @@ function drawPDFTable(
   if (y + 70 > doc.page.height - margin) newPage();
 
   doc.fillColor("#ffffff").rect(margin, y + 12, usable, 54).fillAndStroke("#ffffff", "#e5e7eb");
-  doc.fillColor("#0b1220").font("Helvetica-Bold").fontSize(10).text("Totaux", margin + 10, y + 18);
-  doc.font("Helvetica").fontSize(10).fillColor("#111827");
+
+  doc.fillColor("#0b1220").font("BodyBold").fontSize(10).text("Totaux", margin + 10, y + 18);
+
+  doc.font("Body").fontSize(10).fillColor("#111827");
   doc.text(`Sous-total: ${euro(totals.subtotal)} €`, margin + 120, y + 18);
   doc.text(`Livraison: ${euro(totals.shipping)} €`, margin + 320, y + 18);
-  doc.font("Helvetica-Bold").text(`Total: ${euro(totals.total)} €`, margin + 480, y + 18);
+  doc.font("BodyBold").text(`Total: ${euro(totals.total)} €`, margin + 480, y + 18);
 }
 
 async function loadOrders(): Promise<Order[]> {
@@ -220,21 +233,17 @@ export async function GET(req: Request) {
       toDate = endOfDay(d);
     } else if (month) {
       const [y, m] = month.split("-").map((x) => Number(x));
-      if (!y || !m || m < 1 || m > 12) {
-        return NextResponse.json({ error: "Invalid month" }, { status: 400 });
-      }
+      if (!y || !m || m < 1 || m > 12) return NextResponse.json({ error: "Invalid month" }, { status: 400 });
       fromDate = startOfMonth(y, m);
       toDate = endOfMonth(y, m);
     } else if (from && to) {
       const a = new Date(from);
       const b = new Date(to);
-      if (isNaN(a.getTime()) || isNaN(b.getTime())) {
+      if (isNaN(a.getTime()) || isNaN(b.getTime()))
         return NextResponse.json({ error: "Invalid range" }, { status: 400 });
-      }
       fromDate = startOfDay(a);
       toDate = endOfDay(b);
     } else {
-      // défaut : 7 derniers jours
       const now = new Date();
       toDate = endOfDay(now);
       const past = new Date(now);
@@ -242,12 +251,7 @@ export async function GET(req: Request) {
       fromDate = startOfDay(past);
     }
 
-    // 🔎 logs utiles (Vercel / local)
-    console.log("[export] format:", format, "day:", day, "month:", month, "from:", from, "to:", to);
-    console.log("[export] range:", fromDate.toISOString(), "->", toDate.toISOString());
-
     const all = await loadOrders();
-    console.log("[export] orders loaded:", all.length);
 
     const filtered = all.filter((o) => {
       const d = parseCreatedAt(o.createdAt);
@@ -255,8 +259,6 @@ export async function GET(req: Request) {
       const t = d.getTime();
       return t >= fromDate.getTime() && t <= toDate.getTime();
     });
-
-    console.log("[export] orders filtered:", filtered.length);
 
     const headers = ["Date", "ID", "Email", "Statut", "Articles", "ST", "Ship", "Total"];
 
@@ -314,8 +316,15 @@ export async function GET(req: Request) {
       .slice(0, 10)}`;
 
     const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 40 });
-    const chunks: Buffer[] = [];
 
+    // ✅ Register fonts BEFORE writing text
+    const fontRegular = getFontPath("src/assets/fonts/Inter-Regular.ttf");
+    const fontBold = getFontPath("src/assets/fonts/Inter-Bold.ttf");
+    doc.registerFont("Body", fontRegular);
+    doc.registerFont("BodyBold", fontBold);
+    doc.font("Body");
+
+    const chunks: Buffer[] = [];
     doc.on("data", (c: Buffer) => chunks.push(c));
 
     const done = new Promise<Buffer>((resolve, reject) => {
@@ -347,13 +356,10 @@ export async function GET(req: Request) {
     });
   } catch (err: any) {
     console.error("[export] ERROR:", err);
-
-    // ✅ utile côté front (alert)
     return NextResponse.json(
       {
         error: "Export failed",
         message: err?.message || String(err),
-        // stack seulement en dev
         stack: process.env.NODE_ENV === "development" ? err?.stack : undefined,
       },
       { status: 500 }
