@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type Tab = { href: string; label: string };
 
@@ -30,9 +30,9 @@ type StatsResponse = {
   lowStock?: any[];
 };
 
-const LS_READ_KEY = "admin_notifs_read_v2";
-const LS_LAST_SEEN_ORDER_AT = "admin_last_seen_order_at_v2";
-const LS_LAST_ORDER_ID = "admin_last_order_id_v2";
+const LS_READ_KEY = "admin_notifs_read_v5";
+const LS_LAST_SEEN_ORDER_AT = "admin_last_seen_order_at_v5";
+const LS_LAST_ORDER_ID = "admin_last_order_id_v5";
 
 function loadReadSet(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -79,8 +79,16 @@ function toneIcon(t: AlertTone) {
   if (t === "danger") return "⚠";
   return "i";
 }
-function buildId(prefix: string, parts: (string | number | undefined)[]) {
-  return `${prefix}:${parts.map((p) => String(p ?? "")).join("|")}`;
+
+// IDs stables
+function idAlert(a: { tone: AlertTone; title: string; desc: string }) {
+  return `alert:${a.tone}:${a.title}:${a.desc}`;
+}
+function idOrder(orderId: string) {
+  return `order:${orderId}`;
+}
+function idStock(count: number) {
+  return `stock:${count}`;
 }
 
 type Toast = {
@@ -108,40 +116,39 @@ export default function AdminNavbar() {
 
   const pageTitle = useMemo(() => {
     return (
-      tabs.find((t) =>
-        t.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(t.href)
-      )?.label ?? "Dashboard"
+      tabs.find((t) => (t.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(t.href)))
+        ?.label ?? "Dashboard"
     );
   }, [pathname, tabs]);
 
-  // Quick search
   const [q, setQ] = useState("");
 
-  // Notifs
   const [notifs, setNotifs] = useState<AlertItem[]>([]);
   const [open, setOpen] = useState(false);
   const [read, setRead] = useState<Set<string>>(() => loadReadSet());
 
-  // Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
-  const unreadCount = useMemo(
-    () => notifs.filter((n) => !read.has(n.id)).length,
-    [notifs, read]
-  );
+  const unreadCount = useMemo(() => notifs.filter((n) => !read.has(n.id)).length, [notifs, read]);
 
   const pushToast = (t: Omit<Toast, "id">) => {
     const id = `toast:${Date.now()}:${Math.random().toString(16).slice(2)}`;
     const toast: Toast = { id, ...t };
     setToasts((prev) => [toast, ...prev].slice(0, 3));
-    window.setTimeout(() => {
-      setToasts((prev) => prev.filter((x) => x.id !== id));
-    }, 4200);
+    window.setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 4200);
   };
 
+  const pruneReadSet = (set: Set<string>, keepIds: string[]) => {
+    const keep = new Set(keepIds);
+    const next = new Set<string>();
+    for (const id of set) if (keep.has(id)) next.add(id);
+    return next;
+  };
+
+  // ✅ IMPORTANT: on n’affiche la notif "newest order" QUE si elle est nouvelle depuis la dernière vue
   const fetchNotifs = async (reason: "poll" | "manual" | "focus" = "poll") => {
     try {
       if (typeof window === "undefined") return;
@@ -166,60 +173,61 @@ export default function AdminNavbar() {
       // 1) Alerts backend
       for (const a of baseAlerts) {
         computed.push({
-          id: buildId("alert", [a.tone, a.title, a.desc]),
+          id: idAlert(a),
           tone: a.tone,
           title: a.title,
           desc: a.desc,
-          actionHref: a.title.toLowerCase().includes("commande")
-            ? "/admin/orders"
-            : "/admin",
+          actionHref: a.title.toLowerCase().includes("commande") ? "/admin/orders" : "/admin",
         });
       }
 
-      // 2) Smart notif newest order
+      // 2) Smart notif newest order (ONLY IF NEW)
       const newest = lastOrders[0];
       const newestAt = newest?.createdAt ? Date.parse(newest.createdAt) : 0;
 
       if (newest && newestAt) {
         const isPaid = (newest.status || "") === "paid";
-
-        const n: AlertItem = {
-          id: buildId("order", [newest.id, newest.status, newestAt]),
-          tone: isPaid ? "success" : "warning",
-          title: isPaid ? "Commande payée" : "Commande à traiter",
-          desc: `${newest.email ?? "Client"} • ${(newest.total ?? 0).toFixed(2)} €`,
-          actionHref: `/admin/orders?q=${encodeURIComponent(newest.email ?? newest.id)}`,
-          meta: {
-            orderId: newest.id,
-            email: newest.email,
-            amount: newest.total,
-            createdAt: newest.createdAt,
-          },
-        };
-
-        computed.unshift(n);
-
-        // Toast live si nouvelle depuis dernière vue
         const lastSeen = getLastSeenAt();
         const lastId = getLastOrderId();
+
         const isNew = newestAt > lastSeen && newest.id !== lastId;
 
-        if (isNew && reason !== "manual") {
-          pushToast({
-            tone: n.tone,
-            title: isPaid ? "Nouvelle commande payée" : "Nouvelle commande",
-            desc: n.desc,
-            href: n.actionHref,
-          });
+        if (isNew) {
+          const n: AlertItem = {
+            id: idOrder(newest.id),
+            tone: isPaid ? "success" : "warning",
+            title: isPaid ? "Commande payée" : "Commande à traiter",
+            desc: `${newest.email ?? "Client"} • ${(newest.total ?? 0).toFixed(2)} €`,
+            actionHref: `/admin/orders?q=${encodeURIComponent(newest.email ?? newest.id)}`,
+            meta: {
+              orderId: newest.id,
+              email: newest.email,
+              amount: newest.total,
+              createdAt: newest.createdAt,
+            },
+          };
+
+          computed.unshift(n);
+
+          if (reason !== "manual") {
+            pushToast({
+              tone: n.tone,
+              title: isPaid ? "Nouvelle commande payée" : "Nouvelle commande",
+              desc: n.desc,
+              href: n.actionHref,
+            });
+          }
         }
 
+        // ✅ on sauvegarde quand même le dernier id vu côté polling
+        // (mais la "disparition" est gérée via lastSeenAt quand tu ouvres / marques lu)
         setLastOrderId(newest.id);
       }
 
       // 3) Low stock
       if (Array.isArray(json.lowStock) && json.lowStock.length > 0) {
         computed.push({
-          id: buildId("stock", [json.lowStock.length]),
+          id: idStock(json.lowStock.length),
           tone: "warning",
           title: "Stock faible",
           desc: `${json.lowStock.length} produit(s) à surveiller.`,
@@ -228,12 +236,18 @@ export default function AdminNavbar() {
       }
 
       setNotifs(computed);
+
+      // prune read
+      setRead((prev) => {
+        const next = pruneReadSet(prev, computed.map((x) => x.id));
+        if (next.size !== prev.size) saveReadSet(next);
+        return next;
+      });
     } catch {
       // no-op
     }
   };
 
-  // Initial + polling
   useEffect(() => {
     fetchNotifs("poll");
     const id = window.setInterval(() => fetchNotifs("poll"), 20_000);
@@ -241,7 +255,6 @@ export default function AdminNavbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refresh when tab becomes visible
   useEffect(() => {
     const onVis = () => {
       if (document.visibilityState === "visible") fetchNotifs("focus");
@@ -251,7 +264,6 @@ export default function AdminNavbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
@@ -265,12 +277,10 @@ export default function AdminNavbar() {
     return () => window.removeEventListener("mousedown", onDown);
   }, [open]);
 
-  // Ctrl/Cmd+K + Esc
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const key = typeof e.key === "string" ? e.key : "";
       if (!key) return;
-
       // @ts-ignore
       if (e.isComposing) return;
 
@@ -304,6 +314,8 @@ export default function AdminNavbar() {
     notifs.forEach((n) => next.add(n.id));
     setRead(next);
     saveReadSet(next);
+
+    // ✅ c’est CA qui fait “disparaître” la notif newest order au prochain fetch
     setLastSeenAt(Date.now());
   };
 
@@ -312,7 +324,38 @@ export default function AdminNavbar() {
     next.add(id);
     setRead(next);
     saveReadSet(next);
+
+    // ✅ pareil
+    setLastSeenAt(Date.now());
   };
+
+  const togglePanel = async () => {
+    const willOpen = !open;
+    setOpen(willOpen);
+    if (willOpen) {
+      // tu ouvres le centre -> tu "as vu"
+      setLastSeenAt(Date.now());
+      markAllRead();
+    }
+  };
+
+  const refreshAndClear = async () => {
+    await fetchNotifs("manual");
+    setLastSeenAt(Date.now());
+    markAllRead();
+  };
+
+  const asClickable = (onClick: () => void) => ({
+    role: "button" as const,
+    tabIndex: 0,
+    onClick,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onClick();
+      }
+    },
+  });
 
   return (
     <>
@@ -347,7 +390,7 @@ export default function AdminNavbar() {
           </Link>
 
           <div className="admin-title-zone">
-            <h1 className="admin-h1">{pageTitle}</h1>
+            <h1 className="admin-h1">Dashboard</h1>
             <p className="admin-hint">Gérez produits, commandes et livraisons.</p>
           </div>
 
@@ -369,7 +412,7 @@ export default function AdminNavbar() {
               <button
                 ref={btnRef}
                 type="button"
-                onClick={() => setOpen((v) => !v)}
+                onClick={togglePanel}
                 className="admin-btn admin-btn-ghost"
               >
                 Notifications
@@ -390,7 +433,7 @@ export default function AdminNavbar() {
                       <button
                         type="button"
                         className="admin-notifs-iconbtn"
-                        onClick={() => fetchNotifs("manual")}
+                        onClick={refreshAndClear}
                         title="Rafraîchir"
                       >
                         ↻
@@ -412,21 +455,18 @@ export default function AdminNavbar() {
                     ) : (
                       notifs.map((n) => {
                         const isUnread = !read.has(n.id);
-
-                        // ✅ capture meta values to satisfy TS
                         const orderId = n.meta?.orderId;
                         const email = n.meta?.email;
 
                         return (
                           <div key={n.id} className={`admin-notif-row ${isUnread ? "unread" : ""}`}>
-                            <button
-                              type="button"
+                            <div
                               className="admin-notif-main"
-                              onClick={() => {
+                              {...asClickable(() => {
                                 markOneRead(n.id);
                                 setOpen(false);
                                 router.push(n.actionHref ?? "/admin");
-                              }}
+                              })}
                             >
                               <span className={`admin-notif-dot tone-${n.tone}`} aria-hidden />
                               <div className="admin-notif-body">
@@ -434,6 +474,7 @@ export default function AdminNavbar() {
                                   <span className="admin-notif-badge">{toneLabel(n.tone)}</span>
                                   <span className="admin-notif-title">{n.title}</span>
                                 </div>
+
                                 <div className="admin-notif-desc">{n.desc}</div>
 
                                 {(email || orderId) && (
@@ -446,9 +487,7 @@ export default function AdminNavbar() {
                                           e.stopPropagation();
                                           markOneRead(n.id);
                                           setOpen(false);
-                                          router.push(
-                                            `/admin/orders?q=${encodeURIComponent(orderId)}`
-                                          );
+                                          router.push(`/admin/orders?q=${encodeURIComponent(orderId)}`);
                                         }}
                                       >
                                         Voir
@@ -471,7 +510,7 @@ export default function AdminNavbar() {
                                   </div>
                                 )}
                               </div>
-                            </button>
+                            </div>
 
                             <button
                               type="button"
@@ -502,8 +541,7 @@ export default function AdminNavbar() {
         <div className="admin-tabs">
           <div className="admin-tabs-inner">
             {tabs.map((t) => {
-              const active =
-                t.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(t.href);
+              const active = t.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(t.href);
               return (
                 <Link key={t.href} href={t.href} className={`admin-tab ${active ? "active" : ""}`}>
                   {t.label}
