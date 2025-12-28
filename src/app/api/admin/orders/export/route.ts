@@ -1,3 +1,4 @@
+// src/app/api/admin/orders/export/route.ts
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { Timestamp } from "firebase-admin/firestore";
@@ -111,6 +112,16 @@ function toCSV(headers: string[], rows: string[][]) {
   return [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\n");
 }
 
+/* ---------- PDF helpers (pdf-lib uses WinAnsi for StandardFonts) ---------- */
+function sanitizePdfText(s: string) {
+  return String(s ?? "")
+    .replaceAll("→", "->")
+    .replaceAll("•", "-")
+    .replaceAll("—", "-")
+    .replaceAll("…", "...")
+    .replaceAll("\u00A0", " "); // NBSP
+}
+
 async function loadOrders(): Promise<Order[]> {
   const snap = await dbAdmin.collection("pending_orders").orderBy("createdAt", "desc").get();
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as any;
@@ -129,26 +140,39 @@ async function buildOrdersPdf(opts: {
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const pageSize: [number, number] = [842, 595]; // A4 landscape
+  // A4 landscape
+  const pageSize: [number, number] = [842, 595];
   let page = pdfDoc.addPage(pageSize);
 
   const margin = 32;
   const width = page.getWidth();
   const height = page.getHeight();
-
   const usableW = width - margin * 2;
 
-  // column widths (approx)
-  const colW = [90, 140, 180, 90, 220, 60, 60, 70]; // sum ~910 -> scaled below
-  const sum = colW.reduce((a, b) => a + b, 0);
+  // column widths (scaled)
+  const base = [90, 140, 180, 90, 220, 60, 60, 70];
+  const sum = base.reduce((a, b) => a + b, 0);
   const scale = sum > usableW ? usableW / sum : 1;
-  const widths = colW.map((w) => w * scale);
+  const widths = base.map((w) => w * scale);
 
   const rowH = 16;
   let y = height - margin;
 
-  const drawText = (text: string, x: number, y: number, bold = false, size = 9, color = rgb(0, 0, 0)) => {
-    page.drawText(text ?? "", { x, y, size, font: bold ? fontBold : font, color });
+  const drawText = (
+    text: string,
+    x: number,
+    yPos: number,
+    bold = false,
+    size = 9,
+    color = rgb(0, 0, 0)
+  ) => {
+    page.drawText(sanitizePdfText(text), {
+      x,
+      y: yPos,
+      size,
+      font: bold ? fontBold : font,
+      color,
+    });
   };
 
   const newPage = () => {
@@ -159,10 +183,11 @@ async function buildOrdersPdf(opts: {
   const drawHeader = () => {
     drawText(opts.title, margin, y, true, 16, rgb(0.04, 0.07, 0.13));
     y -= 18;
-    drawText(opts.periodLabel, margin, y, false, 10, rgb(0.42, 0.45, 0.50));
+
+    drawText(opts.periodLabel, margin, y, false, 10, rgb(0.42, 0.45, 0.5));
     y -= 18;
 
-    // header background bar (light)
+    // light header bar
     page.drawRectangle({
       x: margin,
       y: y - 10,
@@ -181,7 +206,6 @@ async function buildOrdersPdf(opts: {
 
   drawHeader();
 
-  // rows
   for (let r = 0; r < opts.rows.length; r++) {
     if (y < margin + 80) {
       newPage();
@@ -190,7 +214,6 @@ async function buildOrdersPdf(opts: {
 
     const row = opts.rows[r];
 
-    // zebra
     if (r % 2 === 1) {
       page.drawRectangle({
         x: margin,
@@ -203,10 +226,9 @@ async function buildOrdersPdf(opts: {
 
     let x = margin;
     for (let c = 0; c < row.length; c++) {
-      const t = String(row[c] ?? "");
-      // simple truncate
-      const maxChars = c === 4 ? 40 : c === 2 ? 26 : 18;
-      const s = t.length > maxChars ? t.slice(0, maxChars - 1) + "…" : t;
+      const t = sanitizePdfText(String(row[c] ?? ""));
+      const maxChars = c === 4 ? 44 : c === 2 ? 28 : 18;
+      const s = t.length > maxChars ? t.slice(0, maxChars - 1) + "…" : t; // "…" will be sanitized on draw
 
       drawText(s, x + 3, y, false, 9, rgb(0.07, 0.09, 0.12));
       x += widths[c];
@@ -215,11 +237,9 @@ async function buildOrdersPdf(opts: {
     y -= rowH;
   }
 
-  // totals box
-  if (y < margin + 60) {
-    newPage();
-  }
+  if (y < margin + 60) newPage();
 
+  // totals box
   page.drawRectangle({
     x: margin,
     y: y - 40,
@@ -268,8 +288,9 @@ export async function GET(req: Request) {
     } else if (from && to) {
       const a = new Date(from);
       const b = new Date(to);
-      if (isNaN(a.getTime()) || isNaN(b.getTime()) || a > b)
+      if (isNaN(a.getTime()) || isNaN(b.getTime()) || a > b) {
         return NextResponse.json({ error: "Invalid range" }, { status: 400 });
+      }
       fromDate = startOfDay(a);
       toDate = endOfDay(b);
     } else {
@@ -280,7 +301,10 @@ export async function GET(req: Request) {
       fromDate = startOfDay(past);
     }
 
-    const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate.toISOString().slice(0, 10)}`;
+    const periodLabel = sanitizePdfText(
+      `Période : ${fromDate.toISOString().slice(0, 10)} -> ${toDate.toISOString().slice(0, 10)}`
+    );
+
     const all = await loadOrders();
 
     const filtered = all.filter((o) => {
@@ -311,7 +335,7 @@ export async function GET(req: Request) {
                 return `${n} x${q}`;
               })
               .slice(0, 3)
-              .join(" • ") + (items.length > 3 ? " …" : "");
+              .join(" - ") + (items.length > 3 ? " ..." : "");
 
       const st = getSubtotal(o);
       const sh = getShipping(o);
@@ -321,11 +345,21 @@ export async function GET(req: Request) {
       sumShip += sh;
       sumTotal += tt;
 
-      return [dateStr, o.id, o.email || "—", o.status || "—", itemsLabel, euro(st), euro(sh), euro(tt)];
+      return [
+        sanitizePdfText(dateStr),
+        sanitizePdfText(o.id),
+        sanitizePdfText(o.email || "—"),
+        sanitizePdfText(o.status || "—"),
+        sanitizePdfText(itemsLabel),
+        sanitizePdfText(euro(st)),
+        sanitizePdfText(euro(sh)),
+        sanitizePdfText(euro(tt)),
+      ];
     });
 
     const filenameBase = `orders_${fromDate.toISOString().slice(0, 10)}_${toDate.toISOString().slice(0, 10)}`;
 
+    // CSV
     if (format === "csv") {
       const csv = toCSV(headers, rows);
       return new Response(csv, {
@@ -338,11 +372,11 @@ export async function GET(req: Request) {
       });
     }
 
-    // PDF via pdf-lib (no pdfkit)
+    // PDF (pdf-lib, sans pdfkit)
     const pdfBuffer = await buildOrdersPdf({
       title: "Export commandes",
-      periodLabel: `${periodLabel} • ${filtered.length} commande(s)`,
-      headers,
+      periodLabel: `${periodLabel} - ${filtered.length} commande(s)`,
+      headers: headers.map(sanitizePdfText),
       rows,
       totals: { subtotal: sumSubtotal, shipping: sumShip, total: sumTotal },
     });
