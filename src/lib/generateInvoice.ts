@@ -1,30 +1,20 @@
 // src/lib/generateInvoice.ts
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
-// ✅ Optionnel (pour QR code). Si tu ne veux pas l’installer, tu peux supprimer tout le bloc QR.
-// npm i qrcode
-let QRCode: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  QRCode = require("qrcode");
-} catch {
-  QRCode = null;
-}
-
 type InvoiceCompany = {
   name: string; // "LazurCo"
-  line1?: string; // "189 avenue de Fabron"
-  line2?: string; // "La Tropezienne"
-  zipCity?: string; // "06200 Nice"
-  country?: string; // "FRANCE"
-  capital?: string; // "Capital : 5000 €"
-  siret?: string; // "SIRET : ..."
-  ape?: string; // "APE : ..."
-  vat?: string; // "TVA : ..."
-  contactLabel?: string; // "Contact : Olivier PETRI"
-  phone?: string; // "Tel : ..."
-  email?: string; // "Email : ..."
-  website?: string; // "www.massme.fr"
+  line1?: string;
+  line2?: string;
+  zipCity?: string;
+  country?: string;
+  capital?: string;
+  siret?: string;
+  ape?: string;
+  vat?: string;
+  contactLabel?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
 };
 
 type InvoiceClient = {
@@ -46,7 +36,7 @@ type InvoiceItem = {
   unitHT: number; // prix unitaire HT
 };
 
-type InvoiceData = {
+export type InvoiceData = {
   invoiceNumber: string; // ex: "F250901"
   dateISO?: string; // ex: "2025-09-02" (sinon aujourd’hui)
   orderId?: string; // ex: "12937"
@@ -57,7 +47,6 @@ type InvoiceData = {
   items: InvoiceItem[];
   company: InvoiceCompany;
   client: InvoiceClient;
-  qrValue?: string; // ex: lien vers commande/facture
   paidLabel?: string; // ex: "FACTURE ACQUITTEE"
 };
 
@@ -74,16 +63,7 @@ function money(n: number) {
   return v.toFixed(2);
 }
 
-function clamp(n: number, a: number, b: number) {
-  return Math.max(a, Math.min(b, n));
-}
-
-function splitLinesByWidth(
-  text: string,
-  font: any,
-  fontSize: number,
-  maxWidth: number
-) {
+function splitLinesByWidth(text: string, font: any, fontSize: number, maxWidth: number) {
   const words = (text || "").replace(/\s+/g, " ").trim().split(" ");
   const lines: string[] = [];
   let cur = "";
@@ -91,27 +71,14 @@ function splitLinesByWidth(
   for (const w of words) {
     const test = cur ? `${cur} ${w}` : w;
     const width = font.widthOfTextAtSize(test, fontSize);
-    if (width <= maxWidth) {
-      cur = test;
-    } else {
+    if (width <= maxWidth) cur = test;
+    else {
       if (cur) lines.push(cur);
       cur = w;
     }
   }
   if (cur) lines.push(cur);
   return lines.length ? lines : [""];
-}
-
-async function embedQrPng(pdfDoc: PDFDocument, value: string) {
-  if (!QRCode) return null;
-  const dataUrl = await QRCode.toDataURL(value, {
-    errorCorrectionLevel: "M",
-    margin: 1,
-    width: 220,
-  });
-  const base64 = dataUrl.split(",")[1];
-  const bytes = Buffer.from(base64, "base64");
-  return await pdfDoc.embedPng(bytes);
 }
 
 export async function generateInvoicePDF(data: InvoiceData) {
@@ -124,7 +91,7 @@ export async function generateInvoicePDF(data: InvoiceData) {
   const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Palette proche screenshot (gris/brun)
+  // Palette proche screenshot
   const ink = rgb(0.07, 0.07, 0.07);
   const muted = rgb(0.35, 0.35, 0.35);
   const line = rgb(0.75, 0.75, 0.75);
@@ -132,18 +99,9 @@ export async function generateInvoicePDF(data: InvoiceData) {
   const bgSoft = rgb(0.96, 0.96, 0.96);
   const danger = rgb(0.78, 0.12, 0.12);
 
-  // Marges
   const M = 42;
 
-  // Helpers draw
-  const drawText = (
-    t: string,
-    x: number,
-    y: number,
-    size: number,
-    bold = false,
-    color = ink
-  ) => {
+  const drawText = (t: string, x: number, y: number, size: number, bold = false, color = ink) => {
     page.drawText(t ?? "", {
       x,
       y,
@@ -182,12 +140,12 @@ export async function generateInvoicePDF(data: InvoiceData) {
   };
 
   // ----------------------------
-  // Header left: "LazurCo" + infos société
+  // Header left : "LazurCo" + infos
   // ----------------------------
   const c = data.company;
 
-  // "Logo" texte (si tu veux remplacer par image plus tard)
-  drawText(c.name || "LazurCo", M, height - M - 16, 30, false, rgb(0.98, 0.72, 0.30)); // jaune/or
+  // "Logo" texte
+  drawText(c.name || "LazurCo", M, height - M - 16, 30, false, rgb(0.98, 0.72, 0.30));
   let yL = height - M - 44;
 
   const leftLines = [
@@ -215,35 +173,15 @@ export async function generateInvoicePDF(data: InvoiceData) {
     yL -= 12;
   });
 
-  // QR code box (bas gauche)
-  const qrX = M;
-  const qrY = height - 330;
-  const qrSize = 110;
-
-  drawBox(qrX, qrY, qrSize, qrSize, { stroke: line, r: 0 });
-
-  if (data.qrValue && QRCode) {
-    try {
-      const qrImg = await embedQrPng(pdfDoc, data.qrValue);
-      if (qrImg) {
-        // padding 8
-        page.drawImage(qrImg, {
-          x: qrX + 8,
-          y: qrY + 8,
-          width: qrSize - 16,
-          height: qrSize - 16,
-        });
-      }
-    } catch {
-      // si QR fail -> on laisse le cadre vide
-    }
-  } else {
-    // placeholder simple
-    drawText("QR", qrX + 44, qrY + 50, 18, true, muted);
-  }
+  // (QR code supprimé) -> on laisse juste un espace vide comme sur ton modèle à gauche
+  const blankX = M;
+  const blankY = height - 330;
+  const blankW = 110;
+  const blankH = 110;
+  drawBox(blankX, blankY, blankW, blankH, { stroke: line, r: 0 });
 
   // ----------------------------
-  // Header right: "FACTURE" + Client box
+  // Header right : "FACTURE" + Client
   // ----------------------------
   const titleBoxW = 300;
   const titleBoxH = 46;
@@ -253,13 +191,11 @@ export async function generateInvoicePDF(data: InvoiceData) {
   drawBox(titleX, titleY, titleBoxW, titleBoxH, { stroke: muted, r: 8 });
   drawText("FACTURE", titleX + 105, titleY + 16, 12, true, ink);
 
-  // Client box
   const clientBoxW = 320;
   const clientBoxH = 110;
   const clientX = width - M - clientBoxW;
   const clientY = titleY - 22 - clientBoxH;
 
-  // petit bandeau "Client"
   drawBox(clientX, clientY, clientBoxW, clientBoxH, { stroke: line, r: 0 });
   page.drawRectangle({
     x: clientX,
@@ -301,7 +237,7 @@ export async function generateInvoicePDF(data: InvoiceData) {
   drawText("N° Facture :", infoX + 290, dateLabelY, 9, true, ink);
   drawText(data.invoiceNumber, infoX + 390, dateLabelY, 9, true, ink);
 
-  // zone grisée dessous (comme l’exemple)
+  // zone grisée
   const greyBoxY = dateLabelY - 76;
   const greyBoxH = 72;
   drawBox(infoX, greyBoxY, infoW, greyBoxH, { fill: rgb(0.97, 0.97, 0.97), stroke: line, r: 0 });
@@ -326,7 +262,7 @@ export async function generateInvoicePDF(data: InvoiceData) {
 
   const col = {
     ref: 70,
-    des: tableW - (70 + 60 + 90 + 90), // auto
+    des: tableW - (70 + 60 + 90 + 90),
     qty: 60,
     unit: 90,
     total: 90,
@@ -335,7 +271,6 @@ export async function generateInvoicePDF(data: InvoiceData) {
   const headH = 18;
   const rowH = 18;
 
-  // Header row
   page.drawRectangle({ x: tableX, y: tableYTop - headH, width: tableW, height: headH, color: bar });
   drawText("Reference", tableX + 6, tableYTop - 12, 8, true, rgb(1, 1, 1));
   drawText("Designation", tableX + col.ref + 6, tableYTop - 12, 8, true, rgb(1, 1, 1));
@@ -343,49 +278,34 @@ export async function generateInvoicePDF(data: InvoiceData) {
   drawText("Prix unitaire HT", tableX + col.ref + col.des + col.qty + 6, tableYTop - 12, 8, true, rgb(1, 1, 1));
   drawText("Prix Total HT", tableX + col.ref + col.des + col.qty + col.unit + 6, tableYTop - 12, 8, true, rgb(1, 1, 1));
 
-  // Grid vertical lines
   const xRef = tableX + col.ref;
   const xDes = xRef + col.des;
   const xQty = xDes + col.qty;
   const xUnit = xQty + col.unit;
 
-  // Items + shipping as line
   const vatRate = typeof data.vatRate === "number" ? data.vatRate : 0.2;
   const items = Array.isArray(data.items) ? data.items : [];
   const shippingHT = Number(data.shippingHT || 0);
 
-  const lines: InvoiceItem[] = [...items];
+  const lines = [...items];
   if (shippingHT > 0) {
-    lines.push({
-      ref: "",
-      name: "Livraison a domicile",
-      qty: 1,
-      unitHT: shippingHT,
-    });
+    lines.push({ ref: "", name: "Livraison a domicile", qty: 1, unitHT: shippingHT });
   }
 
-  // Totals
   const totalHT = lines.reduce((s, it) => s + (Number(it.unitHT) || 0) * (Number(it.qty) || 0), 0);
   const tva = totalHT * vatRate;
   const totalTTC = totalHT + tva;
 
-  // Body rows
   let y = tableYTop - headH;
-  const maxRows = Math.max(6, lines.length); // pour laisser des lignes vides comme l’exemple
+  const maxRows = Math.max(6, lines.length);
 
   for (let i = 0; i < maxRows; i++) {
     const isEven = i % 2 === 1;
     const rowY = y - rowH;
 
-    // background
-    if (isEven) {
-      page.drawRectangle({ x: tableX, y: rowY, width: tableW, height: rowH, color: bgSoft });
-    }
+    if (isEven) page.drawRectangle({ x: tableX, y: rowY, width: tableW, height: rowH, color: bgSoft });
 
-    // horizontal line
     drawLine(tableX, rowY, tableX + tableW, rowY);
-
-    // vertical lines
     drawLine(xRef, y, xRef, rowY);
     drawLine(xDes, y, xDes, rowY);
     drawLine(xQty, y, xQty, rowY);
@@ -393,7 +313,6 @@ export async function generateInvoicePDF(data: InvoiceData) {
     drawLine(tableX, y, tableX, rowY);
     drawLine(tableX + tableW, y, tableX + tableW, rowY);
 
-    // content
     const it = lines[i];
     if (it) {
       const ref = it.ref || "";
@@ -401,15 +320,11 @@ export async function generateInvoicePDF(data: InvoiceData) {
       const unit = Number(it.unitHT || 0);
       const rowTotal = qty * unit;
 
-      // designation (wrap)
-      const name = it.name || "";
-      const desc = it.description ? ` - ${it.description}` : "";
-      const designation = (name + desc).trim();
+      const designation = `${it.name || ""}${it.description ? ` - ${it.description}` : ""}`.trim();
 
       drawText(ref, tableX + 6, rowY + 5, 8, false, ink);
 
-      const maxDesW = col.des - 12;
-      const desLines = splitLinesByWidth(designation, fontRegular, 8, maxDesW).slice(0, 2);
+      const desLines = splitLinesByWidth(designation, fontRegular, 8, col.des - 12).slice(0, 2);
       drawText(desLines[0] || "", tableX + col.ref + 6, rowY + 5, 8, false, ink);
       if (desLines[1]) drawText(desLines[1], tableX + col.ref + 6, rowY - 6, 8, false, ink);
 
@@ -421,7 +336,6 @@ export async function generateInvoicePDF(data: InvoiceData) {
     y = rowY;
   }
 
-  // bottom border
   drawLine(tableX, y, tableX + tableW, y);
 
   // Totals block (droite)
@@ -429,7 +343,6 @@ export async function generateInvoicePDF(data: InvoiceData) {
   const totalsX = tableX + tableW - totalsW;
   const totalsY = y - 60;
 
-  // lines separator
   drawLine(totalsX, y, totalsX, totalsY + 60);
 
   drawText("Total HT", totalsX + 10, totalsY + 40, 9, false, muted);
@@ -442,7 +355,7 @@ export async function generateInvoicePDF(data: InvoiceData) {
   drawText(`${money(totalTTC)} €`, totalsX + 140, totalsY + 8, 9, true, ink);
 
   // ----------------------------
-  // Conditions de paiement + "FACTURE ACQUITTEE"
+  // Conditions + acquittée
   // ----------------------------
   const payY = totalsY - 70;
   drawText("Conditions de paiement :", M, payY + 44, 9, true, ink);
@@ -464,12 +377,10 @@ export async function generateInvoicePDF(data: InvoiceData) {
     }
   }
 
-  // Label acquittée (rouge au centre)
-  const paidLabel = data.paidLabel || "FACTURE ACQUITTEE";
-  drawText(paidLabel, width / 2 + 40, payY + 10, 10, true, danger);
+  drawText(data.paidLabel || "FACTURE ACQUITTEE", width / 2 + 40, payY + 10, 10, true, danger);
 
   // ----------------------------
-  // Footer "Reserve de propriete"
+  // Footer
   // ----------------------------
   const footerBarY = 56;
   page.drawRectangle({ x: M, y: footerBarY, width: width - M * 2, height: 10, color: bar });
@@ -484,7 +395,6 @@ export async function generateInvoicePDF(data: InvoiceData) {
     yF -= 10;
   }
 
-  // Done
   const bytes = await pdfDoc.save();
   return Buffer.from(bytes);
 }
