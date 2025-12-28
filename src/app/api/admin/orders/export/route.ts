@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import PDFDocument from "pdfkit";
-import { dbAdmin } from "@/lib/firebase.admin"; // ✅ ton Admin SDK
+import { dbAdmin } from "@/lib/firebase.admin";
 import { Timestamp } from "firebase-admin/firestore";
 
 export const runtime = "nodejs";
@@ -57,29 +57,21 @@ function endOfMonth(year: number, month1to12: number) {
 function parseCreatedAt(value: any): Date | null {
   if (!value) return null;
 
-  // Firestore Timestamp (Admin)
   if (value instanceof Timestamp) return value.toDate();
-
-  // Firestore Timestamp-like
   if (typeof value === "object" && typeof value.toDate === "function") {
     try {
       const d = value.toDate();
       if (d instanceof Date && !isNaN(d.getTime())) return d;
     } catch {}
   }
-
-  // ISO string
   if (typeof value === "string") {
     const d = new Date(value);
     if (!isNaN(d.getTime())) return d;
   }
-
-  // number ms
   if (typeof value === "number") {
     const d = new Date(value);
     if (!isNaN(d.getTime())) return d;
   }
-
   return null;
 }
 
@@ -90,12 +82,10 @@ function getItemPrice(it: OrderItem): number {
   if (p && typeof p === "object" && typeof p.eur === "number") return p.eur;
   return 0;
 }
-
 function getSubtotal(o: Order): number {
   const items = Array.isArray(o.items) ? o.items : [];
   return items.reduce((sum, it) => sum + getItemPrice(it) * (it.quantity ?? 1), 0);
 }
-
 function getShipping(o: Order): number {
   const m = o.shippingMethod?.price;
   if (typeof m === "number") return m;
@@ -103,13 +93,11 @@ function getShipping(o: Order): number {
   if (typeof o.shippingPrice === "number") return o.shippingPrice;
   return 0;
 }
-
 function getTotal(o: Order): number {
   if (typeof o.amount_total === "number") return o.amount_total / 100;
   if (typeof o.total === "number") return o.total;
   return getSubtotal(o) + getShipping(o);
 }
-
 function euro(n: number) {
   return (Math.round(n * 100) / 100).toFixed(2);
 }
@@ -124,7 +112,7 @@ function toCSV(headers: string[], rows: string[][]) {
   return [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\n");
 }
 
-// ---------- PDF Table (NO TS type on PDFDocument) ----------
+// ---------- PDF table (doc:any => plus d'erreur TS) ----------
 function drawPDFTable(
   doc: any,
   title: string,
@@ -137,22 +125,10 @@ function drawPDFTable(
   const pageWidth = doc.page.width;
   const usable = pageWidth - margin * 2;
 
-  // Column widths (adjustable)
-  const colW = [
-    85,  // date
-    115, // order id
-    170, // email
-    90,  // status
-    220, // items
-    60,  // subtotal
-    60,  // ship
-    60,  // total
-  ];
-
-  // If too wide, scale down proportionally
-  const sumW = colW.reduce((a, b) => a + b, 0);
+  const baseW = [85, 115, 170, 90, 220, 60, 60, 60];
+  const sumW = baseW.reduce((a: number, b: number) => a + b, 0);
   const scale = sumW > usable ? usable / sumW : 1;
-  const widths = colW.map((w) => Math.floor(w * scale));
+  const widths = baseW.map((w: number) => Math.floor(w * scale));
 
   let y = margin;
 
@@ -162,30 +138,15 @@ function drawPDFTable(
   };
 
   const drawHeader = () => {
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .fillColor("#0b1220")
-      .text(title, margin, y);
-
+    doc.font("Helvetica-Bold").fontSize(16).fillColor("#0b1220").text(title, margin, y);
     y += 18;
 
-    doc
-      .font("Helvetica")
-      .fontSize(10)
-      .fillColor("#6b7280")
-      .text(periodLabel, margin, y);
-
+    doc.font("Helvetica").fontSize(10).fillColor("#6b7280").text(periodLabel, margin, y);
     y += 18;
 
-    // Header row background
-    doc
-      .fillColor("#eef2ff")
-      .rect(margin, y, usable, 22)
-      .fill();
+    doc.fillColor("#eef2ff").rect(margin, y, usable, 22).fill();
 
     doc.fillColor("#0b1220").font("Helvetica-Bold").fontSize(9);
-
     let x = margin;
     for (let i = 0; i < headers.length; i++) {
       doc.text(headers[i], x + 4, y + 6, { width: widths[i] - 8, ellipsis: true });
@@ -196,19 +157,18 @@ function drawPDFTable(
     doc.font("Helvetica").fontSize(9).fillColor("#111827");
   };
 
-  const rowHeight = 18;
+  const rowH = 18;
 
   drawHeader();
 
-  for (const r of rows) {
-    if (y + rowHeight > doc.page.height - margin - 80) {
+  rows.forEach((r, idx) => {
+    if (y + rowH > doc.page.height - margin - 80) {
       newPage();
       drawHeader();
     }
 
-    // zebra
-    if ((rows.indexOf(r) % 2) === 1) {
-      doc.fillColor("#fafafa").rect(margin, y - 2, usable, rowHeight).fill();
+    if (idx % 2 === 1) {
+      doc.fillColor("#fafafa").rect(margin, y - 2, usable, rowH).fill();
       doc.fillColor("#111827");
     }
 
@@ -217,21 +177,14 @@ function drawPDFTable(
       doc.text(r[i], x + 4, y, { width: widths[i] - 8, ellipsis: true });
       x += widths[i];
     }
-    y += rowHeight;
-  }
+    y += rowH;
+  });
 
-  // Totals box
-  if (y + 70 > doc.page.height - margin) {
-    newPage();
-  }
+  if (y + 70 > doc.page.height - margin) newPage();
 
-  doc
-    .fillColor("#ffffff")
-    .rect(margin, y + 12, usable, 54)
-    .fillAndStroke("#ffffff", "#e5e7eb");
+  doc.fillColor("#ffffff").rect(margin, y + 12, usable, 54).fillAndStroke("#ffffff", "#e5e7eb");
 
-  doc.fillColor("#0b1220").font("Helvetica-Bold").fontSize(10);
-  doc.text("Totaux", margin + 10, y + 18);
+  doc.fillColor("#0b1220").font("Helvetica-Bold").fontSize(10).text("Totaux", margin + 10, y + 18);
 
   doc.font("Helvetica").fontSize(10).fillColor("#111827");
   doc.text(`Sous-total: ${euro(totals.subtotal)} €`, margin + 120, y + 18);
@@ -240,7 +193,6 @@ function drawPDFTable(
 }
 
 async function loadOrders(): Promise<Order[]> {
-  // ✅ adapte la collection si besoin
   const snap = await dbAdmin.collection("pending_orders").orderBy("createdAt", "desc").get();
   const out: Order[] = [];
   snap.forEach((d) => out.push({ id: d.id, ...(d.data() as any) }));
@@ -253,13 +205,8 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
 
-  // format: pdf | csv
   const format = (searchParams.get("format") || "pdf").toLowerCase();
 
-  // presets:
-  // - day=YYYY-MM-DD
-  // - month=YYYY-MM
-  // - from=YYYY-MM-DD&to=YYYY-MM-DD
   const day = searchParams.get("day");
   const month = searchParams.get("month");
   const from = searchParams.get("from");
@@ -270,28 +217,22 @@ export async function GET(req: Request) {
 
   if (day) {
     const d = new Date(day);
-    if (isNaN(d.getTime())) {
-      return NextResponse.json({ error: "Invalid day" }, { status: 400 });
-    }
+    if (isNaN(d.getTime())) return NextResponse.json({ error: "Invalid day" }, { status: 400 });
     fromDate = startOfDay(d);
     toDate = endOfDay(d);
   } else if (month) {
     const [y, m] = month.split("-").map((x) => Number(x));
-    if (!y || !m || m < 1 || m > 12) {
-      return NextResponse.json({ error: "Invalid month" }, { status: 400 });
-    }
+    if (!y || !m || m < 1 || m > 12) return NextResponse.json({ error: "Invalid month" }, { status: 400 });
     fromDate = startOfMonth(y, m);
     toDate = endOfMonth(y, m);
   } else if (from && to) {
     const a = new Date(from);
     const b = new Date(to);
-    if (isNaN(a.getTime()) || isNaN(b.getTime())) {
+    if (isNaN(a.getTime()) || isNaN(b.getTime()))
       return NextResponse.json({ error: "Invalid range" }, { status: 400 });
-    }
     fromDate = startOfDay(a);
     toDate = endOfDay(b);
   } else {
-    // default: last 7 days
     const now = new Date();
     toDate = endOfDay(now);
     const past = new Date(now);
@@ -301,7 +242,6 @@ export async function GET(req: Request) {
 
   const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate.toISOString().slice(0, 10)}`;
 
-  // 🔥 Robust: load all then filter (works whether createdAt is ISO or Timestamp)
   const all = await loadOrders();
   const filtered = all.filter((o) => {
     const d = parseCreatedAt(o.createdAt);
@@ -310,17 +250,7 @@ export async function GET(req: Request) {
     return t >= fromDate.getTime() && t <= toDate.getTime();
   });
 
-  // Build table
-  const headers = [
-    "Date",
-    "ID",
-    "Email",
-    "Statut",
-    "Articles",
-    "ST",
-    "Ship",
-    "Total",
-  ];
+  const headers = ["Date", "ID", "Email", "Statut", "Articles", "ST", "Ship", "Total"];
 
   let sumSubtotal = 0;
   let sumShip = 0;
@@ -336,10 +266,7 @@ export async function GET(req: Request) {
         ? "—"
         : items
             .map((it) => {
-              const n =
-                typeof it?.name === "string"
-                  ? it.name
-                  : it?.name?.fr || it?.name?.en || "Produit";
+              const n = typeof it?.name === "string" ? it.name : it?.name?.fr || it?.name?.en || "Produit";
               const q = it?.quantity ?? 1;
               return `${n} x${q}`;
             })
@@ -354,23 +281,12 @@ export async function GET(req: Request) {
     sumShip += sh;
     sumTotal += tt;
 
-    return [
-      dateStr,
-      o.id,
-      o.email || "—",
-      o.status || "—",
-      itemsLabel,
-      euro(st),
-      euro(sh),
-      euro(tt),
-    ];
+    return [dateStr, o.id, o.email || "—", o.status || "—", itemsLabel, euro(st), euro(sh), euro(tt)];
   });
 
-  const filenameBase = `orders_${fromDate.toISOString().slice(0, 10)}_${toDate
-    .toISOString()
-    .slice(0, 10)}`;
+  const filenameBase = `orders_${fromDate.toISOString().slice(0, 10)}_${toDate.toISOString().slice(0, 10)}`;
 
-  // ---------- CSV ----------
+  // CSV
   if (format === "csv") {
     const csv = toCSV(headers, rows);
     return new NextResponse(csv, {
@@ -383,15 +299,11 @@ export async function GET(req: Request) {
     });
   }
 
-  // ---------- PDF ----------
-  const doc = new PDFDocument({
-    size: "A4",
-    layout: "landscape",
-    margin: 40,
-  });
-
+  // PDF
+  const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 40 });
   const chunks: Buffer[] = [];
   doc.on("data", (c: Buffer) => chunks.push(c));
+
   const done = new Promise<Buffer>((resolve) => {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
   });
@@ -406,7 +318,6 @@ export async function GET(req: Request) {
   );
 
   doc.end();
-
   const pdfBuffer = await done;
 
   return new NextResponse(pdfBuffer, {
