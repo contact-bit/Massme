@@ -36,6 +36,7 @@ function assertAdmin(req: Request) {
   return null;
 }
 
+/* ---------- Date helpers ---------- */
 function startOfDay(d: Date) {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -73,6 +74,7 @@ function parseCreatedAt(value: any): Date | null {
   return null;
 }
 
+/* ---------- Money helpers ---------- */
 function getItemPrice(it: OrderItem): number {
   const p = it?.price;
   if (typeof p === "number") return p;
@@ -99,6 +101,7 @@ function euro(n: number) {
   return (Math.round(n * 100) / 100).toFixed(2);
 }
 
+/* ---------- CSV ---------- */
 function toCSV(headers: string[], rows: string[][]) {
   const esc = (v: string) => {
     const s = String(v ?? "");
@@ -108,6 +111,7 @@ function toCSV(headers: string[], rows: string[][]) {
   return [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\n");
 }
 
+/* ---------- PDF table ---------- */
 function drawPDFTable(
   doc: any,
   title: string,
@@ -153,7 +157,6 @@ function drawPDFTable(
   };
 
   const rowH = 18;
-
   drawHeader();
 
   rows.forEach((r, idx) => {
@@ -178,9 +181,7 @@ function drawPDFTable(
   if (y + 70 > doc.page.height - margin) newPage();
 
   doc.fillColor("#ffffff").rect(margin, y + 12, usable, 54).fillAndStroke("#ffffff", "#e5e7eb");
-
   doc.fillColor("#0b1220").font("Helvetica-Bold").fontSize(10).text("Totaux", margin + 10, y + 18);
-
   doc.font("Helvetica").fontSize(10).fillColor("#111827");
   doc.text(`Sous-total: ${euro(totals.subtotal)} €`, margin + 120, y + 18);
   doc.text(`Livraison: ${euro(totals.shipping)} €`, margin + 320, y + 18);
@@ -199,7 +200,6 @@ export async function GET(req: Request) {
   if (auth) return auth;
 
   const { searchParams } = new URL(req.url);
-
   const format = (searchParams.get("format") || "pdf").toLowerCase();
   const day = searchParams.get("day");
   const month = searchParams.get("month");
@@ -234,7 +234,6 @@ export async function GET(req: Request) {
     fromDate = startOfDay(past);
   }
 
-  const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate.toISOString().slice(0, 10)}`;
   const all = await loadOrders();
 
   const filtered = all.filter((o) => {
@@ -292,12 +291,16 @@ export async function GET(req: Request) {
     });
   }
 
+  const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate.toISOString().slice(0, 10)}`;
+
   const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 40 });
   const chunks: Buffer[] = [];
+
   doc.on("data", (c: Buffer) => chunks.push(c));
 
-  const done = new Promise<Buffer>((resolve) => {
+  const done = new Promise<Buffer>((resolve, reject) => {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
   });
 
   drawPDFTable(
@@ -310,12 +313,11 @@ export async function GET(req: Request) {
   );
 
   doc.end();
+
   const pdfBuffer = await done;
+  const pdfBytes = new Uint8Array(pdfBuffer);
 
-  // ✅ Blob = BodyInit OK, zéro souci TS
-  const pdfBlob = new Blob([pdfBuffer], { type: "application/pdf" });
-
-  return new Response(pdfBlob, {
+  return new Response(pdfBytes, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
