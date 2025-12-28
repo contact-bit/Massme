@@ -8,61 +8,89 @@ type Tab = { href: string; label: string };
 
 type AlertTone = "info" | "warning" | "success" | "danger";
 type AlertItem = {
+  id: string;                 // ✅ id stable
   tone: AlertTone;
   title: string;
   desc: string;
   actionHref?: string;
+  meta?: { orderId?: string; email?: string; amount?: number; createdAt?: string };
 };
 
 type LastOrder = {
   id: string;
-  status?: "pending_payment" | "paid" | string;
+  status?: string;
   total?: number;
   email?: string;
   createdAt?: string; // ISO
 };
 
 type StatsResponse = {
-  alerts?: AlertItem[];
+  alerts?: { tone: AlertTone; title: string; desc: string }[];
   lastOrders?: LastOrder[];
   lowStock?: any[];
 };
 
-const LS_READ_KEY = "admin_notifs_read_v1";
-const LS_LAST_SEEN_ORDER_AT = "admin_last_seen_order_at_v1";
-
-function notifId(n: AlertItem) {
-  return `${n.tone}|${n.title}|${n.desc}`;
-}
+const LS_READ_KEY = "admin_notifs_read_v2";
+const LS_LAST_SEEN_ORDER_AT = "admin_last_seen_order_at_v2";
+const LS_LAST_ORDER_ID = "admin_last_order_id_v2";
 
 function loadReadSet(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {
     const raw = localStorage.getItem(LS_READ_KEY);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw);
+    const arr = raw ? JSON.parse(raw) : [];
     return new Set(Array.isArray(arr) ? arr : []);
   } catch {
     return new Set();
   }
 }
-
 function saveReadSet(set: Set<string>) {
   if (typeof window === "undefined") return;
   localStorage.setItem(LS_READ_KEY, JSON.stringify(Array.from(set)));
 }
-
 function getLastSeenAt(): number {
   if (typeof window === "undefined") return 0;
   const raw = localStorage.getItem(LS_LAST_SEEN_ORDER_AT);
   const n = raw ? Number(raw) : 0;
   return Number.isFinite(n) ? n : 0;
 }
-
 function setLastSeenAt(ts: number) {
   if (typeof window === "undefined") return;
   localStorage.setItem(LS_LAST_SEEN_ORDER_AT, String(ts));
 }
+function getLastOrderId(): string {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem(LS_LAST_ORDER_ID) || "";
+}
+function setLastOrderId(id: string) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(LS_LAST_ORDER_ID, id);
+}
+
+function toneLabel(t: AlertTone) {
+  if (t === "success") return "OK";
+  if (t === "warning") return "À traiter";
+  if (t === "danger") return "Urgent";
+  return "Info";
+}
+function toneIcon(t: AlertTone) {
+  if (t === "success") return "✓";
+  if (t === "warning") return "!";
+  if (t === "danger") return "⚠";
+  return "i";
+}
+
+function buildId(prefix: string, parts: (string | number | undefined)[]) {
+  return `${prefix}:${parts.map((p) => String(p ?? "")).join("|")}`;
+}
+
+type Toast = {
+  id: string;
+  tone: AlertTone;
+  title: string;
+  desc: string;
+  href?: string;
+};
 
 export default function AdminNavbar() {
   const pathname = usePathname();
@@ -78,21 +106,6 @@ export default function AdminNavbar() {
     []
   );
 
-  const [q, setQ] = useState("");
-
-  // Notifications
-  const [notifs, setNotifs] = useState<AlertItem[]>([]);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [read, setRead] = useState<Set<string>>(() => loadReadSet());
-
-  const btnRef = useRef<HTMLButtonElement | null>(null);
-  const panelRef = useRef<HTMLDivElement | null>(null);
-
-  const unreadCount = useMemo(
-    () => notifs.filter((n) => !read.has(notifId(n))).length,
-    [notifs, read]
-  );
-
   const pageTitle = useMemo(() => {
     return (
       tabs.find((t) =>
@@ -101,22 +114,34 @@ export default function AdminNavbar() {
     );
   }, [pathname, tabs]);
 
-  const toneLabel = (tone: AlertTone) => {
-    if (tone === "success") return "OK";
-    if (tone === "warning") return "Attention";
-    if (tone === "danger") return "Urgent";
-    return "Info";
+  const [q, setQ] = useState("");
+
+  // Notifs
+  const [notifs, setNotifs] = useState<AlertItem[]>([]);
+  const [open, setOpen] = useState(false);
+  const [read, setRead] = useState<Set<string>>(() => loadReadSet());
+
+  // Toasts
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  const unreadCount = useMemo(
+    () => notifs.filter((n) => !read.has(n.id)).length,
+    [notifs, read]
+  );
+
+  const pushToast = (t: Omit<Toast, "id">) => {
+    const id = `toast:${Date.now()}:${Math.random().toString(16).slice(2)}`;
+    const toast: Toast = { id, ...t };
+    setToasts((prev) => [toast, ...prev].slice(0, 3));
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((x) => x.id !== id));
+    }, 4200);
   };
 
-  const routeFromNotif = (n: AlertItem) => {
-    const t = `${n.title} ${n.desc}`.toLowerCase();
-    if (t.includes("commande") || t.includes("order")) return "/admin/orders";
-    if (t.includes("stock") || t.includes("produit")) return "/admin/products";
-    if (t.includes("livraison") || t.includes("shipping")) return "/admin/shipping";
-    return "/admin";
-  };
-
-  const fetchNotifs = async () => {
+  const fetchNotifs = async (reason: "poll" | "manual" | "focus" = "poll") => {
     try {
       if (typeof window === "undefined") return;
 
@@ -128,37 +153,71 @@ export default function AdminNavbar() {
       if (adminToken) headers["x-admin-token"] = adminToken;
 
       const res = await fetch("/api/admin/stats", { headers, cache: "no-store" });
-      if (!res.ok) {
-        // si 401/403 => on ne crashe pas, mais on n'affiche rien
-        return;
-      }
+      if (!res.ok) return;
 
       const json = (await res.json()) as StatsResponse;
 
       const baseAlerts = Array.isArray(json.alerts) ? json.alerts : [];
       const lastOrders = Array.isArray(json.lastOrders) ? json.lastOrders : [];
 
-      const computed: AlertItem[] = [...baseAlerts];
+      const computed: AlertItem[] = [];
 
-      // ✅ Notifs “nouvelles commandes” (même si alerts = [])
-      const newest = lastOrders[0];
-      const newestAt = newest?.createdAt ? Date.parse(newest.createdAt) : 0;
-      const lastSeen = getLastSeenAt();
-
-      if (newest && newestAt && newestAt > lastSeen) {
-        const isPaid = (newest.status || "").toString() === "paid";
-
-        computed.unshift({
-          tone: isPaid ? "success" : "warning",
-          title: isPaid ? "Nouvelle commande payée" : "Nouvelle commande à traiter",
-          desc: `${newest.email ?? "Client"} • ${(newest.total ?? 0).toFixed(2)} €`,
-          actionHref: "/admin/orders",
+      // 1) Alerts backend -> notifs UI
+      for (const a of baseAlerts) {
+        computed.push({
+          id: buildId("alert", [a.tone, a.title, a.desc]),
+          tone: a.tone,
+          title: a.title,
+          desc: a.desc,
+          actionHref: a.title.toLowerCase().includes("commande") ? "/admin/orders" : "/admin",
         });
       }
 
-      // (Optionnel) low stock => notif
+      // 2) Notifs “smart” sur commandes (même si alerts=[])
+      const newest = lastOrders[0];
+      const newestAt = newest?.createdAt ? Date.parse(newest.createdAt) : 0;
+
+      if (newest && newestAt) {
+        const isPaid = (newest.status || "") === "paid";
+        const n: AlertItem = {
+          id: buildId("order", [newest.id, newest.status, newestAt]),
+          tone: isPaid ? "success" : "warning",
+          title: isPaid ? "Commande payée" : "Commande à traiter",
+          desc: `${newest.email ?? "Client"} • ${(newest.total ?? 0).toFixed(2)} €`,
+          actionHref: `/admin/orders?q=${encodeURIComponent(newest.email ?? newest.id)}`,
+          meta: {
+            orderId: newest.id,
+            email: newest.email,
+            amount: newest.total,
+            createdAt: newest.createdAt,
+          },
+        };
+        computed.unshift(n);
+
+        // Toast “live” si nouvelle commande depuis la dernière vue
+        const lastSeen = getLastSeenAt();
+        const lastOrderId = getLastOrderId();
+        const isNew = newestAt > lastSeen && newest.id !== lastOrderId;
+
+        if (isNew && reason !== "manual") {
+          pushToast({
+            tone: n.tone,
+            title: isPaid ? "Nouvelle commande payée" : "Nouvelle commande",
+            desc: n.desc,
+            href: n.actionHref,
+          });
+
+          // Option son (décommente si tu veux)
+          // try { new Audio("/notif.mp3").play(); } catch {}
+        }
+
+        setLastOrderId(newest.id);
+      }
+
+      // 3) Low stock -> notif
       if (Array.isArray(json.lowStock) && json.lowStock.length > 0) {
         computed.push({
+          id: buildId("stock", [json.lowStock.length]),
           tone: "warning",
           title: "Stock faible",
           desc: `${json.lowStock.length} produit(s) à surveiller.`,
@@ -166,63 +225,46 @@ export default function AdminNavbar() {
         });
       }
 
+      // ✅ merge read set (ne pas perdre ce qui est déjà lu)
       setNotifs(computed);
     } catch {
-      // silencieux
+      // no-op
     }
   };
 
-  // Initial + polling léger
+  // Initial + polling
   useEffect(() => {
-    fetchNotifs();
-    const id = window.setInterval(fetchNotifs, 20_000);
+    fetchNotifs("poll");
+    const id = window.setInterval(() => fetchNotifs("poll"), 20_000);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refresh quand on revient sur l’onglet
+  // Focus refresh
   useEffect(() => {
     const onVis = () => {
-      if (document.visibilityState === "visible") fetchNotifs();
+      if (document.visibilityState === "visible") fetchNotifs("focus");
     };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Click outside -> close
+  // Click outside close
   useEffect(() => {
-    if (!notifOpen) return;
+    if (!open) return;
     const onDown = (e: MouseEvent) => {
       const t = e.target as Node | null;
       if (!t) return;
       if (panelRef.current?.contains(t)) return;
       if (btnRef.current?.contains(t)) return;
-      setNotifOpen(false);
+      setOpen(false);
     };
     window.addEventListener("mousedown", onDown);
     return () => window.removeEventListener("mousedown", onDown);
-  }, [notifOpen]);
+  }, [open]);
 
-  const markAllRead = () => {
-    const next = new Set(read);
-    notifs.forEach((n) => next.add(notifId(n)));
-    setRead(next);
-    saveReadSet(next);
-
-    // ✅ on enregistre “vu jusqu’à la dernière commande”
-    // (si une notif "nouvelle commande" existe, on considère qu’elle est vue)
-    const newestOrderNotif = notifs.find((n) => n.title.toLowerCase().includes("commande"));
-    if (newestOrderNotif) {
-      setLastSeenAt(Date.now());
-    }
-  };
-
-  const openNotifs = () => {
-    setNotifOpen((v) => !v);
-  };
-
-  // Cmd/Ctrl + K focus search (robuste)
+  // Ctrl/Cmd+K focus search + Esc close
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const key = typeof e.key === "string" ? e.key : "";
@@ -232,12 +274,9 @@ export default function AdminNavbar() {
 
       if ((e.ctrlKey || e.metaKey) && key.toLowerCase() === "k") {
         e.preventDefault();
-        const el = document.getElementById("adminQuickSearch") as HTMLInputElement | null;
-        el?.focus();
+        (document.getElementById("adminQuickSearch") as HTMLInputElement | null)?.focus();
       }
-      if (key === "Escape") {
-        setNotifOpen(false);
-      }
+      if (key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -257,12 +296,47 @@ export default function AdminNavbar() {
     router.replace("/admin/login");
   };
 
+  const markAllRead = () => {
+    const next = new Set(read);
+    notifs.forEach((n) => next.add(n.id));
+    setRead(next);
+    saveReadSet(next);
+    setLastSeenAt(Date.now());
+  };
+
+  const markOneRead = (id: string) => {
+    const next = new Set(read);
+    next.add(id);
+    setRead(next);
+    saveReadSet(next);
+  };
+
   return (
     <>
+      {/* Toasts */}
+      <div className="admin-toasts" aria-live="polite" aria-relevant="additions">
+        {toasts.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={`admin-toast tone-${t.tone}`}
+            onClick={() => {
+              if (t.href) router.push(t.href);
+            }}
+            title="Ouvrir"
+          >
+            <div className="admin-toast-ic">{toneIcon(t.tone)}</div>
+            <div className="admin-toast-body">
+              <div className="admin-toast-title">{t.title}</div>
+              <div className="admin-toast-desc">{t.desc}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+
       {/* TOP BAR */}
       <div className="admin-topbar">
         <div className="admin-topbar-inner">
-          {/* BRAND */}
           <Link href="/admin" className="admin-brand">
             <span className="admin-brand-mark" aria-hidden />
             <div style={{ minWidth: 0 }}>
@@ -271,13 +345,11 @@ export default function AdminNavbar() {
             </div>
           </Link>
 
-          {/* TITLE ZONE */}
           <div className="admin-title-zone">
             <h1 className="admin-h1">{pageTitle}</h1>
             <p className="admin-hint">Gérez produits, commandes et livraisons.</p>
           </div>
 
-          {/* ACTIONS */}
           <div className="admin-actions">
             <form className="admin-search" onSubmit={onSubmit}>
               <input
@@ -291,83 +363,124 @@ export default function AdminNavbar() {
               <span className="admin-search-kbd">⌘K</span>
             </form>
 
-            {/* NOTIFS */}
+            {/* Notifications */}
             <div className="admin-notifs">
               <button
                 ref={btnRef}
                 type="button"
-                onClick={openNotifs}
+                onClick={() => setOpen((v) => !v)}
                 className="admin-btn admin-btn-ghost"
               >
                 Notifications
-                {unreadCount > 0 && <span className="admin-pill">{unreadCount}</span>}
+                {unreadCount > 0 ? <span className="admin-pill">{unreadCount}</span> : null}
               </button>
 
-              {notifOpen && (
-                <div ref={panelRef} className="admin-notifs-panel" role="dialog">
+              {open && (
+                <div ref={panelRef} className="admin-notifs-panel">
                   <div className="admin-notifs-head">
                     <div>
-                      <div className="admin-notifs-title">Notifications</div>
+                      <div className="admin-notifs-title">Centre de notifications</div>
                       <div className="admin-notifs-sub">
-                        {notifs.length === 0 ? "Aucune notification." : `${notifs.length} élément(s)`}
+                        {unreadCount > 0 ? `${unreadCount} non lue(s)` : "Tout est à jour ✅"}
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div className="admin-notifs-head-actions">
                       <button
                         type="button"
-                        className="admin-notifs-refresh"
-                        onClick={fetchNotifs}
+                        className="admin-notifs-iconbtn"
+                        onClick={() => fetchNotifs("manual")}
                         title="Rafraîchir"
                       >
                         ↻
                       </button>
-                      {notifs.length > 0 && (
-                        <button
-                          type="button"
-                          className="admin-notifs-refresh"
-                          onClick={markAllRead}
-                          title="Tout marquer comme lu"
-                        >
-                          ✓
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        className="admin-notifs-iconbtn"
+                        onClick={markAllRead}
+                        title="Tout marquer lu"
+                      >
+                        ✓
+                      </button>
                     </div>
                   </div>
 
                   <div className="admin-notifs-list">
                     {notifs.length === 0 ? (
-                      <div className="admin-notifs-empty">Tout est clean ✅</div>
+                      <div className="admin-notifs-empty">Aucune notification pour le moment.</div>
                     ) : (
                       notifs.map((n) => {
-                        const id = notifId(n);
-                        const isUnread = !read.has(id);
+                        const isUnread = !read.has(n.id);
 
                         return (
-                          <button
-                            key={id}
-                            type="button"
-                            className={`admin-notif ${isUnread ? "unread" : ""}`}
-                            onClick={() => {
-                              // mark read single
-                              const next = new Set(read);
-                              next.add(id);
-                              setRead(next);
-                              saveReadSet(next);
+                          <div key={n.id} className={`admin-notif-row ${isUnread ? "unread" : ""}`}>
+                            <button
+                              type="button"
+                              className="admin-notif-main"
+                              onClick={() => {
+                                markOneRead(n.id);
+                                setOpen(false);
+                                router.push(n.actionHref ?? "/admin");
+                              }}
+                            >
+                              <span className={`admin-notif-dot tone-${n.tone}`} aria-hidden />
+                              <div className="admin-notif-body">
+                                <div className="admin-notif-top">
+                                  <span className="admin-notif-badge">{toneLabel(n.tone)}</span>
+                                  <span className="admin-notif-title">{n.title}</span>
+                                </div>
+                                <div className="admin-notif-desc">{n.desc}</div>
 
-                              setNotifOpen(false);
-                              router.push(n.actionHref ?? routeFromNotif(n));
-                            }}
-                          >
-                            <span className={`admin-notif-dot tone-${n.tone}`} aria-hidden />
-                            <div className="admin-notif-body">
-                              <div className="admin-notif-top">
-                                <span className="admin-notif-badge">{toneLabel(n.tone)}</span>
-                                <span className="admin-notif-title">{n.title}</span>
+                                {/* actions rapides */}
+                                {n.meta?.email || n.meta?.orderId ? (
+                                  <div className="admin-notif-actions">
+                                    {n.meta?.orderId ? (
+                                      <button
+                                        type="button"
+                                        className="admin-notif-chip"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          markOneRead(n.id);
+                                          setOpen(false);
+                                          router.push(`/admin/orders?q=${encodeURIComponent(n.meta!.orderId!)}`);
+                                        }}
+                                      >
+                                        Voir
+                                      </button>
+                                    ) : null}
+
+                                    {n.meta?.email ? (
+                                      <button
+                                        type="button"
+                                        className="admin-notif-chip"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigator.clipboard?.writeText(n.meta!.email!);
+                                          pushToast({
+                                            tone: "info",
+                                            title: "Copié",
+                                            desc: n.meta!.email!,
+                                          });
+                                        }}
+                                      >
+                                        Copier email
+                                      </button>
+                                    ) : null}
+                                  </div>
+                                ) : null}
                               </div>
-                              <div className="admin-notif-desc">{n.desc}</div>
-                            </div>
-                          </button>
+                            </button>
+
+                            {/* bouton "lu" */}
+                            <button
+                              type="button"
+                              className="admin-notif-mark"
+                              onClick={() => markOneRead(n.id)}
+                              title="Marquer comme lu"
+                            >
+                              {isUnread ? "•" : "✓"}
+                            </button>
+                          </div>
                         );
                       })
                     )}
@@ -388,7 +501,9 @@ export default function AdminNavbar() {
         <div className="admin-tabs">
           <div className="admin-tabs-inner">
             {tabs.map((t) => {
-              const active = t.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(t.href);
+              const active =
+                t.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(t.href);
+
               return (
                 <Link key={t.href} href={t.href} className={`admin-tab ${active ? "active" : ""}`}>
                   {t.label}
