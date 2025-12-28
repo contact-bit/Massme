@@ -1,3 +1,4 @@
+// src/app/api/admin/orders/export/route.ts
 import { NextResponse } from "next/server";
 import PDFDocument from "pdfkit";
 import { dbAdmin } from "@/lib/firebase.admin";
@@ -56,6 +57,7 @@ function endOfMonth(year: number, month1to12: number) {
 
 function parseCreatedAt(value: any): Date | null {
   if (!value) return null;
+
   if (value instanceof Timestamp) return value.toDate();
   if (typeof value === "object" && typeof value.toDate === "function") {
     try {
@@ -196,133 +198,165 @@ async function loadOrders(): Promise<Order[]> {
 }
 
 export async function GET(req: Request) {
-  const auth = assertAdmin(req);
-  if (auth) return auth;
+  try {
+    const auth = assertAdmin(req);
+    if (auth) return auth;
 
-  const { searchParams } = new URL(req.url);
-  const format = (searchParams.get("format") || "pdf").toLowerCase();
-  const day = searchParams.get("day");
-  const month = searchParams.get("month");
-  const from = searchParams.get("from");
-  const to = searchParams.get("to");
+    const { searchParams } = new URL(req.url);
+    const format = (searchParams.get("format") || "pdf").toLowerCase();
 
-  let fromDate: Date;
-  let toDate: Date;
+    const day = searchParams.get("day");
+    const month = searchParams.get("month");
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
 
-  if (day) {
-    const d = new Date(day);
-    if (isNaN(d.getTime())) return NextResponse.json({ error: "Invalid day" }, { status: 400 });
-    fromDate = startOfDay(d);
-    toDate = endOfDay(d);
-  } else if (month) {
-    const [y, m] = month.split("-").map((x) => Number(x));
-    if (!y || !m || m < 1 || m > 12) return NextResponse.json({ error: "Invalid month" }, { status: 400 });
-    fromDate = startOfMonth(y, m);
-    toDate = endOfMonth(y, m);
-  } else if (from && to) {
-    const a = new Date(from);
-    const b = new Date(to);
-    if (isNaN(a.getTime()) || isNaN(b.getTime()))
-      return NextResponse.json({ error: "Invalid range" }, { status: 400 });
-    fromDate = startOfDay(a);
-    toDate = endOfDay(b);
-  } else {
-    const now = new Date();
-    toDate = endOfDay(now);
-    const past = new Date(now);
-    past.setDate(now.getDate() - 6);
-    fromDate = startOfDay(past);
-  }
+    let fromDate: Date;
+    let toDate: Date;
 
-  const all = await loadOrders();
+    if (day) {
+      const d = new Date(day);
+      if (isNaN(d.getTime())) return NextResponse.json({ error: "Invalid day" }, { status: 400 });
+      fromDate = startOfDay(d);
+      toDate = endOfDay(d);
+    } else if (month) {
+      const [y, m] = month.split("-").map((x) => Number(x));
+      if (!y || !m || m < 1 || m > 12) {
+        return NextResponse.json({ error: "Invalid month" }, { status: 400 });
+      }
+      fromDate = startOfMonth(y, m);
+      toDate = endOfMonth(y, m);
+    } else if (from && to) {
+      const a = new Date(from);
+      const b = new Date(to);
+      if (isNaN(a.getTime()) || isNaN(b.getTime())) {
+        return NextResponse.json({ error: "Invalid range" }, { status: 400 });
+      }
+      fromDate = startOfDay(a);
+      toDate = endOfDay(b);
+    } else {
+      // défaut : 7 derniers jours
+      const now = new Date();
+      toDate = endOfDay(now);
+      const past = new Date(now);
+      past.setDate(now.getDate() - 6);
+      fromDate = startOfDay(past);
+    }
 
-  const filtered = all.filter((o) => {
-    const d = parseCreatedAt(o.createdAt);
-    if (!d) return false;
-    const t = d.getTime();
-    return t >= fromDate.getTime() && t <= toDate.getTime();
-  });
+    // 🔎 logs utiles (Vercel / local)
+    console.log("[export] format:", format, "day:", day, "month:", month, "from:", from, "to:", to);
+    console.log("[export] range:", fromDate.toISOString(), "->", toDate.toISOString());
 
-  const headers = ["Date", "ID", "Email", "Statut", "Articles", "ST", "Ship", "Total"];
+    const all = await loadOrders();
+    console.log("[export] orders loaded:", all.length);
 
-  let sumSubtotal = 0;
-  let sumShip = 0;
-  let sumTotal = 0;
+    const filtered = all.filter((o) => {
+      const d = parseCreatedAt(o.createdAt);
+      if (!d) return false;
+      const t = d.getTime();
+      return t >= fromDate.getTime() && t <= toDate.getTime();
+    });
 
-  const rows: string[][] = filtered.map((o) => {
-    const d = parseCreatedAt(o.createdAt);
-    const dateStr = d ? d.toISOString().slice(0, 10) : "—";
+    console.log("[export] orders filtered:", filtered.length);
 
-    const items = Array.isArray(o.items) ? o.items : [];
-    const itemsLabel =
-      items.length === 0
-        ? "—"
-        : items
-            .map((it) => {
-              const n = typeof it?.name === "string" ? it.name : it?.name?.fr || it?.name?.en || "Produit";
-              const q = it?.quantity ?? 1;
-              return `${n} x${q}`;
-            })
-            .slice(0, 3)
-            .join(" • ") + (items.length > 3 ? " …" : "");
+    const headers = ["Date", "ID", "Email", "Statut", "Articles", "ST", "Ship", "Total"];
 
-    const st = getSubtotal(o);
-    const sh = getShipping(o);
-    const tt = getTotal(o);
+    let sumSubtotal = 0;
+    let sumShip = 0;
+    let sumTotal = 0;
 
-    sumSubtotal += st;
-    sumShip += sh;
-    sumTotal += tt;
+    const rows: string[][] = filtered.map((o) => {
+      const d = parseCreatedAt(o.createdAt);
+      const dateStr = d ? d.toISOString().slice(0, 10) : "—";
 
-    return [dateStr, o.id, o.email || "—", o.status || "—", itemsLabel, euro(st), euro(sh), euro(tt)];
-  });
+      const items = Array.isArray(o.items) ? o.items : [];
+      const itemsLabel =
+        items.length === 0
+          ? "—"
+          : items
+              .map((it) => {
+                const n =
+                  typeof it?.name === "string" ? it.name : it?.name?.fr || it?.name?.en || "Produit";
+                const q = it?.quantity ?? 1;
+                return `${n} x${q}`;
+              })
+              .slice(0, 3)
+              .join(" • ") + (items.length > 3 ? " …" : "");
 
-  const filenameBase = `orders_${fromDate.toISOString().slice(0, 10)}_${toDate.toISOString().slice(0, 10)}`;
+      const st = getSubtotal(o);
+      const sh = getShipping(o);
+      const tt = getTotal(o);
 
-  if (format === "csv") {
-    const csv = toCSV(headers, rows);
-    return new Response(csv, {
+      sumSubtotal += st;
+      sumShip += sh;
+      sumTotal += tt;
+
+      return [dateStr, o.id, o.email || "—", o.status || "—", itemsLabel, euro(st), euro(sh), euro(tt)];
+    });
+
+    const filenameBase = `orders_${fromDate.toISOString().slice(0, 10)}_${toDate.toISOString().slice(0, 10)}`;
+
+    // CSV
+    if (format === "csv") {
+      const csv = toCSV(headers, rows);
+      return new Response(csv, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${filenameBase}.csv"`,
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
+    // PDF
+    const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate
+      .toISOString()
+      .slice(0, 10)}`;
+
+    const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 40 });
+    const chunks: Buffer[] = [];
+
+    doc.on("data", (c: Buffer) => chunks.push(c));
+
+    const done = new Promise<Buffer>((resolve, reject) => {
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", (err: any) => reject(err));
+    });
+
+    drawPDFTable(
+      doc,
+      "Export commandes",
+      `${periodLabel} • ${filtered.length} commande(s)`,
+      headers,
+      rows,
+      { subtotal: sumSubtotal, shipping: sumShip, total: sumTotal }
+    );
+
+    doc.end();
+
+    const pdfBuffer = await done;
+    const pdfBytes = new Uint8Array(pdfBuffer);
+
+    return new Response(pdfBytes, {
       status: 200,
       headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${filenameBase}.csv"`,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filenameBase}.pdf"`,
         "Cache-Control": "no-store",
       },
     });
+  } catch (err: any) {
+    console.error("[export] ERROR:", err);
+
+    // ✅ utile côté front (alert)
+    return NextResponse.json(
+      {
+        error: "Export failed",
+        message: err?.message || String(err),
+        // stack seulement en dev
+        stack: process.env.NODE_ENV === "development" ? err?.stack : undefined,
+      },
+      { status: 500 }
+    );
   }
-
-  const periodLabel = `Période : ${fromDate.toISOString().slice(0, 10)} → ${toDate.toISOString().slice(0, 10)}`;
-
-  const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 40 });
-  const chunks: Buffer[] = [];
-
-  doc.on("data", (c: Buffer) => chunks.push(c));
-
-  const done = new Promise<Buffer>((resolve, reject) => {
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
-    doc.on("error", reject);
-  });
-
-  drawPDFTable(
-    doc,
-    "Export commandes",
-    `${periodLabel} • ${filtered.length} commande(s)`,
-    headers,
-    rows,
-    { subtotal: sumSubtotal, shipping: sumShip, total: sumTotal }
-  );
-
-  doc.end();
-
-  const pdfBuffer = await done;
-  const pdfBytes = new Uint8Array(pdfBuffer);
-
-  return new Response(pdfBytes, {
-    status: 200,
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${filenameBase}.pdf"`,
-      "Cache-Control": "no-store",
-    },
-  });
 }
