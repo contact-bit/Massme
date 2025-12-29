@@ -1,9 +1,42 @@
 // src/lib/generateInvoice.ts
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
-type InvoiceItem = { ref: string; name: string; desc: string; qty: number; unit: number };
+type InvoiceItem = {
+  ref: string;
+  name: string;
+  desc: string;
+  qty: number;
+  unit: number; // HT
+};
 
-export async function generateInvoicePDF(order: any, orderId: string) {
+type ShippingAddress = {
+  name?: string;
+  email?: string;
+  address?: string;
+  address2?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+  phone?: string;
+};
+
+type OrderLike = {
+  items?: any[];
+  shippingMethod?: { price?: number };
+  shippingAddress?: ShippingAddress;
+
+  invoiceNumber?: string;
+  invoiceDate?: string | number | Date;
+
+  paidAt?: string | number | Date;
+  paymentMethod?: string;
+  vatNumber?: string;
+};
+
+const LOGO_URL =
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2456d5ba-af23-4219-7115-f54286a7c600/public";
+
+export async function generateInvoicePDF(order: OrderLike, orderId: string) {
   // =========================
   // Helpers
   // =========================
@@ -12,7 +45,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const money = (n: number) =>
     (Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100).toFixed(2);
 
-  const fmtDateFR = (d = new Date()) => {
+  const fmtDateFR = (d: Date) => {
     const dd = String(d.getDate()).padStart(2, "0");
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const yy = String(d.getFullYear()).slice(-2);
@@ -83,7 +116,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     y1: number,
     x2: number,
     y2: number,
-    color = rgb(0.8, 0.8, 0.8)
+    color = rgb(0.85, 0.85, 0.85)
   ) => {
     page.drawLine({
       start: { x: x1, y: y1 },
@@ -93,23 +126,41 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     });
   };
 
+  const parseDate = (v: any, fallback = new Date()) => {
+    if (!v) return fallback;
+    if (v instanceof Date) return v;
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? fallback : d;
+  };
+
   // =========================
   // Data normalization
   // =========================
-  const a = order?.shippingAddress || {};
+  const a: ShippingAddress = (order?.shippingAddress || {}) as ShippingAddress;
   const itemsRaw = Array.isArray(order?.items) ? order.items : [];
 
   const itemsNorm: InvoiceItem[] = itemsRaw.map((it: any): InvoiceItem => {
-    const name = safe(it?.name || "Produit");
+    const name =
+      typeof it?.name === "string"
+        ? it.name
+        : it?.name?.fr || it?.name?.en || it?.name?.title || "Produit";
+
     const desc = safe(it?.description || "");
     const qty = Number(it?.quantity || 1);
-    const unit = Number(it?.price || 0);
-    return { ref: safe(it?.ref || ""), name, desc, qty, unit };
+
+    const unit =
+      typeof it?.price === "number"
+        ? it.price
+        : typeof it?.price?.eur === "number"
+        ? it.price.eur
+        : Number(it?.unitPrice || 0);
+
+    const ref = safe(it?.ref || it?.sku || "");
+    return { ref, name: safe(name), desc, qty, unit: Number(unit || 0) };
   });
 
   const shipping = Number(order?.shippingMethod?.price || 0);
 
-  // ✅ Fix TS implicit any
   const totalHT_items = itemsNorm.reduce<number>(
     (sum: number, it: InvoiceItem) => sum + it.unit * it.qty,
     0
@@ -121,54 +172,103 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const vat = totalHT * VAT_RATE;
   const totalTTC = totalHT + vat;
 
+  const invoiceDate = parseDate(order?.invoiceDate, new Date());
+
   const invoiceNumber =
-    order?.invoiceNumber ||
-    `F${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(
+    safe(order?.invoiceNumber) ||
+    `F${invoiceDate.getFullYear()}${String(invoiceDate.getMonth() + 1).padStart(
       2,
       "0"
-    )}${String(new Date().getDate()).padStart(2, "0")}`;
-
-  const invoiceDate = order?.invoiceDate ? new Date(order.invoiceDate) : new Date();
+    )}${String(invoiceDate.getDate()).padStart(2, "0")}`;
 
   // =========================
-  // Document
+  // Document + Fonts + Colors (DA BLEU)
   // =========================
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]); // A4
+
   const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Colors
-  const ink = rgb(0.07, 0.07, 0.07);
-  const muted = rgb(0.35, 0.35, 0.35);
-  const border = rgb(0.78, 0.78, 0.78);
-  const bar = rgb(0.33, 0.29, 0.23);
-  const soft = rgb(0.97, 0.97, 0.97);
-  const red = rgb(0.78, 0.12, 0.12);
-  const gold = rgb(0.98, 0.72, 0.3);
+  // Palette bleu (ajuste si tu veux les hex exacts)
+  const ink = rgb(0.06, 0.09, 0.16);
+  const muted = rgb(0.35, 0.42, 0.55);
+  const border = rgb(0.82, 0.86, 0.92);
+
+  const blue = rgb(0.14, 0.38, 0.9);
+  const blueDark = rgb(0.05, 0.2, 0.55);
+  const blueSoft = rgb(0.93, 0.96, 1.0);
+  const success = rgb(0.05, 0.62, 0.45);
 
   const M = 42;
 
   // =========================
-  // Header left (company)
+  // Logo (Cloudflare Images) - évite WEBP
   // =========================
-  drawText(page, regularFont, "LazurCo", M, 800, 30, gold);
+  async function tryEmbedLogo() {
+    try {
+      const res = await fetch(LOGO_URL, {
+        headers: { Accept: "image/png,image/jpeg,*/*" },
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(`logo fetch failed: ${res.status}`);
 
-  let yL = 780;
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
+      const bytes = new Uint8Array(await res.arrayBuffer());
+
+      if (ct.includes("png")) return await pdfDoc.embedPng(bytes);
+      if (ct.includes("jpeg") || ct.includes("jpg")) return await pdfDoc.embedJpg(bytes);
+
+      console.warn(`[invoice] Logo unsupported (${ct}). Skipping.`);
+      return null;
+    } catch (e) {
+      console.warn("[invoice] Logo error, skipping:", e);
+      return null;
+    }
+  }
+
+  const logoImg = await tryEmbedLogo();
+
+  // =========================
+  // Header left (brand + company)
+  // =========================
+  const logoBox = { x: M, y: 842 - M - 52, w: 220, h: 52 };
+
+  if (logoImg) {
+    const maxW = 150;
+    const maxH = 40;
+    const dims = logoImg.scale(1);
+    const scale = Math.min(maxW / dims.width, maxH / dims.height);
+    const w = dims.width * scale;
+    const h = dims.height * scale;
+
+    page.drawImage(logoImg, {
+      x: logoBox.x,
+      y: logoBox.y + (logoBox.h - h) / 2,
+      width: w,
+      height: h,
+    });
+
+    drawText(page, boldFont, "OculaRest", logoBox.x + 160, logoBox.y + 26, 15, ink);
+    drawText(page, regularFont, "par Lazurco", logoBox.x + 160, logoBox.y + 10, 9, muted);
+  } else {
+    drawText(page, boldFont, "OculaRest", logoBox.x, logoBox.y + 26, 22, blue);
+    drawText(page, regularFont, "par Lazurco", logoBox.x, logoBox.y + 10, 9, muted);
+  }
+
+  let yL = logoBox.y - 14;
+
+  // ✅ Remplace ici avec TES vraies infos Lazurco si tu veux (SIRET/TVA/adresse)
   const companyLines: string[] = [
+    "LAZURCO",
     "189 avenue de Fabron",
-    "La Tropezienne",
-    "06200 Nice",
-    "FRANCE",
+    "06200 Nice, FRANCE",
     "",
-    "Capital : 5000 €",
     "SIRET : 831 588 926 00012",
-    "APE : 7490B",
     "TVA : FR52831588926",
     "",
-    "Contact : Olivier PETRI",
-    "Tel : +33 (0)6 23 62 69 54",
-    "Email : marketing@lazur.com",
+    "Email : contact@hdconnects.com",
+    "Site : www.ocularest.fr",
   ];
 
   for (const ln of companyLines) {
@@ -176,7 +276,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
       yL -= 8;
       continue;
     }
-    drawText(page, regularFont, ln, M, yL, 8.5, ink);
+    drawText(page, regularFont, ln, M, yL, 8.7, ink);
     yL -= 12;
   }
 
@@ -189,11 +289,13 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const titleY = 842 - M - titleBoxH;
 
   drawBox(page, titleX, titleY, titleBoxW, titleBoxH, {
-    stroke: rgb(0.2, 0.2, 0.2),
+    stroke: border,
     strokeWidth: 1,
-    r: 8,
+    r: 10,
   });
-  drawText(page, boldFont, "FACTURE", titleX + 112, titleY + 16, 12, ink);
+
+  drawBox(page, titleX, titleY + titleBoxH - 10, titleBoxW, 10, { fill: blue });
+  drawText(page, boldFont, "FACTURE", titleX + 116, titleY + 16, 12, ink);
 
   const clientBoxW = 320;
   const clientBoxH = 110;
@@ -204,7 +306,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     stroke: border,
     strokeWidth: 1,
   });
-  drawBox(page, clientX, clientY + clientBoxH - 20, clientBoxW, 20, { fill: bar });
+  drawBox(page, clientX, clientY + clientBoxH - 20, clientBoxW, 20, { fill: blueDark });
   drawText(
     page,
     boldFont,
@@ -241,21 +343,31 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   drawText(page, regularFont, fmtDateFR(invoiceDate), M + 110, lineY, 9, ink);
 
   drawText(page, boldFont, "N° Facture :", M + 290, lineY, 9, ink);
-  drawText(page, boldFont, safe(invoiceNumber), M + 390, lineY, 9, ink);
+  drawText(page, boldFont, invoiceNumber, M + 390, lineY, 9, ink);
 
-  // Grey info box
+  // Info box
   const greyY = lineY - 76;
   const greyH = 72;
   const greyW = 595 - M * 2;
-  drawBox(page, M, greyY, greyW, greyH, { fill: soft, stroke: border, strokeWidth: 1 });
+  drawBox(page, M, greyY, greyW, greyH, { fill: blueSoft, stroke: border, strokeWidth: 1 });
 
   drawText(page, regularFont, "Votre commande", M + 10, greyY + greyH - 22, 8, muted);
-  drawText(page, boldFont, "www.massme.fr", M + 10, greyY + greyH - 34, 8, ink);
+  drawText(page, boldFont, "www.ocularest.fr", M + 10, greyY + greyH - 34, 8, blueDark);
   drawText(page, regularFont, safe(orderId) || "-", M + 160, greyY + greyH - 34, 8, ink);
 
-  drawText(page, regularFont, "Votre numero de TVA", M + 10, greyY + greyH - 54, 8, muted);
-  drawText(page, regularFont, "intracommunautaire :", M + 10, greyY + greyH - 66, 8, muted);
-  drawText(page, regularFont, safe(a.vat || order?.vatNumber) || "-", M + 160, greyY + greyH - 66, 8, ink);
+  drawText(page, regularFont, "Email client :", M + 10, greyY + greyH - 54, 8, muted);
+  drawText(
+    page,
+    regularFont,
+    safe(a.email || order?.shippingAddress?.email) || "-",
+    M + 160,
+    greyY + greyH - 54,
+    8,
+    ink
+  );
+
+  drawText(page, regularFont, "TVA intracom : ", M + 10, greyY + greyH - 66, 8, muted);
+  drawText(page, regularFont, safe(order?.vatNumber) || "-", M + 160, greyY + greyH - 66, 8, ink);
 
   // =========================
   // Table
@@ -264,7 +376,6 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const tableW = 595 - M * 2;
   const tableTop = greyY - 18;
 
-  // columns
   const colRef = 75;
   const colQty = 60;
   const colUnit = 90;
@@ -274,12 +385,28 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const headH = 18;
   const rowH = 18;
 
-  drawBox(page, tableX, tableTop - headH, tableW, headH, { fill: bar });
+  drawBox(page, tableX, tableTop - headH, tableW, headH, { fill: blueDark });
   drawText(page, boldFont, "Reference", tableX + 6, tableTop - 12, 8, rgb(1, 1, 1));
   drawText(page, boldFont, "Designation", tableX + colRef + 6, tableTop - 12, 8, rgb(1, 1, 1));
   drawText(page, boldFont, "Quantite", tableX + colRef + colDes + 6, tableTop - 12, 8, rgb(1, 1, 1));
-  drawText(page, boldFont, "Prix unitaire HT", tableX + colRef + colDes + colQty + 6, tableTop - 12, 8, rgb(1, 1, 1));
-  drawText(page, boldFont, "Prix Total HT", tableX + colRef + colDes + colQty + colUnit + 6, tableTop - 12, 8, rgb(1, 1, 1));
+  drawText(
+    page,
+    boldFont,
+    "Prix unitaire HT",
+    tableX + colRef + colDes + colQty + 6,
+    tableTop - 12,
+    8,
+    rgb(1, 1, 1)
+  );
+  drawText(
+    page,
+    boldFont,
+    "Prix Total HT",
+    tableX + colRef + colDes + colQty + colUnit + 6,
+    tableTop - 12,
+    8,
+    rgb(1, 1, 1)
+  );
 
   const xRef = tableX + colRef;
   const xDes = xRef + colDes;
@@ -287,7 +414,7 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   const xUnit = xQty + colUnit;
 
   const lines: InvoiceItem[] = [...itemsNorm];
-  if (shipping > 0) lines.push({ ref: "", name: "Livraison a domicile", desc: "", qty: 1, unit: shipping });
+  if (shipping > 0) lines.push({ ref: "", name: "Livraison", desc: "", qty: 1, unit: shipping });
 
   const maxRows = Math.max(6, lines.length);
   let y = tableTop - headH;
@@ -295,9 +422,8 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   for (let i = 0; i < maxRows; i++) {
     const rowY = y - rowH;
 
-    if (i % 2 === 1) drawBox(page, tableX, rowY, tableW, rowH, { fill: soft });
+    if (i % 2 === 1) drawBox(page, tableX, rowY, tableW, rowH, { fill: rgb(0.985, 0.99, 1) });
 
-    // grid
     drawLine(page, tableX, rowY, tableX + tableW, rowY, border);
     drawLine(page, tableX, y, tableX, rowY, border);
     drawLine(page, tableX + tableW, y, tableX + tableW, rowY, border);
@@ -310,14 +436,22 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     if (it) {
       drawText(page, regularFont, safe(it.ref), tableX + 6, rowY + 5, 8, ink);
 
-      const designation = `${safe(it.name)}${it.desc ? ` — ${safe(it.desc)}` : ""}`;
+      const designation = `${safe(it.name)}${it.desc ? ` - ${safe(it.desc)}` : ""}`;
       const desLines = wrap(regularFont, designation, 8, colDes - 12).slice(0, 2);
       drawText(page, regularFont, desLines[0] || "", tableX + colRef + 6, rowY + 5, 8, ink);
       if (desLines[1]) drawText(page, regularFont, desLines[1], tableX + colRef + 6, rowY - 6, 8, ink);
 
       drawText(page, regularFont, String(it.qty), tableX + colRef + colDes + 6, rowY + 5, 8, ink);
       drawText(page, regularFont, `${money(it.unit)} €`, tableX + colRef + colDes + colQty + 6, rowY + 5, 8, ink);
-      drawText(page, regularFont, `${money(it.unit * it.qty)} €`, tableX + colRef + colDes + colQty + colUnit + 6, rowY + 5, 8, ink);
+      drawText(
+        page,
+        regularFont,
+        `${money(it.unit * it.qty)} €`,
+        tableX + colRef + colDes + colQty + colUnit + 6,
+        rowY + 5,
+        8,
+        ink
+      );
     }
 
     y = rowY;
@@ -325,7 +459,9 @@ export async function generateInvoicePDF(order: any, orderId: string) {
 
   drawLine(page, tableX, y, tableX + tableW, y, border);
 
+  // =========================
   // Totals
+  // =========================
   const totalsW = 240;
   const totalsX = tableX + tableW - totalsW;
   const totalsY = y - 60;
@@ -339,16 +475,20 @@ export async function generateInvoicePDF(order: any, orderId: string) {
   drawText(page, boldFont, `${money(vat)} €`, totalsX + 140, totalsY + 24, 9, ink);
 
   drawText(page, boldFont, "Total TTC", totalsX + 10, totalsY + 8, 9, ink);
-  drawText(page, boldFont, `${money(totalTTC)} €`, totalsX + 140, totalsY + 8, 9, ink);
+  drawText(page, boldFont, `${money(totalTTC)} €`, totalsX + 140, totalsY + 8, 9, blueDark);
 
-  // Payment conditions + stamp
+  // =========================
+  // Payment conditions
+  // =========================
   const payY = totalsY - 70;
 
   drawText(page, boldFont, "Conditions de paiement :", M, payY + 44, 9, ink);
 
+  const paidAt = parseDate(order?.paidAt, invoiceDate);
+
   const payLines: string[] = [
     `Mode de paiement : ${safe(order?.paymentMethod) || "Carte bancaire"}`,
-    `Paiement recu le : ${fmtDateFR(order?.paidAt ? new Date(order.paidAt) : invoiceDate)}`,
+    `Paiement recu le : ${fmtDateFR(paidAt)}`,
     `Escompte pour paiement anticipe : neant`,
     `Penalite de retard : 3 fois le taux legal`,
     `Indemnite forfaitaire de 40 € pour frais de recouvrement (art. L441-5 du code de commerce) en cas de retard de paiement.`,
@@ -363,16 +503,18 @@ export async function generateInvoicePDF(order: any, orderId: string) {
     }
   }
 
-  drawText(page, boldFont, "FACTURE ACQUITTEE", 595 / 2 + 40, payY + 10, 10, red);
+  drawText(page, boldFont, "FACTURE ACQUITTEE", 595 / 2 + 40, payY + 10, 10, success);
 
+  // =========================
   // Footer
+  // =========================
   const footerBarY = 56;
-  drawBox(page, M, footerBarY, 595 - M * 2, 10, { fill: bar });
+  drawBox(page, M, footerBarY, 595 - M * 2, 10, { fill: blueDark });
 
   drawText(page, boldFont, "Reserve de propriete", 595 / 2 - 56, footerBarY - 18, 8, ink);
 
   const footerTxt =
-    "LazurCo SASU conserve l'entière propriete des biens jusqu'au paiement complet de la commande (loi 80335 du 12 mai 1980)";
+    "Lazurco conserve l'entière propriete des biens jusqu'au paiement complet de la commande (loi 80335 du 12 mai 1980).";
   const footerLines = wrap(regularFont, footerTxt, 7.6, 595 - M * 2).slice(0, 2);
 
   let yF = footerBarY - 32;
