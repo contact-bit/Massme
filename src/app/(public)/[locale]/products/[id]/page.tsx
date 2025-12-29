@@ -6,12 +6,24 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useCart } from "@/context/CartContext";
 
-type Locale = "fr" | "en";
+const LOCALES = ["fr", "en", "es", "de", "it", "nl"] as const;
+type Locale = (typeof LOCALES)[number];
+
+function isLocale(v: any): v is Locale {
+  return typeof v === "string" && (LOCALES as readonly string[]).includes(v);
+}
+
+function pickLocaleValue(
+  obj: Partial<Record<Locale, string>> | undefined,
+  locale: Locale
+) {
+  return obj?.[locale] || obj?.en || obj?.fr || "";
+}
 
 type Product = {
   id: string;
-  name: Record<Locale, string>;
-  description: Record<Locale, string>;
+  name: Partial<Record<Locale, string>>;
+  description?: Partial<Record<Locale, string>>;
   price: { eur: number };
   stock: number;
   imageUrl?: string;
@@ -19,9 +31,10 @@ type Product = {
 };
 
 export default function ProductPage() {
-  const params = useParams();
-  const locale = params.locale as Locale;
-  const id = params.id as string;
+  const params = useParams() as { locale?: string; id?: string };
+
+  const locale: Locale = isLocale(params.locale) ? params.locale : "fr";
+  const id = params.id || "";
 
   const { addItem, toggleCart } = useCart();
 
@@ -36,7 +49,7 @@ export default function ProductPage() {
       const snap = await getDoc(ref);
 
       if (snap.exists()) {
-        setProduct({ ...snap.data(), id: snap.id } as Product);
+        setProduct({ ...(snap.data() as any), id: snap.id } as Product);
       } else {
         setProduct(null);
       }
@@ -50,33 +63,33 @@ export default function ProductPage() {
   if (loading) return <p className="text-center py-10">Chargement...</p>;
   if (!product) return <p className="text-center py-10">Produit introuvable.</p>;
 
+  const name = pickLocaleValue(product.name, locale);
+  const desc = pickLocaleValue(product.description, locale);
+
   const addToCart = () => {
     addItem({
       id: product.id,
-      name: product.name[locale],
-      description: product.description[locale],
+      name,
+      description: desc,
       imageUrl: product.imageUrl,
       price: Number(product.price.eur),
       quantity: 1,
     });
-
     toggleCart();
   };
 
   return (
     <main className="max-w-2xl mx-auto py-10 px-4 text-gray-900">
-      
       {product.imageUrl && (
         <img
           src={product.imageUrl}
           className="w-full h-80 object-cover rounded-lg mb-6 border"
-          alt={product.name[locale]}
+          alt={name}
         />
       )}
 
-      <h1 className="text-3xl font-bold mb-3">{product.name[locale]}</h1>
-
-      <p className="text-gray-600 mb-6">{product.description[locale]}</p>
+      <h1 className="text-3xl font-bold mb-3">{name}</h1>
+      {desc && <p className="text-gray-600 mb-6">{desc}</p>}
 
       <p className="text-xl font-semibold mb-4">{product.price.eur} €</p>
 
