@@ -168,7 +168,7 @@ export async function generateInvoicePDF(order: OrderLike, orderId: string) {
 
   const totalHT = totalHT_items + shipping;
 
-  const VAT_RATE = 0.2; // 20%
+  const VAT_RATE = 0.2;
   const vat = totalHT * VAT_RATE;
   const totalTTC = totalHT + vat;
 
@@ -190,7 +190,6 @@ export async function generateInvoicePDF(order: OrderLike, orderId: string) {
   const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Palette bleu (ajuste si tu veux les hex exacts)
   const ink = rgb(0.06, 0.09, 0.16);
   const muted = rgb(0.35, 0.42, 0.55);
   const border = rgb(0.82, 0.86, 0.92);
@@ -258,7 +257,6 @@ export async function generateInvoicePDF(order: OrderLike, orderId: string) {
 
   let yL = logoBox.y - 14;
 
-  // ✅ Remplace ici avec TES vraies infos Lazurco si tu veux (SIRET/TVA/adresse)
   const companyLines: string[] = [
     "LAZURCO",
     "189 avenue de Fabron",
@@ -281,22 +279,42 @@ export async function generateInvoicePDF(order: OrderLike, orderId: string) {
   }
 
   // =========================
-  // Header right (FACTURE + Client)
+  // Header right (FACTURE + OculaRest/par Lazurco DANS LE RECTANGLE)
   // =========================
   const titleBoxW = 300;
   const titleBoxH = 46;
   const titleX = 595 - M - titleBoxW;
   const titleY = 842 - M - titleBoxH;
 
+  // Box + top blue bar
   drawBox(page, titleX, titleY, titleBoxW, titleBoxH, {
     stroke: border,
     strokeWidth: 1,
     r: 10,
   });
-
   drawBox(page, titleX, titleY + titleBoxH - 10, titleBoxW, 10, { fill: blue });
-  drawText(page, boldFont, "FACTURE", titleX + 116, titleY + 16, 12, ink);
 
+  // ✅ Left text inside box
+  drawText(page, boldFont, "OculaRest", titleX + 14, titleY + 20, 12, ink);
+  drawText(page, regularFont, "par Lazurco", titleX + 14, titleY + 8, 8.5, muted);
+
+  // ✅ Right "FACTURE" inside box (aligned right)
+  const facture = "FACTURE";
+  const factureSize = 11;
+  const factureW = widthOf(boldFont, facture, factureSize);
+  drawText(
+    page,
+    boldFont,
+    facture,
+    titleX + titleBoxW - 14 - factureW,
+    titleY + 18,
+    factureSize,
+    ink
+  );
+
+  // =========================
+  // Header right (Client box)
+  // =========================
   const clientBoxW = 320;
   const clientBoxH = 110;
   const clientX = 595 - M - clientBoxW;
