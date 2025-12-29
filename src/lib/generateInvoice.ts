@@ -1,263 +1,166 @@
 // src/lib/generateInvoice.ts
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
-type InvoiceItem = {
-  ref: string;
-  name: string;
-  desc: string;
-  qty: number;
-  unit: number; // HT
-};
+/**
+ * Facture OculaRest (par Lazurco) — style bleu + logo
+ * - Sans QR code
+ * - "OculaRest / par Lazurco" placé dans le rectangle FACTURE sans chevauchement
+ * - TVA 20% (modifiable)
+ */
+export async function generateInvoicePDF(
+  order: any,
+  orderId: string,
+  opts?: {
+    invoiceNumber?: string; // ex: F20251229
+    vatRate?: number; // ex: 0.2
+    paidLabel?: string; // ex: "FACTURE ACQUITTEE"
+    issueDate?: Date; // par défaut: now
+    logoUrl?: string; // (optionnel, si tu passes un embedImage déjà ailleurs)
+  }
+): Promise<Buffer> {
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595, 842]); // A4 portrait
+  const { width: W, height: H } = page.getSize();
 
-type ShippingAddress = {
-  name?: string;
-  email?: string;
-  address?: string;
-  address2?: string;
-  postalCode?: string;
-  city?: string;
-  country?: string;
-  phone?: string;
-};
+  // Fonts
+  const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-type OrderLike = {
-  items?: any[];
-  shippingMethod?: { price?: number };
-  shippingAddress?: ShippingAddress;
+  // Theme (bleus DA)
+  const blue = rgb(0.14, 0.35, 0.86);
+  const blue2 = rgb(0.05, 0.18, 0.55);
+  const ink = rgb(0.06, 0.07, 0.10);
+  const muted = rgb(0.35, 0.40, 0.48);
+  const border = rgb(0.86, 0.89, 0.93);
+  const soft = rgb(0.96, 0.98, 1);
 
-  invoiceNumber?: string;
-  invoiceDate?: string | number | Date;
+  // Layout
+  const M = 42; // margin
+  const colLeftW = 170;
+  const gap = 18;
+  const rightX = M + colLeftW + gap;
+  const rightW = W - M - rightX;
 
-  paidAt?: string | number | Date;
-  paymentMethod?: string;
-  vatNumber?: string;
-};
+  const VAT_RATE = typeof opts?.vatRate === "number" ? opts.vatRate : 0.2;
+  const issueDate = opts?.issueDate ?? new Date();
 
-const LOGO_URL =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2456d5ba-af23-4219-7115-f54286a7c600/public";
-
-export async function generateInvoicePDF(order: OrderLike, orderId: string) {
-  // =========================
+  // -------------------------
   // Helpers
-  // =========================
+  // -------------------------
+  const fmtMoney = (n: number) => `${(Math.round((n || 0) * 100) / 100).toFixed(2)} €`;
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  const fmtDate = (d: Date) => `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`;
   const safe = (v: any) => (v == null ? "" : String(v));
-  const upper = (v: any) => safe(v).trim().toUpperCase();
-  const money = (n: number) =>
-    (Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100).toFixed(2);
-
-  const fmtDateFR = (d: Date) => {
-    const dd = String(d.getDate()).padStart(2, "0");
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const yy = String(d.getFullYear()).slice(-2);
-    return `${dd}/${mm}/${yy}`;
-  };
-
-  const widthOf = (font: any, text: string, size: number) =>
-    font.widthOfTextAtSize(text, size);
-
-  const wrap = (font: any, text: string, size: number, maxW: number) => {
-    const words = safe(text)
-      .replace(/\s+/g, " ")
-      .trim()
-      .split(" ")
-      .filter(Boolean);
-
-    if (!words.length) return [""];
-
-    const lines: string[] = [];
-    let cur = "";
-    for (const w of words) {
-      const test = cur ? `${cur} ${w}` : w;
-      if (widthOf(font, test, size) <= maxW) cur = test;
-      else {
-        if (cur) lines.push(cur);
-        cur = w;
-      }
-    }
-    if (cur) lines.push(cur);
-    return lines;
-  };
+  const widthOf = (font: any, text: string, size: number) => font.widthOfTextAtSize(text || "", size);
 
   const drawText = (
-    page: any,
-    font: any,
-    text: string,
     x: number,
     y: number,
+    text: string,
     size: number,
-    color = rgb(0, 0, 0)
+    font = regularFont,
+    color = ink
   ) => {
     page.drawText(safe(text), { x, y, size, font, color });
   };
 
+  const drawHr = (y: number) => {
+    page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, thickness: 1, color: border });
+  };
+
   const drawBox = (
-    page: any,
     x: number,
     y: number,
     w: number,
     h: number,
-    opts?: { fill?: any; stroke?: any; strokeWidth?: number; r?: number }
+    cfg?: { fill?: any; stroke?: any; strokeWidth?: number; r?: number }
   ) => {
     page.drawRectangle({
       x,
       y,
       width: w,
       height: h,
-      color: opts?.fill,
-      borderColor: opts?.stroke,
-      borderWidth: opts?.strokeWidth ?? (opts?.stroke ? 1 : 0),
-      borderRadius: opts?.r ?? 0,
+      color: cfg?.fill,
+      borderColor: cfg?.stroke,
+      borderWidth: cfg?.strokeWidth ?? 0,
+      // pdf-lib n'a pas le radius natif sur drawRectangle, on garde rect "sharp"
     });
   };
 
-  const drawLine = (
-    page: any,
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    color = rgb(0.85, 0.85, 0.85)
-  ) => {
-    page.drawLine({
-      start: { x: x1, y: y1 },
-      end: { x: x2, y: y2 },
-      thickness: 1,
-      color,
-    });
+  const ellipsize = (font: any, text: string, size: number, maxW: number) => {
+    const t = safe(text);
+    if (widthOf(font, t, size) <= maxW) return t;
+    const dots = "…";
+    let out = t;
+    while (out.length > 0 && widthOf(font, out + dots, size) > maxW) {
+      out = out.slice(0, -1);
+    }
+    return out.length ? out + dots : dots;
   };
 
-  const parseDate = (v: any, fallback = new Date()) => {
-    if (!v) return fallback;
-    if (v instanceof Date) return v;
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? fallback : d;
-  };
+  // -------------------------
+  // Normalize order data
+  // -------------------------
+  const a = order?.shippingAddress ?? {};
+  const customerName = safe(a.name) || safe(order?.customerName) || safe(order?.name) || "—";
+  const customerAddr1 = safe(a.address);
+  const customerCity = safe(a.city);
+  const customerZip = safe(a.postalCode);
+  const customerCountry = safe(a.country);
+  const customerEmail = safe(a.email) || safe(order?.email) || "—";
 
-  // =========================
-  // Data normalization
-  // =========================
-  const a: ShippingAddress = (order?.shippingAddress || {}) as ShippingAddress;
   const itemsRaw = Array.isArray(order?.items) ? order.items : [];
-
-  const itemsNorm: InvoiceItem[] = itemsRaw.map((it: any): InvoiceItem => {
-    const name =
+  const itemsNorm: { label: string; qty: number; unit: number; ref?: string }[] = itemsRaw.map((it: any) => {
+    const label =
       typeof it?.name === "string"
         ? it.name
-        : it?.name?.fr || it?.name?.en || it?.name?.title || "Produit";
-
-    const desc = safe(it?.description || "");
-    const qty = Number(it?.quantity || 1);
-
-    const unit =
-      typeof it?.price === "number"
-        ? it.price
-        : typeof it?.price?.eur === "number"
-        ? it.price.eur
-        : Number(it?.unitPrice || 0);
-
-    const ref = safe(it?.ref || it?.sku || "");
-    return { ref, name: safe(name), desc, qty, unit: Number(unit || 0) };
+        : it?.name?.fr || it?.name?.en || it?.title || "Produit";
+    const qty = Number(it?.quantity ?? 1) || 1;
+    const unit = Number(it?.price ?? it?.unitPrice ?? 0) || 0;
+    return { label: safe(label), qty, unit, ref: safe(it?.ref || it?.sku || "") };
   });
 
-  const shipping = Number(order?.shippingMethod?.price || 0);
+  const shipping = Number(order?.shippingMethod?.price ?? order?.shippingPrice ?? 0) || 0;
 
-  const totalHT_items = itemsNorm.reduce<number>(
-    (sum: number, it: InvoiceItem) => sum + it.unit * it.qty,
-    0
-  );
-
+  const totalHT_items = itemsNorm.reduce((s: number, it) => s + it.unit * it.qty, 0);
   const totalHT = totalHT_items + shipping;
+  const tva = totalHT * VAT_RATE;
+  const totalTTC = totalHT + tva;
 
-  const VAT_RATE = 0.2;
-  const vat = totalHT * VAT_RATE;
-  const totalTTC = totalHT + vat;
-
-  const invoiceDate = parseDate(order?.invoiceDate, new Date());
+  const status = safe(order?.status);
+  const isPaid = status === "paid" || safe(order?.paid) === "true" || safe(order?.paymentStatus) === "paid";
 
   const invoiceNumber =
-    safe(order?.invoiceNumber) ||
-    `F${invoiceDate.getFullYear()}${String(invoiceDate.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}${String(invoiceDate.getDate()).padStart(2, "0")}`;
+    opts?.invoiceNumber ||
+    `F${issueDate.getFullYear()}${pad2(issueDate.getMonth() + 1)}${pad2(issueDate.getDate())}`;
 
-  // =========================
-  // Document + Fonts + Colors (DA BLEU)
-  // =========================
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4
+  // -------------------------
+  // HEADER (top)
+  // -------------------------
+  let yTop = H - M;
 
-  const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  // Logo (on l'affiche comme un "badge" bleu si tu ne veux pas fetcher l'image côté serveur)
+  // 👉 Pour mettre TON logo image, je te donne la version "embed" juste après si tu veux.
+  // Ici on fait un logo placeholder propre, stable.
+  const logoX = M;
+  const logoY = yTop - 44;
 
-  const ink = rgb(0.06, 0.09, 0.16);
-  const muted = rgb(0.35, 0.42, 0.55);
-  const border = rgb(0.82, 0.86, 0.92);
+  // Badge rond (place-holder)
+  page.drawRectangle({
+    x: logoX,
+    y: logoY,
+    width: 42,
+    height: 42,
+    color: blue,
+    borderColor: rgb(1, 1, 1),
+    borderWidth: 0,
+  });
+  drawText(logoX + 52, logoY + 26, "OculaRest", 14, boldFont, ink);
+  drawText(logoX + 52, logoY + 10, "par Lazurco", 9, regularFont, muted);
 
-  const blue = rgb(0.14, 0.38, 0.9);
-  const blueDark = rgb(0.05, 0.2, 0.55);
-  const blueSoft = rgb(0.93, 0.96, 1.0);
-  const success = rgb(0.05, 0.62, 0.45);
-
-  const M = 42;
-
-  // =========================
-  // Logo (Cloudflare Images) - évite WEBP
-  // =========================
-  async function tryEmbedLogo() {
-    try {
-      const res = await fetch(LOGO_URL, {
-        headers: { Accept: "image/png,image/jpeg,*/*" },
-        cache: "no-store",
-      });
-      if (!res.ok) throw new Error(`logo fetch failed: ${res.status}`);
-
-      const ct = (res.headers.get("content-type") || "").toLowerCase();
-      const bytes = new Uint8Array(await res.arrayBuffer());
-
-      if (ct.includes("png")) return await pdfDoc.embedPng(bytes);
-      if (ct.includes("jpeg") || ct.includes("jpg")) return await pdfDoc.embedJpg(bytes);
-
-      console.warn(`[invoice] Logo unsupported (${ct}). Skipping.`);
-      return null;
-    } catch (e) {
-      console.warn("[invoice] Logo error, skipping:", e);
-      return null;
-    }
-  }
-
-  const logoImg = await tryEmbedLogo();
-
-  // =========================
-  // Header left (brand + company)
-  // =========================
-  const logoBox = { x: M, y: 842 - M - 52, w: 220, h: 52 };
-
-  if (logoImg) {
-    const maxW = 150;
-    const maxH = 40;
-    const dims = logoImg.scale(1);
-    const scale = Math.min(maxW / dims.width, maxH / dims.height);
-    const w = dims.width * scale;
-    const h = dims.height * scale;
-
-    page.drawImage(logoImg, {
-      x: logoBox.x,
-      y: logoBox.y + (logoBox.h - h) / 2,
-      width: w,
-      height: h,
-    });
-
-    drawText(page, boldFont, "OculaRest", logoBox.x + 160, logoBox.y + 26, 15, ink);
-    drawText(page, regularFont, "par Lazurco", logoBox.x + 160, logoBox.y + 10, 9, muted);
-  } else {
-    drawText(page, boldFont, "OculaRest", logoBox.x, logoBox.y + 26, 22, blue);
-    drawText(page, regularFont, "par Lazurco", logoBox.x, logoBox.y + 10, 9, muted);
-  }
-
-  let yL = logoBox.y - 14;
-
-  const companyLines: string[] = [
+  // Col left company block
+  const leftInfoY = logoY - 10;
+  const companyLines = [
     "LAZURCO",
     "189 avenue de Fabron",
     "06200 Nice, FRANCE",
@@ -268,279 +171,331 @@ export async function generateInvoicePDF(order: OrderLike, orderId: string) {
     "Email : contact@hdconnects.com",
     "Site : www.ocularest.fr",
   ];
-
-  for (const ln of companyLines) {
-    if (ln === "") {
-      yL -= 8;
+  let ly = leftInfoY - 10;
+  for (const line of companyLines) {
+    if (!line) {
+      ly -= 10;
       continue;
     }
-    drawText(page, regularFont, ln, M, yL, 8.7, ink);
-    yL -= 12;
+    drawText(M, ly, line, 8.5, regularFont, line === "LAZURCO" ? ink : muted);
+    ly -= 12;
   }
 
-  // =========================
-  // Header right (FACTURE + OculaRest/par Lazurco DANS LE RECTANGLE)
-  // =========================
-  const titleBoxW = 300;
-  const titleBoxH = 46;
-  const titleX = 595 - M - titleBoxW;
-  const titleY = 842 - M - titleBoxH;
+  // Right: FACTURE rectangle with safe zones
+  const titleBoxW = rightW;
+  const titleBoxH = 44;
+  const titleX = rightX;
+  const titleY = yTop - titleBoxH;
 
-  // Box + top blue bar
-  drawBox(page, titleX, titleY, titleBoxW, titleBoxH, {
-    stroke: border,
-    strokeWidth: 1,
-    r: 10,
+  // Box border
+  page.drawRectangle({
+    x: titleX,
+    y: titleY,
+    width: titleBoxW,
+    height: titleBoxH,
+    borderColor: border,
+    borderWidth: 1,
+    color: rgb(1, 1, 1),
   });
-  drawBox(page, titleX, titleY + titleBoxH - 10, titleBoxW, 10, { fill: blue });
+  // Top blue bar
+  page.drawRectangle({
+    x: titleX,
+    y: titleY + titleBoxH - 9,
+    width: titleBoxW,
+    height: 9,
+    color: blue,
+  });
 
-  // ✅ Left text inside box
-  drawText(page, boldFont, "OculaRest", titleX + 14, titleY + 20, 12, ink);
-  drawText(page, regularFont, "par Lazurco", titleX + 14, titleY + 8, 8.5, muted);
+  // Zones (no overlap)
+  const pad = 14;
+  const rightZoneW = 110; // zone pour FACTURE
+  const gapZones = 10;
+  const leftZoneX = titleX + pad;
+  const leftZoneW = titleBoxW - pad * 2 - rightZoneW - gapZones;
+  const rightZoneX = titleX + titleBoxW - pad - rightZoneW;
 
-  // ✅ Right "FACTURE" inside box (aligned right)
-  const facture = "FACTURE";
+  const brandTxt = ellipsize(boldFont, "OculaRest", 12, leftZoneW);
+  const bylineTxt = ellipsize(regularFont, "par Lazurco", 8.5, leftZoneW);
+
+  drawText(leftZoneX, titleY + 20, brandTxt, 12, boldFont, ink);
+  drawText(leftZoneX, titleY + 8, bylineTxt, 8.5, regularFont, muted);
+
+  const factureTxt = "FACTURE";
   const factureSize = 11;
-  const factureW = widthOf(boldFont, facture, factureSize);
-  drawText(
-    page,
-    boldFont,
-    facture,
-    titleX + titleBoxW - 14 - factureW,
-    titleY + 18,
-    factureSize,
-    ink
-  );
+  const factureW = widthOf(boldFont, factureTxt, factureSize);
+  const fx = rightZoneX + Math.max(0, (rightZoneW - factureW) / 2);
+  drawText(fx, titleY + 17, factureTxt, factureSize, boldFont, ink);
 
-  // =========================
-  // Header right (Client box)
-  // =========================
-  const clientBoxW = 320;
-  const clientBoxH = 110;
-  const clientX = 595 - M - clientBoxW;
-  const clientY = titleY - 22 - clientBoxH;
+  // Client box
+  const clientBoxY = titleY - 110;
+  const clientBoxH = 98;
 
-  drawBox(page, clientX, clientY, clientBoxW, clientBoxH, {
-    stroke: border,
-    strokeWidth: 1,
+  page.drawRectangle({
+    x: rightX,
+    y: clientBoxY,
+    width: rightW,
+    height: clientBoxH,
+    borderColor: border,
+    borderWidth: 1,
+    color: rgb(1, 1, 1),
   });
-  drawBox(page, clientX, clientY + clientBoxH - 20, clientBoxW, 20, { fill: blueDark });
-  drawText(
-    page,
-    boldFont,
-    "Client",
-    clientX + clientBoxW / 2 - 18,
-    clientY + clientBoxH - 14,
-    9,
-    rgb(1, 1, 1)
-  );
+  page.drawRectangle({
+    x: rightX,
+    y: clientBoxY + clientBoxH - 18,
+    width: rightW,
+    height: 18,
+    color: blue2,
+  });
+  const clientTitle = "Client";
+  const clientTitleW = widthOf(boldFont, clientTitle, 10);
+  drawText(rightX + (rightW - clientTitleW) / 2, clientBoxY + clientBoxH - 13, clientTitle, 10, boldFont, rgb(1, 1, 1));
 
-  const clientLines = [
-    upper(a.name),
-    upper(a.address),
-    upper(a.address2),
-    upper(`${safe(a.postalCode)} ${safe(a.city)}`.trim()),
-    upper(a.country),
-  ].filter((x) => x && x.trim().length);
+  let cy = clientBoxY + clientBoxH - 34;
+  drawText(rightX + 12, cy, safe(customerName).toUpperCase() || "—", 10, boldFont, ink);
+  cy -= 14;
+  drawText(rightX + 12, cy, customerAddr1 || "—", 9, regularFont, ink);
+  cy -= 12;
+  drawText(rightX + 12, cy, `${customerZip} ${customerCity}`.trim() || "—", 9, regularFont, ink);
+  cy -= 12;
+  drawText(rightX + 12, cy, customerCountry || "FR", 9, regularFont, muted);
 
-  let yC = clientY + clientBoxH - 34;
-  for (const ln of clientLines) {
-    drawText(page, boldFont, ln, clientX + 12, yC, 9, ink);
-    yC -= 14;
-  }
+  // Separator line under header zone
+  const sepY = clientBoxY - 16;
+  drawHr(sepY);
 
-  // =========================
-  // Separator + Date / Invoice number
-  // =========================
-  const infoTopY = clientY - 26;
-  drawLine(page, M, infoTopY, 595 - M, infoTopY, border);
+  // -------------------------
+  // Meta row (Date / N° facture)
+  // -------------------------
+  let y = sepY - 26;
+  drawText(M, y, "Date :", 9, boldFont, muted);
+  drawText(M + 46, y, fmtDate(issueDate), 9, regularFont, ink);
 
-  const lineY = infoTopY - 20;
+  const nfLabel = "N° Facture :";
+  const nfLabelW = widthOf(boldFont, nfLabel, 9);
+  const nfValW = widthOf(boldFont, invoiceNumber, 9);
 
-  drawText(page, boldFont, "Date :", M, lineY, 9, ink);
-  drawText(page, regularFont, fmtDateFR(invoiceDate), M + 110, lineY, 9, ink);
+  const nfX = W - M - (nfLabelW + 10 + nfValW);
+  drawText(nfX, y, nfLabel, 9, boldFont, muted);
+  drawText(nfX + nfLabelW + 10, y, invoiceNumber, 9, boldFont, ink);
 
-  drawText(page, boldFont, "N° Facture :", M + 290, lineY, 9, ink);
-  drawText(page, boldFont, invoiceNumber, M + 390, lineY, 9, ink);
+  y -= 14;
+  drawHr(y);
 
-  // Info box
-  const greyY = lineY - 76;
-  const greyH = 72;
-  const greyW = 595 - M * 2;
-  drawBox(page, M, greyY, greyW, greyH, { fill: blueSoft, stroke: border, strokeWidth: 1 });
+  // -------------------------
+  // Info light box (commande / email / TVA intracom)
+  // -------------------------
+  y -= 12;
 
-  drawText(page, regularFont, "Votre commande", M + 10, greyY + greyH - 22, 8, muted);
-  drawText(page, boldFont, "www.ocularest.fr", M + 10, greyY + greyH - 34, 8, blueDark);
-  drawText(page, regularFont, safe(orderId) || "-", M + 160, greyY + greyH - 34, 8, ink);
+  const infoBoxH = 58;
+  page.drawRectangle({
+    x: M,
+    y: y - infoBoxH,
+    width: W - 2 * M,
+    height: infoBoxH,
+    borderColor: border,
+    borderWidth: 1,
+    color: soft,
+  });
 
-  drawText(page, regularFont, "Email client :", M + 10, greyY + greyH - 54, 8, muted);
-  drawText(
-    page,
-    regularFont,
-    safe(a.email || order?.shippingAddress?.email) || "-",
-    M + 160,
-    greyY + greyH - 54,
-    8,
-    ink
-  );
+  const boxPad = 12;
+  const bx = M + boxPad;
+  let by = y - 18;
 
-  drawText(page, regularFont, "TVA intracom : ", M + 10, greyY + greyH - 66, 8, muted);
-  drawText(page, regularFont, safe(order?.vatNumber) || "-", M + 160, greyY + greyH - 66, 8, ink);
+  drawText(bx, by, "Votre commande", 8, boldFont, muted);
+  drawText(bx + 92, by, "www.ocularest.fr", 8, boldFont, blue2);
 
-  // =========================
-  // Table
-  // =========================
+  by -= 14;
+  drawText(bx, by, "ID commande :", 8, boldFont, muted);
+  drawText(bx + 92, by, safe(orderId), 8, regularFont, ink);
+
+  by -= 14;
+  drawText(bx, by, "Email client :", 8, boldFont, muted);
+  drawText(bx + 92, by, customerEmail || "—", 8, regularFont, ink);
+
+  y = y - infoBoxH - 22;
+
+  // -------------------------
+  // TABLE (Référence / Désignation / Qté / PU HT / Total HT)
+  // -------------------------
   const tableX = M;
-  const tableW = 595 - M * 2;
-  const tableTop = greyY - 18;
+  const tableW = W - 2 * M;
 
-  const colRef = 75;
-  const colQty = 60;
-  const colUnit = 90;
-  const colTot = 90;
-  const colDes = tableW - (colRef + colQty + colUnit + colTot);
+  const cRef = 86;
+  const cDes = tableW - (cRef + 60 + 92 + 92);
+  const cQty = 60;
+  const cPU = 92;
+  const cTot = 92;
 
-  const headH = 18;
+  const headerH = 18;
   const rowH = 18;
 
-  drawBox(page, tableX, tableTop - headH, tableW, headH, { fill: blueDark });
-  drawText(page, boldFont, "Reference", tableX + 6, tableTop - 12, 8, rgb(1, 1, 1));
-  drawText(page, boldFont, "Designation", tableX + colRef + 6, tableTop - 12, 8, rgb(1, 1, 1));
-  drawText(page, boldFont, "Quantite", tableX + colRef + colDes + 6, tableTop - 12, 8, rgb(1, 1, 1));
-  drawText(
-    page,
-    boldFont,
-    "Prix unitaire HT",
-    tableX + colRef + colDes + colQty + 6,
-    tableTop - 12,
-    8,
-    rgb(1, 1, 1)
-  );
-  drawText(
-    page,
-    boldFont,
-    "Prix Total HT",
-    tableX + colRef + colDes + colQty + colUnit + 6,
-    tableTop - 12,
-    8,
-    rgb(1, 1, 1)
-  );
+  // table header background
+  page.drawRectangle({ x: tableX, y: y - headerH, width: tableW, height: headerH, color: blue2 });
+  const headY = y - 13;
 
-  const xRef = tableX + colRef;
-  const xDes = xRef + colDes;
-  const xQty = xDes + colQty;
-  const xUnit = xQty + colUnit;
-
-  const lines: InvoiceItem[] = [...itemsNorm];
-  if (shipping > 0) lines.push({ ref: "", name: "Livraison", desc: "", qty: 1, unit: shipping });
-
-  const maxRows = Math.max(6, lines.length);
-  let y = tableTop - headH;
-
-  for (let i = 0; i < maxRows; i++) {
-    const rowY = y - rowH;
-
-    if (i % 2 === 1) drawBox(page, tableX, rowY, tableW, rowH, { fill: rgb(0.985, 0.99, 1) });
-
-    drawLine(page, tableX, rowY, tableX + tableW, rowY, border);
-    drawLine(page, tableX, y, tableX, rowY, border);
-    drawLine(page, tableX + tableW, y, tableX + tableW, rowY, border);
-    drawLine(page, xRef, y, xRef, rowY, border);
-    drawLine(page, xDes, y, xDes, rowY, border);
-    drawLine(page, xQty, y, xQty, rowY, border);
-    drawLine(page, xUnit, y, xUnit, rowY, border);
-
-    const it = lines[i];
-    if (it) {
-      drawText(page, regularFont, safe(it.ref), tableX + 6, rowY + 5, 8, ink);
-
-      const designation = `${safe(it.name)}${it.desc ? ` - ${safe(it.desc)}` : ""}`;
-      const desLines = wrap(regularFont, designation, 8, colDes - 12).slice(0, 2);
-      drawText(page, regularFont, desLines[0] || "", tableX + colRef + 6, rowY + 5, 8, ink);
-      if (desLines[1]) drawText(page, regularFont, desLines[1], tableX + colRef + 6, rowY - 6, 8, ink);
-
-      drawText(page, regularFont, String(it.qty), tableX + colRef + colDes + 6, rowY + 5, 8, ink);
-      drawText(page, regularFont, `${money(it.unit)} €`, tableX + colRef + colDes + colQty + 6, rowY + 5, 8, ink);
-      drawText(
-        page,
-        regularFont,
-        `${money(it.unit * it.qty)} €`,
-        tableX + colRef + colDes + colQty + colUnit + 6,
-        rowY + 5,
-        8,
-        ink
-      );
-    }
-
-    y = rowY;
-  }
-
-  drawLine(page, tableX, y, tableX + tableW, y, border);
-
-  // =========================
-  // Totals
-  // =========================
-  const totalsW = 240;
-  const totalsX = tableX + tableW - totalsW;
-  const totalsY = y - 60;
-
-  drawLine(page, totalsX, y, totalsX, totalsY + 60, border);
-
-  drawText(page, regularFont, "Total HT", totalsX + 10, totalsY + 40, 9, muted);
-  drawText(page, boldFont, `${money(totalHT)} €`, totalsX + 140, totalsY + 40, 9, ink);
-
-  drawText(page, regularFont, "TVA 20%", totalsX + 10, totalsY + 24, 9, muted);
-  drawText(page, boldFont, `${money(vat)} €`, totalsX + 140, totalsY + 24, 9, ink);
-
-  drawText(page, boldFont, "Total TTC", totalsX + 10, totalsY + 8, 9, ink);
-  drawText(page, boldFont, `${money(totalTTC)} €`, totalsX + 140, totalsY + 8, 9, blueDark);
-
-  // =========================
-  // Payment conditions
-  // =========================
-  const payY = totalsY - 70;
-
-  drawText(page, boldFont, "Conditions de paiement :", M, payY + 44, 9, ink);
-
-  const paidAt = parseDate(order?.paidAt, invoiceDate);
-
-  const payLines: string[] = [
-    `Mode de paiement : ${safe(order?.paymentMethod) || "Carte bancaire"}`,
-    `Paiement recu le : ${fmtDateFR(paidAt)}`,
-    `Escompte pour paiement anticipe : neant`,
-    `Penalite de retard : 3 fois le taux legal`,
-    `Indemnite forfaitaire de 40 € pour frais de recouvrement (art. L441-5 du code de commerce) en cas de retard de paiement.`,
+  const head = [
+    { t: "Référence", x: tableX + 8, w: cRef - 16 },
+    { t: "Désignation", x: tableX + cRef + 8, w: cDes - 16 },
+    { t: "Quantité", x: tableX + cRef + cDes + 8, w: cQty - 16 },
+    { t: "Prix unitaire HT", x: tableX + cRef + cDes + cQty + 8, w: cPU - 16 },
+    { t: "Prix Total HT", x: tableX + cRef + cDes + cQty + cPU + 8, w: cTot - 16 },
   ];
 
-  let yP = payY + 28;
-  for (const l of payLines) {
-    const lines2 = wrap(regularFont, l, 8, 330);
-    for (const ll of lines2) {
-      drawText(page, regularFont, ll, M, yP, 8, ink);
-      yP -= 12;
+  for (const h of head) drawText(h.x, headY, h.t, 8, boldFont, rgb(1, 1, 1));
+
+  y -= headerH;
+
+  const drawRow = (cells: { ref: string; des: string; qty: string; pu: string; tot: string }, idx: number) => {
+    // row bg
+    page.drawRectangle({
+      x: tableX,
+      y: y - rowH,
+      width: tableW,
+      height: rowH,
+      color: idx % 2 === 0 ? rgb(1, 1, 1) : rgb(0.985, 0.99, 1),
+    });
+
+    // borders
+    page.drawLine({ start: { x: tableX, y }, end: { x: tableX + tableW, y }, thickness: 1, color: border });
+
+    // vertical lines
+    const xs = [
+      tableX + cRef,
+      tableX + cRef + cDes,
+      tableX + cRef + cDes + cQty,
+      tableX + cRef + cDes + cQty + cPU,
+    ];
+    for (const vx of xs) {
+      page.drawLine({ start: { x: vx, y }, end: { x: vx, y: y - rowH }, thickness: 1, color: border });
     }
+
+    const ty = y - 13;
+
+    const refTxt = ellipsize(regularFont, cells.ref, 8, cRef - 16);
+    const desTxt = ellipsize(regularFont, cells.des, 8, cDes - 16);
+
+    drawText(tableX + 8, ty, refTxt, 8, regularFont, ink);
+    drawText(tableX + cRef + 8, ty, desTxt, 8, regularFont, ink);
+    drawText(tableX + cRef + cDes + 8, ty, cells.qty, 8, regularFont, ink);
+    drawText(tableX + cRef + cDes + cQty + 8, ty, cells.pu, 8, regularFont, ink);
+    drawText(tableX + cRef + cDes + cQty + cPU + 8, ty, cells.tot, 8, regularFont, ink);
+
+    y -= rowH;
+  };
+
+  const rows = [...itemsNorm].map((it) => ({
+    ref: it.ref || "",
+    des: it.label,
+    qty: String(it.qty),
+    pu: fmtMoney(it.unit),
+    tot: fmtMoney(it.unit * it.qty),
+  }));
+
+  // shipping as row
+  rows.push({
+    ref: "",
+    des: "Livraison",
+    qty: "1",
+    pu: fmtMoney(shipping),
+    tot: fmtMoney(shipping),
+  });
+
+  // draw rows
+  for (let i = 0; i < rows.length; i++) drawRow(rows[i], i);
+
+  // bottom border line
+  page.drawLine({ start: { x: tableX, y }, end: { x: tableX + tableW, y }, thickness: 1, color: border });
+
+  // table outer border
+  page.drawRectangle({
+    x: tableX,
+    y,
+    width: tableW,
+    height: headerH + rows.length * rowH,
+    borderColor: border,
+    borderWidth: 1,
+  });
+
+  // -------------------------
+  // Totals block (right)
+  // -------------------------
+  y -= 18;
+
+  const totalsW = 210;
+  const totalsX = W - M - totalsW;
+  const lineGap = 14;
+
+  const labelSize = 8.5;
+  const valueSize = 9;
+
+  const t1 = "Total HT";
+  const t2 = `TVA ${Math.round(VAT_RATE * 100)}%`;
+  const t3 = "Total TTC";
+
+  const drawTotalLine = (label: string, value: string, bold = false, yLine = 0) => {
+    drawText(totalsX, yLine, label, labelSize, bold ? boldFont : regularFont, muted);
+    const valW = widthOf(bold ? boldFont : boldFont, value, valueSize);
+    drawText(totalsX + totalsW - valW, yLine, value, valueSize, bold ? boldFont : boldFont, ink);
+  };
+
+  let ty = y - 4;
+  drawTotalLine(t1, fmtMoney(totalHT), false, ty);
+  ty -= lineGap;
+  drawTotalLine(t2, fmtMoney(tva), false, ty);
+  ty -= lineGap;
+  drawTotalLine(t3, fmtMoney(totalTTC), true, ty);
+
+  // Paid label
+  const paidLabel = opts?.paidLabel ?? "FACTURE ACQUITTEE";
+  if (isPaid) {
+    const paidY = ty - 26;
+    const paidW = widthOf(boldFont, paidLabel, 10);
+    drawText(totalsX + totalsW - paidW, paidY, paidLabel, 10, boldFont, rgb(0.10, 0.60, 0.30));
+    y = paidY - 18;
+  } else {
+    y = ty - 22;
   }
 
-  drawText(page, boldFont, "FACTURE ACQUITTEE", 595 / 2 + 40, payY + 10, 10, success);
+  // -------------------------
+  // Payment conditions (bottom-left)
+  // -------------------------
+  const condX = M;
+  let cy2 = y;
 
-  // =========================
-  // Footer
-  // =========================
-  const footerBarY = 56;
-  drawBox(page, M, footerBarY, 595 - M * 2, 10, { fill: blueDark });
+  drawText(condX, cy2, "Conditions de paiement :", 8.5, boldFont, ink);
+  cy2 -= 12;
 
-  drawText(page, boldFont, "Reserve de propriete", 595 / 2 - 56, footerBarY - 18, 8, ink);
+  const lines = [
+    `Mode de paiement : ${safe(order?.paymentMethod) || "Carte bancaire"}`,
+    `Paiement reçu le : ${fmtDate(issueDate)}`,
+    `Escompte pour paiement anticipé : néant`,
+    `Pénalité de retard : 3 fois le taux légal`,
+    `Indemnité forfaitaire de 40 € pour frais de recouvrement (art. L441-5 du code de commerce) en cas de retard.`,
+  ];
 
-  const footerTxt =
-    "Lazurco conserve l'entière propriete des biens jusqu'au paiement complet de la commande (loi 80335 du 12 mai 1980).";
-  const footerLines = wrap(regularFont, footerTxt, 7.6, 595 - M * 2).slice(0, 2);
-
-  let yF = footerBarY - 32;
-  for (const ln of footerLines) {
-    drawText(page, regularFont, ln, M + 30, yF, 7.6, muted);
-    yF -= 10;
+  for (const line of lines) {
+    drawText(condX, cy2, line, 7.4, regularFont, muted);
+    cy2 -= 10;
   }
 
+  // -------------------------
+  // Footer bar + mention
+  // -------------------------
+  const footerBarH = 8;
+  page.drawRectangle({ x: M, y: 36, width: W - 2 * M, height: footerBarH, color: blue2 });
+
+  const foot1 = "Réserve de propriété";
+  const foot2 =
+    "Lazurco conserve l'entière propriété des biens jusqu'au paiement complet de la commande (loi 80335 du 12 mai 1980).";
+
+  const footY = 26;
+  const foot1W = widthOf(boldFont, foot1, 7.5);
+  drawText((W - foot1W) / 2, footY, foot1, 7.5, boldFont, muted);
+
+  const foot2W = widthOf(regularFont, foot2, 6.8);
+  drawText((W - foot2W) / 2, footY - 10, foot2, 6.8, regularFont, muted);
+
+  // Save
   const pdfBytes = await pdfDoc.save();
   return Buffer.from(pdfBytes);
 }
