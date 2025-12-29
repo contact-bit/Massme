@@ -9,8 +9,51 @@ import DeviceInfoSection from "@/components/home/DeviceInfoSection";
 import FaqSection from "@/components/home/FaqSection";
 import FinalCtaSection from "@/components/home/FinalCtaSection";
 
+export const dynamic = "force-dynamic";
 
-const CONTENT = {
+/**
+ * Locales Europe (tu peux retirer/ajouter)
+ */
+type Locale =
+  | "fr"
+  | "en"
+  | "es"
+  | "de"
+  | "it"
+  | "pt"
+  | "nl"
+  | "pl"
+  | "sv"
+  | "da"
+  | "no"
+  | "fi"
+  | "cs"
+  | "hu"
+  | "ro"
+  | "bg"
+  | "el"
+  | "sk"
+  | "sl"
+  | "hr"
+  | "et"
+  | "lv"
+  | "lt"
+  | "mt"
+  | "ga";
+
+type Content = {
+  hero: {
+    title: string;
+    subtitle: string;
+    body: string;
+  };
+};
+
+/**
+ * ✅ Pour l’instant tu écris seulement FR/EN.
+ * Les autres langues = fallback EN (tu pourras remplir après).
+ */
+const CONTENT: Partial<Record<Locale, Content>> = {
   fr: {
     hero: {
       title: "Convalescence après vitrectomie avec injection de gaz",
@@ -31,31 +74,50 @@ const CONTENT = {
   },
 } as const;
 
+function isLocale(v: string): v is Locale {
+  return [
+    "fr","en","es","de","it","pt","nl","pl","sv","da","no","fi","cs","hu","ro","bg","el","sk","sl","hr","et","lv","lt","mt","ga",
+  ].includes(v);
+}
+
+/**
+ * 🔥 Locale “effective” : tes composants home ne gèrent que fr/en
+ * Donc on mappe toutes les langues vers EN (ou FR si tu veux).
+ */
+function toEffectiveLocale(locale: Locale): "fr" | "en" {
+  return locale === "fr" ? "fr" : "en";
+}
+
 export default async function HomePage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
-  const t = CONTENT[locale as "fr" | "en"];
+  const { locale: rawLocale } = await params;
+
+  if (!rawLocale || !isLocale(rawLocale)) return notFound();
+
+  const locale = rawLocale as Locale;
+
+  // content: locale -> sinon EN -> sinon FR
+  const t = CONTENT[locale] ?? CONTENT.en ?? CONTENT.fr;
   if (!t) return notFound();
+
+  const effectiveLocale = toEffectiveLocale(locale);
 
   return (
     <main>
-      {/* Navbar déjà existante */}
-      <HeroSection locale={locale as "fr" | "en"} {...t.hero} />
+      <HeroSection locale={effectiveLocale} {...t.hero} />
 
-      {/* Image posture juste après le hero */}
       <PostureSection />
 
-    <CredibilityStrip locale={locale as "fr" | "en"} />
-    <RecoverySupportSection locale={locale as "fr" | "en"} />
-    <StepsSection locale={locale as "fr" | "en"} />
-    <WhyDifferentSection locale={locale as "fr" | "en"} />
-    <DeviceInfoSection locale={locale as "fr" | "en"} />
-    <FaqSection locale={locale as "fr" | "en"} />
-<FinalCtaSection locale={locale as "fr" | "en"} />
-
+      <CredibilityStrip locale={effectiveLocale} />
+      <RecoverySupportSection locale={effectiveLocale} />
+      <StepsSection locale={effectiveLocale} />
+      <WhyDifferentSection locale={effectiveLocale} />
+      <DeviceInfoSection locale={effectiveLocale} />
+      <FaqSection locale={effectiveLocale} />
+      <FinalCtaSection locale={effectiveLocale} />
     </main>
   );
 }

@@ -7,23 +7,107 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useCart } from "@/context/CartContext";
 
-type Locale = "fr" | "en";
+/* ----------------------------------
+   🌍 LOCALES SUPPORTÉES
+---------------------------------- */
+export type Locale =
+  | "fr"
+  | "en"
+  | "es"
+  | "de"
+  | "it"
+  | "nl"
+  | "pt";
 
+/* ----------------------------------
+   🧠 UI TRANSLATIONS
+---------------------------------- */
+const UI_TEXT: Record<
+  Locale,
+  {
+    noProduct: string;
+    view: string;
+    add: string;
+    priceLabel?: string;
+  }
+> = {
+  fr: {
+    noProduct: "Aucun produit disponible.",
+    view: "Voir le produit →",
+    add: "Ajouter au panier 🛒",
+  },
+  en: {
+    noProduct: "No product available.",
+    view: "View product →",
+    add: "Add to cart 🛒",
+  },
+  es: {
+    noProduct: "No hay productos disponibles.",
+    view: "Ver producto →",
+    add: "Añadir al carrito 🛒",
+  },
+  de: {
+    noProduct: "Kein Produkt verfügbar.",
+    view: "Produkt ansehen →",
+    add: "In den Warenkorb 🛒",
+  },
+  it: {
+    noProduct: "Nessun prodotto disponibile.",
+    view: "Vedi prodotto →",
+    add: "Aggiungi al carrello 🛒",
+  },
+  nl: {
+    noProduct: "Geen product beschikbaar.",
+    view: "Bekijk product →",
+    add: "Toevoegen aan winkelwagen 🛒",
+  },
+  pt: {
+    noProduct: "Nenhum produto disponível.",
+    view: "Ver produto →",
+    add: "Adicionar ao carrinho 🛒",
+  },
+};
+
+/* ----------------------------------
+   📦 PRODUCT TYPE
+---------------------------------- */
 export type Product = {
   id: string;
-  name: Record<Locale, string>;
-  description?: Record<Locale, string>;
+  name: Partial<Record<Locale, string>>;
+  description?: Partial<Record<Locale, string>>;
   price: { eur: number };
   imageUrl?: string;
   isActive?: boolean;
 };
 
+/* ----------------------------------
+   🧩 HELPERS
+---------------------------------- */
+function pickLocaleValue(
+  obj: Partial<Record<Locale, string>> | undefined,
+  locale: Locale
+) {
+  return (
+    obj?.[locale] ||
+    obj?.en ||
+    obj?.fr ||
+    ""
+  );
+}
+
+/* ----------------------------------
+   🛍️ COMPONENT
+---------------------------------- */
 export default function ProductsClient({ locale }: { locale: Locale }) {
   const [product, setProduct] = useState<Product | null>(null);
   const { addItem } = useCart();
 
-  const safeLocale: Locale = locale === "en" ? "en" : "fr";
+  const safeLocale: Locale = UI_TEXT[locale] ? locale : "fr";
+  const T = UI_TEXT[safeLocale];
 
+  /* -----------------------------
+     🔄 LOAD PRODUCT
+  ----------------------------- */
   useEffect(() => {
     async function fetchProducts() {
       const snapshot = await getDocs(collection(db, "products"));
@@ -32,77 +116,70 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
         .map((d) => ({ id: d.id, ...(d.data() as any) }))
         .filter((p: Product) => p.isActive);
 
-      if (activeProducts.length > 0) {
-        setProduct(activeProducts[0]); // 👍 un produit complet
-      } else {
-        setProduct(null);
-      }
+      setProduct(activeProducts[0] ?? null);
     }
 
     fetchProducts();
   }, []);
 
+  /* -----------------------------
+     ❌ NO PRODUCT
+  ----------------------------- */
   if (!product) {
     return (
       <main className="products-page">
-        <p className="text-gray-600 text-center">
-          {safeLocale === "fr"
-            ? "Aucun produit disponible."
-            : "No product available."}
-        </p>
+        <p className="text-center text-gray-600">{T.noProduct}</p>
       </main>
     );
   }
 
+  const name = pickLocaleValue(product.name, safeLocale);
+  const desc = pickLocaleValue(product.description, safeLocale);
+
   const addToCartHandler = () => {
     addItem({
       id: product.id,
-      name: product.name[safeLocale],
+      name,
       price: product.price.eur,
       quantity: 1,
-      description: product.description?.[safeLocale] || "",
+      description: desc,
       imageUrl: product.imageUrl,
     });
   };
 
+  /* -----------------------------
+     ✅ RENDER
+  ----------------------------- */
   return (
     <main className="products-page">
       <div className="product-card">
-
         <div className="product-img-wrapper">
           <Image
             src={product.imageUrl || "/placeholder.jpg"}
-            alt={product.name[safeLocale]}
+            alt={name}
             fill
             className="product-img"
           />
         </div>
 
-        <h1 className="product-title">{product.name[safeLocale]}</h1>
+        <h1 className="product-title">{name}</h1>
 
-        <p className="product-desc">
-          {product.description?.[safeLocale] || ""}
-        </p>
+        {desc && <p className="product-desc">{desc}</p>}
 
-        <p className="product-price">{product.price.eur} €</p>
+        <p className="product-price">{product.price.eur.toFixed(2)} €</p>
 
         <div className="product-actions">
           <Link
             href={`/${safeLocale}/products/${product.id}`}
             className="btn btn-secondary"
           >
-            {safeLocale === "fr"
-              ? "Voir le produit →"
-              : "View product →"}
+            {T.view}
           </Link>
 
           <button onClick={addToCartHandler} className="btn btn-primary">
-            {safeLocale === "fr"
-              ? "Ajouter au panier 🛒"
-              : "Add to cart 🛒"}
+            {T.add}
           </button>
         </div>
-
       </div>
     </main>
   );

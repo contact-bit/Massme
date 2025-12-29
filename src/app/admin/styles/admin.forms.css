@@ -1,0 +1,219 @@
+/* =========================================================
+   ADMIN — FORMS (OculaRest)
+   ✅ Fix lisibilité inputs même si thème global force du blanc
+========================================================= */
+
+.admin-form {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px;
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+
+  color: #0f172a;
+}
+
+/* Title */
+.admin-section-title {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+  color: #0f172a;
+}
+
+/* Small helper spacing */
+.admin-form .mt-4 {
+  margin-top: 14px;
+}
+
+/* Labels */
+.admin-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 850;
+  margin: 16px 0 8px;
+  color: #334155;
+}
+
+/* Inputs / textarea / select — FORCE visibility */
+.admin-input,
+.admin-textarea,
+.admin-select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+
+  /* ✅ background & border clearly visible */
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+
+  /* ✅ text always dark (fix global override) */
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
+
+  font-size: 0.95rem;
+  line-height: 1.25;
+  outline: none;
+
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+/* textarea */
+.admin-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Placeholder (force) */
+.admin-input::placeholder,
+.admin-textarea::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+/* Focus */
+.admin-input:focus,
+.admin-textarea:focus,
+.admin-select:focus {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18) !important;
+}
+
+/* Disabled */
+.admin-input:disabled,
+.admin-textarea:disabled,
+.admin-select:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Chrome Autofill fix (sinon jaune + texte bizarre) */
+.admin-input:-webkit-autofill,
+.admin-textarea:-webkit-autofill,
+.admin-select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #f8fafc inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Image preview */
+.admin-img-wrapper {
+  width: 100%;
+  height: 240px;
+  border-radius: 16px;
+  border: 1px dashed rgba(15, 23, 42, 0.22);
+  background: linear-gradient(180deg, #f8fafc, #ffffff);
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.admin-img-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.admin-img-placeholder {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+/* Switch */
+.admin-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+
+  font-size: 0.92rem;
+  font-weight: 750;
+  color: #0f172a;
+}
+
+.admin-switch input {
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+}
+
+/* Actions */
+.admin-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Buttons (admin) */
+.admin-form .btn {
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 850;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  user-select: none;
+}
+
+.admin-form .btn:active {
+  transform: translateY(1px);
+}
+
+.admin-form .btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.25);
+}
+
+.admin-form .btn-primary:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.admin-form .btn-secondary {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.admin-form .btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+/* Error text */
+.admin-form .text-red-500 {
+  color: #dc2626 !important;
+  font-size: 0.86rem;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .admin-form {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .admin-img-wrapper {
+    height: 200px;
+  }
+
+  .admin-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

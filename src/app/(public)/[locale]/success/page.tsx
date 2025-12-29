@@ -1,70 +1,231 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 
+type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
+
+function isLocale(v: string): v is Locale {
+  return ["fr", "en", "es", "de", "it", "nl"].includes(v);
+}
+
+const UI: Record<
+  Locale,
+  {
+    badge: string;
+    thankYou: (name: string) => string;
+    confirmed: (amount: string) => string;
+    emailSent: string;
+    loading: string;
+    order: string;
+    totalPaid: string;
+    billingAddress: string;
+    shippingAddress: string;
+    shippingMethod: string;
+    relayPoint: string;
+    orderedItems: string;
+    backHome: string;
+    customerFallback: string;
+  }
+> = {
+  fr: {
+    badge: "Paiement confirmé",
+    thankYou: (name) => `Merci ${name}! 🎉`,
+    confirmed: (amount) => `Votre achat de ${amount} € a bien été confirmé.`,
+    emailSent: "Un email avec votre facture vous a été envoyé.",
+    loading: "Chargement de la commande…",
+    order: "Commande",
+    totalPaid: "Total payé",
+    billingAddress: "Adresse de facturation",
+    shippingAddress: "Adresse de livraison",
+    shippingMethod: "Méthode d’envoi",
+    relayPoint: "Point relais",
+    orderedItems: "Articles commandés",
+    backHome: "Retourner à l’accueil",
+    customerFallback: "client",
+  },
+  en: {
+    badge: "Payment confirmed",
+    thankYou: (name) => `Thank you, ${name}! 🎉`,
+    confirmed: (amount) => `Your purchase of ${amount} € has been confirmed.`,
+    emailSent: "A confirmation email has been sent.",
+    loading: "Loading order…",
+    order: "Order",
+    totalPaid: "Total paid",
+    billingAddress: "Billing address",
+    shippingAddress: "Shipping address",
+    shippingMethod: "Shipping method",
+    relayPoint: "Relay point",
+    orderedItems: "Ordered items",
+    backHome: "Return home",
+    customerFallback: "customer",
+  },
+  es: {
+    badge: "Pago confirmado",
+    thankYou: (name) => `¡Gracias, ${name}! 🎉`,
+    confirmed: (amount) => `Tu compra de ${amount} € ha sido confirmada.`,
+    emailSent: "Te hemos enviado un correo de confirmación con tu factura.",
+    loading: "Cargando pedido…",
+    order: "Pedido",
+    totalPaid: "Total pagado",
+    billingAddress: "Dirección de facturación",
+    shippingAddress: "Dirección de envío",
+    shippingMethod: "Método de envío",
+    relayPoint: "Punto de recogida",
+    orderedItems: "Artículos pedidos",
+    backHome: "Volver al inicio",
+    customerFallback: "cliente",
+  },
+  de: {
+    badge: "Zahlung bestätigt",
+    thankYou: (name) => `Danke, ${name}! 🎉`,
+    confirmed: (amount) => `Dein Kauf über ${amount} € wurde bestätigt.`,
+    emailSent: "Eine Bestätigungs-E-Mail mit deiner Rechnung wurde gesendet.",
+    loading: "Bestellung wird geladen…",
+    order: "Bestellung",
+    totalPaid: "Bezahlt",
+    billingAddress: "Rechnungsadresse",
+    shippingAddress: "Lieferadresse",
+    shippingMethod: "Versandart",
+    relayPoint: "Abholstelle",
+    orderedItems: "Bestellte Artikel",
+    backHome: "Zur Startseite",
+    customerFallback: "Kunde",
+  },
+  it: {
+    badge: "Pagamento confermato",
+    thankYou: (name) => `Grazie, ${name}! 🎉`,
+    confirmed: (amount) => `Il tuo acquisto di ${amount} € è stato confermato.`,
+    emailSent: "Abbiamo inviato un’email di conferma con la fattura.",
+    loading: "Caricamento ordine…",
+    order: "Ordine",
+    totalPaid: "Totale pagato",
+    billingAddress: "Indirizzo di fatturazione",
+    shippingAddress: "Indirizzo di spedizione",
+    shippingMethod: "Metodo di spedizione",
+    relayPoint: "Punto di ritiro",
+    orderedItems: "Articoli ordinati",
+    backHome: "Torna alla home",
+    customerFallback: "cliente",
+  },
+  nl: {
+    badge: "Betaling bevestigd",
+    thankYou: (name) => `Bedankt, ${name}! 🎉`,
+    confirmed: (amount) => `Je aankoop van ${amount} € is bevestigd.`,
+    emailSent: "Er is een bevestigingsmail met je factuur verzonden.",
+    loading: "Bestelling laden…",
+    order: "Bestelling",
+    totalPaid: "Totaal betaald",
+    billingAddress: "Factuuradres",
+    shippingAddress: "Bezorgadres",
+    shippingMethod: "Verzendmethode",
+    relayPoint: "Afhaalpunt",
+    orderedItems: "Bestelde artikelen",
+    backHome: "Terug naar start",
+    customerFallback: "klant",
+  },
+};
+
+function moneyEUR(n: number) {
+  const v = Math.round(Number(n || 0) * 100) / 100;
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  }).format(v);
+}
+
 export default function SuccessPage() {
-  const { locale } = useParams() as { locale: string };
+  const params = useParams() as { locale?: string };
+  const rawLocale = params?.locale || "fr";
+  const locale: Locale = isLocale(rawLocale) ? rawLocale : "fr";
+
   const search = useSearchParams();
-  const sessionId = search.get("session_id");
+  const sessionId = search.get("session_id"); // string | null
 
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const t = (fr: string, en: string) => (locale === "fr" ? fr : en);
+  const ui = UI[locale] ?? UI.fr;
 
   /* -------------------------------------------------------
-     🔄 CHARGEMENT COMMANDE
+     🔄 CHARGEMENT COMMANDE (TS FIX ✅)
   ------------------------------------------------------- */
   useEffect(() => {
-    if (!sessionId) return;
-
-    async function load() {
-      try {
-        const res = await fetch(`/api/verify-payment?session_id=${sessionId}`);
-        const data = await res.json();
-        setOrder(data.order || null);
-      } finally {
-        setLoading(false);
-      }
+    // ✅ Ici TS sait que sessionId peut être null
+    if (sessionId == null || sessionId.trim() === "") {
+      setLoading(false);
+      return;
     }
-    load();
+
+    // ✅ On force une variable string propre
+    const sidRaw: string = sessionId;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const sid = encodeURIComponent(sidRaw); // ✅ jamais null
+        const res = await fetch(`/api/verify-payment?session_id=${sid}`, {
+          cache: "no-store",
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled) setOrder(data.order || null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId]);
 
   /* -------------------------------------------------------
      🚚 SHIPPING METHOD NORMALISÉE
   ------------------------------------------------------- */
-  let shippingName = "—";
-  let shippingPrice = 0;
+  const { shippingName, shippingPrice, totalPaid, firstName, isRelayShipping, relay } =
+    useMemo(() => {
+      let shippingNameLocal = "—";
+      let shippingPriceLocal = 0;
 
-  if (order?.shippingMethod) {
-    const sm = order.shippingMethod;
+      if (order?.shippingMethod) {
+        const sm = order.shippingMethod;
 
-    shippingName =
-      typeof sm.name === "string"
-        ? sm.name
-        : sm.name?.[locale] || sm.name?.fr || sm.name?.en;
+        shippingNameLocal =
+          typeof sm.name === "string"
+            ? sm.name
+            : sm.name?.[locale] || sm.name?.fr || sm.name?.en || "—";
 
-    shippingPrice =
-      typeof sm.price === "number"
-        ? sm.price
-        : sm.price?.[locale] || sm.price?.fr || sm.price?.en || 0;
-  }
+        shippingPriceLocal =
+          typeof sm.price === "number"
+            ? sm.price
+            : sm.price?.[locale] || sm.price?.fr || sm.price?.en || 0;
+      }
 
-  const totalPaid = order?.amount_total
-    ? (order.amount_total / 100).toFixed(2)
-    : "0.00";
+      const totalPaidLocal = order?.amount_total
+        ? (order.amount_total / 100).toFixed(2)
+        : "0.00";
 
-  const firstName =
-    order?.shippingAddress?.name?.split(" ")?.[0] ||
-    t("client", "customer");
+      const firstNameLocal =
+        order?.shippingAddress?.name?.split(" ")?.[0] || ui.customerFallback;
+
+      const isRelay = order?.shippingMethod?.type === "relay";
+      const relayLocal = order?.relayPoint || null;
+
+      return {
+        shippingName: shippingNameLocal,
+        shippingPrice: shippingPriceLocal,
+        totalPaid: totalPaidLocal,
+        firstName: firstNameLocal,
+        isRelayShipping: isRelay,
+        relay: relayLocal,
+      };
+    }, [order, locale, ui.customerFallback]);
 
   /* -------------------------------------------------------
      📦 POINT RELAIS NORMALISÉ
   ------------------------------------------------------- */
-  const relay = order?.relayPoint || null;
-
   const relayName = relay?.name || relay?.Nom || null;
   const relayAddress = relay?.address || relay?.Adresse1 || null;
   const relayAddress2 = relay?.Adresse2 || null;
@@ -72,142 +233,86 @@ export default function SuccessPage() {
   const relayPostal = relay?.postalCode || relay?.CP || null;
   const relayCountry = relay?.country || relay?.Pays || null;
 
-  const isRelayShipping = order?.shippingMethod?.type === "relay";
-
-  /* ======================================================
-     🎨 RENDER
-  ====================================================== */
   return (
     <main className="success-page">
       <div className="success-container">
+        <div className="success-badge">✓ {ui.badge}</div>
 
-        {/* BADGE */}
-        <div className="success-badge">
-          ✓ {t("Paiement confirmé", "Payment confirmed")}
-        </div>
+        <h1 className="success-title">{ui.thankYou(firstName)}</h1>
 
-        {/* TITRE */}
-        <h1 className="success-title">
-          {t(`Merci ${firstName}! 🎉`, `Thank you, ${firstName}! 🎉`)}
-        </h1>
+        <p className="success-subtitle">{ui.confirmed(totalPaid)}</p>
 
-        <p className="success-subtitle">
-          {t(
-            `Votre achat de ${totalPaid} € a bien été confirmé.`,
-            `Your purchase of ${totalPaid} € has been confirmed.`
-          )}
-        </p>
+        <p className="success-subtitle-small">{ui.emailSent}</p>
 
-        <p className="success-subtitle-small">
-          {t(
-            "Un email avec votre facture vous a été envoyé.",
-            "A confirmation email has been sent."
-          )}
-        </p>
+        {loading && <p className="success-loading">{ui.loading}</p>}
 
-        {loading && (
-          <p className="success-loading">
-            {t("Chargement de la commande…", "Loading order…")}
-          </p>
-        )}
-
-        {/* ------------------- COMMANDE -------------------- */}
         {order && (
           <div className="success-box">
-
-            {/* HEADER */}
             <div className="success-order-header">
               <div>
-                <p className="success-block-title">{t("Commande", "Order")}</p>
+                <p className="success-block-title">{ui.order}</p>
                 <p className="success-block-value">{order.id}</p>
               </div>
 
               <div className="text-right">
-                <p className="success-block-title">{t("Total payé", "Total paid")}</p>
+                <p className="success-block-title">{ui.totalPaid}</p>
                 <p className="success-total">{totalPaid} €</p>
               </div>
             </div>
 
-            {/* ADRESSE + MÉTHODE */}
             <div className="success-grid">
-
-              {/* ⭐ ADRESSE CLIENT AVEC PAYS ⭐ */}
               <div className="success-box-alt">
                 <p className="success-block-title">
-                  {isRelayShipping
-                    ? t("Adresse de facturation", "Billing address")
-                    : t("Adresse de livraison", "Shipping address")}
+                  {isRelayShipping ? ui.billingAddress : ui.shippingAddress}
                 </p>
 
-                <p className="success-block-value">
-                  {order.shippingAddress?.name}
-                </p>
-
+                <p className="success-block-value">{order.shippingAddress?.name}</p>
                 <p>{order.shippingAddress?.address}</p>
-
                 <p>
-                  {order.shippingAddress?.postalCode}{" "}
-                  {order.shippingAddress?.city}
+                  {order.shippingAddress?.postalCode} {order.shippingAddress?.city}
                 </p>
-
-                {/* ⭐ NOUVEAU — LE PAYS ⭐ */}
-                {order.shippingAddress?.country && (
-                  <p>{order.shippingAddress.country}</p>
-                )}
-
-                <p className="success-muted">
-                  {order.shippingAddress?.phone}
-                </p>
+                {order.shippingAddress?.country && <p>{order.shippingAddress.country}</p>}
+                <p className="success-muted">{order.shippingAddress?.phone}</p>
               </div>
 
-              {/* MÉTHODE DE LIVRAISON */}
               <div className="success-box-alt">
-                <p className="success-block-title">
-                  {t("Méthode d’envoi", "Shipping method")}
-                </p>
-
+                <p className="success-block-title">{ui.shippingMethod}</p>
                 <p className="success-block-value">{shippingName}</p>
-                <p className="success-muted">{shippingPrice.toFixed(2)} €</p>
+                <p className="success-muted">{moneyEUR(shippingPrice)}</p>
               </div>
             </div>
 
-            {/* ----------------- POINT RELAIS ----------------- */}
             {isRelayShipping && relay && (
               <div className="success-box-alt mt-4">
-                <p className="success-block-title">{t("Point relais", "Relay point")}</p>
+                <p className="success-block-title">{ui.relayPoint}</p>
 
                 <p className="success-block-value">{relayName}</p>
-
                 {relayAddress && <p>{relayAddress}</p>}
                 {relayAddress2 && <p>{relayAddress2}</p>}
                 {(relayPostal || relayCity) && (
-                  <p>{relayPostal} {relayCity}</p>
+                  <p>
+                    {relayPostal} {relayCity}
+                  </p>
                 )}
                 {relayCountry && <p>{relayCountry}</p>}
 
                 <p className="success-muted mt-1">
-                  {order.shippingMethod.relayProvider === "mondialrelay"
+                  {order.shippingMethod?.relayProvider === "mondialrelay"
                     ? "Mondial Relay"
-                    : order.shippingMethod.relayProvider === "pickup"
+                    : order.shippingMethod?.relayProvider === "pickup"
                     ? "Pickup / Shop2Shop"
                     : ""}
                 </p>
               </div>
             )}
 
-            {/* ARTICLES */}
             <div className="success-items-section">
-              <p className="success-block-title">
-                {t("Articles commandés", "Ordered items")}
-              </p>
+              <p className="success-block-title">{ui.orderedItems}</p>
 
               <div className="success-items-list">
                 {order.items?.map((item: any, i: number) => {
                   const price =
-                    typeof item.price === "number"
-                      ? item.price
-                      : item.price?.eur || 0;
-
+                    typeof item.price === "number" ? item.price : item.price?.eur || 0;
                   const qty = Number(item.quantity) || 1;
 
                   return (
@@ -216,9 +321,7 @@ export default function SuccessPage() {
                         <p className="success-item-name">{item.name}</p>
                         <p className="success-item-qty">× {qty}</p>
                       </div>
-                      <p className="success-item-price">
-                        {(price * qty).toFixed(2)} €
-                      </p>
+                      <p className="success-item-price">{moneyEUR(price * qty)}</p>
                     </div>
                   );
                 })}
@@ -227,10 +330,9 @@ export default function SuccessPage() {
           </div>
         )}
 
-        {/* CTA */}
         <div className="success-cta">
           <Link href={`/${locale}`} className="btn-home">
-            {t("Retourner à l’accueil", "Return home")}
+            {ui.backHome}
           </Link>
         </div>
       </div>

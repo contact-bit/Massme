@@ -13,7 +13,7 @@ export default function CartPage() {
   return (
     <main className="max-w-3xl mx-auto py-10 px-4 text-gray-900">
       <h1 className="text-3xl font-bold mb-6">
-        {locale === "fr" ? "🛒 Votre panier" : "🛒 Your cart"}
+        {locale === "fr" ? "🛒 Votre panxxxier" : "🛒 Your cart"}
       </h1>
 
       {items.length === 0 ? (

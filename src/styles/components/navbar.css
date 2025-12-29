@@ -1,29 +1,32 @@
 /* -----------------------------------------
    NAVBAR — OculaRest / DA Premium (Poppins + bleu)
+   ✅ Version COMPLETE + Dropdown langues (flags) + Mobile
 ------------------------------------------ */
+
 /* =========================
    SITE NOTICE
 ========================= */
-
 .site-notice {
   width: 100%;
   background: #f1f6ff;
   color: #1e63ff;
   text-align: center;
   font-size: 12px;
-  font-weight: 600;
-  padding: 6px 12px;
+  font-weight: 700;
+  padding: 7px 12px;
   border-bottom: 1px solid rgba(30, 99, 255, 0.15);
   z-index: 100;
 }
 
-
+/* =========================
+   NAVBAR WRAPPER
+========================= */
 .navbar {
   position: sticky;
   top: 0;
   z-index: 50;
   background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(32, 27, 27, 0.08);
   box-shadow: 0 8px 24px rgba(32, 27, 27, 0.06);
 }
@@ -36,10 +39,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 14px;
 }
 
 /* ---------------------------------
-   RESPONSIVE VISIBILITY (IMPORTANT)
+   RESPONSIVE VISIBILITY
 ---------------------------------- */
 /* Mobile first */
 .nav-mobile-only {
@@ -61,9 +65,9 @@
   }
 }
 
-/* -----------------------------
+/* =========================
    LOGO
------------------------------- */
+========================= */
 .navbar-logo {
   display: flex;
   align-items: center;
@@ -71,40 +75,41 @@
   text-decoration: none;
   color: var(--color-text);
   font-family: var(--font-title);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.4px;
   flex-shrink: 0;
-
 }
 
 .navbar-logo-img {
   width: 62px;
   height: 62px;
   object-fit: contain;
-
-  /* look premium */
   background: transparent;
   padding: 0;
   border: none;
   box-shadow: none;
 }
 
-
-
-
 /* Désactive l'ancien badge si jamais il reste */
 .navbar-logo-badge {
   display: none;
 }
 
-/* -----------------------------
-   DESKTOP NAVIGATION
------------------------------- */
+/* =========================
+   DESKTOP NAV LINKS
+========================= */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Link */
 .nav-link {
   font-family: var(--font-main);
   color: var(--color-text);
   font-size: 0.95rem;
-  font-weight: 50;
+  font-weight: 650;
   text-decoration: none;
   padding: 8px 10px;
   border-radius: 999px;
@@ -115,11 +120,284 @@
 .nav-link:hover {
   background: rgba(42, 113, 255, 0.08);
   color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
-/* -----------------------------
-   DROPDOWN
------------------------------- */
+/* =========================
+   LANG DROPDOWN (NEW)
+   Used by: nav-lang-wrapper / nav-lang-btn / nav-lang-dropdown / nav-lang-item
+========================= */
+.nav-lang-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-lang-btn {
+  font-family: var(--font-main);
+  background: var(--color-bg-alt);
+  border: 1px solid rgba(32, 27, 27, 0.08);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 900;
+
+  padding: 8px 10px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  cursor: pointer;
+
+  transition: background var(--transition-fast), transform var(--transition-fast),
+    color var(--transition-fast), border var(--transition-fast);
+}
+
+.nav-lang-btn:hover {
+  background: rgba(42, 113, 255, 0.10);
+  border-color: rgba(42, 113, 255, 0.22);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.nav-lang-flag {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.nav-lang-code {
+  letter-spacing: 0.4px;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.nav-lang-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 220px;
+
+  background: #fff;
+  border: 1px solid rgba(32, 27, 27, 0.10);
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(32, 27, 27, 0.14);
+
+  padding: 8px;
+  z-index: 1000;
+
+  animation: fadeIn 0.16s ease-out;
+}
+
+.nav-lang-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  text-decoration: none;
+  font-family: var(--font-main);
+  color: var(--color-text);
+  font-size: 0.92rem;
+  font-weight: 800;
+
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  transition: background var(--transition-fast), color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.nav-lang-item:hover {
+  background: rgba(42, 113, 255, 0.08);
+  color: var(--color-primary);
+  transform: translateX(2px);
+}
+
+/* =========================
+   CART BUTTON
+========================= */
+.nav-cart-btn {
+  position: relative;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  width: 40px;
+  height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  color: var(--color-text);
+
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.nav-cart-btn:hover {
+  background: rgba(42, 113, 255, 0.10);
+  transform: translateY(-1px);
+}
+
+.nav-cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: var(--font-main);
+  font-size: 11px;
+  font-weight: 950;
+
+  box-shadow: 0 10px 18px rgba(42, 113, 255, 0.28);
+  border: 2px solid #fff;
+}
+
+/* =========================
+   MOBILE BURGER
+========================= */
+.navbar-mobile-btn {
+  width: 44px;
+  height: 44px;
+
+  border: 1px solid rgba(32, 27, 27, 0.08);
+  background: var(--color-bg-alt);
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 22px;
+  color: var(--color-text);
+  cursor: pointer;
+
+  transition: background var(--transition-fast), transform var(--transition-fast),
+    border var(--transition-fast);
+}
+
+.navbar-mobile-btn:hover {
+  background: rgba(42, 113, 255, 0.10);
+  border-color: rgba(42, 113, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+/* =========================
+   MOBILE MENU
+========================= */
+.mobile-menu {
+  background: #fff;
+  border-top: 1px solid rgba(32, 27, 27, 0.08);
+  padding: 10px 10px 14px;
+  animation: fadeIn 0.18s ease-out;
+}
+
+.mobile-link {
+  display: block;
+  text-decoration: none;
+
+  font-family: var(--font-main);
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--color-text);
+
+  padding: 12px 12px;
+  border-radius: 14px;
+
+  transition: background var(--transition-fast), color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.mobile-link:hover {
+  background: rgba(42, 113, 255, 0.08);
+  color: var(--color-primary);
+  transform: translateX(2px);
+}
+
+/* Mobile languages list (NEW) */
+.mobile-lang-list {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(246, 245, 245, 0.55);
+  border: 1px solid rgba(32, 27, 27, 0.06);
+
+  display: grid;
+  gap: 6px;
+}
+
+.mobile-lang-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  text-decoration: none;
+  font-family: var(--font-main);
+  font-weight: 900;
+  font-size: 0.98rem;
+
+  color: var(--color-text);
+  padding: 12px 12px;
+  border-radius: 14px;
+
+  transition: background var(--transition-fast), color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.mobile-lang-item:hover {
+  background: rgba(42, 113, 255, 0.08);
+  color: var(--color-primary);
+  transform: translateX(2px);
+}
+
+/* Mobile cart */
+.mobile-cart {
+  width: 100%;
+  margin-top: 10px;
+
+  border: 1px solid rgba(32, 27, 27, 0.08);
+  background: rgba(42, 113, 255, 0.10);
+  border-radius: 16px;
+
+  padding: 12px 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  font-family: var(--font-main);
+  font-weight: 950;
+  color: var(--color-primary);
+
+  cursor: pointer;
+
+  transition: transform var(--transition-fast), background var(--transition-fast),
+    border var(--transition-fast);
+}
+
+.mobile-cart:hover {
+  background: rgba(42, 113, 255, 0.14);
+  border-color: rgba(42, 113, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+/* =========================
+   OPTIONAL: legacy dropdown classes
+   (tu peux garder si d'autres menus utilisent nav-dropdown)
+========================= */
 .nav-dropdown {
   position: relative;
 }
@@ -200,244 +478,9 @@
   transform: translateX(2px);
 }
 
-/* -----------------------------
-   RIGHT SIDE ACTIONS
------------------------------- */
-.nav-lang {
-  font-family: var(--font-main);
-  font-size: 0.9rem;
-  font-weight: 800;
-
-  text-decoration: none;
-  color: var(--color-text);
-
-  padding: 8px 12px;
-  border-radius: 999px;
-
-  background: var(--color-bg-alt);
-  border: 1px solid rgba(32, 27, 27, 0.08);
-
-  transition: background var(--transition-fast), transform var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.nav-lang:hover {
-  background: rgba(42, 113, 255, 0.10);
-  color: var(--color-primary);
-  transform: translateY(-1px);
-}
-
-.nav-cart-btn {
-  position: relative;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-
-  width: 40px;
-  height: 40px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 999px;
-  color: var(--color-text);
-
-  transition: background var(--transition-fast), transform var(--transition-fast);
-}
-
-.nav-cart-btn:hover {
-  background: rgba(42, 113, 255, 0.10);
-  transform: translateY(-1px);
-}
-
-.nav-cart-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-
-  min-width: 18px;
-  height: 18px;
-  padding: 0 6px;
-
-  border-radius: 999px;
-  background: var(--color-primary);
-  color: #fff;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  font-family: var(--font-main);
-  font-size: 11px;
-  font-weight: 900;
-
-  box-shadow: 0 10px 18px rgba(42, 113, 255, 0.28);
-  border: 2px solid #fff;
-}
-
-/* -----------------------------
-   MOBILE BURGER
------------------------------- */
-.navbar-mobile-btn {
-  width: 44px;
-  height: 44px;
-
-  border: 1px solid rgba(32, 27, 27, 0.08);
-  background: var(--color-bg-alt);
-  border-radius: 999px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 22px;
-  color: var(--color-text);
-  cursor: pointer;
-
-  transition: background var(--transition-fast), transform var(--transition-fast);
-}
-
-.navbar-mobile-btn:hover {
-  background: rgba(42, 113, 255, 0.10);
-  transform: translateY(-1px);
-}
-
-/* -----------------------------
-   MOBILE MENU
------------------------------- */
-.mobile-menu {
-  background: #fff;
-  border-top: 1px solid rgba(32, 27, 27, 0.08);
-  padding: 10px 10px 14px;
-  animation: fadeIn 0.18s ease-out;
-}
-
-.mobile-link {
-  display: block;
-  text-decoration: none;
-
-  font-family: var(--font-main);
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--color-text);
-
-  padding: 12px 12px;
-  border-radius: 14px;
-
-  transition: background var(--transition-fast), color var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.mobile-link:hover {
-  background: rgba(42, 113, 255, 0.08);
-  color: var(--color-primary);
-  transform: translateX(2px);
-}
-
-.mobile-dropdown {
-  margin-top: 6px;
-}
-
-.mobile-dropdown summary {
-  list-style: none;
-  cursor: pointer;
-
-  font-family: var(--font-main);
-  font-size: 1rem;
-  font-weight: 900;
-  color: var(--color-text);
-
-  padding: 12px 12px;
-  border-radius: 14px;
-
-  background: var(--color-bg-alt);
-  border: 1px solid rgba(32, 27, 27, 0.08);
-
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-
-.mobile-dropdown summary:hover {
-  background: rgba(42, 113, 255, 0.10);
-  color: var(--color-primary);
-}
-
-.mobile-dropdown-content {
-  margin-top: 8px;
-  padding: 6px 6px 2px;
-  background: rgba(246, 245, 245, 0.6);
-  border-radius: 14px;
-  border: 1px solid rgba(32, 27, 27, 0.06);
-
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.mobile-lang {
-  margin-top: 10px;
-  padding: 10px 6px 0;
-}
-
-.mobile-lang a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  font-family: var(--font-main);
-  font-weight: 900;
-  font-size: 0.95rem;
-  text-decoration: none;
-
-  color: var(--color-text);
-  background: var(--color-bg-alt);
-  border: 1px solid rgba(32, 27, 27, 0.08);
-
-  padding: 10px 12px;
-  border-radius: 999px;
-
-  transition: background var(--transition-fast), transform var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.mobile-lang a:hover {
-  background: rgba(42, 113, 255, 0.10);
-  color: var(--color-primary);
-  transform: translateY(-1px);
-}
-
-.mobile-cart {
-  width: 100%;
-  margin-top: 10px;
-
-  border: 1px solid rgba(32, 27, 27, 0.08);
-  background: rgba(42, 113, 255, 0.10);
-  border-radius: 16px;
-
-  padding: 12px 12px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-
-  font-family: var(--font-main);
-  font-weight: 950;
-  color: var(--color-primary);
-
-  cursor: pointer;
-
-  transition: transform var(--transition-fast), background var(--transition-fast);
-}
-
-.mobile-cart:hover {
-  background: rgba(42, 113, 255, 0.14);
-  transform: translateY(-1px);
-}
-
-/* -----------------------------
+/* =========================
    ANIMATIONS
------------------------------- */
+========================= */
 @keyframes fadeIn {
   0% {
     opacity: 0;
