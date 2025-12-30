@@ -7,15 +7,15 @@ import { db } from "@/lib/firebase";
 
 import { useCart } from "@/context/CartContext";
 import ChooseShipping from "@/components/shipping/ChooseShipping";
-import { ShippingMethod, RelayPoint } from "@/components/shipping/types";
+import type { ShippingMethod, RelayPoint } from "@/components/shipping/types";
 
 /* ----------------------------------
    🌍 LOCALES (6 langues)
 ---------------------------------- */
 const LOCALES = ["fr", "en", "es", "de", "it", "nl"] as const;
-type Locale = (typeof LOCALES)[number];
+export type Locale = (typeof LOCALES)[number];
 
-function isLocale(v: any): v is Locale {
+function isLocale(v: unknown): v is Locale {
   return typeof v === "string" && (LOCALES as readonly string[]).includes(v);
 }
 
@@ -54,6 +54,8 @@ const UI: Record<
     redirecting: string;
 
     countries: Record<string, string>; // ISO -> label
+    redirectError: string;
+    unexpectedError: string;
   }
 > = {
   fr: {
@@ -87,10 +89,12 @@ const UI: Record<
       DE: "Allemagne",
       IT: "Italie",
       NL: "Pays-Bas",
-      PT: "Portugal",
       CH: "Suisse",
       AT: "Autriche",
+      PT: "Portugal",
     },
+    redirectError: "Erreur de redirection Stripe.",
+    unexpectedError: "Erreur inattendue.",
   },
   en: {
     title: "Shipping details",
@@ -123,10 +127,12 @@ const UI: Record<
       DE: "Germany",
       IT: "Italy",
       NL: "Netherlands",
-      PT: "Portugal",
       CH: "Switzerland",
       AT: "Austria",
+      PT: "Portugal",
     },
+    redirectError: "Stripe redirect error.",
+    unexpectedError: "Unexpected error.",
   },
   es: {
     title: "Datos de envío",
@@ -159,10 +165,12 @@ const UI: Record<
       DE: "Alemania",
       IT: "Italia",
       NL: "Países Bajos",
-      PT: "Portugal",
       CH: "Suiza",
       AT: "Austria",
+      PT: "Portugal",
     },
+    redirectError: "Error de redirección de Stripe.",
+    unexpectedError: "Error inesperado.",
   },
   de: {
     title: "Versanddetails",
@@ -195,10 +203,12 @@ const UI: Record<
       DE: "Deutschland",
       IT: "Italien",
       NL: "Niederlande",
-      PT: "Portugal",
       CH: "Schweiz",
       AT: "Österreich",
+      PT: "Portugal",
     },
+    redirectError: "Fehler bei der Stripe-Weiterleitung.",
+    unexpectedError: "Unerwarteter Fehler.",
   },
   it: {
     title: "Dettagli di spedizione",
@@ -231,10 +241,12 @@ const UI: Record<
       DE: "Germania",
       IT: "Italia",
       NL: "Paesi Bassi",
-      PT: "Portogallo",
       CH: "Svizzera",
       AT: "Austria",
+      PT: "Portogallo",
     },
+    redirectError: "Errore di reindirizzamento Stripe.",
+    unexpectedError: "Errore imprevisto.",
   },
   nl: {
     title: "Verzendgegevens",
@@ -267,10 +279,12 @@ const UI: Record<
       DE: "Duitsland",
       IT: "Italië",
       NL: "Nederland",
-      PT: "Portugal",
       CH: "Zwitserland",
       AT: "Oostenrijk",
+      PT: "Portugal",
     },
+    redirectError: "Stripe doorstuurfout.",
+    unexpectedError: "Onverwachte fout.",
   },
 };
 
@@ -300,14 +314,13 @@ export default function CheckoutPage() {
   /* -------------------------------------------------------
      SHIPPING STATE
   ------------------------------------------------------- */
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethod | null>(
-    null
-  );
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod | null>(null);
   const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
   const [shippingError, setShippingError] = useState<string | null>(null);
 
   /* -------------------------------------------------------
      FIRESTORE SHIPPING METHODS
+     Auto-filter: by country + active + locale
   ------------------------------------------------------- */
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
   const [loadingMethods, setLoadingMethods] = useState(false);
@@ -377,9 +390,7 @@ export default function CheckoutPage() {
   /* -------------------------------------------------------
      FORM HANDLER
   ------------------------------------------------------- */
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -423,12 +434,12 @@ export default function CheckoutPage() {
         }),
       });
 
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else alert("Erreur de redirection Stripe.");
+      const data = await res.json().catch(() => ({} as any));
+      if (data?.url) window.location.href = data.url;
+      else alert(T.redirectError);
     } catch (err) {
       console.error("Erreur checkout:", err);
-      alert("Erreur inattendue.");
+      alert(T.unexpectedError);
     } finally {
       setIsPaying(false);
     }
@@ -527,7 +538,7 @@ export default function CheckoutPage() {
           ) : (
             <ChooseShipping
               methods={methods}
-              locale={locale}
+              locale={locale as any /* ✅ si ton ChooseShipping a encore Locale fr/en uniquement, mets-le à jour */}
               onMethodSelect={(m) => {
                 setShippingMethod(m);
                 setShippingError(null);
@@ -564,9 +575,7 @@ export default function CheckoutPage() {
 
         {/* SUBMIT BUTTON */}
         <button
-          className={`checkout-button ${
-            isPaying ? "opacity-50 cursor-not-allowed" : ""
-          }`}
+          className={`checkout-button ${isPaying ? "opacity-50 cursor-not-allowed" : ""}`}
           disabled={isPaying}
           onClick={handleCheckout}
         >
