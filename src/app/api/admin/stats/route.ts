@@ -6,6 +6,10 @@ type AlertTone = "info" | "warn" | "danger";
 
 export const dynamic = "force-dynamic";
 
+// ✅ Cache mémoire 30s (anti-quota)
+let __cache: { at: number; data: any } | null = null;
+const CACHE_TTL_MS = 30_000;
+
 /* =========================
    Dates (Europe/Paris)
 ========================= */
@@ -62,6 +66,17 @@ function pct(a: number, b: number) {
 
 export async function GET() {
   try {
+    // ✅ Cache hit
+    const nowMs = Date.now();
+    if (__cache && nowMs - __cache.at < CACHE_TTL_MS) {
+      return NextResponse.json(__cache.data, {
+        headers: {
+          "Cache-Control": "no-store",
+          "x-stats-cache": "HIT",
+        },
+      });
+    }
+
     const productsCol = dbAdmin.collection("products");
     const ordersCol = dbAdmin.collection("pending_orders");
 
@@ -73,26 +88,27 @@ export async function GET() {
     const last7Start = addDaysUTC(todayStart, -6);
     const prev7Start = addDaysUTC(last7Start, -7);
 
-    // ✅ 1) COUNTS (ne lit pas tous les docs)
+    // ✅ 1) COUNTS
+    // ⚠️ On SUPPRIME la query status != "paid" (index + quota)
     const [
       productsCountSnap,
       activeProductsCountSnap,
       ordersCountSnap,
       paidOrdersCountSnap,
-      pendingCountSnap,
     ] = await Promise.all([
       productsCol.count().get(),
       productsCol.where("isActive", "==", true).count().get(),
       ordersCol.count().get(),
       ordersCol.where("status", "==", "paid").count().get(),
-      ordersCol.where("status", "!=", "paid").count().get(), // peut nécessiter index
     ]);
 
     const productsCount = productsCountSnap.data().count ?? 0;
     const activeProducts = activeProductsCountSnap.data().count ?? 0;
     const ordersCount = ordersCountSnap.data().count ?? 0;
     const paidOrdersCount = paidOrdersCountSnap.data().count ?? 0;
-    const pendingCount = pendingCountSnap.data().count ?? 0;
+
+    // ✅ pending = total - paid (plus d’index requis)
+    const pendingCount = Math.max(0, ordersCount - paidOrdersCount);
 
     // ✅ 2) LOW STOCK : 5 docs max
     const lowStockSnap = await productsCol
@@ -111,7 +127,6 @@ export async function GET() {
     });
 
     // ✅ 3) LAST ORDERS : 8 docs max
-    // ⚠️ createdAt doit être un Timestamp
     const lastOrdersSnap = await ordersCol
       .orderBy("createdAt", "desc")
       .limit(8)
@@ -132,11 +147,11 @@ export async function GET() {
       };
     });
 
-    // ✅ 4) REVENUS : on ne lit que les payées sur 14 jours
-    // (prev7Start -> today), ça limite drastiquement les reads
+    // ✅ 4) REVENUS : payées sur 14 jours
+    // -> nécessite l’index (status + createdAt) que tu as déjà lancé
     const paid14Snap = await ordersCol
       .where("status", "==", "paid")
-      .where("createdAt", ">=", prev7Start) // Timestamp
+      .where("createdAt", ">=", prev7Start)
       .get();
 
     const paid14 = paid14Snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
@@ -147,7 +162,11 @@ export async function GET() {
     const prev7Ms = prev7Start.getTime();
 
     const toMs = (v: any) =>
-      v?.toDate ? v.toDate().getTime() : typeof v === "string" ? new Date(v).getTime() : 0;
+      v?.toDate
+        ? v.toDate().getTime()
+        : typeof v === "string"
+        ? new Date(v).getTime()
+        : 0;
 
     const paidWithTime = paid14
       .map((o) => ({ ...o, __ms: toMs(o.createdAt) }))
@@ -169,9 +188,11 @@ export async function GET() {
       .filter((o) => o.__ms >= yesterdayMs && o.__ms < todayMs)
       .reduce((sum, o) => sum + orderTotalEUR(o), 0);
 
-    const aov = paidOrdersCount > 0 ? revenueLast7 / paidOrdersCount : 0;
+    // ✅ AOV : plutôt basé sur les payées des 7 derniers jours (plus logique)
+    const paidLast7Count = paidWithTime.filter((o) => o.__ms >= last7Ms).length;
+    const aov = paidLast7Count > 0 ? revenueLast7 / paidLast7Count : 0;
 
-    // Série 7 jours (à partir des mêmes docs déjà chargés)
+    // Série 7 jours
     const series = Array.from({ length: 7 }).map((_, i) => {
       const day = addDaysUTC(last7Start, i);
       const dayStartMs = day.getTime();
@@ -211,7 +232,7 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json({
+    const payload = {
       kpis: {
         productsCount,
         activeProducts,
@@ -232,6 +253,16 @@ export async function GET() {
       lastOrders,
       lowStock,
       alerts,
+    };
+
+    // ✅ Cache store
+    __cache = { at: Date.now(), data: payload };
+
+    return NextResponse.json(payload, {
+      headers: {
+        "Cache-Control": "no-store",
+        "x-stats-cache": "MISS",
+      },
     });
   } catch (e: any) {
     console.error("❌ /api/admin/stats error:", e);
