@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 
 type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
-
 function isLocale(v: string): v is Locale {
   return ["fr", "en", "es", "de", "it", "nl"].includes(v);
 }
@@ -129,10 +128,11 @@ const UI: Record<
 
 function moneyEUR(n: number) {
   const v = Math.round(Number(n || 0) * 100) / 100;
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-  }).format(v);
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(v);
+}
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 export default function SuccessPage() {
@@ -141,36 +141,76 @@ export default function SuccessPage() {
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "fr";
 
   const search = useSearchParams();
-  const sessionId = search.get("session_id"); // string | null
+  const sessionId = search.get("session_id");
 
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const ui = UI[locale] ?? UI.fr;
 
-  /* -------------------------------------------------------
-     🔄 CHARGEMENT COMMANDE (TS FIX ✅)
-  ------------------------------------------------------- */
+  // ✅ évite double-fetch (dev StrictMode) + évite re-fetch sur reload
+  const didRun = useRef(false);
+
   useEffect(() => {
-    // ✅ Ici TS sait que sessionId peut être null
+    if (didRun.current) return;
+    didRun.current = true;
+
     if (sessionId == null || sessionId.trim() === "") {
       setLoading(false);
       return;
     }
 
-    // ✅ On force une variable string propre
-    const sidRaw: string = sessionId;
+    const sid = sessionId.trim();
+    const cacheKey = `success_order_${sid}`;
+
+    // ✅ 1) cache sessionStorage (si refresh)
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setOrder(parsed);
+        setLoading(false);
+
+        // si déjà paid, on stop totalement
+        if (parsed?.status === "paid") return;
+        // sinon on peut quand même retenter 1 fois plus tard
+      }
+    } catch {}
 
     let cancelled = false;
 
     (async () => {
       try {
-        const sid = encodeURIComponent(sidRaw); // ✅ jamais null
-        const res = await fetch(`/api/verify-payment?session_id=${sid}`, {
-          cache: "no-store",
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!cancelled) setOrder(data.order || null);
+        setLoading(true);
+
+        // ✅ 2) retries limités (webhook pas encore passé)
+        // backoff: 0ms, 800ms, 2000ms
+        const delays = [0, 800, 2000];
+
+        for (let attempt = 0; attempt < delays.length; attempt++) {
+          if (cancelled) return;
+          if (delays[attempt] > 0) await sleep(delays[attempt]);
+
+          const res = await fetch(`/api/verify-payment?session_id=${encodeURIComponent(sid)}`, {
+            cache: "no-store",
+          });
+
+          const data = await res.json().catch(() => ({}));
+
+          if (cancelled) return;
+
+          const nextOrder = data?.order || null;
+          if (nextOrder) {
+            setOrder(nextOrder);
+            try {
+              sessionStorage.setItem(cacheKey, JSON.stringify(nextOrder));
+            } catch {}
+          }
+
+          // ✅ stop dès que c'est payé (ou statut final)
+          const st = nextOrder?.status;
+          if (st === "paid" || st === "refunded" || st === "canceled") break;
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -181,51 +221,39 @@ export default function SuccessPage() {
     };
   }, [sessionId]);
 
-  /* -------------------------------------------------------
-     🚚 SHIPPING METHOD NORMALISÉE
-  ------------------------------------------------------- */
-  const { shippingName, shippingPrice, totalPaid, firstName, isRelayShipping, relay } =
-    useMemo(() => {
-      let shippingNameLocal = "—";
-      let shippingPriceLocal = 0;
+  const { shippingName, shippingPrice, totalPaid, firstName, isRelayShipping, relay } = useMemo(() => {
+    let shippingNameLocal = "—";
+    let shippingPriceLocal = 0;
 
-      if (order?.shippingMethod) {
-        const sm = order.shippingMethod;
+    if (order?.shippingMethod) {
+      const sm = order.shippingMethod;
 
-        shippingNameLocal =
-          typeof sm.name === "string"
-            ? sm.name
-            : sm.name?.[locale] || sm.name?.fr || sm.name?.en || "—";
+      shippingNameLocal =
+        typeof sm.name === "string" ? sm.name : sm.name?.[locale] || sm.name?.fr || sm.name?.en || "—";
 
-        shippingPriceLocal =
-          typeof sm.price === "number"
-            ? sm.price
-            : sm.price?.[locale] || sm.price?.fr || sm.price?.en || 0;
-      }
+      shippingPriceLocal =
+        typeof sm.price === "number"
+          ? sm.price
+          : sm.price?.[locale] || sm.price?.fr || sm.price?.en || 0;
+    }
 
-      const totalPaidLocal = order?.amount_total
-        ? (order.amount_total / 100).toFixed(2)
-        : "0.00";
+    const totalPaidLocal = order?.amount_total ? (order.amount_total / 100).toFixed(2) : "0.00";
 
-      const firstNameLocal =
-        order?.shippingAddress?.name?.split(" ")?.[0] || ui.customerFallback;
+    const firstNameLocal = order?.shippingAddress?.name?.split(" ")?.[0] || ui.customerFallback;
 
-      const isRelay = order?.shippingMethod?.type === "relay";
-      const relayLocal = order?.relayPoint || null;
+    const isRelay = order?.shippingMethod?.type === "relay";
+    const relayLocal = order?.relayPoint || null;
 
-      return {
-        shippingName: shippingNameLocal,
-        shippingPrice: shippingPriceLocal,
-        totalPaid: totalPaidLocal,
-        firstName: firstNameLocal,
-        isRelayShipping: isRelay,
-        relay: relayLocal,
-      };
-    }, [order, locale, ui.customerFallback]);
+    return {
+      shippingName: shippingNameLocal,
+      shippingPrice: shippingPriceLocal,
+      totalPaid: totalPaidLocal,
+      firstName: firstNameLocal,
+      isRelayShipping: isRelay,
+      relay: relayLocal,
+    };
+  }, [order, locale, ui.customerFallback]);
 
-  /* -------------------------------------------------------
-     📦 POINT RELAIS NORMALISÉ
-  ------------------------------------------------------- */
   const relayName = relay?.name || relay?.Nom || null;
   const relayAddress = relay?.address || relay?.Adresse1 || null;
   const relayAddress2 = relay?.Adresse2 || null;
@@ -262,9 +290,7 @@ export default function SuccessPage() {
 
             <div className="success-grid">
               <div className="success-box-alt">
-                <p className="success-block-title">
-                  {isRelayShipping ? ui.billingAddress : ui.shippingAddress}
-                </p>
+                <p className="success-block-title">{isRelayShipping ? ui.billingAddress : ui.shippingAddress}</p>
 
                 <p className="success-block-value">{order.shippingAddress?.name}</p>
                 <p>{order.shippingAddress?.address}</p>
@@ -311,8 +337,7 @@ export default function SuccessPage() {
 
               <div className="success-items-list">
                 {order.items?.map((item: any, i: number) => {
-                  const price =
-                    typeof item.price === "number" ? item.price : item.price?.eur || 0;
+                  const price = typeof item.price === "number" ? item.price : item.price?.eur || 0;
                   const qty = Number(item.quantity) || 1;
 
                   return (

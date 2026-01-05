@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type OrderItem = {
   name?: any;
@@ -31,7 +31,13 @@ type Order = {
   __itemsLabel?: string;
 };
 
-type StatusFilter = "all" | "paid" | "pending_payment" | "refunded" | "canceled" | "other";
+type StatusFilter =
+  | "all"
+  | "paid"
+  | "pending_payment"
+  | "refunded"
+  | "canceled"
+  | "other";
 type SortKey = "date_desc" | "date_asc" | "total_desc" | "total_asc";
 
 /* ------------------ helpers ------------------ */
@@ -112,23 +118,31 @@ function formatDateFR(d: Date | null) {
 
 function moneyEUR(n: number) {
   const v = Math.round(Number(n || 0) * 100) / 100;
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(v);
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  }).format(v);
 }
 
 function getItemPrice(it: OrderItem): number {
   const p = it?.price;
   if (typeof p === "number") return p;
-  if (p && typeof p === "object" && typeof (p as any).eur === "number") return (p as any).eur;
+  if (p && typeof p === "object" && typeof (p as any).eur === "number")
+    return (p as any).eur;
   return 0;
 }
 function getSubtotal(o: Order): number {
   const items = Array.isArray(o.items) ? o.items : [];
-  return items.reduce((sum, it) => sum + getItemPrice(it) * (it.quantity ?? 1), 0);
+  return items.reduce(
+    (sum, it) => sum + getItemPrice(it) * (it.quantity ?? 1),
+    0
+  );
 }
 function getShipping(o: Order): number {
   const m = o.shippingMethod?.price;
   if (typeof m === "number") return m;
-  if (m && typeof m === "object" && typeof (m as any).eur === "number") return (m as any).eur;
+  if (m && typeof m === "object" && typeof (m as any).eur === "number")
+    return (m as any).eur;
   if (typeof o.shippingPrice === "number") return o.shippingPrice;
   return 0;
 }
@@ -149,7 +163,10 @@ function buildItemsLabel(items: OrderItem[]) {
   const txt =
     items
       .map((it: any) => {
-        const n = typeof it?.name === "string" ? it.name : it?.name?.fr || it?.name?.en || "Produit";
+        const n =
+          typeof it?.name === "string"
+            ? it.name
+            : it?.name?.fr || it?.name?.en || "Produit";
         const q = it?.quantity ?? 1;
         return `${n} x${q}`;
       })
@@ -215,14 +232,24 @@ function ActionIconButton({
   onClick,
   icon,
   variant = "neutral",
+  disabled,
 }: {
   title: string;
   onClick: () => void;
   icon: React.ReactNode;
   variant?: ActionVariant;
+  disabled?: boolean;
 }) {
   return (
-    <button type="button" className={`iconBtn iconBtn--${variant}`} onClick={onClick} title={title} aria-label={title}>
+    <button
+      type="button"
+      className={`iconBtn iconBtn--${variant}`}
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      disabled={disabled}
+      style={disabled ? { opacity: 0.55, cursor: "not-allowed" } : undefined}
+    >
       {icon}
     </button>
   );
@@ -238,7 +265,11 @@ function IconEye() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
     </svg>
   );
 }
@@ -257,7 +288,13 @@ function IconCopy() {
 function IconCheck() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M20 6 9 17l-5-5"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -266,7 +303,12 @@ function IconTrash() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       <path d="M8 6V4h8v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M6 6l1 16h10l1-16" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path
+        d="M6 6l1 16h10l1-16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
       <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
@@ -293,7 +335,10 @@ function Drawer({
 
   return (
     <>
-      <div className={`drawerBackdrop ${open ? "drawerBackdrop--open" : ""}`} onClick={onClose} />
+      <div
+        className={`drawerBackdrop ${open ? "drawerBackdrop--open" : ""}`}
+        onClick={onClose}
+      />
       <div className={`drawer ${open ? "drawer--open" : ""}`}>
         <div className="drawerHead">
           <div className="drawerTitle">{title}</div>
@@ -377,7 +422,10 @@ function OrderDetails({
         ) : (
           <div className="items">
             {items.map((it, idx) => {
-              const name = typeof it?.name === "string" ? it.name : it?.name?.fr || it?.name?.en || "Produit";
+              const name =
+                typeof it?.name === "string"
+                  ? it.name
+                  : it?.name?.fr || it?.name?.en || "Produit";
               const qty = it?.quantity ?? 1;
               const price = getItemPrice(it);
               const desc = it?.description || "";
@@ -431,6 +479,7 @@ export default function AdminOrdersPage() {
   const [error, setError] = useState<string>("");
 
   const [orders, setOrders] = useState<Order[]>([]);
+  const [deleting, setDeleting] = useState<Record<string, boolean>>({});
 
   const [q, setQ] = useState("");
   const qDebounced = useDebouncedValue(q, 220);
@@ -444,10 +493,16 @@ export default function AdminOrdersPage() {
   const pageSize = 12;
 
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const selectedIds = useMemo(() => Object.keys(selected).filter((id) => selected[id]), [selected]);
+  const selectedIds = useMemo(
+    () => Object.keys(selected).filter((id) => selected[id]),
+    [selected]
+  );
 
   const [drawerId, setDrawerId] = useState<string | null>(null);
-  const activeOrder = useMemo(() => orders.find((o) => o.id === drawerId) || null, [orders, drawerId]);
+  const activeOrder = useMemo(
+    () => orders.find((o) => o.id === drawerId) || null,
+    [orders, drawerId]
+  );
 
   const [toast, setToast] = useState<string>("");
   const toastIt = (msg: string) => {
@@ -455,6 +510,9 @@ export default function AdminOrdersPage() {
     window.clearTimeout((toastIt as any)._t);
     (toastIt as any)._t = window.setTimeout(() => setToast(""), 1500);
   };
+
+  // ✅ anti double-fetch (React strict mode / double mount en dev)
+  const didFetchRef = useRef(false);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -511,6 +569,10 @@ export default function AdminOrdersPage() {
   };
 
   useEffect(() => {
+    // ✅ évite les 2 appels en dev
+    if (didFetchRef.current) return;
+    didFetchRef.current = true;
+
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -525,7 +587,8 @@ export default function AdminOrdersPage() {
 
       if (status !== "all") {
         if (status === "other") {
-          if (["paid", "pending_payment", "refunded", "canceled"].includes(st)) return false;
+          if (["paid", "pending_payment", "refunded", "canceled"].includes(st))
+            return false;
         } else {
           if (st !== status) return false;
         }
@@ -580,7 +643,9 @@ export default function AdminOrdersPage() {
     const pendingCount = filtered.filter((o) => o.status === "pending_payment").length;
 
     const totalEUR = filtered.reduce((sum, o) => sum + (o.__total ?? 0), 0);
-    const paidEUR = filtered.filter((o) => o.status === "paid").reduce((sum, o) => sum + (o.__total ?? 0), 0);
+    const paidEUR = filtered
+      .filter((o) => o.status === "paid")
+      .reduce((sum, o) => sum + (o.__total ?? 0), 0);
     const avg = count > 0 ? totalEUR / count : 0;
 
     return { count, paidCount, pendingCount, totalEUR, paidEUR, avg };
@@ -610,10 +675,52 @@ export default function AdminOrdersPage() {
 
   // placeholders actions
   const markPaid = (id: string) => alert(`TODO: marquer payé ${id}`);
-  const deleteOrder = (id: string) => {
+
+  // ✅ suppression réelle via API + update local (0 requêtes inutiles)
+  const deleteOrder = async (id: string) => {
     const ok = confirm("Supprimer cette commande ? (irréversible)");
     if (!ok) return;
-    alert(`TODO: supprimer ${id}`);
+
+    const pass = localStorage.getItem("admin_password") || "";
+    if (!pass) {
+      window.location.href = "/admin/login";
+      return;
+    }
+
+    if (deleting[id]) return;
+
+    try {
+      setDeleting((m) => ({ ...m, [id]: true }));
+
+      const res = await fetch(`/api/admin/orders/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: { "x-admin-password": pass },
+        cache: "no-store",
+      });
+
+      const txt = await res.text();
+      if (!res.ok) throw new Error(txt || `HTTP ${res.status}`);
+
+      // ✅ retire en local (pas de refetch)
+      setOrders((prev) => prev.filter((o) => o.id !== id));
+      setSelected((prev) => {
+        const n = { ...prev };
+        delete n[id];
+        return n;
+      });
+      setDrawerId((curr) => (curr === id ? null : curr));
+
+      toastIt("Commande supprimée ✅");
+    } catch (e: any) {
+      toastIt("Erreur suppression ❌");
+      alert(e?.message ?? "Erreur suppression");
+    } finally {
+      setDeleting((m) => {
+        const n = { ...m };
+        delete n[id];
+        return n;
+      });
+    }
   };
 
   return (
@@ -796,6 +903,7 @@ export default function AdminOrdersPage() {
         }
         .iconBtn:hover{ box-shadow: 0 18px 40px rgba(11,18,32,.10); }
         .iconBtn:active{ transform: translateY(1px); }
+        .iconBtn:disabled{ opacity:.55; cursor:not-allowed; box-shadow:none; }
         .iconBtn--primary{ background: rgba(11,18,32,.92); color: white; border-color: rgba(11,18,32,.20); }
         .iconBtn--success{ background: rgba(16,185,129,.14); color: rgba(5,150,105,1); border-color: rgba(16,185,129,.26); }
         .iconBtn--danger{ background: rgba(239,68,68,.12); color: rgba(220,38,38,1); border-color: rgba(239,68,68,.26); }
@@ -976,7 +1084,9 @@ export default function AdminOrdersPage() {
           <div className="row">
             <div style={{ flex: 1, minWidth: 280 }}>
               <h1 className="title">📦 Commandes</h1>
-              <div className="sub">Vue admin propre + lisible (CSS inclus dans la page).</div>
+              <div className="sub">
+                Vue admin propre + lisible (CSS inclus dans la page).
+              </div>
             </div>
 
             <div className="rowRight">
@@ -1000,7 +1110,9 @@ export default function AdminOrdersPage() {
           <div className="card cardPad">
             <div className="kLabel">Commandes</div>
             <div className="kValue">{stats.count}</div>
-            <div className="kSub">Période: {from} → {to}</div>
+            <div className="kSub">
+              Période: {from} → {to}
+            </div>
           </div>
 
           <div className="card cardPad">
@@ -1133,21 +1245,41 @@ export default function AdminOrdersPage() {
               <div className="muted">
                 Page {currentPage} / {totalPages}
               </div>
-              <button className="btn btn--ghost" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1}>
+              <button
+                className="btn btn--ghost"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+              >
                 ←
               </button>
-              <button className="btn btn--ghost" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages}>
+              <button
+                className="btn btn--ghost"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+              >
                 →
               </button>
             </div>
           </div>
 
           {loading ? (
-            <div style={{ padding: 16 }} className="muted">Chargement…</div>
+            <div style={{ padding: 16 }} className="muted">
+              Chargement…
+            </div>
           ) : error ? (
             <div style={{ padding: 16 }}>
               <div style={{ fontWeight: 950, marginBottom: 8 }}>Erreur</div>
-              <pre style={{ whiteSpace: "pre-wrap", margin: 0, padding: 12, borderRadius: 16, border: "1px solid rgba(11,18,32,.12)", background: "rgba(11,18,32,.03)", fontSize: 12 }}>
+              <pre
+                style={{
+                  whiteSpace: "pre-wrap",
+                  margin: 0,
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(11,18,32,.12)",
+                  background: "rgba(11,18,32,.03)",
+                  fontSize: 12,
+                }}
+              >
                 {error}
               </pre>
               <div style={{ marginTop: 12 }}>
@@ -1157,7 +1289,9 @@ export default function AdminOrdersPage() {
               </div>
             </div>
           ) : filtered.length === 0 ? (
-            <div style={{ padding: 16 }} className="muted">Aucune commande.</div>
+            <div style={{ padding: 16 }} className="muted">
+              Aucune commande.
+            </div>
           ) : (
             <>
               {/* Desktop */}
@@ -1181,17 +1315,30 @@ export default function AdminOrdersPage() {
                     {paged.map((o) => (
                       <tr key={o.id}>
                         <td>
-                          <input type="checkbox" checked={!!selected[o.id]} onChange={() => toggleOne(o.id)} />
+                          <input
+                            type="checkbox"
+                            checked={!!selected[o.id]}
+                            onChange={() => toggleOne(o.id)}
+                          />
                         </td>
                         <td>{formatDateFR(o.__created ?? null)}</td>
                         <td className="mono">{compactId(o.id)}</td>
                         <td>{o.__email || "—"}</td>
-                        <td><StatusPill status={o.status} /></td>
+                        <td>
+                          <StatusPill status={o.status} />
+                        </td>
                         <td title={o.__itemsLabel}>{o.__itemsLabel || "—"}</td>
-                        <td style={{ textAlign: "right", fontWeight: 950 }}>{moneyEUR(o.__total ?? 0)}</td>
+                        <td style={{ textAlign: "right", fontWeight: 950 }}>
+                          {moneyEUR(o.__total ?? 0)}
+                        </td>
                         <td style={{ textAlign: "right" }}>
                           <div className="actions">
-                            <ActionIconButton title="Voir" variant="primary" icon={<IconEye />} onClick={() => setDrawerId(o.id)} />
+                            <ActionIconButton
+                              title="Voir"
+                              variant="primary"
+                              icon={<IconEye />}
+                              onClick={() => setDrawerId(o.id)}
+                            />
                             <ActionIconButton
                               title="Copier ID"
                               icon={<IconCopy />}
@@ -1200,8 +1347,19 @@ export default function AdminOrdersPage() {
                                 toastIt("ID copié ✅");
                               }}
                             />
-                            <ActionIconButton title="Marquer payé" variant="success" icon={<IconCheck />} onClick={() => markPaid(o.id)} />
-                            <ActionIconButton title="Supprimer" variant="danger" icon={<IconTrash />} onClick={() => deleteOrder(o.id)} />
+                            <ActionIconButton
+                              title="Marquer payé"
+                              variant="success"
+                              icon={<IconCheck />}
+                              onClick={() => markPaid(o.id)}
+                            />
+                            <ActionIconButton
+                              title="Supprimer"
+                              variant="danger"
+                              icon={<IconTrash />}
+                              disabled={!!deleting[o.id]}
+                              onClick={() => deleteOrder(o.id)}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -1265,7 +1423,11 @@ export default function AdminOrdersPage() {
                         <button className="btn btn--ghost" onClick={() => markPaid(o.id)}>
                           Payé
                         </button>
-                        <button className="btn btn--ghost" onClick={() => deleteOrder(o.id)}>
+                        <button
+                          className="btn btn--ghost"
+                          onClick={() => deleteOrder(o.id)}
+                          disabled={!!deleting[o.id]}
+                        >
                           Suppr
                         </button>
                       </div>
@@ -1273,7 +1435,9 @@ export default function AdminOrdersPage() {
                       <div className="selectLine">
                         <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
                           <input type="checkbox" checked={!!selected[o.id]} onChange={() => toggleOne(o.id)} />
-                          <span className="muted" style={{ fontSize: 12 }}>Sélectionner</span>
+                          <span className="muted" style={{ fontSize: 12 }}>
+                            Sélectionner
+                          </span>
                         </label>
                       </div>
                     </div>
