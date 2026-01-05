@@ -16,28 +16,33 @@ function assertAdmin(req: Request) {
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const auth = assertAdmin(req);
   if (auth) return auth;
 
-  const id = params.id;
-  if (!id) {
-    return NextResponse.json({ error: "Missing order id" }, { status: 400 });
-  }
-
   try {
-    // 🔥 suppression réelle
+    const { id } = await context.params; // ✅ IMPORTANT
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    }
+
+    console.log("[DELETE ORDER]", id);
+
+    // Supprime dans pending_orders
     await dbAdmin.collection("pending_orders").doc(id).delete();
 
-    // (optionnel) si tu as aussi une collection orders
-    await dbAdmin.collection("orders").doc(id).delete().catch(() => {});
+    // Optionnel : supprimer aussi dans orders si elle existe
+    try {
+      await dbAdmin.collection("orders").doc(id).delete();
+    } catch {}
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {
-    console.error("[DELETE order]", err);
+    console.error("[DELETE ORDER ERROR]", err);
     return NextResponse.json(
-      { error: err.message || "Delete failed" },
+      { error: err?.message || "Delete failed" },
       { status: 500 }
     );
   }
