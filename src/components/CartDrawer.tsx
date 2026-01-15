@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /* ------------------------------------------
-   🌍 LOCALES SUPPORTÉES
+   🌍 LOCALES
 ------------------------------------------ */
 type Locale = "fr" | "en" | "es" | "de" | "it" | "nl" | "pt";
 
@@ -20,7 +20,7 @@ const SUPPORTED_LOCALES: Locale[] = [
 ];
 
 /* ------------------------------------------
-   🌍 TRADUCTIONS
+   🌍 TRANSLATIONS
 ------------------------------------------ */
 const TRANSLATIONS: Record<
   Locale,
@@ -28,7 +28,10 @@ const TRANSLATIONS: Record<
     title: string;
     empty: string;
     remove: string;
-    total: string;
+    subtotalHT: string;
+    vat: string;
+    totalHT: string;
+    totalTTC: string;
     checkout: string;
   }
 > = {
@@ -36,49 +39,70 @@ const TRANSLATIONS: Record<
     title: "Votre panier",
     empty: "Votre panier est vide.",
     remove: "Retirer",
-    total: "Total",
+    subtotalHT: "Sous-total HT",
+    vat: "TVA",
+    totalHT: "Total HT",
+    totalTTC: "Total TTC",
     checkout: "Commander",
   },
   en: {
     title: "Your cart",
     empty: "Your cart is empty.",
     remove: "Remove",
-    total: "Total",
+    subtotalHT: "Subtotal (excl. VAT)",
+    vat: "VAT",
+    totalHT: "Total excl. VAT",
+    totalTTC: "Total incl. VAT",
     checkout: "Checkout",
   },
   es: {
     title: "Tu carrito",
     empty: "Tu carrito está vacío.",
     remove: "Eliminar",
-    total: "Total",
+    subtotalHT: "Subtotal sin IVA",
+    vat: "IVA",
+    totalHT: "Total sin IVA",
+    totalTTC: "Total con IVA",
     checkout: "Pagar",
   },
   de: {
     title: "Ihr Warenkorb",
     empty: "Ihr Warenkorb ist leer.",
     remove: "Entfernen",
-    total: "Gesamt",
+    subtotalHT: "Zwischensumme netto",
+    vat: "MwSt",
+    totalHT: "Gesamt netto",
+    totalTTC: "Gesamt brutto",
     checkout: "Zur Kasse",
   },
   it: {
     title: "Il tuo carrello",
     empty: "Il tuo carrello è vuoto.",
     remove: "Rimuovi",
-    total: "Totale",
+    subtotalHT: "Subtotale IVA esclusa",
+    vat: "IVA",
+    totalHT: "Totale IVA esclusa",
+    totalTTC: "Totale IVA inclusa",
     checkout: "Checkout",
   },
   nl: {
     title: "Je winkelwagen",
     empty: "Je winkelwagen is leeg.",
     remove: "Verwijderen",
-    total: "Totaal",
+    subtotalHT: "Subtotaal excl. btw",
+    vat: "BTW",
+    totalHT: "Totaal excl. btw",
+    totalTTC: "Totaal incl. btw",
     checkout: "Afrekenen",
   },
   pt: {
     title: "Seu carrinho",
     empty: "Seu carrinho está vazio.",
     remove: "Remover",
-    total: "Total",
+    subtotalHT: "Subtotal sem IVA",
+    vat: "IVA",
+    totalHT: "Total sem IVA",
+    totalTTC: "Total com IVA",
     checkout: "Finalizar compra",
   },
 };
@@ -96,12 +120,24 @@ export default function CartDrawer() {
 
   const t = TRANSLATIONS[locale];
 
-  const { items, removeItem, isOpen, toggleCart, getTotal } = useCart();
+  const {
+    items,
+    removeItem,
+    isOpen,
+    toggleCart,
+    totalHT,
+    totalVAT,
+    totalTTC,
+  } = useCart();
+
+  const showVAT = totalVAT > 0;
 
   return (
     <>
       {/* BACKDROP */}
-      {isOpen && <div className="cart-backdrop" onClick={toggleCart} />}
+      {isOpen && (
+        <div className="cart-backdrop" onClick={toggleCart} />
+      )}
 
       {/* DRAWER */}
       <aside className={`cart-drawer ${isOpen ? "open" : ""}`}>
@@ -135,8 +171,7 @@ export default function CartDrawer() {
                   <p className="cart-item-name">{item.name}</p>
 
                   <p className="cart-item-price">
-                    {(Number(item.price) || 0).toFixed(2)} € ×{" "}
-                    {item.quantity}
+                    {item.priceHT.toFixed(2)} € HT × {item.quantity}
                   </p>
 
                   <button
@@ -155,9 +190,27 @@ export default function CartDrawer() {
         {/* FOOTER */}
         {items.length > 0 && (
           <div className="cart-footer">
-            <div className="cart-total">
-              <span>{t.total}</span>
-              <span>{getTotal().toFixed(2)} €</span>
+            <div className="cart-totals">
+              <div>
+                <span>{t.subtotalHT}</span>
+                <span>{totalHT.toFixed(2)} €</span>
+              </div>
+
+              {showVAT && (
+                <div>
+                  <span>{t.vat}</span>
+                  <span>{totalVAT.toFixed(2)} €</span>
+                </div>
+              )}
+
+              <div className="cart-total">
+                <strong>
+                  {showVAT ? t.totalTTC : t.totalHT}
+                </strong>
+                <strong>
+                  {(showVAT ? totalTTC : totalHT).toFixed(2)} €
+                </strong>
+              </div>
             </div>
 
             <Link

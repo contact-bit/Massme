@@ -4,33 +4,48 @@ import { useEffect, useState } from "react";
 import AddMethodForm from "./components/AddMethodForm";
 import EditMethodModal from "./components/EditMethodModal";
 
+/* =====================================================
+   TYPES — SOURCE DE VÉRITÉ
+===================================================== */
 export type ShippingMethod = {
   id: string;
 
-  // valeurs par langue
-  nameFr: string;
-  nameEn: string;
-  delayFr: string;
-  delayEn: string;
-  priceFr: number;
-  priceEn: number;
+  name: {
+    fr: string;
+    en: string;
+  };
 
-  // pour l’affichage rapide
+  delay: {
+    fr: string;
+    en: string;
+  };
+
+  priceHT: number;        // ✅ SOURCE DE VÉRITÉ
+  vatRate?: number;       // optionnel
+
   isActive: boolean;
   type: "home" | "relay" | "local_pickup";
   relayProvider?: string | null;
   country?: string;
 };
 
+/* =====================================================
+   PAGE
+===================================================== */
 export default function ShippingAdminPage() {
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ShippingMethod | null>(null);
 
+  /* ---------- LOAD ---------- */
   const reload = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/admin/shipping-methods");
+
+      const res = await fetch("/api/admin/shipping-methods", {
+        cache: "no-store",
+      });
+
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok || !json.ok) {
@@ -39,53 +54,35 @@ export default function ShippingAdminPage() {
         return;
       }
 
-      const raw = json.methods || [];
-
-      const normalized: ShippingMethod[] = raw.map((m: any) => {
-        const nameFr =
-          typeof m.name === "object" ? m.name?.fr || "" : m.name || "";
-        const nameEn =
-          typeof m.name === "object" ? m.name?.en || "" : m.name || "";
-
-        const delayFr =
-          typeof m.delay === "object" ? m.delay?.fr || "" : m.delay || "";
-        const delayEn =
-          typeof m.delay === "object" ? m.delay?.en || "" : m.delay || "";
-
-        const priceFr =
-          typeof m.price === "object"
-            ? typeof m.price?.fr === "number"
-              ? m.price.fr
-              : 0
-            : typeof m.price === "number"
-            ? m.price
-            : 0;
-
-        const priceEn =
-          typeof m.price === "object"
-            ? typeof m.price?.en === "number"
-              ? m.price.en
-              : priceFr
-            : priceFr;
-
-        return {
+      const normalized: ShippingMethod[] = (json.methods || []).map(
+        (m: any) => ({
           id: m.id,
-          nameFr,
-          nameEn,
-          delayFr,
-          delayEn,
-          priceFr,
-          priceEn,
+
+          name: {
+            fr: m.name?.fr || "",
+            en: m.name?.en || "",
+          },
+
+          delay: {
+            fr: m.delay?.fr || "",
+            en: m.delay?.en || "",
+          },
+
+          // 🔒 SOURCE DE VÉRITÉ
+          priceHT: Number(m.priceHT ?? 0),
+          vatRate:
+            typeof m.vatRate === "number" ? m.vatRate : undefined,
+
           isActive: m.isActive ?? true,
           type: m.type || "home",
           relayProvider: m.relayProvider ?? null,
           country: m.country,
-        };
-      });
+        })
+      );
 
       setMethods(normalized);
     } catch (e) {
-      console.error("Erreur chargement shipping methods:", e);
+      console.error("Erreur chargement shipping:", e);
       setMethods([]);
     } finally {
       setLoading(false);
@@ -96,6 +93,7 @@ export default function ShippingAdminPage() {
     reload();
   }, []);
 
+  /* ---------- DELETE ---------- */
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette méthode de livraison ?")) return;
 
@@ -103,8 +101,8 @@ export default function ShippingAdminPage() {
       const res = await fetch(`/api/admin/shipping-methods/${id}`, {
         method: "DELETE",
       });
-      const json = await res.json().catch(() => ({}));
 
+      const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.ok) {
         alert("Erreur lors de la suppression");
         return;
@@ -112,24 +110,31 @@ export default function ShippingAdminPage() {
 
       setMethods((prev) => prev.filter((m) => m.id !== id));
     } catch (e) {
-      console.error("Erreur suppression méthode:", e);
+      console.error("Erreur suppression shipping:", e);
       alert("Erreur lors de la suppression");
     }
   };
 
+  /* =====================================================
+     RENDER
+  ===================================================== */
   return (
     <main className="admin-page">
       <h1 className="admin-title">🚚 Méthodes de livraison</h1>
 
-      {/* FORM AJOUT SIMPLE */}
+      {/* ➕ AJOUT */}
       <section className="mb-8">
-        <h2 className="admin-section-title mb-2">Créer un mode de livraison</h2>
+        <h2 className="admin-section-title mb-2">
+          Créer un mode de livraison
+        </h2>
         <AddMethodForm onCreated={reload} />
       </section>
 
-      {/* LISTE */}
+      {/* 📋 LISTE */}
       <section>
-        <h2 className="admin-section-title mb-2">Liste des méthodes</h2>
+        <h2 className="admin-section-title mb-2">
+          Liste des méthodes
+        </h2>
 
         {loading ? (
           <p>Chargement…</p>
@@ -138,11 +143,8 @@ export default function ShippingAdminPage() {
         ) : (
           <div className="space-y-3">
             {methods.map((m) => {
-              const displayName = m.nameFr || m.nameEn || "Méthode";
-              const displayDelay =
-                m.delayFr || m.delayEn || "Délai non spécifié";
-              const displayPrice =
-                typeof m.priceFr === "number" ? m.priceFr : m.priceEn || 0;
+              const name = m.name.fr || m.name.en || "Méthode";
+              const delay = m.delay.fr || m.delay.en || "—";
 
               return (
                 <div
@@ -151,7 +153,7 @@ export default function ShippingAdminPage() {
                 >
                   <div>
                     <p className="font-semibold">
-                      {displayName}{" "}
+                      {name}{" "}
                       {!m.isActive && (
                         <span className="text-xs text-red-500">
                           (désactivée)
@@ -160,7 +162,11 @@ export default function ShippingAdminPage() {
                     </p>
 
                     <p className="text-sm text-gray-500">
-                      {displayPrice.toFixed(2)} € — {displayDelay} —{" "}
+                      {m.priceHT.toFixed(2)} € HT
+                      {m.vatRate != null && ` • TVA ${m.vatRate}%`}
+                      {" — "}
+                      {delay}
+                      {" — "}
                       {m.type === "home"
                         ? "Domicile"
                         : m.type === "relay"
@@ -171,12 +177,12 @@ export default function ShippingAdminPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex gap-2">
                     <button
                       onClick={() => setEditing(m)}
                       className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md"
                     >
-                      Configuration
+                      Configurer
                     </button>
 
                     <button

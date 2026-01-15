@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState } from "react";
 
-const COUNTRY_OPTIONS = [
-  { code: "FR", label: "France" },
-  { code: "BE", label: "Belgique" },
-  { code: "ES", label: "Espagne" },
-  { code: "DE", label: "Allemagne" },
-  { code: "IT", label: "Italie" },
-  { code: "NL", label: "Pays-Bas" },
-  { code: "PT", label: "Portugal" },
+const COUNTRIES = [
+  { code: "FR", label: "France (UE)" },
+  { code: "BE", label: "Belgique (UE)" },
+  { code: "DE", label: "Allemagne (UE)" },
+  { code: "ES", label: "Espagne (UE)" },
+  { code: "IT", label: "Italie (UE)" },
+  { code: "NL", label: "Pays-Bas (UE)" },
+  { code: "CH", label: "Suisse (Hors UE)" },
 ];
 
 export default function AddMethodForm({
@@ -18,163 +18,121 @@ export default function AddMethodForm({
   onCreated: () => void;
 }) {
   const [form, setForm] = useState({
-    name_fr: "",
-    name_en: "",
-    type: "home" as "home" | "relay" | "local_pickup",
-    relayProvider: "",
+    nameFr: "",
+    nameEn: "",
     country: "FR",
+    type: "home" as "home" | "relay" | "local_pickup",
+    priceHT: "",
   });
 
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name_fr && !form.name_en) {
-      alert("Merci de renseigner au moins un nom.");
+
+    const res = await fetch("/api/admin/shipping-methods", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        data: {
+          name: {
+            fr: form.nameFr,
+            en: form.nameEn || form.nameFr,
+          },
+          delay: {
+            fr: "",
+            en: "",
+          },
+
+          // 🔐 SOURCE DE VÉRITÉ
+          priceHT: Number(form.priceHT),
+
+          country: form.country,
+          type: form.type,
+          isActive: true,
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      alert("Erreur création méthode de livraison");
       return;
     }
 
-    try {
-      setLoading(true);
+    setForm({
+      nameFr: "",
+      nameEn: "",
+      country: "FR",
+      type: "home",
+      priceHT: "",
+    });
 
-      const res = await fetch("/api/admin/shipping-methods", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: {
-            name: {
-              fr: form.name_fr,
-              en: form.name_en || form.name_fr,
-            },
-            // prix & délais par défaut → tu configures après dans la modal
-            price: {
-              fr: 0,
-              en: 0,
-            },
-            delay: {
-              fr: "",
-              en: "",
-            },
-            type: form.type,
-            relayProvider:
-              form.type === "relay" ? form.relayProvider || null : null,
-            country: form.country,
-            isActive: true,
-          },
-        }),
-      });
-
-      const json = await res.json().catch(() => ({}));
-
-      if (!res.ok || !json.ok) {
-        console.error("❌ Erreur API POST shipping-methods:", json);
-        alert("Erreur lors de la création de la méthode.");
-        return;
-      }
-
-      // reset formulaire
-      setForm({
-        name_fr: "",
-        name_en: "",
-        type: "home",
-        relayProvider: "",
-        country: "FR",
-      });
-
-      onCreated();
-    } catch (err) {
-      console.error("❌ Erreur création méthode:", err);
-      alert("Erreur lors de la création de la méthode.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    onCreated();
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div>
-        <label className="block text-sm font-medium">Nom (FR)</label>
-        <input
-          name="name_fr"
-          value={form.name_fr}
-          onChange={handleChange}
-          className="w-full border rounded p-2"
-        />
-      </div>
+    <form onSubmit={submit} className="space-y-3">
+      <input
+        className="input"
+        placeholder="Nom FR"
+        value={form.nameFr}
+        onChange={(e) =>
+          setForm({ ...form, nameFr: e.target.value })
+        }
+        required
+      />
 
-      <div>
-        <label className="block text-sm font-medium">Nom (EN)</label>
-        <input
-          name="name_en"
-          value={form.name_en}
-          onChange={handleChange}
-          className="w-full border rounded p-2"
-        />
-      </div>
+      <input
+        className="input"
+        placeholder="Nom EN (optionnel)"
+        value={form.nameEn}
+        onChange={(e) =>
+          setForm({ ...form, nameEn: e.target.value })
+        }
+      />
 
-      <div>
-        <label className="block text-sm font-medium">Pays</label>
-        <select
-          name="country"
-          value={form.country}
-          onChange={handleChange}
-          className="w-full border rounded p-2"
-        >
-          {COUNTRY_OPTIONS.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium">Type</label>
-        <select
-          name="type"
-          value={form.type}
-          onChange={handleChange}
-          className="w-full border rounded p-2"
-        >
-          <option value="home">Domicile</option>
-          <option value="relay">Point relais</option>
-          <option value="local_pickup">Retrait sur place</option>
-        </select>
-      </div>
-
-      {form.type === "relay" && (
-        <div>
-          <label className="block text-sm font-medium">
-            Réseau point relais
-          </label>
-          <select
-            name="relayProvider"
-            value={form.relayProvider}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-          >
-            <option value="">—</option>
-            <option value="mondialrelay">Mondial Relay</option>
-            <option value="pickup">Pickup / Shop2Shop</option>
-            <option value="colissimo">Colissimo</option>
-            <option value="relais-colis">Relais Colis</option>
-          </select>
-        </div>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md"
+      <select
+        className="input"
+        value={form.country}
+        onChange={(e) =>
+          setForm({ ...form, country: e.target.value })
+        }
       >
-        {loading ? "Ajout…" : "Ajouter"}
+        {COUNTRIES.map((c) => (
+          <option key={c.code} value={c.code}>
+            {c.label}
+          </option>
+        ))}
+      </select>
+
+      <select
+        className="input"
+        value={form.type}
+        onChange={(e) =>
+          setForm({
+            ...form,
+            type: e.target.value as any,
+          })
+        }
+      >
+        <option value="home">Livraison à domicile</option>
+        <option value="relay">Point relais</option>
+        <option value="local_pickup">Retrait sur place</option>
+      </select>
+
+      <input
+        type="number"
+        step="0.01"
+        min="0"
+        className="input"
+        placeholder="Prix HT (€)"
+        value={form.priceHT}
+        onChange={(e) =>
+          setForm({ ...form, priceHT: e.target.value })
+        }
+        required
+      />
+
+      <button className="btn-blue w-full">
+        ➕ Ajouter la livraison
       </button>
     </form>
   );

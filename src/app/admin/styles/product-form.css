@@ -1,0 +1,185 @@
+/* =====================================================
+   PRODUCT EDIT FORM — PREMIUM ADMIN
+===================================================== */
+
+.admin-form {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 36px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.admin-section-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 28px;
+  color: #111827;
+}
+
+/* ================= LANG TABS ================= */
+
+.admin-lang-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.admin-lang-tabs button {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-lang-tabs button:hover {
+  background: #e5e7eb;
+}
+
+.admin-lang-tabs button.active {
+  background: #111827;
+  color: #ffffff;
+  border-color: #111827;
+}
+
+/* ================= LABELS ================= */
+
+.admin-label {
+  display: block;
+  margin: 18px 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ================= INPUTS ================= */
+
+.admin-input,
+.admin-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-input:focus,
+.admin-textarea:focus {
+  outline: none;
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
+}
+
+/* ================= SWITCH ================= */
+
+.admin-switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ================= CARD ================= */
+
+.pf-card {
+  margin-top: 36px;
+  padding: 26px;
+  border-radius: 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.pf-card h3 {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+/* ================= TABLE ================= */
+
+.pf-table {
+  display: grid;
+  gap: 12px;
+}
+
+.pf-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.6fr 1fr 0.6fr 0.8fr 0.7fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.pf-head {
+  font-size: 13px;
+  font-weight: 800;
+  color: #374151;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.pf-row input[type="number"] {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+.pf-row input[type="checkbox"] {
+  transform: scale(1.15);
+}
+
+.pf-row input:disabled {
+  background: #e5e7eb;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ================= ERROR ================= */
+
+.admin-error {
+  margin-top: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+/* ================= ACTIONS ================= */
+
+.admin-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 36px;
+}
+
+.btn {
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background: #111827;
+  color: #ffffff;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid #d1d5db;
+}

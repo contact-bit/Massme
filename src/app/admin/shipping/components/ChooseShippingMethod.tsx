@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShippingMethod, RelayPoint } from "@/components/shipping/types";
+import type { ShippingMethod, RelayPoint } from "@/components/shipping/types";
 import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
 
 type Locale = "fr" | "en";
@@ -13,6 +13,10 @@ type Props = {
   locale: Locale;
   error?: string | null;
 };
+
+function round2(n: number) {
+  return Math.round(n * 100) / 100;
+}
 
 export default function ChooseShippingMethod({
   methods,
@@ -39,8 +43,17 @@ export default function ChooseShippingMethod({
     onRelayChosen(point);
   }
 
+  function priceTTC(m: ShippingMethod) {
+    if (!m.vatRate || m.vatRate <= 0) return m.priceHT;
+    return round2(m.priceHT * (1 + m.vatRate / 100));
+  }
+
   const t = {
     title: locale === "fr" ? "Méthode de livraison" : "Shipping method",
+    relay:
+      locale === "fr"
+        ? "Point relais Mondial Relay"
+        : "Mondial Relay pickup point",
     chooseRelay:
       locale === "fr"
         ? "Choisir un point relais Mondial Relay"
@@ -53,37 +66,44 @@ export default function ChooseShippingMethod({
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      {methods.map((m) => (
-        <button
-          key={m.id}
-          type="button"
-          onClick={() => selectMethod(m)}
-          className={`w-full text-left border p-4 rounded-lg cursor-pointer transition ${
-            selected?.id === m.id
-              ? "border-blue-600 bg-blue-50"
-              : "border-gray-300 bg-white"
-          }`}
-        >
-          <p className="font-semibold">
-            {m.name} — {m.price.toFixed(2)} €
-          </p>
-          <p className="text-sm text-gray-600">{m.delay}</p>
+      {methods.map((m) => {
+        const isSelected = selected?.id === m.id;
 
-          {m.type === "relay" && (
-            <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded mt-2 inline-block">
-              {locale === "fr"
-                ? "Point relais Mondial Relay"
-                : "Mondial Relay pickup point"}
-            </span>
-          )}
-        </button>
-      ))}
+        return (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => selectMethod(m)}
+            className={`w-full text-left border p-4 rounded-lg transition ${
+              isSelected
+                ? "border-blue-600 bg-blue-50"
+                : "border-gray-300 bg-white"
+            }`}
+          >
+            <p className="font-semibold">
+              {m.name} — {priceTTC(m).toFixed(2)} € TTC
+            </p>
+
+            <p className="text-sm text-gray-600">{m.delay}</p>
+
+            <p className="text-xs text-gray-500">
+              {m.priceHT.toFixed(2)} € HT
+              {m.vatRate ? ` • TVA ${m.vatRate}%` : ""}
+            </p>
+
+            {m.type === "relay" && (
+              <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded mt-2 inline-block">
+                {t.relay}
+              </span>
+            )}
+          </button>
+        );
+      })}
 
       {selected?.type === "relay" && (
         <div className="border p-4 rounded-lg mt-4 bg-white shadow-sm">
           <h3 className="font-semibold mb-2">{t.chooseRelay}</h3>
 
-          {/* vrai widget Mondial Relay */}
           <RelayPointMondialRelay onSelect={handleRelayChosen} />
 
           {relayPoint && (

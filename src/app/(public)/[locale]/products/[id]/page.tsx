@@ -2,103 +2,233 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { doc, getDoc } from "firebase/firestore";
+
 import { db } from "@/lib/firebase";
 import { useCart } from "@/context/CartContext";
+import { MARKET_BY_LOCALE, Locale, Market } from "@/lib/market";
 
-const LOCALES = ["fr", "en", "es", "de", "it", "nl"] as const;
-type Locale = (typeof LOCALES)[number];
+/* =====================================================
+   TYPES
+===================================================== */
 
-function isLocale(v: any): v is Locale {
-  return typeof v === "string" && (LOCALES as readonly string[]).includes(v);
-}
-
-function pickLocaleValue(
-  obj: Partial<Record<Locale, string>> | undefined,
-  locale: Locale
-) {
-  return obj?.[locale] || obj?.en || obj?.fr || "";
-}
+type RawVAT = {
+  enabled?: boolean;
+  rate?: number;
+};
 
 type Product = {
   id: string;
   name: Partial<Record<Locale, string>>;
   description?: Partial<Record<Locale, string>>;
-  price: { eur: number };
-  stock: number;
   imageUrl?: string;
   isActive?: boolean;
+
+  markets?: string[];
+  pricesByMarket?: Record<string, number>;
+  vatByMarket?: Record<string, RawVAT>;
 };
 
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function pickLocaleValue(
+  obj: Partial<Record<Locale, string>> | undefined,
+  locale: Locale
+) {
+  return obj?.[locale] || obj?.fr || "";
+}
+
+function round2(n: number) {
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+
+/**
+ * 🔒 NORMALISE LES CLÉS MARCHÉ
+ * - "it", "IT ", "Italie" → "IT"
+ */
+function normalizeMarketKey(key: string): Market | null {
+  const k = key.trim().toUpperCase();
+  const allowed: Market[] = [
+    "FR",
+    "IT",
+    "DE",
+    "ES",
+    "NL",
+    "PT",
+    "BE",
+    "CH",
+  ];
+  return allowed.includes(k as Market) ? (k as Market) : null;
+}
+
+/**
+ * 🔒 LECTURE TVA SAFE
+ */
+function getVATForMarket(
+  vatByMarket: Record<string, RawVAT> | undefined,
+  market: Market
+): { enabled: boolean; rate: number } {
+  if (!vatByMarket) return { enabled: false, rate: 0 };
+
+  for (const [key, value] of Object.entries(vatByMarket)) {
+    const normalized = normalizeMarketKey(key);
+    if (normalized === market) {
+      const enabled = value?.enabled === true;
+      const rate =
+        typeof value?.rate === "number" && value.rate > 0
+          ? value.rate
+          : 0;
+
+      return {
+        enabled: enabled && rate > 0,
+        rate,
+      };
+    }
+  }
+
+  return { enabled: false, rate: 0 };
+}
+
+/**
+ * 🔒 LECTURE PRIX SAFE
+ */
+function getPriceForMarket(
+  pricesByMarket: Record<string, number> | undefined,
+  market: Market
+): number {
+  if (!pricesByMarket) return 0;
+
+  for (const [key, value] of Object.entries(pricesByMarket)) {
+    const normalized = normalizeMarketKey(key);
+    if (normalized === market && typeof value === "number") {
+      return value;
+    }
+  }
+
+  return 0;
+}
+
+/* =====================================================
+   PAGE
+===================================================== */
+
 export default function ProductPage() {
-  const params = useParams() as { locale?: string; id?: string };
+  const params = useParams() as {
+    locale?: Locale;
+    id?: string;
+  };
 
-  const locale: Locale = isLocale(params.locale) ? params.locale : "fr";
-  const id = params.id || "";
+  const locale: Locale = params.locale ?? "fr";
+  const productId = params.id;
 
-  const { addItem, toggleCart } = useCart();
+  const market: Market = MARKET_BY_LOCALE[locale];
+
+  const { addItem } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
+  /* ---------------- FETCH PRODUCT ---------------- */
   useEffect(() => {
-    async function fetchProduct() {
-      if (!id) return;
+    if (!productId) return;
 
-      const ref = doc(db, "products", id);
-      const snap = await getDoc(ref);
-
+    getDoc(doc(db, "products", productId)).then((snap) => {
       if (snap.exists()) {
-        setProduct({ ...(snap.data() as any), id: snap.id } as Product);
-      } else {
-        setProduct(null);
+        setProduct({
+          id: snap.id,
+          ...(snap.data() as any),
+        });
       }
-
       setLoading(false);
-    }
+    });
+  }, [productId]);
 
-    fetchProduct();
-  }, [id]);
+  if (loading) {
+    return <p className="py-10 text-center">Chargement…</p>;
+  }
 
-  if (loading) return <p className="text-center py-10">Chargement...</p>;
-  if (!product) return <p className="text-center py-10">Produit introuvable.</p>;
+  if (!product) {
+    return <p className="py-10 text-center">Produit introuvable.</p>;
+  }
 
+  /* ---------------- DATA ---------------- */
   const name = pickLocaleValue(product.name, locale);
   const desc = pickLocaleValue(product.description, locale);
 
+  const priceHT = getPriceForMarket(product.pricesByMarket, market);
+
+  const vat = getVATForMarket(product.vatByMarket, market);
+
+  const vatAmount = vat.enabled
+    ? round2((priceHT * vat.rate) / 100)
+    : 0;
+
+  const priceTTC = round2(priceHT + vatAmount);
+
+  /* ---------------- ADD TO CART ---------------- */
   const addToCart = () => {
     addItem({
       id: product.id,
       name,
-      description: desc,
-      imageUrl: product.imageUrl,
-      price: Number(product.price.eur),
+      priceHT,
       quantity: 1,
+      imageUrl: product.imageUrl,
+      description: desc,
+
+      vat: {
+        enabled: vat.enabled,
+        rate: vat.rate,
+      },
     });
-    toggleCart();
   };
 
+  /* ---------------- RENDER ---------------- */
   return (
-    <main className="max-w-2xl mx-auto py-10 px-4 text-gray-900">
-      {product.imageUrl && (
-        <img
-          src={product.imageUrl}
-          className="w-full h-80 object-cover rounded-lg mb-6 border"
-          alt={name}
-        />
-      )}
+    <main className="max-w-3xl mx-auto py-10 px-4">
+      <div className="space-y-6">
+        <div className="relative w-full aspect-square bg-gray-100 rounded">
+          <Image
+            src={product.imageUrl || "/placeholder.jpg"}
+            alt={name}
+            fill
+            className="object-contain"
+          />
+        </div>
 
-      <h1 className="text-3xl font-bold mb-3">{name}</h1>
-      {desc && <p className="text-gray-600 mb-6">{desc}</p>}
+        <h1 className="text-2xl font-bold">{name}</h1>
 
-      <p className="text-xl font-semibold mb-4">{product.price.eur} €</p>
+        {desc && <p className="text-gray-600">{desc}</p>}
 
-      <button
-        onClick={addToCart}
-        className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition text-lg"
-      >
-        {locale === "fr" ? "Ajouter au panier 🛒" : "Add to cart 🛒"}
-      </button>
+        {/* PRICES */}
+        <div className="space-y-1">
+          <p>
+            Prix HT : <strong>{priceHT.toFixed(2)} €</strong>
+          </p>
+
+          {vat.enabled && (
+            <>
+              <p>
+                TVA ({vat.rate}%) :{" "}
+                <strong>{vatAmount.toFixed(2)} €</strong>
+              </p>
+
+              <p className="text-lg font-semibold">
+                Prix TTC : {priceTTC.toFixed(2)} €
+              </p>
+            </>
+          )}
+        </div>
+
+        <button
+          onClick={addToCart}
+          className="bg-black text-white px-6 py-3 rounded hover:bg-gray-800 transition"
+        >
+          Ajouter au panier 🛒
+        </button>
+      </div>
     </main>
   );
 }

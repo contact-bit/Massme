@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
+import { CartProvider } from "@/context/CartContext";
+
 import "./styles/admin.css";
 import "./styles/admin-login.css";
 
@@ -36,12 +38,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     setAuthChecked(true);
   }, [router, isLogin]);
 
-  // ⏳ Evite flash de pages protégées
+  // ⏳ Évite le flash des pages protégées
   if (!authChecked && !isLogin) return null;
 
-  // 🧾 Login = pas de shell
-  if (isLogin) return <>{children}</>;
+  // 🧾 Page login = pas de shell, MAIS provider OK
+  if (isLogin) {
+    return <CartProvider>{children}</CartProvider>;
+  }
 
-  // ✅ Pages admin = shell (navbar + tabs + search + logout + content)
-  return <AdminShell>{children}</AdminShell>;
+  // ✅ Pages admin = shell + provider
+  return (
+    <CartProvider>
+      <AdminShell>{children}</AdminShell>
+    </CartProvider>
+  );
 }
