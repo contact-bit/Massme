@@ -11,9 +11,9 @@ export const dynamic = "force-dynamic";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
-/* -------------------------------------------------------
-   RAW BODY → BUFFER (Stripe obligatoire)
-------------------------------------------------------- */
+/* =====================================================
+   RAW BODY → BUFFER (obligatoire pour Stripe)
+===================================================== */
 async function buffer(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader();
   const chunks: Uint8Array[] = [];
@@ -27,9 +27,9 @@ async function buffer(stream: ReadableStream<Uint8Array>) {
   return Buffer.concat(chunks);
 }
 
-/* =======================================================
+/* =====================================================
    STRIPE WEBHOOK
-======================================================= */
+===================================================== */
 export async function POST(req: Request) {
   const signature = req.headers.get("stripe-signature");
 
@@ -51,32 +51,25 @@ export async function POST(req: Request) {
     );
   } catch (err: any) {
     console.error("❌ Stripe signature error:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: err.message },
+      { status: 400 }
+    );
   }
 
   /* =====================================================
-     CHECKOUT PAYÉ
+     🎯 CHECKOUT SESSION PAYÉE
   ===================================================== */
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
     const metadata = session.metadata || {};
     const orderId = metadata.order_id;
-    const isRelay = metadata.isRelay === "true";
-    const relayProvider = metadata.relayProvider || null;
 
     const customerEmail =
       session.customer_details?.email ||
       session.customer_email ||
       null;
-
-    const customerName =
-      session.customer_details?.name ||
-      session.shipping_details?.name ||
-      null;
-
-    const customerFirstName =
-      customerName?.split(" ")?.[0] || null;
 
     if (!orderId || !customerEmail) {
       console.error("⚠️ order_id ou email manquant");
@@ -84,7 +77,7 @@ export async function POST(req: Request) {
     }
 
     /* ---------------------------------------------------
-       ORDERS = SOURCE DE VÉRITÉ
+       🔎 ORDERS = SOURCE DE VÉRITÉ
     --------------------------------------------------- */
     const ref = dbAdmin.collection("orders").doc(orderId);
     const snap = await ref.get();
@@ -97,7 +90,21 @@ export async function POST(req: Request) {
     const savedOrder = snap.data()!;
 
     /* ---------------------------------------------------
-       ITEMS
+       👤 CLIENT — PRÉNOM / NOM (JAMAIS DEPUIS STRIPE)
+    --------------------------------------------------- */
+    const firstName =
+      savedOrder.shippingAddress?.firstName ||
+      savedOrder.customerFirstName ||
+      savedOrder.shippingAddress?.name?.split(" ")[0] ||
+      "";
+
+    const lastName =
+      savedOrder.shippingAddress?.lastName ||
+      savedOrder.customerLastName ||
+      "";
+
+    /* ---------------------------------------------------
+       📦 ITEMS — NORMALISATION (LEGACY COMPAT)
     --------------------------------------------------- */
     const items = (savedOrder.items || []).map((it: any) => {
       const priceHT = Number(it.priceHT ?? it.price ?? 0);
@@ -107,14 +114,16 @@ export async function POST(req: Request) {
         description: it.description || "",
         quantity: Number(it.quantity || 1),
 
-        // legacy
+        // legacy (PDF / emails / success)
         price: priceHT,
+
+        // interne
         priceHT,
       };
     });
 
     /* ---------------------------------------------------
-       SHIPPING
+       🚚 SHIPPING — NORMALISATION TVA
     --------------------------------------------------- */
     const sm = savedOrder.shippingMethod || {};
     const shippingHT = Number(sm.priceHT ?? sm.price ?? 0);
@@ -127,12 +136,17 @@ export async function POST(req: Request) {
 
     const shippingMethod = {
       ...sm,
+
+      // legacy
       price: shippingCalc.ttc,
+
+      // interne
       priceHT: shippingHT,
       vatRate,
       priceTTC: shippingCalc.ttc,
+
       type: sm.type || "home",
-      relayProvider: sm.relayProvider || relayProvider || null,
+      relayProvider: sm.relayProvider || null,
     };
 
     const normalizedOrder = {
@@ -140,26 +154,23 @@ export async function POST(req: Request) {
       items,
       shippingMethod,
       relayPoint: savedOrder.relayPoint || null,
-      isRelay,
+      customerFirstName: firstName,
+      customerLastName: lastName,
     };
 
     /* ---------------------------------------------------
-       UPDATE COMMANDE
+       💾 UPDATE COMMANDE → PAYÉE
     --------------------------------------------------- */
     await ref.update({
       status: "paid",
       paidAt: new Date(),
       stripeSessionId: session.id,
-
-      email: customerEmail,
-      customerName,
-      customerFirstName,
-
-      relayPoint: normalizedOrder.relayPoint || null,
+      customerFirstName: firstName,
+      customerLastName: lastName,
     });
 
     /* ---------------------------------------------------
-       FACTURE + EMAIL CLIENT
+       📄 FACTURE PDF + EMAIL CLIENT
     --------------------------------------------------- */
     try {
       const pdfBuffer = await generateInvoicePDF(
@@ -170,11 +181,11 @@ export async function POST(req: Request) {
       await resend.emails.send({
         from: "Massme • Support <contact@hdconnects.com>",
         to: customerEmail,
-        subject: "🎉 Merci pour votre achat — Votre facture",
+        subject: "🎉 Merci pour votre commande — Facture jointe",
         html: `
           <div style="font-family:Arial,sans-serif;padding:20px">
-            <h2>Merci ${customerFirstName ?? ""} pour votre commande</h2>
-            <p>Votre facture est jointe.</p>
+            <h2>Merci ${firstName || ""} pour votre commande 🎉</h2>
+            <p>Votre facture est jointe à cet email.</p>
             <p><b>Commande :</b> ${orderId}</p>
           </div>
         `,
@@ -193,13 +204,18 @@ export async function POST(req: Request) {
     }
 
     /* ---------------------------------------------------
-       EMAILS ADMIN / LOGISTIQUE
+       📮 EMAILS ADMIN + LOGISTIQUE (NON BLOQUANTS)
     --------------------------------------------------- */
     try {
       fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-admin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, customerEmail }),
+        body: JSON.stringify({
+          orderId,
+          customerEmail,
+          firstName,
+          lastName,
+        }),
       });
 
       fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-logistique`, {
@@ -208,8 +224,8 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           orderId,
           customerEmail,
-          isRelay,
-          relayProvider,
+          shippingMethod: shippingMethod.type,
+          relayPoint: normalizedOrder.relayPoint,
         }),
       });
     } catch (err) {
