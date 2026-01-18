@@ -16,7 +16,7 @@ export default function SuccessPage() {
   const t = (fr: string, en: string) => (locale === "fr" ? fr : en);
 
   /* -------------------------------------------------------
-     🔄 LOAD ORDER (ROBUSTE)
+     🔄 LOAD ORDER (SAFE + TS OK)
   ------------------------------------------------------- */
   useEffect(() => {
     if (!sessionId) {
@@ -25,12 +25,14 @@ export default function SuccessPage() {
       return;
     }
 
+    const sid = sessionId; // ✅ FIX TypeScript (string garanti)
+
     let cancelled = false;
 
     async function load() {
       try {
         const res = await fetch(
-          `/api/verify-payment?session_id=${encodeURIComponent(sessionId)}`,
+          `/api/verify-payment?session_id=${encodeURIComponent(sid)}`,
           { cache: "no-store" }
         );
 
@@ -58,13 +60,14 @@ export default function SuccessPage() {
     }
 
     load();
+
     return () => {
       cancelled = true;
     };
   }, [sessionId]);
 
   /* -------------------------------------------------------
-     🧮 DATA SAFE
+     🧠 EARLY STATES
   ------------------------------------------------------- */
   if (loading) {
     return (
@@ -79,9 +82,7 @@ export default function SuccessPage() {
   if (error) {
     return (
       <main className="success-page">
-        <p className="text-red-600 text-center mt-10">
-          {error}
-        </p>
+        <p className="text-red-600 text-center mt-10">{error}</p>
         <div className="text-center mt-6">
           <Link href={`/${locale}`} className="btn-home">
             {t("Retour à l’accueil", "Back home")}
@@ -94,7 +95,7 @@ export default function SuccessPage() {
   if (!order) return null;
 
   /* -------------------------------------------------------
-     NORMALISATION
+     🔧 NORMALISATION DATA
   ------------------------------------------------------- */
   const firstName =
     order.shippingAddress?.name?.split(" ")?.[0] ??
@@ -105,6 +106,7 @@ export default function SuccessPage() {
     : "0.00";
 
   const sm = order.shippingMethod || {};
+
   const shippingName =
     typeof sm.name === "string"
       ? sm.name
@@ -124,10 +126,12 @@ export default function SuccessPage() {
   return (
     <main className="success-page">
       <div className="success-container">
+        {/* BADGE */}
         <div className="success-badge">
           ✓ {t("Paiement confirmé", "Payment confirmed")}
         </div>
 
+        {/* TITLE */}
         <h1 className="success-title">
           {t(`Merci ${firstName}! 🎉`, `Thank you, ${firstName}! 🎉`)}
         </h1>
@@ -146,6 +150,7 @@ export default function SuccessPage() {
           )}
         </p>
 
+        {/* ORDER BOX */}
         <div className="success-box">
           <div className="success-order-header">
             <div>
@@ -163,6 +168,7 @@ export default function SuccessPage() {
             </div>
           </div>
 
+          {/* ADDRESS + SHIPPING */}
           <div className="success-grid">
             <div className="success-box-alt">
               <p className="success-block-title">
@@ -179,6 +185,9 @@ export default function SuccessPage() {
                 {order.shippingAddress?.postalCode}{" "}
                 {order.shippingAddress?.city}
               </p>
+              {order.shippingAddress?.country && (
+                <p>{order.shippingAddress.country}</p>
+              )}
             </div>
 
             <div className="success-box-alt">
@@ -192,24 +201,36 @@ export default function SuccessPage() {
             </div>
           </div>
 
+          {/* RELAY */}
           {isRelay && relay && (
             <div className="success-box-alt mt-4">
               <p className="success-block-title">
                 {t("Point relais", "Relay point")}
               </p>
+
               <p className="success-block-value">
                 {relay.name || relay.Nom}
               </p>
+
+              {relay.address && <p>{relay.address}</p>}
+              {relay.Adresse1 && <p>{relay.Adresse1}</p>}
+              {(relay.postalCode || relay.CP || relay.city || relay.Ville) && (
+                <p>
+                  {relay.postalCode || relay.CP}{" "}
+                  {relay.city || relay.Ville}
+                </p>
+              )}
             </div>
           )}
 
+          {/* ITEMS */}
           <div className="success-items-section">
             <p className="success-block-title">
               {t("Articles commandés", "Ordered items")}
             </p>
 
             {order.items?.map((it: any, i: number) => {
-              const price =
+              const unit =
                 typeof it.price === "number"
                   ? it.price
                   : it.priceHT ?? 0;
@@ -222,7 +243,7 @@ export default function SuccessPage() {
                     <p className="success-item-qty">× {qty}</p>
                   </div>
                   <p className="success-item-price">
-                    {(price * qty).toFixed(2)} €
+                    {(unit * qty).toFixed(2)} €
                   </p>
                 </div>
               );
@@ -230,6 +251,7 @@ export default function SuccessPage() {
           </div>
         </div>
 
+        {/* CTA */}
         <div className="success-cta">
           <Link href={`/${locale}`} className="btn-home">
             {t("Retourner à l’accueil", "Return home")}
