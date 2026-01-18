@@ -1,4 +1,3 @@
-// src/app/api/checkout/route.ts
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { dbAdmin as db } from "@/lib/firebase.admin";
@@ -6,9 +5,26 @@ import { Timestamp } from "firebase-admin/firestore";
 import { computeTax } from "@/lib/tax";
 import Stripe from "stripe";
 
+/* =====================================================
+   TYPES
+===================================================== */
+type CartItem = {
+  priceHT: number;
+  quantity: number;
+};
+
+type CleanItem = CartItem & {
+  id: string;
+  name: string;
+};
+
+/* =====================================================
+   API
+===================================================== */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+
     const {
       items,
       locale = "fr",
@@ -19,26 +35,41 @@ export async function POST(req: Request) {
       disableVAT = false,
     } = body;
 
-    if (!items?.length || !customerEmail || !shippingMethod) {
-      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    /* ------------------ VALIDATION ------------------ */
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: "Missing items" }, { status: 400 });
+    }
+
+    if (!customerEmail) {
+      return NextResponse.json({ error: "Missing email" }, { status: 400 });
+    }
+
+    if (!shippingMethod) {
+      return NextResponse.json(
+        { error: "Missing shipping method" },
+        { status: 400 }
+      );
     }
 
     const country = shippingAddress?.country || "FR";
 
-    /* ------------------ PANIER HT ------------------ */
-    const cleanItems = items.map((i: any) => ({
+    /* ------------------ PANIER (HT) ------------------ */
+    const cleanItems: CleanItem[] = items.map((i: any) => ({
       id: String(i.id),
-      name: i.name,
-      priceHT: Number(i.priceHT),
+      name: String(i.name),
+      priceHT: Number(i.priceHT) || 0,
       quantity: Math.max(1, Number(i.quantity || 1)),
     }));
 
     const itemsHT = cleanItems.reduce(
-      (s, i) => s + i.priceHT * i.quantity,
+      (sum: number, item: CartItem) =>
+        sum + item.priceHT * item.quantity,
       0
     );
 
-    const shippingHT = Number(shippingMethod.priceHT ?? shippingMethod.price ?? 0);
+    const shippingHT = Number(
+      shippingMethod.priceHT ?? shippingMethod.price ?? 0
+    );
 
     /* ------------------ TVA ------------------ */
     const taxItems = disableVAT
@@ -59,10 +90,13 @@ export async function POST(req: Request) {
     await orderRef.set({
       id: orderRef.id,
       email: customerEmail,
+
       items: cleanItems,
-      shippingMethod,
+
       shippingAddress,
+      shippingMethod,
       relayPoint: relayPoint || null,
+
       totals: {
         country,
         vatRate: taxItems.vatRate,
@@ -71,22 +105,23 @@ export async function POST(req: Request) {
         totalTTC,
         vatDisabled: disableVAT,
       },
+
       locale,
       status: "pending_payment",
       createdAt: Timestamp.now(),
     });
 
-    /* ------------------ STRIPE ------------------ */
+    /* ------------------ STRIPE LINE ITEMS ------------------ */
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
-    for (const i of cleanItems) {
+    for (const item of cleanItems) {
       line_items.push({
         price_data: {
           currency: "eur",
-          product_data: { name: i.name },
-          unit_amount: Math.round(i.priceHT * 100),
+          product_data: { name: item.name },
+          unit_amount: Math.round(item.priceHT * 100),
         },
-        quantity: i.quantity,
+        quantity: item.quantity,
       });
     }
 
@@ -105,14 +140,20 @@ export async function POST(req: Request) {
       line_items.push({
         price_data: {
           currency: "eur",
-          product_data: { name: `TVA ${taxItems.vatRate}%` },
+          product_data: {
+            name: `TVA ${taxItems.vatRate}%`,
+          },
           unit_amount: Math.round(totalVAT * 100),
         },
         quantity: 1,
       });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_URL!;
+    /* ------------------ STRIPE SESSION ------------------ */
+    const baseUrl = process.env.NEXT_PUBLIC_URL;
+    if (!baseUrl) {
+      throw new Error("NEXT_PUBLIC_URL missing");
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -121,15 +162,16 @@ export async function POST(req: Request) {
       metadata: {
         order_id: orderRef.id,
       },
-
-      // 🔥 CHANGEMENT CLÉ
       success_url: `${baseUrl}/${locale}/success?order_id=${orderRef.id}`,
       cancel_url: `${baseUrl}/${locale}/checkout`,
     });
 
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
-    console.error("checkout error:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    console.error("💥 /api/checkout error:", err);
+    return NextResponse.json(
+      { error: err?.message || "Internal server error" },
+      { status: 500 }
+    );
   }
 }
