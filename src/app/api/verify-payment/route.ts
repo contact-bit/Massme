@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { computePrice } from "@/lib/pricing";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 export const dynamic = "force-dynamic";
@@ -11,98 +12,76 @@ export async function GET(req: Request) {
     const sessionId = searchParams.get("session_id");
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: "Missing session_id" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing session_id" }, { status: 400 });
     }
 
     /* ---------------------------------------------------
-       1️⃣ Récupération session Stripe
+       1️⃣ Stripe session
     --------------------------------------------------- */
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (!session) {
-      return NextResponse.json(
-        { success: false, error: "Stripe session not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Stripe session not found" }, { status: 404 });
     }
 
     const orderId = session.metadata?.order_id;
     if (!orderId) {
-      return NextResponse.json({
-        success: false,
-        error: "Order ID missing from metadata",
-      });
+      return NextResponse.json({ error: "Order ID missing from metadata" }, { status: 400 });
     }
 
     /* ---------------------------------------------------
-       2️⃣ Récup Firestore
+       2️⃣ Firestore (LECTURE SEULE)
     --------------------------------------------------- */
     const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
 
     if (!snap.exists) {
-      return NextResponse.json({
-        success: false,
-        error: "Order not found",
-      });
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
     const order = snap.data();
     if (!order) {
-      return NextResponse.json({
-        success: false,
-        error: "Invalid order data",
-      });
+      return NextResponse.json({ error: "Invalid order data" }, { status: 500 });
     }
 
     /* ---------------------------------------------------
-       3️⃣ SHIPPING METHOD Normalisation (multi-langue)
+       3️⃣ SHIPPING NORMALISÉ (HT + TVA)
     --------------------------------------------------- */
     const shipping = order.shippingMethod || {};
 
-    // Nom normalisé
     const shippingName =
       typeof shipping.name === "string"
         ? shipping.name
-        : shipping.name?.fr ||
-          shipping.name?.en ||
-          "—";
+        : shipping.name?.fr || shipping.name?.en || "—";
 
-    // Prix normalisé
-    const shippingPrice =
-      typeof shipping.price === "number"
-        ? shipping.price
-        : shipping.price?.fr ||
-          shipping.price?.en ||
-          0;
+    const priceHT = Number(shipping.priceHT || 0);
+    const vatRate = Number(shipping.vatRate || 0);
+
+    const shippingPrice = computePrice({
+      priceHT,
+      vatRate,
+    });
 
     /* ---------------------------------------------------
-       4️⃣ Marquer comme payé si Stripe confirme
-    --------------------------------------------------- */
-    if (session.payment_status === "paid") {
-      await dbAdmin.collection("pending_orders").doc(orderId).update({
-        status: "paid",
-        paidAt: new Date(),
-        stripeSessionId: session.id,
-      });
-    }
-
-    /* ---------------------------------------------------
-       5️⃣ Renvoi complet pour SuccessPage (🔥 très important)
-       ➜ NE PAS ÉCRASER shippingMethod NI relayPoint
+       4️⃣ RÉPONSE SUCCESS PAGE
+       ❗ NE PAS UPDATE FIRESTORE ICI
     --------------------------------------------------- */
     return NextResponse.json({
       success: true,
       order: {
         id: orderId,
-        ...order, // garde shippingMethod complet + relayPoint complet
+        ...order,
 
         shippingMethod: {
           ...shipping,
           name: shippingName,
-          price: shippingPrice,
+          priceHT,
+          vatRate,
+          priceTTC: shippingPrice.ttc,
+        },
+
+        stripe: {
+          sessionId: session.id,
+          paymentStatus: session.payment_status,
         },
 
         amount_total: session.amount_total,
@@ -111,9 +90,8 @@ export async function GET(req: Request) {
     });
   } catch (err: any) {
     console.error("❌ verify-payment error:", err);
-
     return NextResponse.json(
-      { success: false, error: err.message || "Server error" },
+      { error: err.message || "Server error" },
       { status: 500 }
     );
   }
