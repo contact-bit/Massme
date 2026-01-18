@@ -4,55 +4,84 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 
+/* -------------------------------------
+   Helpers
+------------------------------------- */
+function eur(n?: number) {
+  if (typeof n !== "number" || Number.isNaN(n)) return "—";
+  return `${n.toFixed(2)} €`;
+}
+
+function formatDate(value: any) {
+  if (!value) return "—";
+
+  // Firestore Timestamp
+  if (value?.seconds) {
+    return new Date(value.seconds * 1000).toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
+  // Date / ISO string
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "—";
+
+  return d.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+/* -------------------------------------
+   Page
+------------------------------------- */
 export default function SuccessPage() {
   const { locale } = useParams() as { locale: string };
   const search = useSearchParams();
-  const sessionId = search.get("session_id");
+  const orderId = search.get("order_id");
 
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const t = (fr: string, en: string) => (locale === "fr" ? fr : en);
-
-  /* -------------------------------------------------------
-     🔄 LOAD ORDER (SAFE + TS OK)
-  ------------------------------------------------------- */
+  /* -------------------------------------
+     Load order (Firestore only)
+  ------------------------------------- */
   useEffect(() => {
-    if (!sessionId) {
+    if (!orderId) {
+      setError("Commande introuvable");
       setLoading(false);
-      setError("Session Stripe manquante");
       return;
     }
-
-    const sid = sessionId; // ✅ FIX TypeScript (string garanti)
 
     let cancelled = false;
 
     async function load() {
       try {
         const res = await fetch(
-          `/api/verify-payment?session_id=${encodeURIComponent(sid)}`,
+          `/api/get-order?order_id=${encodeURIComponent(orderId)}`,
           { cache: "no-store" }
         );
 
         if (!res.ok) {
-          throw new Error(`API error ${res.status}`);
+          throw new Error(`API ${res.status}`);
         }
 
         const data = await res.json();
-
-        if (!data?.success || !data?.order) {
+        if (!data?.order) {
           throw new Error("Commande introuvable");
         }
 
         if (!cancelled) {
           setOrder(data.order);
         }
-      } catch (e: any) {
-        console.error("❌ SuccessPage error:", e);
+      } catch (err) {
+        console.error("❌ Success error:", err);
         if (!cancelled) {
-          setError(e.message || "Erreur de chargement");
+          setError("Impossible de charger la commande");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -60,203 +89,166 @@ export default function SuccessPage() {
     }
 
     load();
-
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [orderId]);
 
-  /* -------------------------------------------------------
-     🧠 EARLY STATES
-  ------------------------------------------------------- */
+  /* -------------------------------------
+     States
+  ------------------------------------- */
   if (loading) {
     return (
-      <main className="success-page">
-        <p className="success-loading">
-          {t("Chargement de la commande…", "Loading order…")}
-        </p>
+      <main className="max-w-xl mx-auto mt-16 text-center">
+        <p>Chargement de votre commande…</p>
       </main>
     );
   }
 
   if (error) {
     return (
-      <main className="success-page">
-        <p className="text-red-600 text-center mt-10">{error}</p>
-        <div className="text-center mt-6">
-          <Link href={`/${locale}`} className="btn-home">
-            {t("Retour à l’accueil", "Back home")}
-          </Link>
-        </div>
+      <main className="max-w-xl mx-auto mt-16 text-center">
+        <p className="text-red-600">{error}</p>
+        <Link href={`/${locale}`} className="btn-home mt-6 inline-block">
+          Retour à l’accueil
+        </Link>
       </main>
     );
   }
 
   if (!order) return null;
 
-  /* -------------------------------------------------------
-     🔧 NORMALISATION DATA
-  ------------------------------------------------------- */
-  const firstName =
-    order.shippingAddress?.name?.split(" ")?.[0] ??
-    t("client", "customer");
-
-  const totalPaid = order.amount_total
-    ? (order.amount_total / 100).toFixed(2)
-    : "0.00";
-
-  const sm = order.shippingMethod || {};
-
-  const shippingName =
-    typeof sm.name === "string"
-      ? sm.name
-      : sm.name?.[locale] || sm.name?.fr || sm.name?.en || "—";
-
-  const shippingPrice =
-    typeof sm.price === "number"
-      ? sm.price
-      : sm.priceTTC ?? 0;
-
-  const isRelay = sm.type === "relay";
+  /* -------------------------------------
+     Normalisation données
+  ------------------------------------- */
+  const customer = order.shippingAddress || {};
+  const shipping = order.shippingMethod || {};
+  const totals = order.totals || {};
   const relay = order.relayPoint || null;
 
-  /* ======================================================
-     🎨 RENDER
-  ====================================================== */
+  // ✅ PRÉNOM PREMIUM (ordre de priorité béton)
+  const firstName =
+    order.customerFirstName ||
+    order.customerName?.trim().split(/\s+/)[0] ||
+    customer.name?.trim().split(/\s+/)[0] ||
+    "";
+
+  /* -------------------------------------
+     Render
+  ------------------------------------- */
   return (
-    <main className="success-page">
-      <div className="success-container">
-        {/* BADGE */}
-        <div className="success-badge">
-          ✓ {t("Paiement confirmé", "Payment confirmed")}
+    <main className="max-w-3xl mx-auto px-4 py-12 space-y-10">
+      {/* HEADER */}
+      <section className="text-center">
+        <div className="text-green-600 font-semibold text-sm">
+          ✓ Paiement confirmé
         </div>
 
-        {/* TITLE */}
-        <h1 className="success-title">
-          {t(`Merci ${firstName}! 🎉`, `Thank you, ${firstName}! 🎉`)}
+        <h1 className="text-3xl font-bold mt-2">
+          Merci{firstName ? ` ${firstName}` : ""} 🎉
         </h1>
 
-        <p className="success-subtitle">
-          {t(
-            `Votre achat de ${totalPaid} € a bien été confirmé.`,
-            `Your purchase of ${totalPaid} € has been confirmed.`
-          )}
+        <p className="text-gray-600 mt-2">
+          Commande <strong>{order.id}</strong> confirmée
         </p>
 
-        <p className="success-subtitle-small">
-          {t(
-            "Un email avec votre facture vous a été envoyé.",
-            "A confirmation email has been sent."
-          )}
+        <p className="text-sm text-gray-500 mt-1">
+          Date : {formatDate(order.paidAt || order.createdAt)}
         </p>
 
-        {/* ORDER BOX */}
-        <div className="success-box">
-          <div className="success-order-header">
-            <div>
-              <p className="success-block-title">
-                {t("Commande", "Order")}
-              </p>
-              <p className="success-block-value">{order.id}</p>
-            </div>
+        <p className="text-sm text-gray-500 mt-1">
+          Un email avec votre facture vous a été envoyé.
+        </p>
+      </section>
 
-            <div className="text-right">
-              <p className="success-block-title">
-                {t("Total payé", "Total paid")}
-              </p>
-              <p className="success-total">{totalPaid} €</p>
-            </div>
-          </div>
+      {/* CLIENT */}
+      <section className="border rounded-lg p-6">
+        <h2 className="font-semibold text-lg mb-2">Client</h2>
+        <p className="font-medium">{customer.name}</p>
+        <p>{order.email}</p>
+        {customer.phone && <p>{customer.phone}</p>}
+      </section>
 
-          {/* ADDRESS + SHIPPING */}
-          <div className="success-grid">
-            <div className="success-box-alt">
-              <p className="success-block-title">
-                {isRelay
-                  ? t("Adresse de facturation", "Billing address")
-                  : t("Adresse de livraison", "Shipping address")}
-              </p>
+      {/* ADRESSE + LIVRAISON */}
+      <section className="grid md:grid-cols-2 gap-6">
+        <div className="border rounded-lg p-6">
+          <h3 className="font-semibold mb-1">Adresse</h3>
+          <p>{customer.address}</p>
+          <p>
+            {customer.postalCode} {customer.city}
+          </p>
+          <p>{customer.country}</p>
+        </div>
 
-              <p className="success-block-value">
-                {order.shippingAddress?.name}
-              </p>
-              <p>{order.shippingAddress?.address}</p>
+        <div className="border rounded-lg p-6">
+          <h3 className="font-semibold mb-1">Livraison</h3>
+          <p className="font-medium">{shipping.name}</p>
+          <p>{eur(shipping.priceTTC ?? shipping.price)}</p>
+
+          {shipping.type === "relay" && relay && (
+            <div className="mt-3 text-sm">
+              <p className="font-medium">Point relais</p>
+              <p>{relay.name || relay.Nom}</p>
+              <p>{relay.address || relay.Adresse1}</p>
               <p>
-                {order.shippingAddress?.postalCode}{" "}
-                {order.shippingAddress?.city}
+                {relay.postalCode || relay.CP}{" "}
+                {relay.city || relay.Ville}
               </p>
-              {order.shippingAddress?.country && (
-                <p>{order.shippingAddress.country}</p>
-              )}
-            </div>
-
-            <div className="success-box-alt">
-              <p className="success-block-title">
-                {t("Méthode d’envoi", "Shipping method")}
-              </p>
-              <p className="success-block-value">{shippingName}</p>
-              <p className="success-muted">
-                {shippingPrice.toFixed(2)} €
-              </p>
-            </div>
-          </div>
-
-          {/* RELAY */}
-          {isRelay && relay && (
-            <div className="success-box-alt mt-4">
-              <p className="success-block-title">
-                {t("Point relais", "Relay point")}
-              </p>
-
-              <p className="success-block-value">
-                {relay.name || relay.Nom}
-              </p>
-
-              {relay.address && <p>{relay.address}</p>}
-              {relay.Adresse1 && <p>{relay.Adresse1}</p>}
-              {(relay.postalCode || relay.CP || relay.city || relay.Ville) && (
-                <p>
-                  {relay.postalCode || relay.CP}{" "}
-                  {relay.city || relay.Ville}
-                </p>
-              )}
             </div>
           )}
-
-          {/* ITEMS */}
-          <div className="success-items-section">
-            <p className="success-block-title">
-              {t("Articles commandés", "Ordered items")}
-            </p>
-
-            {order.items?.map((it: any, i: number) => {
-              const unit =
-                typeof it.price === "number"
-                  ? it.price
-                  : it.priceHT ?? 0;
-              const qty = Number(it.quantity || 1);
-
-              return (
-                <div key={i} className="success-item">
-                  <div>
-                    <p className="success-item-name">{it.name}</p>
-                    <p className="success-item-qty">× {qty}</p>
-                  </div>
-                  <p className="success-item-price">
-                    {(unit * qty).toFixed(2)} €
-                  </p>
-                </div>
-              );
-            })}
-          </div>
         </div>
+      </section>
 
-        {/* CTA */}
-        <div className="success-cta">
-          <Link href={`/${locale}`} className="btn-home">
-            {t("Retourner à l’accueil", "Return home")}
-          </Link>
+      {/* ARTICLES */}
+      <section className="border rounded-lg p-6">
+        <h2 className="font-semibold text-lg mb-4">
+          Articles commandés
+        </h2>
+
+        {order.items?.map((it: any, i: number) => {
+          const unitHT = Number(it.priceHT ?? it.price ?? 0);
+          const qty = Number(it.quantity || 1);
+
+          return (
+            <div
+              key={i}
+              className="flex justify-between text-sm mb-2"
+            >
+              <div>
+                <p className="font-medium">{it.name}</p>
+                <p className="text-gray-500">
+                  {qty} × {eur(unitHT)} HT
+                </p>
+              </div>
+              <p className="font-medium">
+                {eur(unitHT * qty)}
+              </p>
+            </div>
+          );
+        })}
+      </section>
+
+      {/* TOTAUX */}
+      <section className="border rounded-lg p-6">
+        <div className="flex justify-between">
+          <span>Total HT</span>
+          <span>{eur(totals.totalHT)}</span>
         </div>
+        <div className="flex justify-between">
+          <span>TVA</span>
+          <span>{eur(totals.vatAmount ?? totals.totalVAT)}</span>
+        </div>
+        <div className="flex justify-between font-semibold text-lg border-t pt-2 mt-2">
+          <span>Total TTC</span>
+          <span>{eur(totals.totalTTC)}</span>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <div className="text-center pt-6">
+        <Link href={`/${locale}`} className="btn-home">
+          Retour à l’accueil
+        </Link>
       </div>
     </main>
   );

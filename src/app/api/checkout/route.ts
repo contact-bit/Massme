@@ -1,3 +1,4 @@
+// src/app/api/checkout/route.ts
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { dbAdmin as db } from "@/lib/firebase.admin";
@@ -8,7 +9,6 @@ import Stripe from "stripe";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     const {
       items,
       locale = "fr",
@@ -16,94 +16,77 @@ export async function POST(req: Request) {
       shippingAddress,
       shippingMethod,
       relayPoint,
-      disableVAT = false, // ✅ B2B / intracom
+      disableVAT = false,
     } = body;
 
-    if (!items?.length) {
-      return NextResponse.json({ error: "Missing items" }, { status: 400 });
-    }
-
-    if (!customerEmail) {
-      return NextResponse.json({ error: "Missing email" }, { status: 400 });
-    }
-
-    if (!shippingMethod) {
-      return NextResponse.json({ error: "Missing shipping method" }, { status: 400 });
+    if (!items?.length || !customerEmail || !shippingMethod) {
+      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
     const country = shippingAddress?.country || "FR";
 
-    /* ------------------------------------
-       PANIER (HT UNIQUEMENT)
-    ------------------------------------ */
-    const cleanItems = items.map((item: any) => ({
-      id: String(item.id),
-      name: item.name,
-      priceHT: Number(item.priceHT),
-      quantity: Math.max(1, Number(item.quantity || 1)),
+    /* ------------------ PANIER HT ------------------ */
+    const cleanItems = items.map((i: any) => ({
+      id: String(i.id),
+      name: i.name,
+      priceHT: Number(i.priceHT),
+      quantity: Math.max(1, Number(i.quantity || 1)),
     }));
 
     const itemsHT = cleanItems.reduce(
-      (sum: number, i: any) => sum + i.priceHT * i.quantity,
+      (s, i) => s + i.priceHT * i.quantity,
       0
     );
 
-    const shippingHT = Number(shippingMethod.price ?? 0);
+    const shippingHT = Number(shippingMethod.priceHT ?? shippingMethod.price ?? 0);
 
-    /* ------------------------------------
-       TVA (CENTRALISÉE)
-    ------------------------------------ */
+    /* ------------------ TVA ------------------ */
     const taxItems = disableVAT
-      ? { ht: itemsHT, vatAmount: 0, vatRate: 0, ttc: itemsHT }
+      ? { ht: itemsHT, vatAmount: 0, vatRate: 0 }
       : computeTax({ priceHT: itemsHT, country });
 
     const taxShipping = disableVAT
-      ? { ht: shippingHT, vatAmount: 0, vatRate: 0, ttc: shippingHT }
+      ? { ht: shippingHT, vatAmount: 0, vatRate: 0 }
       : computeTax({ priceHT: shippingHT, country });
 
     const totalHT = taxItems.ht + taxShipping.ht;
     const totalVAT = taxItems.vatAmount + taxShipping.vatAmount;
     const totalTTC = totalHT + totalVAT;
 
-    /* ------------------------------------
-       FIRESTORE (COMPTABLE)
-    ------------------------------------ */
-    const orderRef = await db.collection("orders").add({
+    /* ------------------ FIRESTORE (SOURCE DE VÉRITÉ) ------------------ */
+    const orderRef = db.collection("orders").doc();
+
+    await orderRef.set({
+      id: orderRef.id,
       email: customerEmail,
       items: cleanItems,
       shippingMethod,
       shippingAddress,
       relayPoint: relayPoint || null,
-
       totals: {
         country,
         vatRate: taxItems.vatRate,
-        itemsHT: taxItems.ht,
-        shippingHT: taxShipping.ht,
-        vatAmount: totalVAT,
         totalHT,
+        totalVAT,
         totalTTC,
         vatDisabled: disableVAT,
       },
-
       locale,
       status: "pending_payment",
       createdAt: Timestamp.now(),
     });
 
-    /* ------------------------------------
-       STRIPE LINE ITEMS
-    ------------------------------------ */
+    /* ------------------ STRIPE ------------------ */
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
-    for (const item of cleanItems) {
+    for (const i of cleanItems) {
       line_items.push({
         price_data: {
           currency: "eur",
-          product_data: { name: item.name },
-          unit_amount: Math.round(item.priceHT * 100),
+          product_data: { name: i.name },
+          unit_amount: Math.round(i.priceHT * 100),
         },
-        quantity: item.quantity,
+        quantity: i.quantity,
       });
     }
 
@@ -122,19 +105,14 @@ export async function POST(req: Request) {
       line_items.push({
         price_data: {
           currency: "eur",
-          product_data: {
-            name: `TVA ${taxItems.vatRate}%`,
-          },
+          product_data: { name: `TVA ${taxItems.vatRate}%` },
           unit_amount: Math.round(totalVAT * 100),
         },
         quantity: 1,
       });
     }
 
-    /* ------------------------------------
-       STRIPE SESSION
-    ------------------------------------ */
-    const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_URL!;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -142,18 +120,16 @@ export async function POST(req: Request) {
       line_items,
       metadata: {
         order_id: orderRef.id,
-        vat_disabled: String(disableVAT),
       },
-      success_url: `${baseUrl}/${locale}/success?session_id={CHECKOUT_SESSION_ID}`,
+
+      // 🔥 CHANGEMENT CLÉ
+      success_url: `${baseUrl}/${locale}/success?order_id=${orderRef.id}`,
       cancel_url: `${baseUrl}/${locale}/checkout`,
     });
 
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
-    console.error("💥 /api/checkout error:", err);
-    return NextResponse.json(
-      { error: err?.message || "Internal error" },
-      { status: 500 }
-    );
+    console.error("checkout error:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
