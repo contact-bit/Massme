@@ -17,22 +17,13 @@ function formatDate(value: any) {
 
   // Firestore Timestamp
   if (value?.seconds) {
-    return new Date(value.seconds * 1000).toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    return new Date(value.seconds * 1000).toLocaleDateString("fr-FR");
   }
 
-  // Date / ISO string
   const d = new Date(value);
   if (isNaN(d.getTime())) return "—";
 
-  return d.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  return d.toLocaleDateString("fr-FR");
 }
 
 /* -------------------------------------
@@ -48,7 +39,7 @@ export default function SuccessPage() {
   const [error, setError] = useState<string | null>(null);
 
   /* -------------------------------------
-     Load order (Firestore only)
+     Load order (SAFE TS)
   ------------------------------------- */
   useEffect(() => {
     if (!orderId) {
@@ -57,12 +48,14 @@ export default function SuccessPage() {
       return;
     }
 
+    const safeOrderId = orderId; // ✅ string garanti
+
     let cancelled = false;
 
     async function load() {
       try {
         const res = await fetch(
-          `/api/get-order?order_id=${encodeURIComponent(orderId)}`,
+          `/api/get-order?order_id=${encodeURIComponent(safeOrderId)}`,
           { cache: "no-store" }
         );
 
@@ -71,6 +64,7 @@ export default function SuccessPage() {
         }
 
         const data = await res.json();
+
         if (!data?.order) {
           throw new Error("Commande introuvable");
         }
@@ -119,17 +113,15 @@ export default function SuccessPage() {
   if (!order) return null;
 
   /* -------------------------------------
-     Normalisation données
+     Normalisation
   ------------------------------------- */
   const customer = order.shippingAddress || {};
   const shipping = order.shippingMethod || {};
   const totals = order.totals || {};
   const relay = order.relayPoint || null;
 
-  // ✅ PRÉNOM PREMIUM (ordre de priorité béton)
   const firstName =
     order.customerFirstName ||
-    order.customerName?.trim().split(/\s+/)[0] ||
     customer.name?.trim().split(/\s+/)[0] ||
     "";
 
@@ -210,19 +202,14 @@ export default function SuccessPage() {
           const qty = Number(it.quantity || 1);
 
           return (
-            <div
-              key={i}
-              className="flex justify-between text-sm mb-2"
-            >
+            <div key={i} className="flex justify-between text-sm mb-2">
               <div>
                 <p className="font-medium">{it.name}</p>
                 <p className="text-gray-500">
                   {qty} × {eur(unitHT)} HT
                 </p>
               </div>
-              <p className="font-medium">
-                {eur(unitHT * qty)}
-              </p>
+              <p className="font-medium">{eur(unitHT * qty)}</p>
             </div>
           );
         })}
@@ -244,7 +231,6 @@ export default function SuccessPage() {
         </div>
       </section>
 
-      {/* CTA */}
       <div className="text-center pt-6">
         <Link href={`/${locale}`} className="btn-home">
           Retour à l’accueil
