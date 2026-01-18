@@ -19,7 +19,6 @@ export async function GET(req: Request) {
        1️⃣ Stripe session
     --------------------------------------------------- */
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-
     if (!session) {
       return NextResponse.json({ error: "Stripe session not found" }, { status: 404 });
     }
@@ -30,10 +29,9 @@ export async function GET(req: Request) {
     }
 
     /* ---------------------------------------------------
-       2️⃣ Firestore (LECTURE SEULE)
+       2️⃣ Firestore (lecture seule)
     --------------------------------------------------- */
     const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
-
     if (!snap.exists) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
@@ -44,7 +42,7 @@ export async function GET(req: Request) {
     }
 
     /* ---------------------------------------------------
-       3️⃣ SHIPPING NORMALISÉ (HT + TVA)
+       3️⃣ SHIPPING — ADAPTER COMPATIBILITÉ 🔥
     --------------------------------------------------- */
     const shipping = order.shippingMethod || {};
 
@@ -53,17 +51,34 @@ export async function GET(req: Request) {
         ? shipping.name
         : shipping.name?.fr || shipping.name?.en || "—";
 
-    const priceHT = Number(shipping.priceHT || 0);
-    const vatRate = Number(shipping.vatRate || 0);
+    const priceHT = Number(shipping.priceHT ?? shipping.price ?? 0);
+    const vatRate = Number(shipping.vatRate ?? 0);
 
-    const shippingPrice = computePrice({
+    const priceCalc = computePrice({
       priceHT,
       vatRate,
     });
 
     /* ---------------------------------------------------
-       4️⃣ RÉPONSE SUCCESS PAGE
-       ❗ NE PAS UPDATE FIRESTORE ICI
+       4️⃣ ITEMS — ADAPTER COMPATIBILITÉ 🔥
+    --------------------------------------------------- */
+    const items = Array.isArray(order.items)
+      ? order.items.map((it: any) => ({
+          ...it,
+
+          // 🔥 champs legacy attendus par success + emails
+          price:
+            typeof it.price === "number"
+              ? it.price
+              : it.priceHT ?? it.price?.eur ?? 0,
+
+          // nouveaux champs propres
+          priceHT: it.priceHT ?? it.price ?? 0,
+        }))
+      : [];
+
+    /* ---------------------------------------------------
+       5️⃣ RÉPONSE SUCCESS (FORME COMPATIBLE)
     --------------------------------------------------- */
     return NextResponse.json({
       success: true,
@@ -71,21 +86,28 @@ export async function GET(req: Request) {
         id: orderId,
         ...order,
 
+        items,
+
         shippingMethod: {
           ...shipping,
+
+          // ✅ anciens champs (OBLIGATOIRES)
           name: shippingName,
+          price: priceCalc.ttc,
+
+          // ✅ nouveaux champs
           priceHT,
           vatRate,
-          priceTTC: shippingPrice.ttc,
+          priceTTC: priceCalc.ttc,
         },
+
+        amount_total: session.amount_total,
+        amount_eur: (session.amount_total || 0) / 100,
 
         stripe: {
           sessionId: session.id,
           paymentStatus: session.payment_status,
         },
-
-        amount_total: session.amount_total,
-        amount_eur: (session.amount_total || 0) / 100,
       },
     });
   } catch (err: any) {
