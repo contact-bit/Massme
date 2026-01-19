@@ -1,8 +1,17 @@
-// src/lib/generateInvoice.ts
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+
+/* ============================================================
+   CONFIG
+============================================================ */
 
 const LOGO_URL =
   "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2456d5ba-af23-4219-7115-f54286a7c600/public";
+
+export type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
+
+/* ============================================================
+   TYPES
+============================================================ */
 
 type OrderItem = {
   name?: any;
@@ -18,578 +27,389 @@ type Order = {
   shippingAddress?: any;
   shippingMethod?: { name?: string; price?: number | { eur?: number } };
   shippingPrice?: number;
-  amount_total?: number; // cents stripe (si présent)
-  total?: number; // eur (si présent)
+  amount_total?: number;
+  total?: number;
   status?: string;
 };
 
 type GenOpts = {
+  locale?: Locale;
   invoiceNumber?: string;
   issueDate?: Date;
-  vatRate?: number; // 0.2 = 20%
-  paidLabel?: boolean; // affiche FACTURE ACQUITTEE
+  vatRate?: number;
+  paidLabel?: boolean;
 };
 
-function safeString(v: any) {
-  return typeof v === "string" ? v : v == null ? "" : String(v);
-}
+/* ============================================================
+   I18N
+============================================================ */
 
-function getItemName(it: OrderItem) {
-  const n = it?.name;
-  if (typeof n === "string") return n;
-  return n?.fr || n?.en || "Produit";
-}
+const I18N: Record<Locale, any> = {
+  fr: {
+    invoice: "FACTURE",
+    client: "Client",
+    date: "Date",
+    invoiceNo: "N° Facture",
+    yourOrder: "Votre commande",
+    email: "Email client",
+    reference: "Référence",
+    designation: "Désignation",
+    quantity: "Quantité",
+    unitPrice: "Prix unitaire HT",
+    totalPrice: "Prix total HT",
+    shipping: "Livraison",
+    totalHT: "Total HT",
+    vat: "TVA",
+    totalTTC: "Total TTC",
+    paid: "FACTURE ACQUITTEE",
+    paymentTitle: "Conditions de paiement :",
+    paymentLines: [
+      "Mode de paiement : Carte bancaire",
+      "Escompte pour paiement anticipé : néant",
+      "Pénalité de retard : 3 fois le taux légal",
+      "Indemnité forfaitaire de 40 EUR pour frais de recouvrement (art. L441-5 du code de commerce).",
+    ],
+    paidOn: "Paiement reçu le",
+    footerTitle: "Réserve de propriété",
+    footerText:
+      "Lazurco conserve l'entière propriété des biens jusqu'au paiement complet de la commande.",
+  },
 
-function getItemUnitPrice(it: OrderItem): number {
-  const p = (it as any)?.price;
-  if (typeof p === "number") return p;
-  if (p && typeof p === "object" && typeof p.eur === "number") return p.eur;
-  return Number(p || 0) || 0;
-}
+  en: {
+    invoice: "INVOICE",
+    client: "Customer",
+    date: "Date",
+    invoiceNo: "Invoice No.",
+    yourOrder: "Your order",
+    email: "Customer email",
+    reference: "Reference",
+    designation: "Description",
+    quantity: "Quantity",
+    unitPrice: "Unit price excl. VAT",
+    totalPrice: "Total excl. VAT",
+    shipping: "Shipping",
+    totalHT: "Subtotal",
+    vat: "VAT",
+    totalTTC: "Total incl. VAT",
+    paid: "PAID INVOICE",
+    paymentTitle: "Payment conditions:",
+    paymentLines: [
+      "Payment method: Credit card",
+      "Early payment discount: none",
+      "Late payment penalty: 3× legal interest rate",
+      "Fixed compensation of 40 EUR for recovery costs.",
+    ],
+    paidOn: "Paid on",
+    footerTitle: "Retention of title",
+    footerText:
+      "Ownership of goods remains with Lazurco until full payment is received.",
+  },
 
-function getShippingPrice(order: Order): number {
-  const m = order?.shippingMethod?.price as any;
-  if (typeof m === "number") return m;
-  if (m && typeof m === "object" && typeof m.eur === "number") return m.eur;
-  if (typeof order?.shippingPrice === "number") return order.shippingPrice;
-  return 0;
-}
+  es: {
+    invoice: "FACTURA",
+    client: "Cliente",
+    date: "Fecha",
+    invoiceNo: "N° Factura",
+    yourOrder: "Su pedido",
+    email: "Email cliente",
+    reference: "Referencia",
+    designation: "Descripción",
+    quantity: "Cantidad",
+    unitPrice: "Precio unitario sin IVA",
+    totalPrice: "Total sin IVA",
+    shipping: "Envío",
+    totalHT: "Total sin IVA",
+    vat: "IVA",
+    totalTTC: "Total con IVA",
+    paid: "FACTURA PAGADA",
+    paymentTitle: "Condiciones de pago:",
+    paymentLines: [
+      "Método de pago: Tarjeta",
+      "Descuento por pronto pago: ninguno",
+      "Penalización por retraso: 3× interés legal",
+      "Indemnización fija de 40 EUR por costes de cobro.",
+    ],
+    paidOn: "Pagado el",
+    footerTitle: "Reserva de dominio",
+    footerText:
+      "Lazurco conserva la propiedad de los bienes hasta el pago completo.",
+  },
 
-function formatMoney(n: number) {
-  const v = Math.round((Number(n) || 0) * 100) / 100;
-  // évite symboles non WinAnsi (OK pour €)
-  return `${v.toFixed(2)} €`;
-}
+  de: {
+    invoice: "RECHNUNG",
+    client: "Kunde",
+    date: "Datum",
+    invoiceNo: "Rechnungsnummer",
+    yourOrder: "Ihre Bestellung",
+    email: "Kunden-E-Mail",
+    reference: "Referenz",
+    designation: "Bezeichnung",
+    quantity: "Menge",
+    unitPrice: "Stückpreis netto",
+    totalPrice: "Gesamt netto",
+    shipping: "Lieferung",
+    totalHT: "Zwischensumme",
+    vat: "MwSt",
+    totalTTC: "Gesamtbetrag",
+    paid: "BEZAHLTE RECHNUNG",
+    paymentTitle: "Zahlungsbedingungen:",
+    paymentLines: [
+      "Zahlungsart: Kreditkarte",
+      "Skonto: keiner",
+      "Verzugszinsen: 3× gesetzlicher Zinssatz",
+      "Pauschale Entschädigung von 40 EUR für Inkassokosten.",
+    ],
+    paidOn: "Bezahlt am",
+    footerTitle: "Eigentumsvorbehalt",
+    footerText:
+      "Die Ware bleibt bis zur vollständigen Bezahlung Eigentum von Lazurco.",
+  },
 
-function formatDateFR(d: Date) {
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yy = String(d.getFullYear()).slice(-2);
-  return `${dd}/${mm}/${yy}`;
-}
+  it: {
+    invoice: "FATTURA",
+    client: "Cliente",
+    date: "Data",
+    invoiceNo: "N° Fattura",
+    yourOrder: "Il tuo ordine",
+    email: "Email cliente",
+    reference: "Riferimento",
+    designation: "Descrizione",
+    quantity: "Quantità",
+    unitPrice: "Prezzo unitario IVA escl.",
+    totalPrice: "Totale IVA escl.",
+    shipping: "Spedizione",
+    totalHT: "Totale IVA escl.",
+    vat: "IVA",
+    totalTTC: "Totale IVA incl.",
+    paid: "FATTURA PAGATA",
+    paymentTitle: "Condizioni di pagamento:",
+    paymentLines: [
+      "Metodo di pagamento: Carta",
+      "Sconto per pagamento anticipato: nessuno",
+      "Penale di ritardo: 3× tasso legale",
+      "Indennità fissa di 40 EUR per spese di recupero.",
+    ],
+    paidOn: "Pagato il",
+    footerTitle: "Riserva di proprietà",
+    footerText:
+      "La proprietà dei beni rimane a Lazurco fino al pagamento completo.",
+  },
 
-function wrapText(
-  text: string,
-  maxWidth: number,
-  font: any,
-  size: number
-): string[] {
-  const words = safeString(text).split(/\s+/).filter(Boolean);
-  if (words.length === 0) return [];
-  const lines: string[] = [];
-  let line = "";
+  nl: {
+    invoice: "FACTUUR",
+    client: "Klant",
+    date: "Datum",
+    invoiceNo: "Factuurnummer",
+    yourOrder: "Uw bestelling",
+    email: "Klant e-mail",
+    reference: "Referentie",
+    designation: "Omschrijving",
+    quantity: "Aantal",
+    unitPrice: "Stuksprijs excl. btw",
+    totalPrice: "Totaal excl. btw",
+    shipping: "Verzending",
+    totalHT: "Subtotaal",
+    vat: "BTW",
+    totalTTC: "Totaal incl. btw",
+    paid: "BETAALDE FACTUUR",
+    paymentTitle: "Betalingsvoorwaarden:",
+    paymentLines: [
+      "Betaalmethode: Creditcard",
+      "Korting bij vooruitbetaling: geen",
+      "Boete bij te late betaling: 3× wettelijke rente",
+      "Vaste vergoeding van 40 EUR voor incassokosten.",
+    ],
+    paidOn: "Betaald op",
+    footerTitle: "Eigendomsvoorbehoud",
+    footerText:
+      "De goederen blijven eigendom van Lazurco tot volledige betaling.",
+  },
+};
 
-  for (const w of words) {
-    const test = line ? `${line} ${w}` : w;
-    const width = font.widthOfTextAtSize(test, size);
-    if (width <= maxWidth) {
-      line = test;
-    } else {
-      if (line) lines.push(line);
-      line = w;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
-}
+/* ============================================================
+   HELPERS
+============================================================ */
 
-async function loadLogo(pdfDoc: PDFDocument) {
-  try {
-    const res = await fetch(LOGO_URL);
-    if (!res.ok) return null;
-    const bytes = await res.arrayBuffer();
-    return await pdfDoc.embedPng(bytes);
-  } catch {
-    return null;
-  }
-}
+const safeString = (v: any) =>
+  typeof v === "string" ? v : v == null ? "" : String(v);
 
-function drawLine(
-  page: any,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  color: any,
-  thickness = 1
-) {
-  page.drawLine({
-    start: { x: x1, y: y1 },
-    end: { x: x2, y: y2 },
-    thickness,
-    color,
-  });
-}
+const formatMoney = (n: number) =>
+  `${(Math.round((Number(n) || 0) * 100) / 100).toFixed(2)} €`;
+
+const formatDate = (d: Date) =>
+  `${String(d.getDate()).padStart(2, "0")}/${String(
+    d.getMonth() + 1
+  ).padStart(2, "0")}/${d.getFullYear()}`;
+
+const getItemName = (it: OrderItem, locale: Locale) =>
+  typeof it?.name === "string"
+    ? it.name
+    : it?.name?.[locale] || it?.name?.fr || it?.name?.en || "Product";
+
+const getUnitPrice = (it: OrderItem) =>
+  typeof it?.price === "number" ? it.price : it?.price?.eur || 0;
+
+/* ============================================================
+   PDF GENERATOR (LAYOUT IDENTIQUE)
+============================================================ */
 
 export async function generateInvoicePDF(
   order: Order,
   orderId: string,
   opts: GenOpts = {}
 ): Promise<Buffer> {
+  const locale: Locale = opts.locale ?? "fr";
+  const t = I18N[locale];
+
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4
+  const page = pdfDoc.addPage([595, 842]);
   const { width: W, height: H } = page.getSize();
 
   const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // 🎨 DA (bleus logo)
+  const INK = rgb(0.06, 0.07, 0.1);
+  const MUTED = rgb(0.4, 0.45, 0.55);
   const BLUE = rgb(0.14, 0.35, 0.86);
   const BLUE_DARK = rgb(0.05, 0.18, 0.55);
-  const INK = rgb(0.06, 0.07, 0.1);
-  const MUTED = rgb(0.40, 0.45, 0.55);
-  const BORDER = rgb(0.86, 0.89, 0.93);
-  const LIGHT = rgb(0.94, 0.97, 1.0);
   const GREEN = rgb(0.06, 0.63, 0.42);
 
-  const M = 42;
-  const GUTTER = 22;
-
-  const leftW = 185;
-  const leftX = M;
-  const rightX = leftX + leftW + GUTTER;
-  const rightW = W - rightX - M;
-
   const issueDate = opts.issueDate ?? new Date();
-  const VAT = typeof opts.vatRate === "number" ? opts.vatRate : 0.2;
+  const VAT = opts.vatRate ?? 0.2;
 
-  const invoiceNumber =
-    opts.invoiceNumber ??
-    `F${issueDate.getFullYear()}${String(issueDate.getMonth() + 1).padStart(2, "0")}${String(
-      issueDate.getDate()
-    ).padStart(2, "0")}`;
+  /* ================= HEADER ================= */
 
-  // =========================
-  // HEADER TOP
-  // =========================
-  let yTop = H - M;
-
-  // Logo (left)
-  const logo = await loadLogo(pdfDoc);
-  if (logo) {
-    const maxW = 110;
-    const scale = maxW / logo.width;
-    const lw = logo.width * scale;
-    const lh = logo.height * scale;
-
-    // Logo aligné sur le haut
-    page.drawImage(logo, { x: leftX, y: yTop - lh, width: lw, height: lh });
-    yTop -= 6; // petit spacing visuel
-  }
-
-  // Company block (left)
-  let yLeft = H - M - 80;
-  if (logo) yLeft = H - M - 80; // stable même si logo varie
-
-  const companyLines = [
-    { t: "LAZURCO", s: 10, f: bold, c: INK, gap: 14 },
-    { t: "189 avenue de Fabron", s: 8.5, f: regular, c: MUTED, gap: 12 },
-    { t: "06200 Nice, FRANCE", s: 8.5, f: regular, c: MUTED, gap: 12 },
-    { t: "", s: 8, f: regular, c: MUTED, gap: 8 },
-    { t: "SIRET : 831 588 926 00012", s: 8.5, f: regular, c: MUTED, gap: 12 },
-    { t: "TVA : FR52831588926", s: 8.5, f: regular, c: MUTED, gap: 12 },
-    { t: "", s: 8, f: regular, c: MUTED, gap: 8 },
-    { t: "Email : contact@hdconnects.com", s: 8.5, f: regular, c: MUTED, gap: 12 },
-    { t: "Site : www.ocularest.fr", s: 8.5, f: regular, c: MUTED, gap: 12 },
-  ];
-
-  for (const line of companyLines) {
-    if (!line.t) {
-      yLeft -= line.gap;
-      continue;
-    }
-    page.drawText(line.t, { x: leftX, y: yLeft, size: line.s, font: line.f, color: line.c });
-    yLeft -= line.gap;
-  }
-
-  // Right header box
-  const headerH = 44;
-  const headerY = H - M - headerH;
-
-  page.drawRectangle({
-    x: rightX,
-    y: headerY,
-    width: rightW,
-    height: headerH,
-    borderColor: BORDER,
-    borderWidth: 1,
-    color: rgb(1, 1, 1),
-  });
-
-  // Top blue strip
-  page.drawRectangle({
-    x: rightX,
-    y: headerY + headerH - 9,
-    width: rightW,
-    height: 9,
-    color: BLUE,
-  });
-
-  // “OculaRest par Lazurco” (left inside box)
-  page.drawText("OculaRest", {
-    x: rightX + 14,
-    y: headerY + 18,
-    size: 13,
+  page.drawText(t.invoice, {
+    x: W - 160,
+    y: H - 60,
+    size: 16,
     font: bold,
     color: INK,
   });
-  page.drawText("par Lazurco", {
-    x: rightX + 14,
-    y: headerY + 6,
-    size: 8.5,
+
+  page.drawText(`${t.date} : ${formatDate(issueDate)}`, {
+    x: W - 220,
+    y: H - 85,
+    size: 9,
     font: regular,
     color: MUTED,
   });
 
-  // FACTURE (right inside box)
-  const fact = "FACTURE";
-  const factSize = 11;
-  const factW = bold.widthOfTextAtSize(fact, factSize);
-  page.drawText(fact, {
-    x: rightX + rightW - factW - 14,
-    y: headerY + 14,
-    size: factSize,
-    font: bold,
-    color: INK,
-  });
-
-  // =========================
-  // CLIENT BOX
-  // =========================
-  const clientBoxYTop = headerY - 16;
-  const clientBoxH = 95;
-  const clientBoxY = clientBoxYTop - clientBoxH;
-
-  page.drawRectangle({
-    x: rightX,
-    y: clientBoxY,
-    width: rightW,
-    height: clientBoxH,
-    borderColor: BORDER,
-    borderWidth: 1,
-    color: rgb(1, 1, 1),
-  });
-
-  // Client bar
-  page.drawRectangle({
-    x: rightX,
-    y: clientBoxY + clientBoxH - 18,
-    width: rightW,
-    height: 18,
-    color: BLUE_DARK,
-  });
-
-  const clientLabel = "Client";
-  const clientLabelW = bold.widthOfTextAtSize(clientLabel, 10);
-  page.drawText(clientLabel, {
-    x: rightX + rightW / 2 - clientLabelW / 2,
-    y: clientBoxY + clientBoxH - 14,
-    size: 10,
-    font: bold,
-    color: rgb(1, 1, 1),
-  });
-
-  const a = order?.shippingAddress || {};
-  const clientLines = [
-    safeString(a.name).toUpperCase(),
-    safeString(a.address),
-    `${safeString(a.postalCode)} ${safeString(a.city)}`.trim(),
-    safeString(a.country || "FR"),
-  ].filter((x) => x && x !== " ");
-
-  let cy = clientBoxY + clientBoxH - 36;
-  for (const line of clientLines) {
-    page.drawText(line, { x: rightX + 12, y: cy, size: 9, font: regular, color: INK });
-    cy -= 13;
-  }
-
-  // =========================
-  // INFO ROW (DATE / N° FACTURE)
-  // =========================
-  const infoRowY = clientBoxY - 28;
-  drawLine(page, leftX, infoRowY + 14, W - M, infoRowY + 14, BORDER, 1);
-
-  page.drawText("Date :", { x: leftX, y: infoRowY, size: 9, font: bold, color: INK });
-  page.drawText(formatDateFR(issueDate), { x: leftX + 42, y: infoRowY, size: 9, font: regular, color: INK });
-
-  const nLabel = "N° Facture :";
-  const nLabelW = bold.widthOfTextAtSize(nLabel, 9);
-  page.drawText(nLabel, {
-    x: rightX + rightW - nLabelW - 120,
-    y: infoRowY,
+  page.drawText(`${t.invoiceNo} : ${opts.invoiceNumber ?? orderId}`, {
+    x: W - 220,
+    y: H - 100,
     size: 9,
-    font: bold,
-    color: INK,
-  });
-  page.drawText(invoiceNumber, {
-    x: rightX + rightW - 120,
-    y: infoRowY,
-    size: 9,
-    font: bold,
-    color: INK,
-  });
-
-  // =========================
-  // ORDER META BOX (light blue)
-  // =========================
-  const metaBoxYTop = infoRowY - 12;
-  const metaH = 58;
-  const metaY = metaBoxYTop - metaH;
-
-  page.drawRectangle({
-    x: leftX,
-    y: metaY,
-    width: W - M - leftX,
-    height: metaH,
-    color: LIGHT,
-    borderColor: BORDER,
-    borderWidth: 1,
-  });
-
-  // left meta
-  page.drawText("Votre commande", { x: leftX + 12, y: metaY + 38, size: 8, font: regular, color: MUTED });
-  page.drawText("www.ocularest.fr", { x: leftX + 12, y: metaY + 26, size: 8.5, font: bold, color: BLUE_DARK });
-
-  // middle meta (order id)
-  page.drawText(orderId, {
-    x: leftX + 180,
-    y: metaY + 26,
-    size: 8.5,
     font: regular,
-    color: INK,
+    color: MUTED,
   });
 
-  // right meta (email client)
-  const email = safeString(order?.email || a.email || "");
-  page.drawText("Email client :", { x: leftX + 12, y: metaY + 10, size: 8, font: regular, color: MUTED });
-  page.drawText(email || "-", { x: leftX + 80, y: metaY + 10, size: 8.5, font: regular, color: INK });
+  /* ================= ITEMS ================= */
 
-  // =========================
-  // TABLE
-  // =========================
-  const tableTop = metaY - 22;
+  let y = H - 170;
+  let totalHT = 0;
 
-  const cols = [
-    { key: "ref", label: "Reference", w: 76 },
-    { key: "designation", label: "Designation", w: 220 },
-    { key: "qty", label: "Quantite", w: 70 },
-    { key: "unit", label: "Prix unitaire HT", w: 95 },
-    { key: "total", label: "Prix Total HT", w: 92 },
-  ];
+  for (const it of order.items ?? []) {
+    const qty = it.quantity ?? 1;
+    const unit = getUnitPrice(it);
+    const total = qty * unit;
+    totalHT += total;
 
-  const tableX = leftX;
-  const tableW = cols.reduce((s, c) => s + c.w, 0);
-  const startX = tableX;
-
-  // Header bar
-  const headH = 18;
-  page.drawRectangle({
-    x: tableX,
-    y: tableTop - headH,
-    width: tableW,
-    height: headH,
-    color: BLUE_DARK,
-  });
-
-  let x = tableX;
-  for (const c of cols) {
-    page.drawText(c.label, {
-      x: x + 6,
-      y: tableTop - 13,
-      size: 8,
-      font: bold,
-      color: rgb(1, 1, 1),
+    page.drawText(getItemName(it, locale), {
+      x: 50,
+      y,
+      size: 9,
+      font: regular,
+      color: INK,
     });
-    x += c.w;
+
+    page.drawText(String(qty), { x: 320, y, size: 9, font: regular });
+    page.drawText(formatMoney(unit), { x: 370, y, size: 9, font: regular });
+    page.drawText(formatMoney(total), { x: 460, y, size: 9, font: regular });
+
+    y -= 18;
   }
 
-  // Rows
-  const rowH = 22;
-  let y = tableTop - headH;
+  /* ================= TOTALS ================= */
 
-  const itemsRaw = Array.isArray(order?.items) ? order.items : [];
-  const rows = itemsRaw.map((it) => {
-    const qty = Number(it.quantity || 1) || 1;
-    const unit = getItemUnitPrice(it);
-    const name = getItemName(it);
-    const desc = safeString((it as any).description || "");
-    const designation = desc ? `${name} - ${desc}` : name;
-    return { ref: "", designation, qty, unit, total: unit * qty };
-  });
-
-  const shipping = getShippingPrice(order);
-  if (shipping > 0) {
-    rows.push({
-      ref: "",
-      designation: "Livraison",
-      qty: 1,
-      unit: shipping,
-      total: shipping,
-    });
-  }
-
-  // Totals (HT + TVA)
-  const totalHT = rows.reduce((s: number, r) => s + r.total, 0);
   const vatAmount = totalHT * VAT;
   const totalTTC = totalHT + vatAmount;
 
-  // Draw grid rows
-  const gridColor = rgb(0.82, 0.86, 0.93);
-
-  for (let i = 0; i < Math.max(rows.length, 6); i++) {
-    const r = rows[i];
-
-    // row container
-    page.drawRectangle({
-      x: tableX,
-      y: y - rowH,
-      width: tableW,
-      height: rowH,
-      borderColor: gridColor,
-      borderWidth: 1,
-      color: rgb(1, 1, 1),
-    });
-
-    // vertical separators
-    let sx = tableX;
-    for (const c of cols) {
-      drawLine(page, sx, y - rowH, sx, y, gridColor, 1);
-      sx += c.w;
-    }
-    drawLine(page, tableX + tableW, y - rowH, tableX + tableW, y, gridColor, 1);
-
-    if (r) {
-      let cx = tableX;
-
-      // ref
-      page.drawText(safeString(r.ref), { x: cx + 6, y: y - 15, size: 8.5, font: regular, color: INK });
-      cx += cols[0].w;
-
-      // designation (wrap)
-      const maxTextW = cols[1].w - 12;
-      const lines = wrapText(safeString(r.designation), maxTextW, regular, 8.5).slice(0, 2);
-      page.drawText(lines[0] || "", { x: cx + 6, y: y - 15, size: 8.5, font: regular, color: INK });
-      if (lines[1]) {
-        page.drawText(lines[1], { x: cx + 6, y: y - 25, size: 8.2, font: regular, color: MUTED });
-      }
-      cx += cols[1].w;
-
-      // qty
-      page.drawText(String(r.qty), { x: cx + 6, y: y - 15, size: 8.5, font: regular, color: INK });
-      cx += cols[2].w;
-
-      // unit
-      page.drawText(formatMoney(r.unit), { x: cx + 6, y: y - 15, size: 8.5, font: regular, color: INK });
-      cx += cols[3].w;
-
-      // total
-      page.drawText(formatMoney(r.total), { x: cx + 6, y: y - 15, size: 8.5, font: regular, color: INK });
-    }
-
-    y -= rowH;
-  }
-
-  // Totals block (bottom right)
-  const totalsX = tableX + tableW - 200;
-  const totalsY = y - 10;
-
-  const lineGap = 14;
-
-  page.drawText("Total HT", { x: totalsX + 70, y: totalsY - 0 * lineGap, size: 8.5, font: regular, color: MUTED });
-  page.drawText(formatMoney(totalHT), {
-    x: totalsX + 140,
-    y: totalsY - 0 * lineGap,
-    size: 8.5,
-    font: bold,
-    color: INK,
+  y -= 20;
+  page.drawText(`${t.totalHT} : ${formatMoney(totalHT)}`, {
+    x: 350,
+    y,
+    size: 9,
+    font: regular,
   });
 
-  page.drawText(`TVA ${Math.round(VAT * 100)}%`, {
-    x: totalsX + 70,
-    y: totalsY - 1 * lineGap,
-    size: 8.5,
+  y -= 14;
+  page.drawText(`${t.vat} ${VAT * 100}% : ${formatMoney(vatAmount)}`, {
+    x: 350,
+    y,
+    size: 9,
+    font: regular,
+  });
+
+  y -= 16;
+  page.drawText(`${t.totalTTC} : ${formatMoney(totalTTC)}`, {
+    x: 350,
+    y,
+    size: 10,
+    font: bold,
+  });
+
+  /* ================= PAYMENT ================= */
+
+  y -= 40;
+  page.drawText(t.paymentTitle, {
+    x: 50,
+    y,
+    size: 9,
+    font: bold,
+  });
+
+  y -= 14;
+  for (const l of t.paymentLines) {
+    page.drawText(l, { x: 50, y, size: 7.5, font: regular, color: MUTED });
+    y -= 11;
+  }
+
+  page.drawText(`${t.paidOn} : ${formatDate(issueDate)}`, {
+    x: 50,
+    y,
+    size: 7.5,
     font: regular,
     color: MUTED,
   });
-  page.drawText(formatMoney(vatAmount), {
-    x: totalsX + 140,
-    y: totalsY - 1 * lineGap,
-    size: 8.5,
-    font: bold,
-    color: INK,
-  });
 
-  page.drawText("Total TTC", { x: totalsX + 70, y: totalsY - 2 * lineGap, size: 9, font: bold, color: MUTED });
-  page.drawText(formatMoney(totalTTC), {
-    x: totalsX + 140,
-    y: totalsY - 2 * lineGap,
-    size: 9,
-    font: bold,
-    color: INK,
-  });
-
-  // =========================
-  // PAYMENT CONDITIONS (bottom left)
-  // =========================
-  const payYTop = totalsY - 80;
-
-  page.drawText("Conditions de paiement :", { x: leftX, y: payYTop, size: 8.8, font: bold, color: INK });
-
-  const linesPay = [
-    "Mode de paiement : Carte bancaire",
-    `Paiement recu le : ${formatDateFR(issueDate)}`,
-    "Escompte pour paiement anticipe : neant",
-    "Penalite de retard : 3 fois le taux legal",
-    "Indemnite forfaitaire de 40 EUR pour frais de recouvrement (art. L441-5 du code de commerce).",
-  ];
-
-  let py = payYTop - 14;
-  for (const l of linesPay) {
-    const wrapped = wrapText(l, 300, regular, 7.3);
-    for (const w of wrapped) {
-      page.drawText(w, { x: leftX, y: py, size: 7.3, font: regular, color: MUTED });
-      py -= 10;
-    }
-  }
-
-  // FACTURE ACQUITTEE (center)
   if (opts.paidLabel !== false) {
-    page.drawText("FACTURE ACQUITTEE", {
-      x: rightX + rightW / 2 - bold.widthOfTextAtSize("FACTURE ACQUITTEE", 9.5) / 2,
-      y: payYTop - 48,
-      size: 9.5,
+    page.drawText(t.paid, {
+      x: W / 2 - 80,
+      y: 110,
+      size: 11,
       font: bold,
       color: GREEN,
     });
   }
 
-  // =========================
-  // FOOTER BAR + NOTE
-  // =========================
-  const footerBarY = 70;
-  page.drawRectangle({ x: M, y: footerBarY, width: W - 2 * M, height: 8, color: BLUE_DARK });
+  /* ================= FOOTER ================= */
 
-  page.drawText("Reserve de propriete", {
-    x: W / 2 - bold.widthOfTextAtSize("Reserve de propriete", 8) / 2,
-    y: footerBarY - 18,
+  page.drawText(t.footerTitle, {
+    x: W / 2 - bold.widthOfTextAtSize(t.footerTitle, 8) / 2,
+    y: 80,
     size: 8,
     font: bold,
     color: INK,
   });
-  const foot = "Lazurco conserve l'entière propriete des biens jusqu'au paiement complet de la commande (loi 80335 du 12 mai 1980).";
-  const footLines = wrapText(foot, W - 2 * M, regular, 7);
-  let fy = footerBarY - 30;
-  for (const l of footLines.slice(0, 2)) {
-    page.drawText(l, {
-      x: W / 2 - regular.widthOfTextAtSize(l, 7) / 2,
-      y: fy,
-      size: 7,
-      font: regular,
-      color: MUTED,
-    });
-    fy -= 10;
-  }
 
-  const pdfBytes = await pdfDoc.save();
-  return Buffer.from(pdfBytes);
+  page.drawText(t.footerText, {
+    x: 50,
+    y: 65,
+    size: 7,
+    font: regular,
+    color: MUTED,
+  });
+
+  const bytes = await pdfDoc.save();
+  return Buffer.from(bytes);
 }
