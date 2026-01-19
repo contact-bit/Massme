@@ -160,42 +160,17 @@ const TRANSLATIONS: Record<Locale, {
     nameRequired: "Voor- en achternaam vereist",
     paymentError: "Betalingsfout",
   },
-  pt: {
-    title: "Encomenda",
-    firstName: "Nome",
-    lastName: "Apelido",
-    email: "Email",
-    address: "Endereço",
-    postalCode: "Código postal",
-    city: "Cidade",
-    country: "País",
-    loadingShipping: "A carregar envio…",
-    subtotalExclTax: "Subtotal sem IVA",
-    productVAT: "IVA produtos",
-    shippingInclTax: "Envio com IVA",
-    totalInclTax: "Total com IVA",
-    payWithStripe: "Pagar com Stripe 💳",
-    emptyCart: "Carrinho vazio",
-    chooseShipping: "Escolha um método de envio",
-    emailRequired: "Email obrigatório",
-    nameRequired: "Nome e apelido obrigatórios",
-    paymentError: "Erro de pagamento",
-  },
 };
 
 /* -------------------------------------
    HELPERS
 ------------------------------------- */
-const LOCALES = ["fr", "en", "es", "de", "it", "nl", "pt"] as const;
 type ShippingLocale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
 function getLocale(path: string | null): Locale {
-  const l = path?.split("/")?.[1];
-  return LOCALES.includes(l as Locale) ? (l as Locale) : "fr";
-}
-
-function adaptLocale(l: Locale): ShippingLocale {
-  return l === "pt" ? "fr" : l;
+  const seg = path?.split("/")?.[1];
+  const LOCALES: Locale[] = ["fr", "en", "es", "de", "it", "nl"];
+  return LOCALES.includes(seg as Locale) ? (seg as Locale) : "fr";
 }
 
 function round2(n: number) {
@@ -208,7 +183,7 @@ function round2(n: number) {
 export default function CheckoutPage() {
   const pathname = usePathname();
   const locale = getLocale(pathname);
-  const shippingLocale = adaptLocale(locale);
+  const shippingLocale = locale as ShippingLocale; // ✅ Cast direct
   const t = TRANSLATIONS[locale];
 
   const { items, totalHT, totalVAT, totalTTC, clearCart } = useCart();
