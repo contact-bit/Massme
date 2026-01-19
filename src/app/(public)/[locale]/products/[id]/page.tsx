@@ -90,6 +90,14 @@ const TRANSLATIONS: Record<Locale, {
     priceInclTax: "Prijs incl. BTW",
     addToCart: "Toevoegen aan winkelwagen 🛒",
   },
+  pt: {
+    loading: "A carregar…",
+    notFound: "Produto não encontrado.",
+    priceExclTax: "Preço sem IVA",
+    vat: "IVA",
+    priceInclTax: "Preço com IVA",
+    addToCart: "Adicionar ao carrinho 🛒",
+  },
 };
 
 /* =====================================================
