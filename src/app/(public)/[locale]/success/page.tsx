@@ -141,25 +141,7 @@ const TRANSLATIONS: Record<Locale, {
     orderNotFound: "Bestelling niet gevonden",
     errorLoading: "Kan bestelling niet laden",
   },
-  pt: {
-    paymentConfirmed: "✓ Pagamento confirmado",
-    thankYou: "Obrigado",
-    orderConfirmed: "Encomenda",
-    date: "Data:",
-    emailSent: "Foi-lhe enviado um email com a sua fatura.",
-    customer: "Cliente",
-    address: "Endereço",
-    delivery: "Entrega",
-    relayPoint: "Ponto de retransmissão",
-    orderedItems: "Artigos encomendados",
-    totalExclTax: "Total sem IVA",
-    vat: "IVA",
-    totalInclTax: "Total com IVA",
-    backToHome: "Voltar ao início",
-    loading: "A carregar a sua encomenda…",
-    orderNotFound: "Encomenda não encontrada",
-    errorLoading: "Não é possível carregar a encomenda",
-  },
+  
 };
 
 /* -------------------------------------
@@ -180,7 +162,6 @@ function formatDate(value: any, locale: Locale) {
     de: "de-DE",
     it: "it-IT",
     nl: "nl-NL",
-    pt: "pt-PT",
   };
 
   // Firestore Timestamp
