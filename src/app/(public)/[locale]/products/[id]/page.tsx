@@ -31,6 +31,68 @@ type Product = {
 };
 
 /* =====================================================
+   TRANSLATIONS
+===================================================== */
+
+const TRANSLATIONS: Record<Locale, {
+  loading: string;
+  notFound: string;
+  priceExclTax: string;
+  vat: string;
+  priceInclTax: string;
+  addToCart: string;
+}> = {
+  fr: {
+    loading: "Chargement…",
+    notFound: "Produit introuvable.",
+    priceExclTax: "Prix HT",
+    vat: "TVA",
+    priceInclTax: "Prix TTC",
+    addToCart: "Ajouter au panier 🛒",
+  },
+  en: {
+    loading: "Loading…",
+    notFound: "Product not found.",
+    priceExclTax: "Price excl. tax",
+    vat: "VAT",
+    priceInclTax: "Price incl. tax",
+    addToCart: "Add to cart 🛒",
+  },
+  es: {
+    loading: "Cargando…",
+    notFound: "Producto no encontrado.",
+    priceExclTax: "Precio sin IVA",
+    vat: "IVA",
+    priceInclTax: "Precio con IVA",
+    addToCart: "Añadir al carrito 🛒",
+  },
+  de: {
+    loading: "Wird geladen…",
+    notFound: "Produkt nicht gefunden.",
+    priceExclTax: "Preis ohne MwSt",
+    vat: "MwSt",
+    priceInclTax: "Preis inkl. MwSt",
+    addToCart: "In den Warenkorb 🛒",
+  },
+  it: {
+    loading: "Caricamento…",
+    notFound: "Prodotto non trovato.",
+    priceExclTax: "Prezzo IVA esclusa",
+    vat: "IVA",
+    priceInclTax: "Prezzo IVA inclusa",
+    addToCart: "Aggiungi al carrello 🛒",
+  },
+  nl: {
+    loading: "Laden…",
+    notFound: "Product niet gevonden.",
+    priceExclTax: "Prijs excl. BTW",
+    vat: "BTW",
+    priceInclTax: "Prijs incl. BTW",
+    addToCart: "Toevoegen aan winkelwagen 🛒",
+  },
+};
+
+/* =====================================================
    HELPERS
 ===================================================== */
 
@@ -125,6 +187,7 @@ export default function ProductPage() {
   const productId = params.id;
 
   const market: Market = MARKET_BY_LOCALE[locale];
+  const t = TRANSLATIONS[locale];
 
   const { addItem } = useCart();
 
@@ -147,11 +210,11 @@ export default function ProductPage() {
   }, [productId]);
 
   if (loading) {
-    return <p className="py-10 text-center">Chargement…</p>;
+    return <p className="py-10 text-center">{t.loading}</p>;
   }
 
   if (!product) {
-    return <p className="py-10 text-center">Produit introuvable.</p>;
+    return <p className="py-10 text-center">{t.notFound}</p>;
   }
 
   /* ---------------- DATA ---------------- */
@@ -205,18 +268,18 @@ export default function ProductPage() {
         {/* PRICES */}
         <div className="space-y-1">
           <p>
-            Prix HT : <strong>{priceHT.toFixed(2)} €</strong>
+            {t.priceExclTax} : <strong>{priceHT.toFixed(2)} €</strong>
           </p>
 
           {vat.enabled && (
             <>
               <p>
-                TVA ({vat.rate}%) :{" "}
+                {t.vat} ({vat.rate}%) :{" "}
                 <strong>{vatAmount.toFixed(2)} €</strong>
               </p>
 
               <p className="text-lg font-semibold">
-                Prix TTC : {priceTTC.toFixed(2)} €
+                {t.priceInclTax} : {priceTTC.toFixed(2)} €
               </p>
             </>
           )}
@@ -226,7 +289,7 @@ export default function ProductPage() {
           onClick={addToCart}
           className="bg-black text-white px-6 py-3 rounded hover:bg-gray-800 transition"
         >
-          Ajouter au panier 🛒
+          {t.addToCart}
         </button>
       </div>
     </main>
