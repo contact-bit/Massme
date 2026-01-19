@@ -19,20 +19,18 @@ export default async function HomePage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  // ✅ OBLIGATOIRE EN APP ROUTER
+  // ✅ NEXT 15/16 + TURBOPACK → params EST UNE PROMISE
   const { locale: rawLocale } = await params;
 
   if (!isLocale(rawLocale)) {
     notFound();
   }
 
-  const locale = rawLocale as Locale;
+  const locale: Locale = rawLocale;
 
   return (
     <main>
-      {/* ✅ ON PASSE LE LOCALE RÉEL PARTOUT */}
       <HeroSection locale={locale} />
-
       <PostureSection locale={locale} />
       <CredibilityStrip locale={locale} />
       <RecoverySupportSection locale={locale} />
