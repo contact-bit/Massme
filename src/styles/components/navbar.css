@@ -1,6 +1,8 @@
 /* -----------------------------------------
-   NAVBAR — OculaRest / DA Premium (Poppins + bleu)
-   ✅ Version COMPLETE + Dropdown langues (flags) + Mobile
+   NAVBAR — OculaRest / DA Premium
+   ✔ Desktop + Mobile
+   ✔ Dropdown langues (flags)
+   ✔ UX e-commerce premium
 ------------------------------------------ */
 
 /* =========================
@@ -42,10 +44,9 @@
   gap: 14px;
 }
 
-/* ---------------------------------
+/* =========================
    RESPONSIVE VISIBILITY
----------------------------------- */
-/* Mobile first */
+========================= */
 .nav-mobile-only {
   display: block;
 }
@@ -53,7 +54,6 @@
   display: none;
 }
 
-/* Desktop */
 @media (min-width: 768px) {
   .nav-mobile-only {
     display: none !important;
@@ -73,26 +73,15 @@
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: var(--color-text);
   font-family: var(--font-title);
   font-weight: 800;
   letter-spacing: -0.4px;
-  flex-shrink: 0;
 }
 
 .navbar-logo-img {
   width: 62px;
   height: 62px;
   object-fit: contain;
-  background: transparent;
-  padding: 0;
-  border: none;
-  box-shadow: none;
-}
-
-/* Désactive l'ancien badge si jamais il reste */
-.navbar-logo-badge {
-  display: none;
 }
 
 /* =========================
@@ -104,7 +93,6 @@
   gap: 14px;
 }
 
-/* Link */
 .nav-link {
   font-family: var(--font-main);
   color: var(--color-text);
@@ -113,7 +101,8 @@
   text-decoration: none;
   padding: 8px 10px;
   border-radius: 999px;
-  transition: background var(--transition-fast), color var(--transition-fast),
+  transition: background var(--transition-fast),
+    color var(--transition-fast),
     transform var(--transition-fast);
 }
 
@@ -124,54 +113,43 @@
 }
 
 /* =========================
-   LANG DROPDOWN (NEW)
-   Used by: nav-lang-wrapper / nav-lang-btn / nav-lang-dropdown / nav-lang-item
+   LANG DROPDOWN (FLAGS)
 ========================= */
 .nav-lang-wrapper {
   position: relative;
   display: inline-flex;
-  align-items: center;
 }
 
 .nav-lang-btn {
-  font-family: var(--font-main);
   background: var(--color-bg-alt);
   border: 1px solid rgba(32, 27, 27, 0.08);
-  color: var(--color-text);
-  font-size: 0.9rem;
-  font-weight: 900;
-
-  padding: 8px 10px;
   border-radius: 999px;
+  padding: 8px 10px;
 
   display: inline-flex;
   align-items: center;
   gap: 8px;
 
   cursor: pointer;
+  font-size: 16px;
 
-  transition: background var(--transition-fast), transform var(--transition-fast),
-    color var(--transition-fast), border var(--transition-fast);
+  transition: background var(--transition-fast),
+    border var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .nav-lang-btn:hover {
-  background: rgba(42, 113, 255, 0.10);
+  background: rgba(42, 113, 255, 0.1);
   border-color: rgba(42, 113, 255, 0.22);
-  color: var(--color-primary);
   transform: translateY(-1px);
 }
 
 .nav-lang-flag {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
 }
 
-.nav-lang-code {
-  letter-spacing: 0.4px;
-  font-size: 12px;
-  font-weight: 950;
-}
-
+/* Dropdown */
 .nav-lang-dropdown {
   position: absolute;
   top: calc(100% + 10px);
@@ -179,7 +157,7 @@
   min-width: 220px;
 
   background: #fff;
-  border: 1px solid rgba(32, 27, 27, 0.10);
+  border: 1px solid rgba(32, 27, 27, 0.1);
   border-radius: 16px;
   box-shadow: 0 18px 40px rgba(32, 27, 27, 0.14);
 
@@ -196,14 +174,15 @@
 
   text-decoration: none;
   font-family: var(--font-main);
-  color: var(--color-text);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 800;
+  color: var(--color-text);
 
   padding: 10px 12px;
   border-radius: 12px;
 
-  transition: background var(--transition-fast), color var(--transition-fast),
+  transition: background var(--transition-fast),
+    color var(--transition-fast),
     transform var(--transition-fast);
 }
 
@@ -218,25 +197,26 @@
 ========================= */
 .nav-cart-btn {
   position: relative;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-
   width: 40px;
   height: 40px;
+
+  border: none;
+  background: transparent;
+  border-radius: 999px;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  border-radius: 999px;
+  cursor: pointer;
   color: var(--color-text);
 
-  transition: background var(--transition-fast), transform var(--transition-fast);
+  transition: background var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .nav-cart-btn:hover {
-  background: rgba(42, 113, 255, 0.10);
+  background: rgba(42, 113, 255, 0.1);
   transform: translateY(-1px);
 }
 
@@ -253,16 +233,15 @@
   background: var(--color-primary);
   color: #fff;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  font-family: var(--font-main);
   font-size: 11px;
   font-weight: 950;
 
-  box-shadow: 0 10px 18px rgba(42, 113, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   border: 2px solid #fff;
+  box-shadow: 0 10px 18px rgba(42, 113, 255, 0.28);
 }
 
 /* =========================
@@ -272,24 +251,24 @@
   width: 44px;
   height: 44px;
 
+  border-radius: 999px;
   border: 1px solid rgba(32, 27, 27, 0.08);
   background: var(--color-bg-alt);
-  border-radius: 999px;
 
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
 
   font-size: 22px;
-  color: var(--color-text);
   cursor: pointer;
 
-  transition: background var(--transition-fast), transform var(--transition-fast),
-    border var(--transition-fast);
+  transition: background var(--transition-fast),
+    border var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .navbar-mobile-btn:hover {
-  background: rgba(42, 113, 255, 0.10);
+  background: rgba(42, 113, 255, 0.1);
   border-color: rgba(42, 113, 255, 0.22);
   transform: translateY(-1px);
 }
@@ -300,7 +279,7 @@
 .mobile-menu {
   background: #fff;
   border-top: 1px solid rgba(32, 27, 27, 0.08);
-  padding: 10px 10px 14px;
+  padding: 12px;
   animation: fadeIn 0.18s ease-out;
 }
 
@@ -313,10 +292,11 @@
   font-weight: 900;
   color: var(--color-text);
 
-  padding: 12px 12px;
+  padding: 12px;
   border-radius: 14px;
 
-  transition: background var(--transition-fast), color var(--transition-fast),
+  transition: background var(--transition-fast),
+    color var(--transition-fast),
     transform var(--transition-fast);
 }
 
@@ -326,14 +306,13 @@
   transform: translateX(2px);
 }
 
-/* Mobile languages list (NEW) */
+/* Languages (mobile) */
 .mobile-lang-list {
   margin-top: 12px;
   padding: 10px;
   border-radius: 16px;
   background: rgba(246, 245, 245, 0.55);
   border: 1px solid rgba(32, 27, 27, 0.06);
-
   display: grid;
   gap: 6px;
 }
@@ -343,16 +322,15 @@
   align-items: center;
   gap: 10px;
 
-  text-decoration: none;
-  font-family: var(--font-main);
   font-weight: 900;
-  font-size: 0.98rem;
-
+  text-decoration: none;
   color: var(--color-text);
-  padding: 12px 12px;
+
+  padding: 12px;
   border-radius: 14px;
 
-  transition: background var(--transition-fast), color var(--transition-fast),
+  transition: background var(--transition-fast),
+    color var(--transition-fast),
     transform var(--transition-fast);
 }
 
@@ -367,25 +345,23 @@
   width: 100%;
   margin-top: 10px;
 
-  border: 1px solid rgba(32, 27, 27, 0.08);
-  background: rgba(42, 113, 255, 0.10);
+  padding: 12px;
   border-radius: 16px;
+  border: 1px solid rgba(32, 27, 27, 0.08);
 
-  padding: 12px 12px;
+  background: rgba(42, 113, 255, 0.1);
+  color: var(--color-primary);
+  font-weight: 950;
 
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
 
-  font-family: var(--font-main);
-  font-weight: 950;
-  color: var(--color-primary);
-
   cursor: pointer;
-
-  transition: transform var(--transition-fast), background var(--transition-fast),
-    border var(--transition-fast);
+  transition: background var(--transition-fast),
+    border var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .mobile-cart:hover {
@@ -395,98 +371,14 @@
 }
 
 /* =========================
-   OPTIONAL: legacy dropdown classes
-   (tu peux garder si d'autres menus utilisent nav-dropdown)
-========================= */
-.nav-dropdown {
-  position: relative;
-}
-
-.nav-dropdown-btn {
-  font-family: var(--font-main);
-  background: none;
-  border: none;
-  color: var(--color-text);
-  font-size: 0.95rem;
-  font-weight: 650;
-  cursor: pointer;
-
-  padding: 8px 10px;
-  border-radius: 999px;
-
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-
-.nav-dropdown-btn:hover {
-  background: rgba(42, 113, 255, 0.08);
-  color: var(--color-primary);
-}
-
-.nav-dropdown-btn span {
-  font-size: 10px;
-  transition: transform 0.2s ease;
-}
-
-.rotate-180 {
-  transform: rotate(180deg);
-}
-.rotate-0 {
-  transform: rotate(0deg);
-}
-
-.nav-dropdown-menu {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-
-  width: 260px;
-  background: #fff;
-  border: 1px solid rgba(32, 27, 27, 0.10);
-  border-radius: 16px;
-  box-shadow: 0 18px 40px rgba(32, 27, 27, 0.14);
-
-  padding: 8px;
-  animation: fadeIn 0.16s ease-out;
-  z-index: 1000;
-}
-
-.nav-dropdown-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  text-decoration: none;
-  font-family: var(--font-main);
-  color: var(--color-text);
-  font-size: 0.92rem;
-  font-weight: 650;
-
-  padding: 10px 12px;
-  border-radius: 12px;
-
-  transition: background var(--transition-fast), color var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.nav-dropdown-item:hover {
-  background: rgba(42, 113, 255, 0.08);
-  color: var(--color-primary);
-  transform: translateX(2px);
-}
-
-/* =========================
-   ANIMATIONS
+   ANIMATION
 ========================= */
 @keyframes fadeIn {
-  0% {
+  from {
     opacity: 0;
     transform: translateY(-6px);
   }
-  100% {
+  to {
     opacity: 1;
     transform: translateY(0);
   }
