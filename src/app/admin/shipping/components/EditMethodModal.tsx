@@ -33,13 +33,19 @@ export default function EditMethodModal({
       setError(null);
 
       const payload = {
-        name: form.name,
-        delay: form.delay,
+        name: {
+          fr: form.name.fr,
+          en: form.name.en,
+        },
+
+        delay: {
+          fr: form.delay.fr,
+          en: form.delay.en,
+        },
 
         // 🔒 SOURCE DE VÉRITÉ
         priceHT: Number(form.priceHT) || 0,
 
-        // TVA optionnelle
         vatRate:
           typeof form.vatRate === "number"
             ? form.vatRate
@@ -55,9 +61,7 @@ export default function EditMethodModal({
         `/api/admin/shipping-methods/${data.id}`,
         {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           cache: "no-store",
           body: JSON.stringify({ data: payload }),
         }
@@ -71,7 +75,7 @@ export default function EditMethodModal({
         return;
       }
 
-      onSaved(); // 🔁 reload parent
+      onSaved(); // reload parent
       onClose();
     } catch (e) {
       console.error("❌ SAVE SHIPPING ERROR:", e);
@@ -91,14 +95,75 @@ export default function EditMethodModal({
           Configurer la livraison
         </h2>
 
-        {/* ERREUR */}
         {error && (
-          <p className="text-sm text-red-600 mb-2">
-            {error}
-          </p>
+          <p className="text-sm text-red-600 mb-3">{error}</p>
         )}
 
-        {/* PRIX HT */}
+        {/* =========================
+            NOM
+        ========================= */}
+        <h3 className="admin-subtitle">Nom du mode</h3>
+
+        <label className="admin-label">Nom (FR)</label>
+        <input
+          className="admin-input"
+          value={form.name.fr}
+          onChange={(e) =>
+            setForm((p) => ({
+              ...p,
+              name: { ...p.name, fr: e.target.value },
+            }))
+          }
+        />
+
+        <label className="admin-label">Nom (EN)</label>
+        <input
+          className="admin-input"
+          value={form.name.en}
+          onChange={(e) =>
+            setForm((p) => ({
+              ...p,
+              name: { ...p.name, en: e.target.value },
+            }))
+          }
+        />
+
+        {/* =========================
+            DÉLAIS
+        ========================= */}
+        <h3 className="admin-subtitle mt-4">Délais de livraison</h3>
+
+        <label className="admin-label">Délai (FR)</label>
+        <input
+          className="admin-input"
+          placeholder="Ex : 2 à 4 jours ouvrés"
+          value={form.delay.fr}
+          onChange={(e) =>
+            setForm((p) => ({
+              ...p,
+              delay: { ...p.delay, fr: e.target.value },
+            }))
+          }
+        />
+
+        <label className="admin-label">Délai (EN)</label>
+        <input
+          className="admin-input"
+          placeholder="Ex: 2–4 business days"
+          value={form.delay.en}
+          onChange={(e) =>
+            setForm((p) => ({
+              ...p,
+              delay: { ...p.delay, en: e.target.value },
+            }))
+          }
+        />
+
+        {/* =========================
+            PRIX / TVA
+        ========================= */}
+        <h3 className="admin-subtitle mt-4">Tarification</h3>
+
         <label className="admin-label">Prix HT (€)</label>
         <input
           type="number"
@@ -114,7 +179,6 @@ export default function EditMethodModal({
           }
         />
 
-        {/* TVA */}
         <label className="admin-label">TVA (%)</label>
         <input
           type="number"
@@ -122,7 +186,6 @@ export default function EditMethodModal({
           min="0"
           className="admin-input"
           value={form.vatRate ?? ""}
-          placeholder="Ex: 20"
           onChange={(e) =>
             setForm((p) => ({
               ...p,
@@ -134,8 +197,10 @@ export default function EditMethodModal({
           }
         />
 
-        {/* ACTIF */}
-        <label className="admin-switch">
+        {/* =========================
+            ACTIF
+        ========================= */}
+        <label className="admin-switch mt-3">
           <input
             type="checkbox"
             checked={form.isActive}
@@ -149,7 +214,9 @@ export default function EditMethodModal({
           Méthode active
         </label>
 
-        {/* ACTIONS */}
+        {/* =========================
+            ACTIONS
+        ========================= */}
         <div className="admin-form-actions">
           <button
             className="btn btn-ghost"
