@@ -1,10 +1,7 @@
-import { notFound } from "next/navigation";
+"use client";
 
-export const dynamic = "force-dynamic";
-
-/* =====================================================
-   I18N CONTENT
-===================================================== */
+import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 const CONTENT = {
   fr: {
@@ -15,10 +12,10 @@ const CONTENT = {
       email: "Email",
       message: "Message",
       submit: "Envoyer",
+      success: "Message envoyé avec succès ✅",
+      error: "Une erreur est survenue ❌",
     },
-    emailLabel: "Email :",
   },
-
   en: {
     title: "Contact",
     subtitle: "We're here to help you.",
@@ -27,10 +24,10 @@ const CONTENT = {
       email: "Email",
       message: "Message",
       submit: "Send",
+      success: "Message sent successfully ✅",
+      error: "Something went wrong ❌",
     },
-    emailLabel: "Email:",
   },
-
   it: {
     title: "Contatto",
     subtitle: "Siamo a tua disposizione.",
@@ -39,10 +36,10 @@ const CONTENT = {
       email: "Email",
       message: "Messaggio",
       submit: "Invia",
+      success: "Messaggio inviato con successo ✅",
+      error: "Si è verificato un errore ❌",
     },
-    emailLabel: "Email:",
   },
-
   es: {
     title: "Contacto",
     subtitle: "Estamos a tu disposición.",
@@ -51,10 +48,10 @@ const CONTENT = {
       email: "Email",
       message: "Mensaje",
       submit: "Enviar",
+      success: "Mensaje enviado correctamente ✅",
+      error: "Ocurrió un error ❌",
     },
-    emailLabel: "Email:",
   },
-
   de: {
     title: "Kontakt",
     subtitle: "Wir sind für Sie da.",
@@ -63,10 +60,10 @@ const CONTENT = {
       email: "E-Mail",
       message: "Nachricht",
       submit: "Senden",
+      success: "Nachricht erfolgreich gesendet ✅",
+      error: "Ein Fehler ist aufgetreten ❌",
     },
-    emailLabel: "E-Mail:",
   },
-
   nl: {
     title: "Contact",
     subtitle: "Wij staan voor u klaar.",
@@ -75,80 +72,64 @@ const CONTENT = {
       email: "E-mail",
       message: "Bericht",
       submit: "Verzenden",
+      success: "Bericht succesvol verzonden ✅",
+      error: "Er is een fout opgetreden ❌",
     },
-    emailLabel: "E-mail:",
   },
 } as const;
 
 type Locale = keyof typeof CONTENT;
 
-/* =====================================================
-   PAGE
-===================================================== */
+export default function ContactPage() {
+  const pathname = usePathname();
+  const locale = (pathname?.split("/")[1] as Locale) || "fr";
+  const t = CONTENT[locale];
 
-export default async function ContactPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<"success" | "error" | null>(null);
 
-  const t = CONTENT[locale as Locale];
-  if (!t) return notFound();
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setStatus(null);
+
+    const formData = new FormData(e.currentTarget);
+
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: formData.get("name"),
+        email: formData.get("email"),
+        message: formData.get("message"),
+        locale,
+      }),
+    });
+
+    setLoading(false);
+    setStatus(res.ok ? "success" : "error");
+    if (res.ok) e.currentTarget.reset();
+  }
 
   return (
     <main className="contact-page">
-      {/* HEADER */}
       <header className="contact-header">
         <h1>{t.title}</h1>
         <p>{t.subtitle}</p>
       </header>
 
-      {/* FORM */}
-      <form className="contact-form" method="POST" action="#">
-        <div className="contact-field">
-          <label htmlFor="name">{t.form.name}</label>
-          <input
-            id="name"
-            type="text"
-            name="name"
-            placeholder={t.form.name}
-            required
-          />
-        </div>
+      <form className="contact-form" onSubmit={handleSubmit}>
+        <input name="name" placeholder={t.form.name} required />
+        <input name="email" type="email" placeholder={t.form.email} required />
+        <textarea name="message" placeholder={t.form.message} required />
 
-        <div className="contact-field">
-          <label htmlFor="email">{t.form.email}</label>
-          <input
-            id="email"
-            type="email"
-            name="email"
-            placeholder={t.form.email}
-            required
-          />
-        </div>
-
-        <div className="contact-field">
-          <label htmlFor="message">{t.form.message}</label>
-          <textarea
-            id="message"
-            name="message"
-            placeholder={t.form.message}
-            rows={5}
-            required
-          />
-        </div>
-
-        <button type="submit" className="contact-submit">
-          {t.form.submit}
+        <button type="submit" disabled={loading}>
+          {loading ? "..." : t.form.submit}
         </button>
-      </form>
 
-      {/* DIRECT EMAIL */}
-      <div className="contact-email">
-        <span>{t.emailLabel}</span>{" "}
-        <a href="mailto:contact@massme.fr">contact@massme.fr</a>
-      </div>
+        {status === "success" && <p className="success">{t.form.success}</p>}
+        {status === "error" && <p className="error">{t.form.error}</p>}
+      </form>
     </main>
   );
 }
