@@ -29,8 +29,6 @@ const HERO_CONTENT: Record<
     title: string;
     subtitle: string;
     body: string;
-    ctaPrimary: string;
-    ctaSecondary: string;
   }
 > = {
   fr: {
@@ -39,8 +37,6 @@ const HERO_CONTENT: Record<
       "Maintenez facilement la position prescrite après une opération du trou maculaire ou du décollement de la rétine.",
     body:
       "OculaRest est un dispositif médical certifié conçu pour accompagner les patients durant leur convalescence post-opératoire tout en soulageant les cervicales.",
-    ctaPrimary: "Être accompagné",
-    ctaSecondary: "Voir le fonctionnement",
   },
 
   en: {
@@ -49,8 +45,6 @@ const HERO_CONTENT: Record<
       "Easily maintain the prescribed position after macular hole or retinal detachment surgery.",
     body:
       "OculaRest is a certified medical device designed to support patients during post-operative recovery while relieving neck strain.",
-    ctaPrimary: "Get support",
-    ctaSecondary: "How it works",
   },
 
   es: {
@@ -59,8 +53,6 @@ const HERO_CONTENT: Record<
       "Mantenga fácilmente la posición prescrita tras una cirugía del agujero macular o desprendimiento de retina.",
     body:
       "OculaRest es un dispositivo médico certificado diseñado para acompañar a los pacientes durante su recuperación postoperatoria y aliviar las cervicales.",
-    ctaPrimary: "Recibir acompañamiento",
-    ctaSecondary: "Ver funcionamiento",
   },
 
   de: {
@@ -69,8 +61,6 @@ const HERO_CONTENT: Record<
       "Halten Sie nach einer Makulaloch- oder Netzhautablösungsoperation einfach die vorgeschriebene Position ein.",
     body:
       "OculaRest ist ein zertifiziertes Medizinprodukt zur Unterstützung der postoperativen Genesung und zur Entlastung der Halswirbelsäule.",
-    ctaPrimary: "Begleitung erhalten",
-    ctaSecondary: "Funktionsweise ansehen",
   },
 
   it: {
@@ -79,8 +69,6 @@ const HERO_CONTENT: Record<
       "Mantieni facilmente la posizione prescritta dopo un intervento al foro maculare o al distacco della retina.",
     body:
       "OculaRest è un dispositivo medico certificato progettato per supportare i pazienti durante la convalescenza post-operatoria alleviando la tensione cervicale.",
-    ctaPrimary: "Ricevere supporto",
-    ctaSecondary: "Scopri come funziona",
   },
 
   nl: {
@@ -89,8 +77,6 @@ const HERO_CONTENT: Record<
       "Houd eenvoudig de voorgeschreven houding aan na een maculagat- of netvliesloslatingsoperatie.",
     body:
       "OculaRest is een gecertificeerd medisch hulpmiddel dat patiënten ondersteunt tijdens het postoperatieve herstel en de nek ontlast.",
-    ctaPrimary: "Begeleiding krijgen",
-    ctaSecondary: "Bekijk de werking",
   },
 };
 
@@ -120,21 +106,7 @@ export default function HeroSection({ locale }: HeroProps) {
             <p className="hero-subtitle">{t.subtitle}</p>
             <p className="hero-body">{t.body}</p>
 
-            <div className="hero-ctas">
-              <a
-                href={`/${locale}/convalescence`}
-                className="btn btn-primary"
-              >
-                {t.ctaPrimary}
-              </a>
 
-              <a
-                href={`/${locale}/fonctionnement`}
-                className="btn btn-outline"
-              >
-                {t.ctaSecondary}
-              </a>
-            </div>
           </div>
 
           {/* RIGHT */}
