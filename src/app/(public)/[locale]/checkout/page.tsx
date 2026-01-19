@@ -8,12 +8,185 @@ import { db } from "@/lib/firebase";
 import { useCart } from "@/context/CartContext";
 import ChooseShipping from "@/components/shipping/ChooseShipping";
 import type { ShippingMethod, RelayPoint } from "@/components/shipping/types";
+import { Locale } from "@/lib/i18n";
 
 /* -------------------------------------
-   LOCALES
+   TRANSLATIONS
+------------------------------------- */
+const TRANSLATIONS: Record<Locale, {
+  title: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  address: string;
+  postalCode: string;
+  city: string;
+  country: string;
+  loadingShipping: string;
+  subtotalExclTax: string;
+  productVAT: string;
+  shippingInclTax: string;
+  totalInclTax: string;
+  payWithStripe: string;
+  emptyCart: string;
+  chooseShipping: string;
+  emailRequired: string;
+  nameRequired: string;
+  paymentError: string;
+}> = {
+  fr: {
+    title: "Commande",
+    firstName: "Prénom",
+    lastName: "Nom",
+    email: "Email",
+    address: "Adresse",
+    postalCode: "Code postal",
+    city: "Ville",
+    country: "Pays",
+    loadingShipping: "Chargement livraison…",
+    subtotalExclTax: "Sous-total HT",
+    productVAT: "TVA produits",
+    shippingInclTax: "Livraison TTC",
+    totalInclTax: "Total TTC",
+    payWithStripe: "Payer avec Stripe 💳",
+    emptyCart: "Panier vide",
+    chooseShipping: "Choisissez une livraison",
+    emailRequired: "Email requis",
+    nameRequired: "Prénom et nom requis",
+    paymentError: "Erreur paiement",
+  },
+  en: {
+    title: "Order",
+    firstName: "First name",
+    lastName: "Last name",
+    email: "Email",
+    address: "Address",
+    postalCode: "Postal code",
+    city: "City",
+    country: "Country",
+    loadingShipping: "Loading shipping…",
+    subtotalExclTax: "Subtotal excl. tax",
+    productVAT: "Product VAT",
+    shippingInclTax: "Shipping incl. tax",
+    totalInclTax: "Total incl. tax",
+    payWithStripe: "Pay with Stripe 💳",
+    emptyCart: "Cart is empty",
+    chooseShipping: "Choose a shipping method",
+    emailRequired: "Email required",
+    nameRequired: "First and last name required",
+    paymentError: "Payment error",
+  },
+  es: {
+    title: "Pedido",
+    firstName: "Nombre",
+    lastName: "Apellido",
+    email: "Email",
+    address: "Dirección",
+    postalCode: "Código postal",
+    city: "Ciudad",
+    country: "País",
+    loadingShipping: "Cargando envío…",
+    subtotalExclTax: "Subtotal sin IVA",
+    productVAT: "IVA productos",
+    shippingInclTax: "Envío con IVA",
+    totalInclTax: "Total con IVA",
+    payWithStripe: "Pagar con Stripe 💳",
+    emptyCart: "Carrito vacío",
+    chooseShipping: "Elija un método de envío",
+    emailRequired: "Email requerido",
+    nameRequired: "Nombre y apellido requeridos",
+    paymentError: "Error de pago",
+  },
+  de: {
+    title: "Bestellung",
+    firstName: "Vorname",
+    lastName: "Nachname",
+    email: "E-Mail",
+    address: "Adresse",
+    postalCode: "Postleitzahl",
+    city: "Stadt",
+    country: "Land",
+    loadingShipping: "Versand wird geladen…",
+    subtotalExclTax: "Zwischensumme ohne MwSt",
+    productVAT: "Produkt MwSt",
+    shippingInclTax: "Versand inkl. MwSt",
+    totalInclTax: "Gesamt inkl. MwSt",
+    payWithStripe: "Mit Stripe bezahlen 💳",
+    emptyCart: "Warenkorb ist leer",
+    chooseShipping: "Wählen Sie eine Versandart",
+    emailRequired: "E-Mail erforderlich",
+    nameRequired: "Vor- und Nachname erforderlich",
+    paymentError: "Zahlungsfehler",
+  },
+  it: {
+    title: "Ordine",
+    firstName: "Nome",
+    lastName: "Cognome",
+    email: "Email",
+    address: "Indirizzo",
+    postalCode: "Codice postale",
+    city: "Città",
+    country: "Paese",
+    loadingShipping: "Caricamento spedizione…",
+    subtotalExclTax: "Subtotale IVA esclusa",
+    productVAT: "IVA prodotti",
+    shippingInclTax: "Spedizione IVA inclusa",
+    totalInclTax: "Totale IVA inclusa",
+    payWithStripe: "Paga con Stripe 💳",
+    emptyCart: "Carrello vuoto",
+    chooseShipping: "Scegli un metodo di spedizione",
+    emailRequired: "Email richiesta",
+    nameRequired: "Nome e cognome richiesti",
+    paymentError: "Errore di pagamento",
+  },
+  nl: {
+    title: "Bestelling",
+    firstName: "Voornaam",
+    lastName: "Achternaam",
+    email: "E-mail",
+    address: "Adres",
+    postalCode: "Postcode",
+    city: "Stad",
+    country: "Land",
+    loadingShipping: "Verzending laden…",
+    subtotalExclTax: "Subtotaal excl. BTW",
+    productVAT: "Product BTW",
+    shippingInclTax: "Verzending incl. BTW",
+    totalInclTax: "Totaal incl. BTW",
+    payWithStripe: "Betalen met Stripe 💳",
+    emptyCart: "Winkelwagen is leeg",
+    chooseShipping: "Kies een verzendmethode",
+    emailRequired: "E-mail vereist",
+    nameRequired: "Voor- en achternaam vereist",
+    paymentError: "Betalingsfout",
+  },
+  pt: {
+    title: "Encomenda",
+    firstName: "Nome",
+    lastName: "Apelido",
+    email: "Email",
+    address: "Endereço",
+    postalCode: "Código postal",
+    city: "Cidade",
+    country: "País",
+    loadingShipping: "A carregar envio…",
+    subtotalExclTax: "Subtotal sem IVA",
+    productVAT: "IVA produtos",
+    shippingInclTax: "Envio com IVA",
+    totalInclTax: "Total com IVA",
+    payWithStripe: "Pagar com Stripe 💳",
+    emptyCart: "Carrinho vazio",
+    chooseShipping: "Escolha um método de envio",
+    emailRequired: "Email obrigatório",
+    nameRequired: "Nome e apelido obrigatórios",
+    paymentError: "Erro de pagamento",
+  },
+};
+
+/* -------------------------------------
+   HELPERS
 ------------------------------------- */
 const LOCALES = ["fr", "en", "es", "de", "it", "nl", "pt"] as const;
-type Locale = (typeof LOCALES)[number];
 type ShippingLocale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
 function getLocale(path: string | null): Locale {
@@ -36,6 +209,7 @@ export default function CheckoutPage() {
   const pathname = usePathname();
   const locale = getLocale(pathname);
   const shippingLocale = adaptLocale(locale);
+  const t = TRANSLATIONS[locale];
 
   const { items, totalHT, totalVAT, totalTTC, clearCart } = useCart();
 
@@ -123,11 +297,11 @@ export default function CheckoutPage() {
      PAY
   ------------------------------------- */
   async function pay() {
-    if (!items.length) return alert("Panier vide");
-    if (!shippingMethod) return alert("Choisissez une livraison");
-    if (!customer.email) return alert("Email requis");
+    if (!items.length) return alert(t.emptyCart);
+    if (!shippingMethod) return alert(t.chooseShipping);
+    if (!customer.email) return alert(t.emailRequired);
     if (!customer.firstName || !customer.lastName) {
-      return alert("Prénom et nom requis");
+      return alert(t.nameRequired);
     }
 
     // 🔥 NOM COMPLET CANONIQUE
@@ -160,7 +334,7 @@ export default function CheckoutPage() {
     const json = await res.json();
 
     if (!res.ok || !json.url) {
-      alert("Erreur paiement");
+      alert(t.paymentError);
       return;
     }
 
@@ -172,64 +346,69 @@ export default function CheckoutPage() {
      RENDER
   ===================================== */
   return (
-    <main className="max-w-3xl mx-auto py-10 space-y-8">
-      <h1 className="text-2xl font-bold">Commande</h1>
+    <main className="max-w-3xl mx-auto py-10 px-4 space-y-8">
+      <h1 className="text-3xl font-bold">{t.title}</h1>
 
       {/* CLIENT */}
-      <section className="space-y-3">
+      <section className="space-y-4">
+        <div className="grid md:grid-cols-2 gap-4">
+          <input
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder={t.firstName}
+            value={customer.firstName}
+            onChange={(e) =>
+              setCustomer({ ...customer, firstName: e.target.value })
+            }
+          />
+          <input
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder={t.lastName}
+            value={customer.lastName}
+            onChange={(e) =>
+              setCustomer({ ...customer, lastName: e.target.value })
+            }
+          />
+        </div>
         <input
-          className="input"
-          placeholder="Prénom"
-          value={customer.firstName}
-          onChange={(e) =>
-            setCustomer({ ...customer, firstName: e.target.value })
-          }
-        />
-        <input
-          className="input"
-          placeholder="Nom"
-          value={customer.lastName}
-          onChange={(e) =>
-            setCustomer({ ...customer, lastName: e.target.value })
-          }
-        />
-        <input
-          className="input"
-          placeholder="Email"
+          className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          type="email"
+          placeholder={t.email}
           value={customer.email}
           onChange={(e) =>
             setCustomer({ ...customer, email: e.target.value })
           }
         />
         <input
-          className="input"
-          placeholder="Adresse"
+          className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder={t.address}
           value={customer.address}
           onChange={(e) =>
             setCustomer({ ...customer, address: e.target.value })
           }
         />
-        <input
-          className="input"
-          placeholder="Code postal"
-          value={customer.postalCode}
-          onChange={(e) =>
-            setCustomer({ ...customer, postalCode: e.target.value })
-          }
-        />
-        <input
-          className="input"
-          placeholder="Ville"
-          value={customer.city}
-          onChange={(e) =>
-            setCustomer({ ...customer, city: e.target.value })
-          }
-        />
+        <div className="grid md:grid-cols-2 gap-4">
+          <input
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder={t.postalCode}
+            value={customer.postalCode}
+            onChange={(e) =>
+              setCustomer({ ...customer, postalCode: e.target.value })
+            }
+          />
+          <input
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder={t.city}
+            value={customer.city}
+            onChange={(e) =>
+              setCustomer({ ...customer, city: e.target.value })
+            }
+          />
+        </div>
       </section>
 
       {/* SHIPPING */}
       {loading ? (
-        <p>Chargement livraison…</p>
+        <p className="text-center text-gray-500">{t.loadingShipping}</p>
       ) : (
         <ChooseShipping
           methods={methods}
@@ -240,20 +419,32 @@ export default function CheckoutPage() {
       )}
 
       {/* TOTAL */}
-      <section className="border-t pt-4 space-y-2">
-        <p>Sous-total HT : {totalHT.toFixed(2)} €</p>
-        {totalVAT > 0 && <p>TVA produits : {totalVAT.toFixed(2)} €</p>}
-        <p>Livraison TTC : {shippingTTC.toFixed(2)} €</p>
-        <p className="font-bold text-lg">
-          Total TTC : {finalTTC.toFixed(2)} €
-        </p>
+      <section className="border-t pt-6 space-y-2">
+        <div className="flex justify-between text-gray-700">
+          <span>{t.subtotalExclTax}</span>
+          <span className="font-medium">{totalHT.toFixed(2)} €</span>
+        </div>
+        {totalVAT > 0 && (
+          <div className="flex justify-between text-gray-700">
+            <span>{t.productVAT}</span>
+            <span className="font-medium">{totalVAT.toFixed(2)} €</span>
+          </div>
+        )}
+        <div className="flex justify-between text-gray-700">
+          <span>{t.shippingInclTax}</span>
+          <span className="font-medium">{shippingTTC.toFixed(2)} €</span>
+        </div>
+        <div className="flex justify-between font-bold text-xl border-t pt-3 mt-3">
+          <span>{t.totalInclTax}</span>
+          <span>{finalTTC.toFixed(2)} €</span>
+        </div>
       </section>
 
       <button
         onClick={pay}
-        className="btn btn-primary w-full py-4 text-lg"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors"
       >
-        Payer avec Stripe 💳
+        {t.payWithStripe}
       </button>
     </main>
   );
