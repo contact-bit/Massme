@@ -12,7 +12,60 @@ export const dynamic = "force-dynamic";
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 /* =====================================================
-   RAW BODY → BUFFER (obligatoire pour Stripe)
+   EMAIL I18N
+===================================================== */
+
+type EmailLocale = "fr" | "en" | "it" | "es" | "de" | "nl";
+
+const EMAIL_I18N: Record<
+  EmailLocale,
+  {
+    subject: string;
+    title: (name: string) => string;
+    intro: string;
+    orderLabel: string;
+  }
+> = {
+  fr: {
+    subject: "🎉 Merci pour votre commande — Facture jointe",
+    title: (name) => `Merci ${name} pour votre commande 🎉`,
+    intro: "Votre facture est jointe à cet email.",
+    orderLabel: "Commande",
+  },
+  en: {
+    subject: "🎉 Thank you for your order — Invoice attached",
+    title: (name) => `Thank you ${name} for your order 🎉`,
+    intro: "Your invoice is attached to this email.",
+    orderLabel: "Order",
+  },
+  it: {
+    subject: "🎉 Grazie per il tuo ordine — Fattura allegata",
+    title: (name) => `Grazie ${name} per il tuo ordine 🎉`,
+    intro: "La tua fattura è allegata a questa email.",
+    orderLabel: "Ordine",
+  },
+  es: {
+    subject: "🎉 Gracias por tu pedido — Factura adjunta",
+    title: (name) => `Gracias ${name} por tu pedido 🎉`,
+    intro: "Tu factura está adjunta a este correo.",
+    orderLabel: "Pedido",
+  },
+  de: {
+    subject: "🎉 Vielen Dank für Ihre Bestellung — Rechnung beigefügt",
+    title: (name) => `Vielen Dank ${name} für Ihre Bestellung 🎉`,
+    intro: "Ihre Rechnung ist dieser E-Mail beigefügt.",
+    orderLabel: "Bestellung",
+  },
+  nl: {
+    subject: "🎉 Bedankt voor je bestelling — Factuur bijgevoegd",
+    title: (name) => `Bedankt ${name} voor je bestelling 🎉`,
+    intro: "Je factuur is bijgevoegd bij deze e-mail.",
+    orderLabel: "Bestelling",
+  },
+};
+
+/* =====================================================
+   RAW BODY → BUFFER (Stripe requirement)
 ===================================================== */
 async function buffer(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader();
@@ -51,21 +104,16 @@ export async function POST(req: Request) {
     );
   } catch (err: any) {
     console.error("❌ Stripe signature error:", err.message);
-    return NextResponse.json(
-      { error: err.message },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
   /* =====================================================
-     🎯 CHECKOUT SESSION PAYÉE
+     CHECKOUT SESSION COMPLETED
   ===================================================== */
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    const metadata = session.metadata || {};
-    const orderId = metadata.order_id;
-
+    const orderId = session.metadata?.order_id;
     const customerEmail =
       session.customer_details?.email ||
       session.customer_email ||
@@ -76,9 +124,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true });
     }
 
-    /* ---------------------------------------------------
-       🔎 ORDERS = SOURCE DE VÉRITÉ
-    --------------------------------------------------- */
+    /* ---------------- SOURCE DE VÉRITÉ ---------------- */
     const ref = dbAdmin.collection("orders").doc(orderId);
     const snap = await ref.get();
 
@@ -89,9 +135,15 @@ export async function POST(req: Request) {
 
     const savedOrder = snap.data()!;
 
-    /* ---------------------------------------------------
-       👤 CLIENT — PRÉNOM / NOM (JAMAIS DEPUIS STRIPE)
-    --------------------------------------------------- */
+    /* ---------------- LANGUE CLIENT ---------------- */
+    const locale: EmailLocale =
+      EMAIL_I18N[savedOrder.locale as EmailLocale]
+        ? savedOrder.locale
+        : "fr";
+
+    const mail = EMAIL_I18N[locale];
+
+    /* ---------------- CLIENT ---------------- */
     const firstName =
       savedOrder.shippingAddress?.firstName ||
       savedOrder.customerFirstName ||
@@ -103,28 +155,19 @@ export async function POST(req: Request) {
       savedOrder.customerLastName ||
       "";
 
-    /* ---------------------------------------------------
-       📦 ITEMS — NORMALISATION (LEGACY COMPAT)
-    --------------------------------------------------- */
+    /* ---------------- ITEMS ---------------- */
     const items = (savedOrder.items || []).map((it: any) => {
       const priceHT = Number(it.priceHT ?? it.price ?? 0);
-
       return {
         name: it.name || "Produit",
         description: it.description || "",
         quantity: Number(it.quantity || 1),
-
-        // legacy (PDF / emails / success)
         price: priceHT,
-
-        // interne
         priceHT,
       };
     });
 
-    /* ---------------------------------------------------
-       🚚 SHIPPING — NORMALISATION TVA
-    --------------------------------------------------- */
+    /* ---------------- SHIPPING ---------------- */
     const sm = savedOrder.shippingMethod || {};
     const shippingHT = Number(sm.priceHT ?? sm.price ?? 0);
     const vatRate = Number(sm.vatRate ?? 0);
@@ -136,15 +179,10 @@ export async function POST(req: Request) {
 
     const shippingMethod = {
       ...sm,
-
-      // legacy
       price: shippingCalc.ttc,
-
-      // interne
       priceHT: shippingHT,
       vatRate,
       priceTTC: shippingCalc.ttc,
-
       type: sm.type || "home",
       relayProvider: sm.relayProvider || null,
     };
@@ -153,14 +191,11 @@ export async function POST(req: Request) {
       ...savedOrder,
       items,
       shippingMethod,
-      relayPoint: savedOrder.relayPoint || null,
       customerFirstName: firstName,
       customerLastName: lastName,
     };
 
-    /* ---------------------------------------------------
-       💾 UPDATE COMMANDE → PAYÉE
-    --------------------------------------------------- */
+    /* ---------------- UPDATE ORDER ---------------- */
     await ref.update({
       status: "paid",
       paidAt: new Date(),
@@ -169,29 +204,28 @@ export async function POST(req: Request) {
       customerLastName: lastName,
     });
 
-    /* ---------------------------------------------------
-       📄 FACTURE PDF + EMAIL CLIENT
-    --------------------------------------------------- */
+    /* ---------------- PDF + EMAIL ---------------- */
     try {
       const pdfBuffer = await generateInvoicePDF(
         normalizedOrder,
-        orderId
+        orderId,
+        { locale }
       );
 
       await resend.emails.send({
         from: "Massme • Support <contact@hdconnects.com>",
         to: customerEmail,
-        subject: "🎉 Merci pour votre commande — Facture jointe",
+        subject: mail.subject,
         html: `
           <div style="font-family:Arial,sans-serif;padding:20px">
-            <h2>Merci ${firstName || ""} pour votre commande 🎉</h2>
-            <p>Votre facture est jointe à cet email.</p>
-            <p><b>Commande :</b> ${orderId}</p>
+            <h2>${mail.title(firstName)}</h2>
+            <p>${mail.intro}</p>
+            <p><b>${mail.orderLabel} :</b> ${orderId}</p>
           </div>
         `,
         attachments: [
           {
-            filename: `facture-${orderId}.pdf`,
+            filename: `invoice-${orderId}.pdf`,
             content: pdfBuffer.toString("base64"),
             contentType: "application/pdf",
           },
@@ -201,35 +235,6 @@ export async function POST(req: Request) {
       console.log("📧 Email client envoyé");
     } catch (err) {
       console.error("❌ PDF / email client:", err);
-    }
-
-    /* ---------------------------------------------------
-       📮 EMAILS ADMIN + LOGISTIQUE (NON BLOQUANTS)
-    --------------------------------------------------- */
-    try {
-      fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-admin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId,
-          customerEmail,
-          firstName,
-          lastName,
-        }),
-      });
-
-      fetch(`${process.env.NEXT_PUBLIC_URL}/api/email-logistique`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId,
-          customerEmail,
-          shippingMethod: shippingMethod.type,
-          relayPoint: normalizedOrder.relayPoint,
-        }),
-      });
-    } catch (err) {
-      console.error("⚠️ Emails admin/logistique:", err);
     }
   }
 
