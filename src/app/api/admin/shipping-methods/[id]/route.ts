@@ -1,30 +1,33 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 
-// ⚠️ IMPORTANT : params est une Promise dans Next 16
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// ⚠️ IMPORTANT : params est une Promise en Next 15 / 16
 type Context = {
   params: Promise<{ id: string }>;
 };
 
-// PATCH → modifier une méthode
+/* =====================================================
+   PATCH → modifier une méthode
+===================================================== */
 export async function PATCH(req: Request, context: Context) {
   try {
-    // On "unwrap" la Promise
     const { id } = await context.params;
 
     let body: any;
     try {
       body = await req.json();
     } catch (e) {
-      console.error("❌ [shipping PATCH] Body JSON invalide ou manquant:", e);
+      console.error("❌ [shipping PATCH] JSON invalide:", e);
       return NextResponse.json(
-        { ok: false, error: "Corps JSON invalide ou manquant" },
+        { ok: false, error: "Corps JSON invalide" },
         { status: 400 }
       );
     }
 
     const { data } = body || {};
-
     if (!data) {
       return NextResponse.json(
         { ok: false, error: "Données manquantes (data)" },
@@ -35,9 +38,22 @@ export async function PATCH(req: Request, context: Context) {
     console.log("🛠 [shipping PATCH] id =", id);
     console.log("🛠 [shipping PATCH] data =", data);
 
-    await dbAdmin.collection("shipping_methods").doc(id).update(data);
+    await dbAdmin
+      .collection("shipping_methods")
+      .doc(id)
+      .update({
+        ...data,
+        updatedAt: new Date(),
+      });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json(
+      { ok: true },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
   } catch (e) {
     console.error("❌ Error updating shipping_method:", e);
     return NextResponse.json(
@@ -47,7 +63,9 @@ export async function PATCH(req: Request, context: Context) {
   }
 }
 
-// DELETE → supprimer une méthode
+/* =====================================================
+   DELETE → supprimer une méthode
+===================================================== */
 export async function DELETE(req: Request, context: Context) {
   try {
     const { id } = await context.params;
@@ -56,7 +74,14 @@ export async function DELETE(req: Request, context: Context) {
 
     await dbAdmin.collection("shipping_methods").doc(id).delete();
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json(
+      { ok: true },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
   } catch (e) {
     console.error("❌ Error deleting shipping_method:", e);
     return NextResponse.json(

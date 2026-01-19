@@ -20,8 +20,8 @@ export type ShippingMethod = {
     en: string;
   };
 
-  priceHT: number;        // ✅ SOURCE DE VÉRITÉ
-  vatRate?: number;       // optionnel
+  priceHT: number;          // ✅ SOURCE UNIQUE
+  vatRate?: number;
 
   isActive: boolean;
   type: "home" | "relay" | "local_pickup";
@@ -37,19 +37,21 @@ export default function ShippingAdminPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ShippingMethod | null>(null);
 
-  /* ---------- LOAD ---------- */
-  const reload = async () => {
+  /* =====================================================
+     LOAD — NO CACHE / SOURCE FIRESTORE
+  ===================================================== */
+  const reload = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
 
       const res = await fetch("/api/admin/shipping-methods", {
         cache: "no-store",
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = await res.json().catch(() => null);
 
-      if (!res.ok || !json.ok) {
-        console.error("Erreur API shipping-methods:", json.error);
+      if (!res.ok || !json?.ok) {
+        console.error("❌ shipping-methods:", json?.error);
         setMethods([]);
         return;
       }
@@ -59,16 +61,15 @@ export default function ShippingAdminPage() {
           id: m.id,
 
           name: {
-            fr: m.name?.fr || "",
-            en: m.name?.en || "",
+            fr: String(m.name?.fr || ""),
+            en: String(m.name?.en || ""),
           },
 
           delay: {
-            fr: m.delay?.fr || "",
-            en: m.delay?.en || "",
+            fr: String(m.delay?.fr || ""),
+            en: String(m.delay?.en || ""),
           },
 
-          // 🔒 SOURCE DE VÉRITÉ
           priceHT: Number(m.priceHT ?? 0),
           vatRate:
             typeof m.vatRate === "number" ? m.vatRate : undefined,
@@ -82,10 +83,10 @@ export default function ShippingAdminPage() {
 
       setMethods(normalized);
     } catch (e) {
-      console.error("Erreur chargement shipping:", e);
+      console.error("❌ Load shipping error:", e);
       setMethods([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -93,24 +94,28 @@ export default function ShippingAdminPage() {
     reload();
   }, []);
 
-  /* ---------- DELETE ---------- */
+  /* =====================================================
+     DELETE
+  ===================================================== */
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette méthode de livraison ?")) return;
 
     try {
       const res = await fetch(`/api/admin/shipping-methods/${id}`, {
         method: "DELETE",
+        cache: "no-store",
       });
 
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || !json.ok) {
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json?.ok) {
         alert("Erreur lors de la suppression");
         return;
       }
 
       setMethods((prev) => prev.filter((m) => m.id !== id));
     } catch (e) {
-      console.error("Erreur suppression shipping:", e);
+      console.error("❌ Delete shipping error:", e);
       alert("Erreur lors de la suppression");
     }
   };
@@ -127,7 +132,7 @@ export default function ShippingAdminPage() {
         <h2 className="admin-section-title mb-2">
           Créer un mode de livraison
         </h2>
-        <AddMethodForm onCreated={reload} />
+        <AddMethodForm onCreated={() => reload(true)} />
       </section>
 
       {/* 📋 LISTE */}
@@ -199,11 +204,12 @@ export default function ShippingAdminPage() {
         )}
       </section>
 
+      {/* ✏️ MODAL */}
       {editing && (
         <EditMethodModal
           data={editing}
           onClose={() => setEditing(null)}
-          onSaved={reload}
+          onSaved={() => reload(true)}
         />
       )}
     </main>
