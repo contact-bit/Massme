@@ -1,3 +1,4 @@
+// src/app/api/admin/orders/route.ts
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 
@@ -10,11 +11,6 @@ export const dynamic = "force-dynamic";
 function assertAdmin(req: Request) {
   const pass = req.headers.get("x-admin-password") || "";
   const expected = process.env.ADMIN_PASSWORD || "";
-
-  console.log("[orders] admin check", {
-    hasExpected: !!expected,
-    passLen: pass.length,
-  });
 
   if (!expected || pass !== expected) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -30,29 +26,34 @@ export async function GET(req: Request) {
   if (auth) return auth;
 
   try {
-    let docs: any[] = [];
+    const snap = await dbAdmin
+      .collection("orders") // ✅ FIX ICI
+      .orderBy("createdAt", "desc")
+      .limit(300)
+      .get();
 
-    try {
-      const snap = await dbAdmin
-        .collection("pending_orders")
-        .orderBy("createdAt", "desc")
-        .limit(200)
-        .get();
+    const orders = snap.docs.map((d) => {
+      const o = d.data();
 
-      docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    } catch (e: any) {
-      console.log("[orders] orderBy failed, fallback");
-      const snap = await dbAdmin
-        .collection("pending_orders")
-        .limit(200)
-        .get();
+      return {
+        id: d.id,
+        status: o.status ?? "unknown",
+        email: o.email ?? "",
+        items: o.items ?? [],
+        shippingMethod: o.shippingMethod ?? null,
+        shippingAddress: o.shippingAddress ?? null,
+        totals: o.totals ?? null,
 
-      docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    }
+        // 👇 champs attendus par ton admin UI
+        total: o.totals?.totalTTC ?? 0,
+        createdAt: o.createdAt ?? null,
+        paidAt: o.paidAt ?? null,
+      };
+    });
 
-    return NextResponse.json({ orders: docs }, { status: 200 });
+    return NextResponse.json({ orders }, { status: 200 });
   } catch (err: any) {
-    console.error("[orders] GET error:", err);
+    console.error("[admin/orders] GET error:", err);
     return NextResponse.json(
       { error: "Orders failed", message: err?.message },
       { status: 500 }
@@ -78,16 +79,14 @@ export async function DELETE(req: Request) {
   }
 
   try {
-    await dbAdmin.collection("pending_orders").doc(id).delete();
-
-    console.log("[orders] deleted:", id);
+    await dbAdmin.collection("orders").doc(id).delete(); // ✅ FIX ICI
 
     return NextResponse.json(
       { success: true, id },
       { status: 200 }
     );
   } catch (err: any) {
-    console.error("[orders] DELETE error:", err);
+    console.error("[admin/orders] DELETE error:", err);
     return NextResponse.json(
       { error: "Delete failed", message: err?.message },
       { status: 500 }
