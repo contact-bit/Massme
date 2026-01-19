@@ -1,163 +1,188 @@
 import "./StepsSection.css";
-import type { Locale } from "@/lib/i18n";
+import Image from "next/image";
+import { Locale } from "@/lib/i18n";
 
 type Props = {
   locale: Locale;
 };
 
-type Dict = {
+const MINI_LOGO =
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2c995c35-dbef-45d8-a0b2-70075a919800/public";
+
+const COPY: Record<Locale, {
   titleA: string;
   titleB: string;
-  steps: {
-    title: string;
-    desc: string;
-  }[];
-};
-
-/* ======================================================
-   TRANSLATIONS — STEPS
-====================================================== */
-const TRANSLATIONS: Record<Locale, Dict> = {
+  steps: Array<{
+    label: string;
+    text?: string;
+    textBefore?: string;
+    brand?: string;
+    textAfter?: string;
+  }>;
+}> = {
   fr: {
-    titleA: "Comment",
-    titleB: "ça fonctionne",
+    titleA: "Votre accompagnement en",
+    titleB: "3 étapes",
     steps: [
       {
-        title: "Installation simple",
-        desc: "Installez OculaRest facilement sur votre lit ou fauteuil.",
+        label: "Étape 1:",
+        text: "Vous rentrez chez vous après votre opération et devez respecter la position bulle.",
       },
       {
-        title: "Position prescrite",
-        desc: "Adoptez la position recommandée par votre chirurgien.",
+        label: "Étape 2:",
+        textBefore: "Vous installez ",
+        brand: "OculaRest",
+        textAfter: " en quelques secondes, sur votre lit ou sur une table.",
       },
       {
-        title: "Convalescence sereine",
-        desc: "Récupérez plus confortablement en réduisant les tensions.",
+        label: "Étape 3:",
+        text: "Vous maintenez la position prescrite sans souffrir, tout en pouvant dormir, manger, lire ou vous reposer.",
       },
     ],
   },
-
   en: {
-    titleA: "How",
-    titleB: "it works",
+    titleA: "Your support in",
+    titleB: "3 steps",
     steps: [
       {
-        title: "Easy setup",
-        desc: "Quickly install OculaRest on your bed or chair.",
+        label: "Step 1:",
+        text: "You return home after your surgery and must follow the face-down position instructions.",
       },
       {
-        title: "Prescribed position",
-        desc: "Maintain the position recommended by your surgeon.",
+        label: "Step 2:",
+        textBefore: "You set up ",
+        brand: "OculaRest",
+        textAfter: " in seconds, on your bed or on a table.",
       },
       {
-        title: "Smooth recovery",
-        desc: "Recover comfortably while reducing strain.",
+        label: "Step 3:",
+        text: "You maintain the prescribed position more comfortably while still being able to rest, read, and recover.",
       },
     ],
   },
-
   es: {
-    titleA: "Cómo",
-    titleB: "funciona",
+    titleA: "Su acompañamiento en",
+    titleB: "3 pasos",
     steps: [
       {
-        title: "Instalación sencilla",
-        desc: "Instale OculaRest fácilmente en su cama o sillón.",
+        label: "Paso 1:",
+        text: "Regresa a casa después de su cirugía y debe seguir las instrucciones de posición boca abajo.",
       },
       {
-        title: "Posición prescrita",
-        desc: "Mantenga la posición recomendada por su cirujano.",
+        label: "Paso 2:",
+        textBefore: "Instala ",
+        brand: "OculaRest",
+        textAfter: " en segundos, en su cama o en una mesa.",
       },
       {
-        title: "Recuperación cómoda",
-        desc: "Recupérese con mayor confort reduciendo la tensión.",
+        label: "Paso 3:",
+        text: "Mantiene la posición prescrita con mayor comodidad mientras puede descansar, leer y recuperarse.",
       },
     ],
   },
-
   de: {
-    titleA: "So",
-    titleB: "funktioniert es",
+    titleA: "Ihre Begleitung in",
+    titleB: "3 Schritten",
     steps: [
       {
-        title: "Einfache Installation",
-        desc: "OculaRest lässt sich leicht auf Bett oder Sessel montieren.",
+        label: "Schritt 1:",
+        text: "Sie kehren nach Ihrer Operation nach Hause zurück und müssen die Gesicht-nach-unten-Position einhalten.",
       },
       {
-        title: "Vorgeschriebene Position",
-        desc: "Halten Sie die vom Chirurgen empfohlene Position ein.",
+        label: "Schritt 2:",
+        textBefore: "Sie richten ",
+        brand: "OculaRest",
+        textAfter: " in Sekunden ein, auf Ihrem Bett oder auf einem Tisch.",
       },
       {
-        title: "Entspannte Genesung",
-        desc: "Erholen Sie sich komfortabler mit weniger Belastung.",
+        label: "Schritt 3:",
+        text: "Sie halten die vorgeschriebene Position bequemer ein, während Sie sich ausruhen, lesen und erholen können.",
       },
     ],
   },
-
   it: {
-    titleA: "Come",
-    titleB: "funziona",
+    titleA: "Il tuo supporto in",
+    titleB: "3 passaggi",
     steps: [
       {
-        title: "Installazione semplice",
-        desc: "Installa facilmente OculaRest su letto o poltrona.",
+        label: "Passaggio 1:",
+        text: "Torni a casa dopo l'intervento e devi seguire le istruzioni di posizione a faccia in giù.",
       },
       {
-        title: "Posizione prescritta",
-        desc: "Mantieni la posizione consigliata dal chirurgo.",
+        label: "Passaggio 2:",
+        textBefore: "Installi ",
+        brand: "OculaRest",
+        textAfter: " in pochi secondi, sul tuo letto o su un tavolo.",
       },
       {
-        title: "Recupero sereno",
-        desc: "Recupera in modo più confortevole riducendo le tensioni.",
+        label: "Passaggio 3:",
+        text: "Mantieni la posizione prescritta in modo più confortevole mentre puoi riposare, leggere e recuperare.",
       },
     ],
   },
-
   nl: {
-    titleA: "Hoe",
-    titleB: "het werkt",
+    titleA: "Uw ondersteuning in",
+    titleB: "3 stappen",
     steps: [
       {
-        title: "Eenvoudige installatie",
-        desc: "Installeer OculaRest eenvoudig op bed of stoel.",
+        label: "Stap 1:",
+        text: "U keert thuis terug na uw operatie en moet de gezicht-naar-beneden positie instructies volgen.",
       },
       {
-        title: "Voorgeschreven houding",
-        desc: "Houd de door de chirurg aanbevolen houding aan.",
+        label: "Stap 2:",
+        textBefore: "U installeert ",
+        brand: "OculaRest",
+        textAfter: " in enkele seconden, op uw bed of op een tafel.",
       },
       {
-        title: "Comfortabel herstel",
-        desc: "Herstel comfortabel met minder belasting.",
+        label: "Stap 3:",
+        text: "U behoudt de voorgeschreven positie comfortabeler terwijl u nog steeds kunt rusten, lezen en herstellen.",
       },
     ],
   },
 };
 
-/* ======================================================
-   COMPONENT
-====================================================== */
 export default function StepsSection({ locale }: Props) {
-  // ✅ FALLBACK SÉCURISÉ
-  const t = TRANSLATIONS[locale] ?? TRANSLATIONS.fr;
+  const t = COPY[locale];
 
   return (
     <section className="steps">
       <div className="steps-inner">
         <h3 className="steps-title">
-          {t.titleA}{" "}
-          <span className="steps-accent">{t.titleB}</span>
+          {t.titleA} <span className="steps-accent">{t.titleB}:</span>
         </h3>
 
         <div className="steps-list">
-          {t.steps.map((step, i) => (
-            <div key={i} className="step-card">
-              <div className="step-index">{i + 1}</div>
-              <div className="step-content">
-                <h4 className="step-title">{step.title}</h4>
-                <p className="step-desc">{step.desc}</p>
-              </div>
-            </div>
-          ))}
+          {/* Step 1 */}
+          <div className="step">
+            <div className="step-label">{t.steps[0].label}</div>
+            <p className="step-text">{t.steps[0].text}</p>
+          </div>
+
+          {/* Step 2 */}
+          <div className="step">
+            <div className="step-label">{t.steps[1].label}</div>
+            <p className="step-text">
+              {t.steps[1].textBefore}
+              <span className="step-brand">
+                {t.steps[1].brand}
+                <Image
+                  src={MINI_LOGO}
+                  alt="OculaRest"
+                  width={18}
+                  height={18}
+                  className="step-mini"
+                />
+              </span>
+              {t.steps[1].textAfter}
+            </p>
+          </div>
+
+          {/* Step 3 */}
+          <div className="step">
+            <div className="step-label">{t.steps[2].label}</div>
+            <p className="step-text">{t.steps[2].text}</p>
+          </div>
         </div>
       </div>
     </section>

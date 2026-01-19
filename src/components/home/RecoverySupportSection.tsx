@@ -1,129 +1,120 @@
 import "./RecoverySupportSection.css";
 import Image from "next/image";
-import type { Locale } from "@/lib/i18n";
-
-const MINI_LOGO =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2456d5ba-af23-4219-7115-f54286a7c600/public";
+import { Locale } from "@/lib/i18n";
 
 type Props = {
   locale: Locale;
 };
 
-type Dict = {
+const MINI_LOGO =
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2c995c35-dbef-45d8-a0b2-70075a919800/public";
+
+const TOP_MONTAGE_IMG =
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/e509bc79-1a70-43f9-163e-daa46dc41d00/public";
+
+const EYE_IMG =
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/09b2eaac-25e1-4b88-52b6-7f209695d300/public";
+
+const COPY: Record<Locale, {
   title1: string;
   title2: string;
-  subtitle: string;
-  items: string[];
-};
-
-/* ======================================================
-   TRANSLATIONS — RECOVERY SUPPORT
-====================================================== */
-const TRANSLATIONS: Record<Locale, Dict> = {
+  title3: string;
+  p1: string;
+  p2: string;
+  eyeAlt: string;
+}> = {
   fr: {
-    title1: "Un accompagnement pensé pour",
-    title2: "la convalescence post-opératoire",
-    subtitle:
-      "OculaRest aide à maintenir la position prescrite tout en réduisant les douleurs cervicales.",
-    items: [
-      "Maintien confortable de la position",
-      "Réduction des tensions cervicales",
-      "Compatible lit et fauteuil",
-    ],
+    title1: "OculaRest",
+    title2: "vous accompagne",
+    title3: "pendant toute votre convalescence",
+    p1: "OculaRest a été conçu pour répondre précisément aux contraintes de la convalescence après vitrectomie.",
+    p2: "Il permet de maintenir la position prescrite par votre chirurgien tout en améliorant votre confort, de jour comme de nuit.",
+    eyeAlt: "Illustration œil",
   },
-
   en: {
-    title1: "Support designed for",
-    title2: "post-operative recovery",
-    subtitle:
-      "OculaRest helps maintain the prescribed position while reducing neck strain.",
-    items: [
-      "Comfortable position support",
-      "Reduced neck tension",
-      "Bed and chair compatible",
-    ],
+    title1: "OculaRest",
+    title2: "supports you",
+    title3: "throughout your recovery",
+    p1: "OculaRest was designed to meet the specific constraints of recovery after vitrectomy.",
+    p2: "It helps maintain the position prescribed by your surgeon while improving comfort, day and night.",
+    eyeAlt: "Eye illustration",
   },
-
   es: {
-    title1: "Un acompañamiento diseñado para",
-    title2: "la recuperación postoperatoria",
-    subtitle:
-      "OculaRest ayuda a mantener la posición prescrita reduciendo la tensión cervical.",
-    items: [
-      "Mantenimiento cómodo de la posición",
-      "Reducción de la tensión cervical",
-      "Compatible con cama y sillón",
-    ],
+    title1: "OculaRest",
+    title2: "te acompaña",
+    title3: "durante toda tu convalecencia",
+    p1: "OculaRest fue diseñado para cumplir con las restricciones específicas de la recuperación después de vitrectomía.",
+    p2: "Ayuda a mantener la posición prescrita por su cirujano mientras mejora la comodidad, día y noche.",
+    eyeAlt: "Ilustración de ojo",
   },
-
   de: {
-    title1: "Unterstützung für",
-    title2: "die postoperative Genesung",
-    subtitle:
-      "OculaRest hilft, die vorgeschriebene Position einzuhalten und entlastet den Nacken.",
-    items: [
-      "Bequeme Positionshaltung",
-      "Weniger Nackenbelastung",
-      "Für Bett und Sessel geeignet",
-    ],
+    title1: "OculaRest",
+    title2: "begleitet Sie",
+    title3: "während Ihrer gesamten Genesung",
+    p1: "OculaRest wurde entwickelt, um den spezifischen Anforderungen der Genesung nach einer Vitrektomie gerecht zu werden.",
+    p2: "Es hilft, die von Ihrem Chirurgen vorgeschriebene Position beizubehalten und gleichzeitig den Komfort Tag und Nacht zu verbessern.",
+    eyeAlt: "Augenillustration",
   },
-
   it: {
-    title1: "Un supporto pensato per",
-    title2: "la convalescenza post-operatoria",
-    subtitle:
-      "OculaRest aiuta a mantenere la posizione prescritta alleviando la tensione cervicale.",
-    items: [
-      "Mantenimento confortevole della posizione",
-      "Riduzione della tensione cervicale",
-      "Compatibile con letto e poltrona",
-    ],
+    title1: "OculaRest",
+    title2: "ti accompagna",
+    title3: "durante tutta la tua convalescenza",
+    p1: "OculaRest è stato progettato per soddisfare i vincoli specifici della convalescenza dopo vitrectomia.",
+    p2: "Aiuta a mantenere la posizione prescritta dal chirurgo migliorando al contempo il comfort, giorno e notte.",
+    eyeAlt: "Illustrazione dell'occhio",
   },
-
   nl: {
-    title1: "Ondersteuning ontworpen voor",
-    title2: "postoperatief herstel",
-    subtitle:
-      "OculaRest helpt de voorgeschreven houding aan te houden en ontlast de nek.",
-    items: [
-      "Comfortabele houding",
-      "Minder nekbelasting",
-      "Geschikt voor bed en stoel",
-    ],
+    title1: "OculaRest",
+    title2: "ondersteunt u",
+    title3: "tijdens uw gehele herstel",
+    p1: "OculaRest is ontworpen om te voldoen aan de specifieke beperkingen van herstel na vitrectomie.",
+    p2: "Het helpt de door uw chirurg voorgeschreven positie te behouden en verbetert tegelijkertijd het comfort, dag en nacht.",
+    eyeAlt: "Oogillustratie",
   },
 };
 
-/* ======================================================
-   COMPONENT
-====================================================== */
 export default function RecoverySupportSection({ locale }: Props) {
-  // ✅ fallback SAFE
-  const t = TRANSLATIONS[locale] ?? TRANSLATIONS.fr;
+  const t = COPY[locale];
 
   return (
-    <section className="recovery-support">
+    <section className="rs">
       <div className="rs-inner">
+        {/* Image montage du dessus */}
+        <Image
+          src={TOP_MONTAGE_IMG}
+          alt=""
+          width={1200}
+          height={260}
+          className="rs-top-img"
+          priority
+        />
+
+        {/* Titre (au-dessus) */}
         <h2 className="rs-title">
           <span className="rs-brand">
             {t.title1}
             <Image
               src={MINI_LOGO}
               alt="OculaRest"
-              width={26}
-              height={26}
+              width={20}
+              height={20}
+              className="rs-mini"
             />
-          </span>
-          <br />
+          </span>{" "}
           {t.title2}
+          <br />
+          <span className="rs-accent">{t.title3}</span>
         </h2>
 
-        <p className="rs-subtitle">{t.subtitle}</p>
+        {/* IMAGE + PARAGRAPHES PAR-DESSUS */}
+        <div className="rs-eye">
+          <Image src={EYE_IMG} alt={t.eyeAlt} fill className="rs-eye-img" />
 
-        <ul className="rs-list">
-          {t.items.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ul>
+          <div className="rs-eye-text">
+            <p className="rs-pill">{t.p1}</p>
+            <p className="rs-pill">{t.p2}</p>
+          </div>
+        </div>
       </div>
     </section>
   );
