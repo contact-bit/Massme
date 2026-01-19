@@ -1,8 +1,9 @@
 import "./WhyDifferentSection.css";
 import Image from "next/image";
+import { Locale } from "@/lib/i18n";
 
 type Props = {
-  locale: "fr" | "en";
+  locale: Locale;
 };
 
 const MINI_LOGO =
@@ -11,7 +12,12 @@ const MINI_LOGO =
 const TOP_MONTAGE_IMG =
   "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/b4966255-a6dc-4fb9-4d9e-4934e8aaa400/public";
 
-const COPY = {
+const COPY: Record<Locale, {
+  titleA: string;
+  brand: string;
+  titleB: string;
+  bullets: string[];
+}> = {
   fr: {
     titleA: "Pourquoi",
     brand: "OculaRest",
@@ -36,7 +42,55 @@ const COPY = {
       "A durable alternative to renting equipment",
     ],
   },
-} as const;
+  es: {
+    titleA: "Por qué",
+    brand: "OculaRest",
+    titleB: "es diferente",
+    bullets: [
+      "Soporte fiable para la posición postoperatoria prescrita",
+      "Ayuda a reducir las molestias cervicales y musculares",
+      "Mayor comodidad durante todo el período de recuperación",
+      "Apoya la recuperación en mejores condiciones",
+      "Una alternativa duradera al alquiler de equipos",
+    ],
+  },
+  de: {
+    titleA: "Warum",
+    brand: "OculaRest",
+    titleB: "anders ist",
+    bullets: [
+      "Zuverlässige Unterstützung für die vorgeschriebene postoperative Position",
+      "Hilft, Nacken- und Muskelbeschwerden zu reduzieren",
+      "Verbesserter Komfort während der gesamten Erholungsphase",
+      "Unterstützt die Genesung unter besseren Bedingungen",
+      "Eine dauerhafte Alternative zur Miete von Ausrüstung",
+    ],
+  },
+  it: {
+    titleA: "Perché",
+    brand: "OculaRest",
+    titleB: "è diverso",
+    bullets: [
+      "Supporto affidabile per la posizione post-operatoria prescritta",
+      "Aiuta a ridurre il disagio cervicale e muscolare",
+      "Maggiore comfort durante tutto il periodo di recupero",
+      "Supporta il recupero in condizioni migliori",
+      "Un'alternativa durevole al noleggio di attrezzature",
+    ],
+  },
+  nl: {
+    titleA: "Waarom",
+    brand: "OculaRest",
+    titleB: "anders is",
+    bullets: [
+      "Betrouwbare ondersteuning voor de voorgeschreven postoperatieve positie",
+      "Helpt nek- en spierongemak te verminderen",
+      "Verbeterd comfort gedurende de hele herstelperiode",
+      "Ondersteunt herstel onder betere omstandigheden",
+      "Een duurzaam alternatief voor het huren van apparatuur",
+    ],
+  },
+};
 
 export default function WhyDifferentSection({ locale }: Props) {
   const t = COPY[locale];

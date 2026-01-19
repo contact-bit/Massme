@@ -1,97 +1,163 @@
 import "./StepsSection.css";
-import Image from "next/image";
+import type { Locale } from "@/lib/i18n";
 
 type Props = {
-  locale: "fr" | "en";
+  locale: Locale;
 };
 
-const MINI_LOGO =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2c995c35-dbef-45d8-a0b2-70075a919800/public";
+type Dict = {
+  titleA: string;
+  titleB: string;
+  steps: {
+    title: string;
+    desc: string;
+  }[];
+};
 
-const COPY = {
+/* ======================================================
+   TRANSLATIONS — STEPS
+====================================================== */
+const TRANSLATIONS: Record<Locale, Dict> = {
   fr: {
-    titleA: "Votre accompagnement en",
-    titleB: "3 étapes",
+    titleA: "Comment",
+    titleB: "ça fonctionne",
     steps: [
       {
-        label: "Étape 1:",
-        text: "Vous rentrez chez vous après votre opération et devez respecter la position bulle.",
+        title: "Installation simple",
+        desc: "Installez OculaRest facilement sur votre lit ou fauteuil.",
       },
       {
-        label: "Étape 2:",
-        textBefore: "Vous installez ",
-        brand: "OculaRest",
-        textAfter: " en quelques secondes, sur votre lit ou sur une table.",
+        title: "Position prescrite",
+        desc: "Adoptez la position recommandée par votre chirurgien.",
       },
       {
-        label: "Étape 3:",
-        text: "Vous maintenez la position prescrite sans souffrir, tout en pouvant dormir, manger, lire ou vous reposer.",
+        title: "Convalescence sereine",
+        desc: "Récupérez plus confortablement en réduisant les tensions.",
       },
     ],
   },
-  en: {
-    titleA: "Your support in",
-    titleB: "3 steps",
-    steps: [
-      {
-        label: "Step 1:",
-        text: "You return home after your surgery and must follow the face-down position instructions.",
-      },
-      {
-        label: "Step 2:",
-        textBefore: "You set up ",
-        brand: "OculaRest",
-        textAfter: " in seconds, on your bed or on a table.",
-      },
-      {
-        label: "Step 3:",
-        text: "You maintain the prescribed position more comfortably while still being able to rest, read, and recover.",
-      },
-    ],
-  },
-} as const;
 
+  en: {
+    titleA: "How",
+    titleB: "it works",
+    steps: [
+      {
+        title: "Easy setup",
+        desc: "Quickly install OculaRest on your bed or chair.",
+      },
+      {
+        title: "Prescribed position",
+        desc: "Maintain the position recommended by your surgeon.",
+      },
+      {
+        title: "Smooth recovery",
+        desc: "Recover comfortably while reducing strain.",
+      },
+    ],
+  },
+
+  es: {
+    titleA: "Cómo",
+    titleB: "funciona",
+    steps: [
+      {
+        title: "Instalación sencilla",
+        desc: "Instale OculaRest fácilmente en su cama o sillón.",
+      },
+      {
+        title: "Posición prescrita",
+        desc: "Mantenga la posición recomendada por su cirujano.",
+      },
+      {
+        title: "Recuperación cómoda",
+        desc: "Recupérese con mayor confort reduciendo la tensión.",
+      },
+    ],
+  },
+
+  de: {
+    titleA: "So",
+    titleB: "funktioniert es",
+    steps: [
+      {
+        title: "Einfache Installation",
+        desc: "OculaRest lässt sich leicht auf Bett oder Sessel montieren.",
+      },
+      {
+        title: "Vorgeschriebene Position",
+        desc: "Halten Sie die vom Chirurgen empfohlene Position ein.",
+      },
+      {
+        title: "Entspannte Genesung",
+        desc: "Erholen Sie sich komfortabler mit weniger Belastung.",
+      },
+    ],
+  },
+
+  it: {
+    titleA: "Come",
+    titleB: "funziona",
+    steps: [
+      {
+        title: "Installazione semplice",
+        desc: "Installa facilmente OculaRest su letto o poltrona.",
+      },
+      {
+        title: "Posizione prescritta",
+        desc: "Mantieni la posizione consigliata dal chirurgo.",
+      },
+      {
+        title: "Recupero sereno",
+        desc: "Recupera in modo più confortevole riducendo le tensioni.",
+      },
+    ],
+  },
+
+  nl: {
+    titleA: "Hoe",
+    titleB: "het werkt",
+    steps: [
+      {
+        title: "Eenvoudige installatie",
+        desc: "Installeer OculaRest eenvoudig op bed of stoel.",
+      },
+      {
+        title: "Voorgeschreven houding",
+        desc: "Houd de door de chirurg aanbevolen houding aan.",
+      },
+      {
+        title: "Comfortabel herstel",
+        desc: "Herstel comfortabel met minder belasting.",
+      },
+    ],
+  },
+};
+
+/* ======================================================
+   COMPONENT
+====================================================== */
 export default function StepsSection({ locale }: Props) {
-  const t = COPY[locale];
+  // ✅ FALLBACK SÉCURISÉ
+  const t = TRANSLATIONS[locale] ?? TRANSLATIONS.fr;
 
   return (
     <section className="steps">
       <div className="steps-inner">
         <h3 className="steps-title">
-          {t.titleA} <span className="steps-accent">{t.titleB}:</span>
+          {t.titleA}{" "}
+          <span className="steps-accent">{t.titleB}</span>
         </h3>
 
         <div className="steps-list">
-          {/* Step 1 */}
-          <div className="step">
-            <div className="step-label">{t.steps[0].label}</div>
-            <p className="step-text">{t.steps[0].text}</p>
-          </div>
-
-          {/* Step 2 */}
-          <div className="step">
-            <div className="step-label">{t.steps[1].label}</div>
-            <p className="step-text">
-              {t.steps[1].textBefore}
-              <span className="step-brand">
-                {t.steps[1].brand}
-                <Image
-                  src={MINI_LOGO}
-                  alt="OculaRest"
-                  width={18}
-                  height={18}
-                  className="step-mini"
-                />
-              </span>
-              {t.steps[1].textAfter}
-            </p>
-          </div>
-
-          {/* Step 3 */}
-          <div className="step">
-            <div className="step-label">{t.steps[2].label}</div>
-            <p className="step-text">{t.steps[2].text}</p>
-          </div>
+          {t.steps.map((step, i) => (
+            <div key={i} className="step-card">
+              <div className="step-index">{i + 1}</div>
+              <div className="step-content">
+                <h4 className="step-title">{step.title}</h4>
+                <p className="step-desc">{step.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

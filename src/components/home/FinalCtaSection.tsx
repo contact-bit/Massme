@@ -1,14 +1,23 @@
 import "./FinalCtaSection.css";
 import Image from "next/image";
+import { Locale } from "@/lib/i18n";
 
 type Props = {
-  locale: "fr" | "en";
+  locale: Locale;
 };
 
 const MINI_LOGO =
   "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2c995c35-dbef-45d8-a0b2-70075a919800/public";
 
-const COPY = {
+const COPY: Record<Locale, {
+  title: string;
+  pBefore: string;
+  pAfter: string;
+  primary: string;
+  secondary: string;
+  orderHref: string;
+  contactHref: string;
+}> = {
   fr: {
     title: "Prêt à être accompagné pendant votre convalescence ?",
     pBefore: "OculaRest",
@@ -29,7 +38,47 @@ const COPY = {
     orderHref: "/en/products",
     contactHref: "/en/contact",
   },
-} as const;
+  es: {
+    title: "¿Listo para recibir apoyo durante tu convalecencia?",
+    pBefore: "OculaRest",
+    pAfter:
+      "te ayuda a atravesar este período postoperatorio en las mejores condiciones posibles, combinando soporte postural, comodidad y tranquilidad.",
+    primary: "Pedir OculaRest",
+    secondary: "Contáctanos para recibir asesoramiento",
+    orderHref: "/es/products",
+    contactHref: "/es/contact",
+  },
+  de: {
+    title: "Bereit, während Ihrer Genesung unterstützt zu werden?",
+    pBefore: "OculaRest",
+    pAfter:
+      "hilft Ihnen, diese postoperative Phase unter den bestmöglichen Bedingungen zu durchlaufen und kombiniert Haltungsunterstützung, Komfort und Seelenfrieden.",
+    primary: "OculaRest bestellen",
+    secondary: "Kontaktieren Sie uns für Beratung",
+    orderHref: "/de/products",
+    contactHref: "/de/contact",
+  },
+  it: {
+    title: "Pronto a essere supportato durante la tua convalescenza?",
+    pBefore: "OculaRest",
+    pAfter:
+      "ti aiuta ad attraversare questo periodo post-operatorio nelle migliori condizioni possibili, combinando supporto posturale, comfort e serenità.",
+    primary: "Ordina OculaRest",
+    secondary: "Contattaci per ricevere consigli",
+    orderHref: "/it/products",
+    contactHref: "/it/contact",
+  },
+  nl: {
+    title: "Klaar om ondersteund te worden tijdens je herstel?",
+    pBefore: "OculaRest",
+    pAfter:
+      "helpt je door deze postoperatieve periode onder de best mogelijke omstandigheden—met houdingsondersteuning, comfort en gemoedsrust.",
+    primary: "Bestel OculaRest",
+    secondary: "Neem contact met ons op voor advies",
+    orderHref: "/nl/products",
+    contactHref: "/nl/contact",
+  },
+};
 
 export default function FinalCtaSection({ locale }: Props) {
   const t = COPY[locale];

@@ -1,75 +1,85 @@
 import "./CredibilityStrip.css";
-import Image from "next/image";
+import type { Locale } from "@/lib/i18n";
 
 type Props = {
-  locale: "fr" | "en";
+  locale: Locale;
 };
 
-const OCULAREST_SMALL_LOGO =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2c995c35-dbef-45d8-a0b2-70075a919800/public";
+type Dict = {
+  line1_left: string;
+  brand: string;
+  line1_right: string;
+  line2: string;
+};
 
-const CE_LOGO_URL =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/3f902801-6b1c-45b3-b2f4-bb3e59e96900/public";
-
-const CONTENT = {
+/* ======================================================
+   TRANSLATIONS
+====================================================== */
+const TRANSLATIONS: Record<Locale, Dict> = {
   fr: {
-    line1_left: "Coussin vitrectomie",
-    brand: "OculaRest",
-    line2: "Le 1er ",
-    highlight: "DISPOSITIF MÉDICAL certifié CE",
-    line2_end: " pour la convalescence après vitrectomie.",
-    ceAlt: "Certification CE",
+    line1_left: "Déjà utilisé dans",
+    brand: "les hôpitaux",
+    line1_right: "et cliniques européennes",
+    line2: "Dispositif médical certifié • Conçu avec des spécialistes",
   },
-  en: {
-    line1_left: "Vitrectomy cushion",
-    brand: "OculaRest",
-    line2: "The first ",
-    highlight: "CE-certified medical device",
-    line2_end: " for recovery after vitrectomy.",
-    ceAlt: "CE certification",
-  },
-} as const;
 
+  en: {
+    line1_left: "Already used in",
+    brand: "hospitals",
+    line1_right: "and European clinics",
+    line2: "Certified medical device • Designed with specialists",
+  },
+
+  es: {
+    line1_left: "Ya utilizado en",
+    brand: "hospitales",
+    line1_right: "y clínicas europeas",
+    line2: "Dispositivo médico certificado • Diseñado con especialistas",
+  },
+
+  de: {
+    line1_left: "Bereits im Einsatz in",
+    brand: "Krankenhäusern",
+    line1_right: "und europäischen Kliniken",
+    line2: "Zertifiziertes Medizinprodukt • Entwickelt mit Spezialisten",
+  },
+
+  it: {
+    line1_left: "Già utilizzato in",
+    brand: "ospedali",
+    line1_right: "e cliniche europee",
+    line2: "Dispositivo medico certificato • Progettato con specialisti",
+  },
+
+  nl: {
+    line1_left: "Reeds gebruikt in",
+    brand: "ziekenhuizen",
+    line1_right: "en Europese klinieken",
+    line2: "Gecertificeerd medisch hulpmiddel • Ontworpen met specialisten",
+  },
+};
+
+/* ======================================================
+   COMPONENT
+====================================================== */
 export default function CredibilityStrip({ locale }: Props) {
-  const t = CONTENT[locale];
+  // ✅ fallback SAFE (ne plantera jamais)
+  const t = TRANSLATIONS[locale] ?? TRANSLATIONS.fr;
 
   return (
-    <section className="cred">
-      <div className="cred-inner">
+    <section className="credibility-strip">
+      <div className="credibility-inner">
         {/* Ligne 1 */}
         <div className="cred-line1">
           <span className="cred-muted">{t.line1_left}</span>
           <span className="cred-brand">
             <span className="cred-brand-text">{t.brand}</span>
-            <span className="cred-brand-logo">
-              <Image
-                src={OCULAREST_SMALL_LOGO}
-                alt="OculaRest"
-                width={22}
-                height={22}
-                className="cred-logo-img"
-              />
-            </span>
           </span>
+          <span className="cred-muted">{t.line1_right}</span>
         </div>
 
         {/* Ligne 2 */}
-        <p className="cred-line2">
-          {t.line2}
-          <span className="cred-highlight">{t.highlight}</span>
-          {t.line2_end}
-        </p>
-
-        {/* Logo CE */}
-        <div className="cred-ce">
-          <Image
-            src={CE_LOGO_URL}
-            alt={t.ceAlt}
-            width={44}
-            height={44}
-            className="cred-ce-img"
-          />
-        </div>
+        <div className="cred-line2">{t.line2}</div>
       </div>
     </section>
   );

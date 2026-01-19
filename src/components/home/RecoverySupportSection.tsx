@@ -1,80 +1,129 @@
 import "./RecoverySupportSection.css";
 import Image from "next/image";
-
-type Props = {
-  locale: "fr" | "en";
-};
+import type { Locale } from "@/lib/i18n";
 
 const MINI_LOGO =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2c995c35-dbef-45d8-a0b2-70075a919800/public";
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2456d5ba-af23-4219-7115-f54286a7c600/public";
 
-const TOP_MONTAGE_IMG =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/e509bc79-1a70-43f9-163e-daa46dc41d00/public";
+type Props = {
+  locale: Locale;
+};
 
-const EYE_IMG =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/09b2eaac-25e1-4b88-52b6-7f209695d300/public";
+type Dict = {
+  title1: string;
+  title2: string;
+  subtitle: string;
+  items: string[];
+};
 
-const COPY = {
+/* ======================================================
+   TRANSLATIONS — RECOVERY SUPPORT
+====================================================== */
+const TRANSLATIONS: Record<Locale, Dict> = {
   fr: {
-    title1: "OculaRest",
-    title2: "vous accompagne",
-    title3: "pendant toute votre convalescence",
-    p1: "OculaRest a été conçu pour répondre précisément aux contraintes de la convalescence après vitrectomie.",
-    p2: "Il permet de maintenir la position prescrite par votre chirurgien tout en améliorant votre confort, de jour comme de nuit.",
-    eyeAlt: "Illustration œil",
+    title1: "Un accompagnement pensé pour",
+    title2: "la convalescence post-opératoire",
+    subtitle:
+      "OculaRest aide à maintenir la position prescrite tout en réduisant les douleurs cervicales.",
+    items: [
+      "Maintien confortable de la position",
+      "Réduction des tensions cervicales",
+      "Compatible lit et fauteuil",
+    ],
   },
-  en: {
-    title1: "OculaRest",
-    title2: "supports you",
-    title3: "throughout your recovery",
-    p1: "OculaRest was designed to meet the specific constraints of recovery after vitrectomy.",
-    p2: "It helps maintain the position prescribed by your surgeon while improving comfort, day and night.",
-    eyeAlt: "Eye illustration",
-  },
-} as const;
 
+  en: {
+    title1: "Support designed for",
+    title2: "post-operative recovery",
+    subtitle:
+      "OculaRest helps maintain the prescribed position while reducing neck strain.",
+    items: [
+      "Comfortable position support",
+      "Reduced neck tension",
+      "Bed and chair compatible",
+    ],
+  },
+
+  es: {
+    title1: "Un acompañamiento diseñado para",
+    title2: "la recuperación postoperatoria",
+    subtitle:
+      "OculaRest ayuda a mantener la posición prescrita reduciendo la tensión cervical.",
+    items: [
+      "Mantenimiento cómodo de la posición",
+      "Reducción de la tensión cervical",
+      "Compatible con cama y sillón",
+    ],
+  },
+
+  de: {
+    title1: "Unterstützung für",
+    title2: "die postoperative Genesung",
+    subtitle:
+      "OculaRest hilft, die vorgeschriebene Position einzuhalten und entlastet den Nacken.",
+    items: [
+      "Bequeme Positionshaltung",
+      "Weniger Nackenbelastung",
+      "Für Bett und Sessel geeignet",
+    ],
+  },
+
+  it: {
+    title1: "Un supporto pensato per",
+    title2: "la convalescenza post-operatoria",
+    subtitle:
+      "OculaRest aiuta a mantenere la posizione prescritta alleviando la tensione cervicale.",
+    items: [
+      "Mantenimento confortevole della posizione",
+      "Riduzione della tensione cervicale",
+      "Compatibile con letto e poltrona",
+    ],
+  },
+
+  nl: {
+    title1: "Ondersteuning ontworpen voor",
+    title2: "postoperatief herstel",
+    subtitle:
+      "OculaRest helpt de voorgeschreven houding aan te houden en ontlast de nek.",
+    items: [
+      "Comfortabele houding",
+      "Minder nekbelasting",
+      "Geschikt voor bed en stoel",
+    ],
+  },
+};
+
+/* ======================================================
+   COMPONENT
+====================================================== */
 export default function RecoverySupportSection({ locale }: Props) {
-  const t = COPY[locale];
+  // ✅ fallback SAFE
+  const t = TRANSLATIONS[locale] ?? TRANSLATIONS.fr;
 
   return (
-    <section className="rs">
+    <section className="recovery-support">
       <div className="rs-inner">
-        {/* Image montage du dessus */}
-        <Image
-          src={TOP_MONTAGE_IMG}
-          alt=""
-          width={1200}
-          height={260}
-          className="rs-top-img"
-          priority
-        />
-
-        {/* Titre (au-dessus) */}
         <h2 className="rs-title">
           <span className="rs-brand">
             {t.title1}
             <Image
               src={MINI_LOGO}
               alt="OculaRest"
-              width={20}
-              height={20}
-              className="rs-mini"
+              width={26}
+              height={26}
             />
-          </span>{" "}
-          {t.title2}
+          </span>
           <br />
-          <span className="rs-accent">{t.title3}</span>
+          {t.title2}
         </h2>
 
-        {/* IMAGE + PARAGRAPHES PAR-DESSUS */}
-        <div className="rs-eye">
-          <Image src={EYE_IMG} alt={t.eyeAlt} fill className="rs-eye-img" />
+        <p className="rs-subtitle">{t.subtitle}</p>
 
-          <div className="rs-eye-text">
-            <p className="rs-pill">{t.p1}</p>
-            <p className="rs-pill">{t.p2}</p>
-          </div>
-        </div>
+        <ul className="rs-list">
+          {t.items.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
       </div>
     </section>
   );

@@ -1085,7 +1085,6 @@ export default function AdminOrdersPage() {
             <div style={{ flex: 1, minWidth: 280 }}>
               <h1 className="title">📦 Commandes</h1>
               <div className="sub">
-                Vue admin propre + lisible (CSS inclus dans la page).
               </div>
             </div>
 
