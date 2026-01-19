@@ -2,6 +2,10 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+/* =====================================================
+   I18N CONTENT
+===================================================== */
+
 const CONTENT = {
   fr: {
     title: "Contact",
@@ -14,6 +18,7 @@ const CONTENT = {
     },
     emailLabel: "Email :",
   },
+
   en: {
     title: "Contact",
     subtitle: "We're here to help you.",
@@ -25,7 +30,61 @@ const CONTENT = {
     },
     emailLabel: "Email:",
   },
+
+  it: {
+    title: "Contatto",
+    subtitle: "Siamo a tua disposizione.",
+    form: {
+      name: "Nome",
+      email: "Email",
+      message: "Messaggio",
+      submit: "Invia",
+    },
+    emailLabel: "Email:",
+  },
+
+  es: {
+    title: "Contacto",
+    subtitle: "Estamos a tu disposición.",
+    form: {
+      name: "Nombre",
+      email: "Email",
+      message: "Mensaje",
+      submit: "Enviar",
+    },
+    emailLabel: "Email:",
+  },
+
+  de: {
+    title: "Kontakt",
+    subtitle: "Wir sind für Sie da.",
+    form: {
+      name: "Name",
+      email: "E-Mail",
+      message: "Nachricht",
+      submit: "Senden",
+    },
+    emailLabel: "E-Mail:",
+  },
+
+  nl: {
+    title: "Contact",
+    subtitle: "Wij staan voor u klaar.",
+    form: {
+      name: "Naam",
+      email: "E-mail",
+      message: "Bericht",
+      submit: "Verzenden",
+    },
+    emailLabel: "E-mail:",
+  },
 } as const;
+
+type Locale = keyof typeof CONTENT;
+
+/* =====================================================
+   PAGE
+===================================================== */
 
 export default async function ContactPage({
   params,
@@ -34,33 +93,50 @@ export default async function ContactPage({
 }) {
   const { locale } = await params;
 
-  const t = CONTENT[locale as "fr" | "en"];
+  const t = CONTENT[locale as Locale];
   if (!t) return notFound();
 
   return (
     <main className="contact-page">
-
       {/* HEADER */}
       <header className="contact-header">
         <h1>{t.title}</h1>
         <p>{t.subtitle}</p>
       </header>
 
-      {/* FORMULAIRE */}
+      {/* FORM */}
       <form className="contact-form" method="POST" action="#">
         <div className="contact-field">
-          <label>{t.form.name}</label>
-          <input type="text" name="name" placeholder={t.form.name} />
+          <label htmlFor="name">{t.form.name}</label>
+          <input
+            id="name"
+            type="text"
+            name="name"
+            placeholder={t.form.name}
+            required
+          />
         </div>
 
         <div className="contact-field">
-          <label>{t.form.email}</label>
-          <input type="email" name="email" placeholder={t.form.email} />
+          <label htmlFor="email">{t.form.email}</label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            placeholder={t.form.email}
+            required
+          />
         </div>
 
         <div className="contact-field">
-          <label>{t.form.message}</label>
-          <textarea name="message" placeholder={t.form.message} />
+          <label htmlFor="message">{t.form.message}</label>
+          <textarea
+            id="message"
+            name="message"
+            placeholder={t.form.message}
+            rows={5}
+            required
+          />
         </div>
 
         <button type="submit" className="contact-submit">
@@ -68,9 +144,9 @@ export default async function ContactPage({
         </button>
       </form>
 
-      {/* EMAIL DIRECT */}
+      {/* DIRECT EMAIL */}
       <div className="contact-email">
-        {t.emailLabel}
+        <span>{t.emailLabel}</span>{" "}
         <a href="mailto:contact@massme.fr">contact@massme.fr</a>
       </div>
     </main>
