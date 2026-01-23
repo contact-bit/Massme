@@ -1,30 +1,15 @@
 "use client";
 
 import React from "react";
-
-// ✅ IMPORT ABSOLU (IMPORTANT)
 import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
 
-/* =====================================================
-   TYPES
-===================================================== */
-
 type Locale = "fr" | "en";
-
-export type RelayProviderKey =
-  | "mondialrelay"
-  | "ups"
-  | "colissimo";
 
 type RelayProviderConfig = {
   label: Record<Locale, string>;
   choose: Record<Locale, string>;
   Component: React.FC<{ onSelect: (p: any) => void }>;
 };
-
-/* =====================================================
-   PLACEHOLDER (UPS / COLISSIMO)
-===================================================== */
 
 const ComingSoon =
   (name: string): RelayProviderConfig["Component"] =>
@@ -35,12 +20,8 @@ const ComingSoon =
       </div>
     );
 
-/* =====================================================
-   PROVIDERS
-===================================================== */
-
 export const RELAY_PROVIDERS: Record<
-  RelayProviderKey,
+  RelayProvider,
   RelayProviderConfig
 > = {
   mondialrelay: {
@@ -55,18 +36,6 @@ export const RELAY_PROVIDERS: Record<
     Component: RelayPointMondialRelay,
   },
 
-  ups: {
-    label: {
-      fr: "UPS Access Point",
-      en: "UPS Access Point",
-    },
-    choose: {
-      fr: "Choisir un point relais UPS",
-      en: "Choose a UPS pickup point",
-    },
-    Component: ComingSoon("UPS"),
-  },
-
   colissimo: {
     label: {
       fr: "Point relais Colissimo",
@@ -77,5 +46,29 @@ export const RELAY_PROVIDERS: Record<
       en: "Choose a Colissimo pickup point",
     },
     Component: ComingSoon("Colissimo"),
+  },
+
+  "relais-colis": {
+    label: {
+      fr: "Relais Colis",
+      en: "Relais Colis",
+    },
+    choose: {
+      fr: "Choisir un point Relais Colis",
+      en: "Choose a Relais Colis pickup point",
+    },
+    Component: ComingSoon("Relais Colis"),
+  },
+
+  pickup: {
+    label: {
+      fr: "Point Pickup",
+      en: "Pickup point",
+    },
+    choose: {
+      fr: "Choisir un point Pickup",
+      en: "Choose a Pickup point",
+    },
+    Component: ComingSoon("Pickup"),
   },
 };
