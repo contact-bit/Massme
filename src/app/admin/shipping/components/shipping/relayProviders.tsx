@@ -37,18 +37,6 @@ export const RELAY_PROVIDERS: Record<
     Component: RelayPointMondialRelay,
   },
 
-  colissimo: {
-    label: {
-      fr: "Point relais Colissimo",
-      en: "Colissimo pickup point",
-    },
-    choose: {
-      fr: "Choisir un point relais Colissimo",
-      en: "Choose a Colissimo pickup point",
-    },
-    Component: ComingSoon("Colissimo"),
-  },
-
   pickup: {
     label: {
       fr: "Point Pickup",
@@ -59,6 +47,18 @@ export const RELAY_PROVIDERS: Record<
       en: "Choose a Pickup point",
     },
     Component: ComingSoon("Pickup"),
+  },
+
+  colissimo: {
+    label: {
+      fr: "Point relais Colissimo",
+      en: "Colissimo pickup point",
+    },
+    choose: {
+      fr: "Choisir un point relais Colissimo",
+      en: "Choose a Colissimo pickup point",
+    },
+    Component: ComingSoon("Colissimo"),
   },
 
   "relais-colis": {

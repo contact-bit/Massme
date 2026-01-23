@@ -3,6 +3,7 @@
 import type { RelayProvider } from "@/components/shipping/types";
 import type { Locale } from "@/lib/i18n";
 import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
+import React from "react";
 
 /* =====================================================
    TYPES
@@ -15,13 +16,25 @@ type RelayProviderConfig = {
 };
 
 /* =====================================================
-   REGISTRY
+   PLACEHOLDER
+===================================================== */
+const ComingSoon =
+  (name: string): RelayProviderConfig["Component"] =>
+  () =>
+    (
+      <div className="p-4 text-sm rounded bg-yellow-50 text-yellow-800">
+        🚧 {name} bientôt disponible
+      </div>
+    );
+
+/* =====================================================
+   REGISTRY — 🔑 DOIT MATCH RelayProvider
 ===================================================== */
 export const RELAY_PROVIDERS: Record<
   RelayProvider,
   RelayProviderConfig
 > = {
-  mondial_relay: {
+  mondialrelay: {
     label: {
       fr: "Point relais Mondial Relay",
       en: "Mondial Relay pickup point",
@@ -49,25 +62,22 @@ export const RELAY_PROVIDERS: Record<
     Component: RelayPointMondialRelay,
   },
 
-  /* ----------------------------------
-     PROVIDERS À VENIR
-  ---------------------------------- */
-  ups: {
+  pickup: {
     label: {
-      fr: "UPS Access Point",
-      en: "UPS Access Point",
-      es: "UPS Access Point",
-      de: "UPS Access Point",
-      it: "UPS Access Point",
-      nl: "UPS Access Point",
+      fr: "Point relais Pickup",
+      en: "Pickup point",
+      es: "Punto Pickup",
+      de: "Pickup Abholstelle",
+      it: "Punto Pickup",
+      nl: "Pickup afhaalpunt",
     },
     choose: {
-      fr: "Choisir un point relais UPS",
-      en: "Choose a UPS pickup point",
-      es: "Elegir un punto UPS",
-      de: "UPS Abholstelle auswählen",
-      it: "Scegli un punto UPS",
-      nl: "Kies een UPS afhaalpunt",
+      fr: "Choisir un point relais Pickup",
+      en: "Choose a Pickup point",
+      es: "Elegir un punto Pickup",
+      de: "Pickup Abholstelle auswählen",
+      it: "Scegli un punto Pickup",
+      nl: "Kies een Pickup afhaalpunt",
     },
     selected: {
       fr: "Point relais sélectionné",
@@ -77,11 +87,7 @@ export const RELAY_PROVIDERS: Record<
       it: "Punto selezionato",
       nl: "Gekozen afhaalpunt",
     },
-    Component: () => (
-      <div className="p-4 text-sm rounded bg-yellow-50 text-yellow-800">
-        🚧 UPS bientôt disponible
-      </div>
-    ),
+    Component: ComingSoon("Pickup"),
   },
 
   colissimo: {
@@ -109,14 +115,10 @@ export const RELAY_PROVIDERS: Record<
       it: "Punto selezionato",
       nl: "Gekozen afhaalpunt",
     },
-    Component: () => (
-      <div className="p-4 text-sm rounded bg-yellow-50 text-yellow-800">
-        🚧 Colissimo bientôt disponible
-      </div>
-    ),
+    Component: ComingSoon("Colissimo"),
   },
 
-  relais_colis: {
+  "relais-colis": {
     label: {
       fr: "Relais Colis",
       en: "Relais Colis",
@@ -141,10 +143,6 @@ export const RELAY_PROVIDERS: Record<
       it: "Punto selezionato",
       nl: "Gekozen afhaalpunt",
     },
-    Component: () => (
-      <div className="p-4 text-sm rounded bg-yellow-50 text-yellow-800">
-        🚧 Relais Colis bientôt disponible
-      </div>
-    ),
+    Component: ComingSoon("Relais Colis"),
   },
 };
