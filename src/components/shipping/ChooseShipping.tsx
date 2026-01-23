@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ShippingMethod, RelayPoint } from "@/components/shipping/types";
-import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
+import type {
+  ShippingMethod,
+  RelayPoint,
+} from "@/components/shipping/types";
+import { RELAY_PROVIDERS } from "@/components/shipping/relayProviders";
 import type { Locale } from "@/lib/i18n";
 import { computePrice } from "@/lib/pricing";
 
@@ -20,65 +23,44 @@ type ChooseShippingProps = {
 };
 
 /* =====================================================
-   UI TEXT
+   UI TEXT (GÉNÉRIQUE, PAS RELAY)
 ===================================================== */
 const UI: Record<
   Locale,
   {
     title: string;
     subtitle: string;
-    relayBadge: string;
-    relayBlockTitle: string;
-    selectedRelayTitle: string;
     vatIncluded: string;
   }
 > = {
   fr: {
     title: "Méthode de livraison",
     subtitle: "Choisissez votre mode de livraison :",
-    relayBadge: "Point relais Mondial Relay",
-    relayBlockTitle: "Choisir un point relais Mondial Relay",
-    selectedRelayTitle: "Point relais sélectionné",
     vatIncluded: "TVA incluse",
   },
   en: {
     title: "Shipping method",
     subtitle: "Choose your shipping method:",
-    relayBadge: "Mondial Relay pickup point",
-    relayBlockTitle: "Choose a Mondial Relay pickup point",
-    selectedRelayTitle: "Selected pickup point",
     vatIncluded: "VAT included",
   },
   es: {
     title: "Método de envío",
     subtitle: "Elige tu método de envío:",
-    relayBadge: "Punto de recogida Mondial Relay",
-    relayBlockTitle: "Elegir un punto de recogida Mondial Relay",
-    selectedRelayTitle: "Punto seleccionado",
     vatIncluded: "IVA incluido",
   },
   de: {
     title: "Versandart",
     subtitle: "Wähle deine Versandart:",
-    relayBadge: "Mondial Relay Abholstelle",
-    relayBlockTitle: "Mondial Relay Abholstelle auswählen",
-    selectedRelayTitle: "Ausgewählte Abholstelle",
     vatIncluded: "MwSt. enthalten",
   },
   it: {
     title: "Metodo di spedizione",
     subtitle: "Scegli il tuo metodo di spedizione:",
-    relayBadge: "Punto di ritiro Mondial Relay",
-    relayBlockTitle: "Scegli un punto di ritiro Mondial Relay",
-    selectedRelayTitle: "Punto selezionato",
     vatIncluded: "IVA inclusa",
   },
   nl: {
     title: "Verzendmethode",
     subtitle: "Kies je verzendmethode:",
-    relayBadge: "Mondial Relay afhaalpunt",
-    relayBlockTitle: "Kies een Mondial Relay afhaalpunt",
-    selectedRelayTitle: "Gekozen afhaalpunt",
     vatIncluded: "BTW inbegrepen",
   },
 };
@@ -100,11 +82,28 @@ export default function ChooseShipping({
 
   const t = UI[locale] ?? UI.fr;
 
+  /* -------------------------------
+     Méthodes visibles
+  -------------------------------- */
   const visibleMethods = useMemo(
     () => methods.filter((m) => m.isActive !== false),
     [methods]
   );
 
+  /* -------------------------------
+     Provider relay sélectionné
+  -------------------------------- */
+  const relayConfig =
+    selectedMethod?.type === "relay" &&
+    selectedMethod.relayProvider
+      ? RELAY_PROVIDERS[selectedMethod.relayProvider]
+      : null;
+
+  const RelayComponent = relayConfig?.Component;
+
+  /* -------------------------------
+     Handlers
+  -------------------------------- */
   function selectMethod(method: ShippingMethod) {
     setSelectedMethod(method);
     onMethodSelect(method);
@@ -124,6 +123,7 @@ export default function ChooseShipping({
 
   return (
     <section className="space-y-4">
+      {/* HEADER */}
       <div>
         <h2 className="text-lg font-semibold">{t.title}</h2>
         <p className="text-sm text-gray-600">{t.subtitle}</p>
@@ -131,6 +131,7 @@ export default function ChooseShipping({
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
+      {/* LISTE DES MÉTHODES */}
       <div className="space-y-3">
         {visibleMethods.map((m) => {
           const isSelected = selectedMethod?.id === m.id;
@@ -139,6 +140,11 @@ export default function ChooseShipping({
             priceHT: m.priceHT,
             vatRate: m.vatRate,
           });
+
+          const providerConfig =
+            m.type === "relay" && m.relayProvider
+              ? RELAY_PROVIDERS[m.relayProvider]
+              : null;
 
           return (
             <button
@@ -155,7 +161,9 @@ export default function ChooseShipping({
                 <p className="font-semibold">{m.name}</p>
 
                 {m.delay && (
-                  <p className="text-sm text-gray-600">{m.delay}</p>
+                  <p className="text-sm text-gray-600">
+                    {m.delay}
+                  </p>
                 )}
 
                 {m.vatRate && m.vatRate > 0 && (
@@ -164,14 +172,13 @@ export default function ChooseShipping({
                   </p>
                 )}
 
-                {m.type === "relay" && (
+                {providerConfig && (
                   <span className="inline-block mt-2 text-xs px-2 py-1 rounded bg-purple-100 text-purple-700">
-                    {t.relayBadge}
+                    {providerConfig.label[locale]}
                   </span>
                 )}
               </div>
 
-              {/* ✅ PRIX TTC CALCULÉ (TVA SAFE) */}
               <div className="font-semibold whitespace-nowrap">
                 {price.ttc.toFixed(2)} €
               </div>
@@ -180,29 +187,34 @@ export default function ChooseShipping({
         })}
       </div>
 
-      {selectedMethod?.type === "relay" && (
-        <div className="border rounded-lg p-4 bg-white">
-          <h3 className="font-semibold mb-2">
-            {t.relayBlockTitle}
-          </h3>
+      {/* BLOC POINT RELAIS */}
+      {selectedMethod?.type === "relay" &&
+        relayConfig &&
+        RelayComponent && (
+          <div className="border rounded-lg p-4 bg-white">
+            <h3 className="font-semibold mb-2">
+              {relayConfig.choose[locale]}
+            </h3>
 
-          <RelayPointMondialRelay onSelect={handleRelaySelect} />
+            <RelayComponent onSelect={handleRelaySelect} />
 
-          {relayPoint && (
-            <div className="mt-3 p-3 bg-gray-100 rounded text-sm">
-              <p className="font-semibold">
-                {t.selectedRelayTitle}
-              </p>
-              <p className="font-bold">{relayPoint.name}</p>
-              <p>{relayPoint.address}</p>
-              <p>
-                {relayPoint.postalCode} {relayPoint.city}
-              </p>
-              {relayPoint.country && <p>{relayPoint.country}</p>}
-            </div>
-          )}
-        </div>
-      )}
+            {relayPoint && (
+              <div className="mt-3 p-3 bg-gray-100 rounded text-sm">
+                <p className="font-semibold">
+                  {relayConfig.selected[locale]}
+                </p>
+                <p className="font-bold">{relayPoint.name}</p>
+                <p>{relayPoint.address}</p>
+                <p>
+                  {relayPoint.postalCode} {relayPoint.city}
+                </p>
+                {relayPoint.country && (
+                  <p>{relayPoint.country}</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
     </section>
   );
 }

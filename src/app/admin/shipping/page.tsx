@@ -37,9 +37,13 @@ const COUNTRIES: {
 }[] = [
   { code: "FR", label: "France", flag: "🇫🇷" },
   { code: "GB", label: "Angleterre", flag: "🇬🇧" },
+  { code: "ES", label: "Espagne", flag: "🇪🇸" },
   { code: "DE", label: "Allemagne", flag: "🇩🇪" },
+  { code: "IT", label: "Italie", flag: "🇮🇹" },
+  { code: "NL", label: "Pays-Bas", flag: "🇳🇱" },
   { code: "CH", label: "Suisse", flag: "🇨🇭" },
 ];
+
 
 /* 🔑 LIEN PAYS → LOCALE (CRITIQUE) */
 const COUNTRY_TO_LOCALE: Record<CountryCode, ShippingLocale> = {
