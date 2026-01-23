@@ -1,48 +1,17 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-/* =====================================================
-   GET → liste des méthodes (SOURCE DE VÉRITÉ)
-===================================================== */
+// GET → liste des méthodes
 export async function GET() {
   try {
-    const snap = await dbAdmin
-      .collection("shipping_methods")
-      .where("isActive", "==", true)
-      .get();
+    const snap = await dbAdmin.collection("shipping_methods").get();
 
-    const methods = snap.docs.map((d) => {
-      const data = d.data();
+    const methods = snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    }));
 
-      return {
-        id: d.id,
-
-        name: data.name ?? {},
-        delay: data.delay ?? {},
-
-        // 🔒 SOURCE DE VÉRITÉ
-        priceHT: Number(data.priceHT ?? 0),
-        vatRate:
-          typeof data.vatRate === "number" ? data.vatRate : 0,
-
-        isActive: data.isActive ?? true,
-        type: data.type ?? "home",
-        relayProvider: data.relayProvider ?? null,
-        country: data.country ?? null,
-      };
-    });
-
-    return NextResponse.json(
-      { ok: true, methods },
-      {
-        headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate",
-        },
-      }
-    );
+    return NextResponse.json({ ok: true, methods });
   } catch (e) {
     console.error("❌ Error loading shipping_methods:", e);
     return NextResponse.json(
@@ -52,9 +21,7 @@ export async function GET() {
   }
 }
 
-/* =====================================================
-   POST → créer une méthode
-===================================================== */
+// POST → créer une méthode (PAR PAYS)
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null);
@@ -68,26 +35,53 @@ export async function POST(req: Request) {
 
     const { data } = body;
 
+    // 🔒 VALIDATION MINIMALE
+    if (
+      !data.country ||
+      !data.name ||
+      !data.delay ||
+      !data.type ||
+      typeof data.priceHT !== "number" ||
+      typeof data.vatRate !== "number"
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid shipping method format" },
+        { status: 400 }
+      );
+    }
+
+    const payload = {
+      country: data.country,
+
+      name: {
+        fr: data.name.fr ?? "",
+        en: data.name.en ?? "",
+      },
+
+      delay: {
+        fr: data.delay.fr ?? "",
+        en: data.delay.en ?? "",
+      },
+
+      type: data.type,
+      relayProvider: data.relayProvider ?? null,
+
+      priceHT: Number(data.priceHT),
+      vatRate: Number(data.vatRate),
+
+      isActive: data.isActive ?? true,
+      createdAt: new Date(),
+    };
+
     const docRef = await dbAdmin
       .collection("shipping_methods")
-      .add(data);
+      .add(payload);
 
-    const created = await docRef.get();
-
-    return NextResponse.json(
-      {
-        ok: true,
-        method: {
-          id: docRef.id,
-          ...created.data(),
-        },
-      },
-      {
-        headers: {
-          "Cache-Control": "no-store",
-        },
-      }
-    );
+    return NextResponse.json({
+      ok: true,
+      id: docRef.id,
+      method: { id: docRef.id, ...payload },
+    });
   } catch (e) {
     console.error("❌ Error creating shipping_method:", e);
     return NextResponse.json(

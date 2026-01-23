@@ -1,28 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import {
+  COUNTRY_LANGUAGE_MAP,
+  CountryCode,
+} from "@/lib/shipping-i18n";
 
-const COUNTRIES = [
-  { code: "FR", label: "France (UE)" },
-  { code: "BE", label: "Belgique (UE)" },
-  { code: "DE", label: "Allemagne (UE)" },
-  { code: "ES", label: "Espagne (UE)" },
-  { code: "IT", label: "Italie (UE)" },
-  { code: "NL", label: "Pays-Bas (UE)" },
-  { code: "CH", label: "Suisse (Hors UE)" },
-];
-
-export default function AddMethodForm({
-  onCreated,
-}: {
+type Props = {
+  country: CountryCode;
   onCreated: () => void;
-}) {
+};
+
+export default function AddMethodForm({ country, onCreated }: Props) {
+  const lang = COUNTRY_LANGUAGE_MAP[country];
+
   const [form, setForm] = useState({
-    nameFr: "",
-    nameEn: "",
-    country: "FR",
+    name: "",
+    delay: "",
     type: "home" as "home" | "relay" | "local_pickup",
     priceHT: "",
+    vatRate: country === "CH" ? "0" : "",
   });
 
   async function submit(e: React.FormEvent) {
@@ -33,20 +30,12 @@ export default function AddMethodForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         data: {
-          name: {
-            fr: form.nameFr,
-            en: form.nameEn || form.nameFr,
-          },
-          delay: {
-            fr: "",
-            en: "",
-          },
-
-          // 🔐 SOURCE DE VÉRITÉ
-          priceHT: Number(form.priceHT),
-
-          country: form.country,
+          country,
+          name: { [lang]: form.name },
+          delay: { [lang]: form.delay },
           type: form.type,
+          priceHT: Number(form.priceHT),
+          vatRate: Number(form.vatRate || 0),
           isActive: true,
         },
       }),
@@ -58,11 +47,11 @@ export default function AddMethodForm({
     }
 
     setForm({
-      nameFr: "",
-      nameEn: "",
-      country: "FR",
+      name: "",
+      delay: "",
       type: "home",
       priceHT: "",
+      vatRate: country === "CH" ? "0" : "",
     });
 
     onCreated();
@@ -70,47 +59,38 @@ export default function AddMethodForm({
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      <p className="text-sm text-gray-500">
+        ➕ Méthode pour <strong>{country}</strong> — langue{" "}
+        <strong>{lang.toUpperCase()}</strong>
+      </p>
+
       <input
         className="input"
-        placeholder="Nom FR"
-        value={form.nameFr}
+        placeholder={`Nom (${lang.toUpperCase()})`}
+        value={form.name}
         onChange={(e) =>
-          setForm({ ...form, nameFr: e.target.value })
+          setForm((f) => ({ ...f, name: e.target.value }))
         }
         required
       />
 
       <input
         className="input"
-        placeholder="Nom EN (optionnel)"
-        value={form.nameEn}
+        placeholder={`Délai (${lang.toUpperCase()})`}
+        value={form.delay}
         onChange={(e) =>
-          setForm({ ...form, nameEn: e.target.value })
+          setForm((f) => ({ ...f, delay: e.target.value }))
         }
       />
 
       <select
         className="input"
-        value={form.country}
-        onChange={(e) =>
-          setForm({ ...form, country: e.target.value })
-        }
-      >
-        {COUNTRIES.map((c) => (
-          <option key={c.code} value={c.code}>
-            {c.label}
-          </option>
-        ))}
-      </select>
-
-      <select
-        className="input"
         value={form.type}
         onChange={(e) =>
-          setForm({
-            ...form,
+          setForm((f) => ({
+            ...f,
             type: e.target.value as any,
-          })
+          }))
         }
       >
         <option value="home">Livraison à domicile</option>
@@ -126,9 +106,22 @@ export default function AddMethodForm({
         placeholder="Prix HT (€)"
         value={form.priceHT}
         onChange={(e) =>
-          setForm({ ...form, priceHT: e.target.value })
+          setForm((f) => ({ ...f, priceHT: e.target.value }))
         }
         required
+      />
+
+      <input
+        type="number"
+        step="0.01"
+        min="0"
+        className="input"
+        placeholder="TVA (%)"
+        value={form.vatRate}
+        disabled={country === "CH"}
+        onChange={(e) =>
+          setForm((f) => ({ ...f, vatRate: e.target.value }))
+        }
       />
 
       <button className="btn-blue w-full">

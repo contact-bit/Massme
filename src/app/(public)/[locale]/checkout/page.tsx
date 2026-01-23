@@ -160,18 +160,21 @@ const TRANSLATIONS: Record<Locale, {
     nameRequired: "Voor- en achternaam vereist",
     paymentError: "Betalingsfout",
   },
+  
 };
 
 /* -------------------------------------
    HELPERS
 ------------------------------------- */
+const LOCALES = ["fr", "en", "es", "de", "it", "nl", "pt"] as const;
 type ShippingLocale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
 function getLocale(path: string | null): Locale {
-  const seg = path?.split("/")?.[1];
-  const LOCALES: Locale[] = ["fr", "en", "es", "de", "it", "nl"];
-  return LOCALES.includes(seg as Locale) ? (seg as Locale) : "fr";
+  const l = path?.split("/")?.[1];
+  return LOCALES.includes(l as Locale) ? (l as Locale) : "fr";
 }
+
+
 
 function round2(n: number) {
   return Math.round(n * 100) / 100;
@@ -183,7 +186,7 @@ function round2(n: number) {
 export default function CheckoutPage() {
   const pathname = usePathname();
   const locale = getLocale(pathname);
-  const shippingLocale = locale as ShippingLocale; // ✅ Cast direct
+const shippingLocale = locale as ShippingLocale;
   const t = TRANSLATIONS[locale];
 
   const { items, totalHT, totalVAT, totalTTC, clearCart } = useCart();

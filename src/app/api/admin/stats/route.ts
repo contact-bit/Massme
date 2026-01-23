@@ -35,7 +35,7 @@ function addDays(d: Date, n: number) {
 }
 
 /* =========================
-   Total commande (SOURCE DE VÉRITÉ)
+   Totaux commandes
 ========================= */
 function orderTotalEUR(order: any): number {
   return typeof order?.totals?.totalTTC === "number"
@@ -54,7 +54,9 @@ function pct(current: number, previous: number) {
 ========================= */
 export async function GET() {
   try {
-    // Cache
+    /* =========================
+       Cache
+    ========================= */
     if (__cache && Date.now() - __cache.at < CACHE_TTL) {
       return NextResponse.json(__cache.data, {
         headers: { "x-stats-cache": "HIT", "Cache-Control": "no-store" },
@@ -62,7 +64,8 @@ export async function GET() {
     }
 
     const productsCol = dbAdmin.collection("products");
-    const ordersCol = dbAdmin.collection("orders"); // ✅ FIX MAJEUR
+    const ordersCol = dbAdmin.collection("orders");
+    const statsRef = dbAdmin.doc("stats/global");
 
     const now = new Date();
     const todayStart = parisStartOfDay(now);
@@ -71,24 +74,15 @@ export async function GET() {
     const prev7Start = addDays(last7Start, -7);
 
     /* =========================
-       COUNTS
+       STATS GLOBAL (SOURCE)
     ========================= */
-    const [
-      productsCountSnap,
-      activeProductsSnap,
-      ordersCountSnap,
-      paidOrdersSnap,
-    ] = await Promise.all([
-      productsCol.count().get(),
-      productsCol.where("isActive", "==", true).count().get(),
-      ordersCol.count().get(),
-      ordersCol.where("status", "==", "paid").count().get(),
-    ]);
+    const statsSnap = await statsRef.get();
+    const stats = statsSnap.data() ?? {};
 
-    const productsCount = productsCountSnap.data().count ?? 0;
-    const activeProducts = activeProductsSnap.data().count ?? 0;
-    const ordersCount = ordersCountSnap.data().count ?? 0;
-    const paidOrdersCount = paidOrdersSnap.data().count ?? 0;
+    const productsCount = Number(stats.productsCount ?? 0);
+    const activeProducts = Number(stats.activeProducts ?? 0);
+    const ordersCount = Number(stats.ordersCount ?? 0);
+    const paidOrdersCount = Number(stats.paidOrdersCount ?? 0);
     const pendingCount = Math.max(0, ordersCount - paidOrdersCount);
 
     /* =========================
@@ -140,11 +134,13 @@ export async function GET() {
       .where("createdAt", ">=", prev7Start)
       .get();
 
-    const paidOrders = paid14Snap.docs.map(d => ({
-      id: d.id,
-      ...(d.data() as any),
-      _ms: d.data().createdAt?.toDate?.().getTime?.() ?? 0,
-    }));
+    const paidOrders = paid14Snap.docs.map(d => {
+      const o: any = d.data();
+      return {
+        ...o,
+        _ms: o?.createdAt?.toDate?.()?.getTime?.() ?? 0,
+      };
+    });
 
     const todayMs = todayStart.getTime();
     const yesterdayMs = yesterdayStart.getTime();
@@ -191,7 +187,8 @@ export async function GET() {
     /* =========================
        ALERTS
     ========================= */
-    const alerts = [];
+    const alerts: any[] = [];
+
     if (pendingCount > 0) {
       alerts.push({
         tone: "info",
@@ -199,6 +196,7 @@ export async function GET() {
         desc: `${pendingCount} commande(s) non traitée(s).`,
       });
     }
+
     if (lowStock.length > 0) {
       alerts.push({
         tone: "warn",
@@ -207,6 +205,9 @@ export async function GET() {
       });
     }
 
+    /* =========================
+       PAYLOAD FINAL
+    ========================= */
     const payload = {
       kpis: {
         productsCount,
@@ -233,7 +234,7 @@ export async function GET() {
     __cache = { at: Date.now(), data: payload };
 
     return NextResponse.json(payload, {
-      headers: { "Cache-Control": "no-store", "x-stats-cache": "MISS" },
+      headers: { "x-stats-cache": "MISS", "Cache-Control": "no-store" },
     });
   } catch (err: any) {
     console.error("❌ admin/stats error:", err);

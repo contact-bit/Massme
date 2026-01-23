@@ -3,31 +3,43 @@
 import { useEffect, useState } from "react";
 import AddMethodForm from "./components/AddMethodForm";
 import EditMethodModal from "./components/EditMethodModal";
+import {
+  CountryCode,
+  ShippingLocale,
+} from "@/lib/shipping-i18n";
 
 /* =====================================================
    TYPES — SOURCE DE VÉRITÉ
 ===================================================== */
 export type ShippingMethod = {
   id: string;
+  country: CountryCode;
 
-  name: {
-    fr: string;
-    en: string;
-  };
+  // ✅ UNE SEULE LANGUE PAR PAYS
+  name: Partial<Record<ShippingLocale, string>>;
+  delay: Partial<Record<ShippingLocale, string>>;
 
-  delay: {
-    fr: string;
-    en: string;
-  };
-
-  priceHT: number;          // ✅ SOURCE UNIQUE
-  vatRate?: number;
-
-  isActive: boolean;
   type: "home" | "relay" | "local_pickup";
   relayProvider?: string | null;
-  country?: string;
+
+  priceHT: number;
+  vatRate: number;
+  isActive: boolean;
 };
+
+/* =====================================================
+   CONST
+===================================================== */
+const COUNTRIES: {
+  code: CountryCode;
+  label: string;
+  flag: string;
+}[] = [
+  { code: "FR", label: "France", flag: "🇫🇷" },
+  { code: "GB", label: "Angleterre", flag: "🇬🇧" },
+  { code: "DE", label: "Allemagne", flag: "🇩🇪" },
+  { code: "CH", label: "Suisse", flag: "🇨🇭" },
+];
 
 /* =====================================================
    PAGE
@@ -36,57 +48,44 @@ export default function ShippingAdminPage() {
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ShippingMethod | null>(null);
+  const [activeCountry, setActiveCountry] =
+    useState<CountryCode>("FR");
 
-  /* =====================================================
-     LOAD — NO CACHE / SOURCE FIRESTORE
-  ===================================================== */
-  const reload = async (silent = false) => {
+  /* ---------- LOAD ---------- */
+  const reload = async () => {
     try {
-      if (!silent) setLoading(true);
+      setLoading(true);
 
       const res = await fetch("/api/admin/shipping-methods", {
         cache: "no-store",
       });
 
-      const json = await res.json().catch(() => null);
-
-      if (!res.ok || !json?.ok) {
-        console.error("❌ shipping-methods:", json?.error);
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
         setMethods([]);
         return;
       }
 
-      const normalized: ShippingMethod[] = (json.methods || []).map(
+      const normalized: ShippingMethod[] = json.methods.map(
         (m: any) => ({
           id: m.id,
+          country: m.country,
 
-          name: {
-            fr: String(m.name?.fr || ""),
-            en: String(m.name?.en || ""),
-          },
+          name: m.name ?? {},
+          delay: m.delay ?? {},
 
-          delay: {
-            fr: String(m.delay?.fr || ""),
-            en: String(m.delay?.en || ""),
-          },
-
-          priceHT: Number(m.priceHT ?? 0),
-          vatRate:
-            typeof m.vatRate === "number" ? m.vatRate : undefined,
-
-          isActive: m.isActive ?? true,
           type: m.type || "home",
           relayProvider: m.relayProvider ?? null,
-          country: m.country,
+
+          priceHT: Number(m.priceHT ?? 0),
+          vatRate: Number(m.vatRate ?? 0),
+          isActive: m.isActive ?? true,
         })
       );
 
       setMethods(normalized);
-    } catch (e) {
-      console.error("❌ Load shipping error:", e);
-      setMethods([]);
     } finally {
-      if (!silent) setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -94,122 +93,100 @@ export default function ShippingAdminPage() {
     reload();
   }, []);
 
-  /* =====================================================
-     DELETE
-  ===================================================== */
-  const handleDelete = async (id: string) => {
-    if (!confirm("Supprimer cette méthode de livraison ?")) return;
+  /* ---------- DELETE ---------- */
+  async function handleDelete(id: string) {
+    if (!confirm("Supprimer cette méthode ?")) return;
+    await fetch(`/api/admin/shipping-methods/${id}`, {
+      method: "DELETE",
+    });
+    reload();
+  }
 
-    try {
-      const res = await fetch(`/api/admin/shipping-methods/${id}`, {
-        method: "DELETE",
-        cache: "no-store",
-      });
-
-      const json = await res.json().catch(() => null);
-
-      if (!res.ok || !json?.ok) {
-        alert("Erreur lors de la suppression");
-        return;
-      }
-
-      setMethods((prev) => prev.filter((m) => m.id !== id));
-    } catch (e) {
-      console.error("❌ Delete shipping error:", e);
-      alert("Erreur lors de la suppression");
-    }
-  };
+  const filtered = methods.filter(
+    (m) => m.country === activeCountry
+  );
 
   /* =====================================================
      RENDER
   ===================================================== */
   return (
     <main className="admin-page">
-      <h1 className="admin-title">🚚 Méthodes de livraison</h1>
+      <h1 className="admin-title">🚚 Livraison</h1>
+
+      {/* 🌍 ONGLET PAYS */}
+      <div className="flex gap-2 mb-6">
+        {COUNTRIES.map((c) => (
+          <button
+            key={c.code}
+            onClick={() => setActiveCountry(c.code)}
+            className={`px-4 py-2 rounded-md border ${
+              activeCountry === c.code
+                ? "bg-blue-600 text-white"
+                : "bg-white"
+            }`}
+          >
+            {c.flag} {c.label}
+          </button>
+        ))}
+      </div>
 
       {/* ➕ AJOUT */}
-      <section className="mb-8">
-        <h2 className="admin-section-title mb-2">
-          Créer un mode de livraison
-        </h2>
-        <AddMethodForm onCreated={() => reload(true)} />
-      </section>
+      <AddMethodForm
+        country={activeCountry}
+        onCreated={reload}
+      />
 
       {/* 📋 LISTE */}
-      <section>
-        <h2 className="admin-section-title mb-2">
-          Liste des méthodes
-        </h2>
-
+      <section className="mt-6 space-y-3">
         {loading ? (
           <p>Chargement…</p>
-        ) : methods.length === 0 ? (
-          <p>Aucune méthode de livraison.</p>
+        ) : filtered.length === 0 ? (
+          <p>Aucune méthode pour ce pays.</p>
         ) : (
-          <div className="space-y-3">
-            {methods.map((m) => {
-              const name = m.name.fr || m.name.en || "Méthode";
-              const delay = m.delay.fr || m.delay.en || "—";
+          filtered.map((m) => (
+            <div
+              key={m.id}
+              className="flex justify-between border rounded-md p-3 bg-white"
+            >
+              <div>
+                <p className="font-semibold">
+                  {Object.values(m.name)[0] || "—"}
+                  {!m.isActive && (
+                    <span className="text-xs text-red-500 ml-2">
+                      (désactivée)
+                    </span>
+                  )}
+                </p>
 
-              return (
-                <div
-                  key={m.id}
-                  className="flex items-center justify-between border rounded-md p-3 bg-white"
+                <p className="text-sm text-gray-500">
+                  {m.priceHT.toFixed(2)} € HT • TVA {m.vatRate}%
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditing(m)}
+                  className="btn btn-primary"
                 >
-                  <div>
-                    <p className="font-semibold">
-                      {name}{" "}
-                      {!m.isActive && (
-                        <span className="text-xs text-red-500">
-                          (désactivée)
-                        </span>
-                      )}
-                    </p>
-
-                    <p className="text-sm text-gray-500">
-                      {m.priceHT.toFixed(2)} € HT
-                      {m.vatRate != null && ` • TVA ${m.vatRate}%`}
-                      {" — "}
-                      {delay}
-                      {" — "}
-                      {m.type === "home"
-                        ? "Domicile"
-                        : m.type === "relay"
-                        ? "Point relais"
-                        : "Retrait sur place"}
-                      {m.relayProvider && ` (${m.relayProvider})`}
-                      {m.country && ` • ${m.country}`}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setEditing(m)}
-                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md"
-                    >
-                      Configurer
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(m.id)}
-                      className="px-3 py-1 text-sm bg-red-600 text-white rounded-md"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  Configurer
+                </button>
+                <button
+                  onClick={() => handleDelete(m.id)}
+                  className="btn btn-danger"
+                >
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          ))
         )}
       </section>
 
-      {/* ✏️ MODAL */}
       {editing && (
         <EditMethodModal
           data={editing}
           onClose={() => setEditing(null)}
-          onSaved={() => reload(true)}
+          onSaved={reload}
         />
       )}
     </main>
