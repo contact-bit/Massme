@@ -46,8 +46,12 @@ const COUNTRY_TO_LOCALE: Record<CountryCode, ShippingLocale> = {
   FR: "fr",
   GB: "en",
   DE: "de",
+  ES: "es",
+  IT: "it",
+  NL: "nl",
   CH: "fr",
 };
+
 
 /* =====================================================
    PAGE
