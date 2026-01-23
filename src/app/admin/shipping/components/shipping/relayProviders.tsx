@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import type { RelayProvider } from "@/components/shipping/types";
 import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
 
 type Locale = "fr" | "en";
@@ -48,18 +49,6 @@ export const RELAY_PROVIDERS: Record<
     Component: ComingSoon("Colissimo"),
   },
 
-  "relais-colis": {
-    label: {
-      fr: "Relais Colis",
-      en: "Relais Colis",
-    },
-    choose: {
-      fr: "Choisir un point Relais Colis",
-      en: "Choose a Relais Colis pickup point",
-    },
-    Component: ComingSoon("Relais Colis"),
-  },
-
   pickup: {
     label: {
       fr: "Point Pickup",
@@ -70,5 +59,17 @@ export const RELAY_PROVIDERS: Record<
       en: "Choose a Pickup point",
     },
     Component: ComingSoon("Pickup"),
+  },
+
+  "relais-colis": {
+    label: {
+      fr: "Relais Colis",
+      en: "Relais Colis",
+    },
+    choose: {
+      fr: "Choisir un point Relais Colis",
+      en: "Choose a Relais Colis pickup point",
+    },
+    Component: ComingSoon("Relais Colis"),
   },
 };
