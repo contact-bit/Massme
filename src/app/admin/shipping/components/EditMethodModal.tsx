@@ -6,6 +6,7 @@ import {
   COUNTRY_LANGUAGE_MAP,
   CountryCode,
 } from "@/lib/shipping-i18n";
+import "@/styles/admin-shipping-modal.css";
 
 type Props = {
   data: ShippingMethod;
@@ -34,15 +35,13 @@ export default function EditMethodModal({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            data: {
-              name: form.name,
-              delay: form.delay,
-              type: form.type,
-              relayProvider: form.relayProvider ?? null,
-              priceHT: Number(form.priceHT),
-              vatRate: Number(form.vatRate ?? 0),
-              isActive: form.isActive,
-            },
+            name: form.name,
+            delay: form.delay,
+            type: form.type,
+            relayProvider: form.relayProvider ?? null,
+            priceHT: Number(form.priceHT),
+            vatRate: Number(form.vatRate ?? 0),
+            isActive: form.isActive,
           }),
         }
       );
@@ -64,10 +63,13 @@ export default function EditMethodModal({
 
   return (
     <div className="admin-modal-backdrop">
-      <div className="admin-modal max-w-xl">
+      <div className="admin-modal">
         <h2 className="admin-section-title">
-          Livraison — {country} ({lang.toUpperCase()})
+          ✏️ Configurer la livraison
         </h2>
+        <p className="admin-section-subtitle">
+          {country} — langue {lang.toUpperCase()}
+        </p>
 
         <label className="admin-label">
           Nom ({lang.toUpperCase()})
@@ -113,34 +115,40 @@ export default function EditMethodModal({
           <option value="local_pickup">Retrait sur place</option>
         </select>
 
-        <label className="admin-label">Prix HT (€)</label>
-        <input
-          type="number"
-          step="0.01"
-          className="admin-input"
-          value={form.priceHT}
-          onChange={(e) =>
-            setForm((f) => ({
-              ...f,
-              priceHT: Number(e.target.value),
-            }))
-          }
-        />
+        <div className="admin-grid-2">
+          <div>
+            <label className="admin-label">Prix HT (€)</label>
+            <input
+              type="number"
+              step="0.01"
+              className="admin-input"
+              value={form.priceHT}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  priceHT: Number(e.target.value),
+                }))
+              }
+            />
+          </div>
 
-        <label className="admin-label">TVA (%)</label>
-        <input
-          type="number"
-          step="0.01"
-          className="admin-input"
-          value={form.vatRate}
-          disabled={country === "CH"}
-          onChange={(e) =>
-            setForm((f) => ({
-              ...f,
-              vatRate: Number(e.target.value),
-            }))
-          }
-        />
+          <div>
+            <label className="admin-label">TVA (%)</label>
+            <input
+              type="number"
+              step="0.01"
+              className="admin-input"
+              value={form.vatRate}
+              disabled={country === "CH"}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  vatRate: Number(e.target.value),
+                }))
+              }
+            />
+          </div>
+        </div>
 
         <label className="admin-switch mt-3">
           <input

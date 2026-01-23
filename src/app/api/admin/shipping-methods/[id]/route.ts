@@ -1,80 +1,70 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 
-// ⚠️ IMPORTANT : params est une Promise dans Next 16
 type Context = {
   params: Promise<{ id: string }>;
 };
 
-// PATCH → modifier une méthode (MULTI-PAYS)
 export async function PATCH(req: Request, context: Context) {
   try {
     const { id } = await context.params;
+    const body = await req.json();
 
-    let body: any;
-    try {
-      body = await req.json();
-    } catch (e) {
-      console.error("❌ [shipping PATCH] JSON invalide:", e);
+    const {
+      name,
+      delay,
+      type,
+      relayProvider,
+      priceHT,
+      vatRate,
+      isActive,
+    } = body;
+
+    // ✅ validations cohérentes
+    if (!id || typeof name !== "object") {
       return NextResponse.json(
-        { ok: false, error: "JSON invalide ou manquant" },
+        { ok: false, error: "Invalid payload (id / name)" },
         { status: 400 }
       );
     }
 
-    const { data } = body || {};
-    if (!data) {
+    if (
+      typeof priceHT !== "number" ||
+      Number.isNaN(priceHT)
+    ) {
       return NextResponse.json(
-        { ok: false, error: "Données manquantes (data)" },
+        { ok: false, error: "Invalid priceHT" },
         { status: 400 }
       );
     }
 
-    // 🔒 NORMALISATION COUNTRIES (si présent)
-    let countries;
-    if (Array.isArray(data.countries)) {
-      countries = data.countries.map((c: any) => ({
-        code: String(c.code),
-        priceHT: Number(c.priceHT ?? 0),
-        vatRate:
-          typeof c.vatRate === "number" ? c.vatRate : undefined,
-        isActive: c.isActive ?? true,
-      }));
+    if (
+      typeof vatRate !== "number" ||
+      Number.isNaN(vatRate)
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid vatRate" },
+        { status: 400 }
+      );
     }
 
-    // 🔒 PAYLOAD CONTRÔLÉ
-    const payload: any = {
-      ...(data.name && {
-        name: {
-          fr: data.name.fr ?? "",
-          en: data.name.en ?? "",
-        },
-      }),
+    if (!Object.keys(name).length) {
+      return NextResponse.json(
+        { ok: false, error: "Empty name object" },
+        { status: 400 }
+      );
+    }
 
-      ...(data.delay && {
-        delay: {
-          fr: data.delay.fr ?? "",
-          en: data.delay.en ?? "",
-        },
-      }),
-
-      ...(data.type && { type: data.type }),
-
-      ...(data.relayProvider !== undefined && {
-        relayProvider: data.relayProvider,
-      }),
-
-      ...(typeof data.isActive === "boolean" && {
-        isActive: data.isActive,
-      }),
-
-      ...(countries && { countries }),
-
+    const payload = {
+      name,                 // 🔑 ON GARDE TOUTES LES LOCALES
+      delay: delay || {},
+      type: type || "home",
+      relayProvider: relayProvider ?? null,
+      priceHT,
+      vatRate,
+      isActive: isActive ?? true,
       updatedAt: new Date(),
     };
-
-    console.log("🛠 [shipping PATCH] id =", id);
-    console.log("🛠 [shipping PATCH] payload =", payload);
 
     await dbAdmin
       .collection("shipping_methods")
@@ -83,26 +73,7 @@ export async function PATCH(req: Request, context: Context) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error("❌ Error updating shipping_method:", e);
-    return NextResponse.json(
-      { ok: false, error: "Server error" },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE → supprimer une méthode
-export async function DELETE(req: Request, context: Context) {
-  try {
-    const { id } = await context.params;
-
-    console.log("🛠 [shipping DELETE] id =", id);
-
-    await dbAdmin.collection("shipping_methods").doc(id).delete();
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("❌ Error deleting shipping_method:", e);
+    console.error("❌ PATCH shipping_method error:", e);
     return NextResponse.json(
       { ok: false, error: "Server error" },
       { status: 500 }

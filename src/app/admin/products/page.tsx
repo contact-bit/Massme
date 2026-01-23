@@ -188,7 +188,6 @@ export default function ProductsAdminPage() {
       <div className="p-header">
         <div className="p-titlezone">
           <h1 className="p-title">🛍️ Produits</h1>
-          <p className="p-sub">Catalogue, stock et activation. (On branchera les actions avancées ensuite.)</p>
         </div>
 
         <div className="p-actions">

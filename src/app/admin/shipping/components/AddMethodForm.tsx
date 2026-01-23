@@ -1,9 +1,10 @@
 "use client";
+import "@/styles/shipping-form.css";
 
 import { useState } from "react";
 import {
-  COUNTRY_LANGUAGE_MAP,
   CountryCode,
+  COUNTRY_LANGUAGE_MAP,
 } from "@/lib/shipping-i18n";
 
 type Props = {
@@ -11,103 +12,111 @@ type Props = {
   onCreated: () => void;
 };
 
-export default function AddMethodForm({ country, onCreated }: Props) {
-  const lang = COUNTRY_LANGUAGE_MAP[country];
+export default function AddMethodForm({
+  country,
+  onCreated,
+}: Props) {
+  const locale = COUNTRY_LANGUAGE_MAP[country];
 
-  const [form, setForm] = useState({
-    name: "",
-    delay: "",
-    type: "home" as "home" | "relay" | "local_pickup",
-    priceHT: "",
-    vatRate: country === "CH" ? "0" : "",
-  });
+  const [name, setName] = useState("");
+  const [delay, setDelay] = useState("");
+  const [type, setType] = useState<
+    "home" | "relay" | "local_pickup"
+  >("home");
+  const [priceHT, setPriceHT] = useState("");
+  const [vatRate, setVatRate] = useState(
+    country === "CH" ? "0" : "20"
+  );
+  const [loading, setLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
 
-    const res = await fetch("/api/admin/shipping-methods", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        data: {
-          country,
-          name: { [lang]: form.name },
-          delay: { [lang]: form.delay },
-          type: form.type,
-          priceHT: Number(form.priceHT),
-          vatRate: Number(form.vatRate || 0),
-          isActive: true,
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      alert("Erreur création méthode de livraison");
+    if (!name.trim()) {
+      alert("Nom requis");
       return;
     }
 
-    setForm({
-      name: "",
-      delay: "",
-      type: "home",
-      priceHT: "",
-      vatRate: country === "CH" ? "0" : "",
+    setLoading(true);
+
+    const payload = {
+      country,
+      name: { [locale]: name.trim() },
+      delay: delay ? { [locale]: delay.trim() } : {},
+      type,
+      priceHT: Number(priceHT),
+      vatRate: Number(vatRate),
+      isActive: true,
+    };
+
+    console.log("🚚 SHIPPING PAYLOAD", payload);
+
+    const res = await fetch("/api/admin/shipping-methods", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
+    const json = await res.json();
+
+    if (!res.ok) {
+      console.error("❌ API ERROR", json);
+      alert(json.error || "Erreur création livraison");
+      setLoading(false);
+      return;
+    }
+
+    setName("");
+    setDelay("");
+    setPriceHT("");
+    setVatRate(country === "CH" ? "0" : "20");
+
     onCreated();
+    setLoading(false);
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3">
-      <p className="text-sm text-gray-500">
-        ➕ Méthode pour <strong>{country}</strong> — langue{" "}
-        <strong>{lang.toUpperCase()}</strong>
-      </p>
+    <form onSubmit={submit} className="shipping-form">
+  <p className="shipping-form-header">
+    ➕ Méthode pour <strong>{country}</strong> — langue{" "}
+    <strong>{locale.toUpperCase()}</strong>
+  </p>
 
-      <input
-        className="input"
-        placeholder={`Nom (${lang.toUpperCase()})`}
-        value={form.name}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, name: e.target.value }))
-        }
-        required
-      />
+  <div className="shipping-col">
+    <input
+      className="shipping-input"
+      placeholder={`Nom (${locale.toUpperCase()})`}
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      required
+    />
 
-      <input
-        className="input"
-        placeholder={`Délai (${lang.toUpperCase()})`}
-        value={form.delay}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, delay: e.target.value }))
-        }
-      />
+    <input
+      className="shipping-input"
+      placeholder={`Délai (${locale.toUpperCase()})`}
+      value={delay}
+      onChange={(e) => setDelay(e.target.value)}
+    />
 
-      <select
-        className="input"
-        value={form.type}
-        onChange={(e) =>
-          setForm((f) => ({
-            ...f,
-            type: e.target.value as any,
-          }))
-        }
-      >
-        <option value="home">Livraison à domicile</option>
-        <option value="relay">Point relais</option>
-        <option value="local_pickup">Retrait sur place</option>
-      </select>
+    <select
+      className="shipping-select"
+      value={type}
+      onChange={(e) => setType(e.target.value as any)}
+    >
+      <option value="home">Livraison à domicile</option>
+      <option value="relay">Point relais</option>
+      <option value="local_pickup">Retrait sur place</option>
+    </select>
 
+    <div className="shipping-row">
       <input
         type="number"
         step="0.01"
         min="0"
-        className="input"
+        className="shipping-input"
         placeholder="Prix HT (€)"
-        value={form.priceHT}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, priceHT: e.target.value }))
-        }
+        value={priceHT}
+        onChange={(e) => setPriceHT(e.target.value)}
         required
       />
 
@@ -115,18 +124,22 @@ export default function AddMethodForm({ country, onCreated }: Props) {
         type="number"
         step="0.01"
         min="0"
-        className="input"
+        className="shipping-input"
         placeholder="TVA (%)"
-        value={form.vatRate}
+        value={vatRate}
         disabled={country === "CH"}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, vatRate: e.target.value }))
-        }
+        onChange={(e) => setVatRate(e.target.value)}
       />
+    </div>
 
-      <button className="btn-blue w-full">
-        ➕ Ajouter la livraison
-      </button>
-    </form>
+    <button
+      disabled={loading}
+      className="shipping-submit"
+    >
+      ➕ Ajouter la livraison
+    </button>
+  </div>
+</form>
+
   );
 }

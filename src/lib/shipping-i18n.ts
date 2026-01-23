@@ -1,5 +1,21 @@
-export type CountryCode = "FR" | "GB" | "DE" | "CH";
-export type ShippingLocale = "fr" | "en" | "de";
+// /lib/shipping-i18n.ts
+
+export type CountryCode =
+  | "FR"
+  | "GB"
+  | "DE"
+  | "ES"
+  | "IT"
+  | "NL"
+  | "CH";
+
+export type ShippingLocale =
+  | "fr"
+  | "en"
+  | "de"
+  | "es"
+  | "it"
+  | "nl";
 
 export const COUNTRY_LANGUAGE_MAP: Record<
   CountryCode,
@@ -8,5 +24,8 @@ export const COUNTRY_LANGUAGE_MAP: Record<
   FR: "fr",
   GB: "en",
   DE: "de",
-  CH: "fr", // Suisse = français (modifiable plus tard)
+  ES: "es",
+  IT: "it",
+  NL: "nl",
+  CH: "fr",
 };

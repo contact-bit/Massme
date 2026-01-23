@@ -9,31 +9,12 @@ import { useCart } from "@/context/CartContext";
 import ChooseShipping from "@/components/shipping/ChooseShipping";
 import type { ShippingMethod, RelayPoint } from "@/components/shipping/types";
 import { Locale } from "@/lib/i18n";
+import "./checkout.css";
 
-/* -------------------------------------
+/* =====================================================
    TRANSLATIONS
-------------------------------------- */
-const TRANSLATIONS: Record<Locale, {
-  title: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  address: string;
-  postalCode: string;
-  city: string;
-  country: string;
-  loadingShipping: string;
-  subtotalExclTax: string;
-  productVAT: string;
-  shippingInclTax: string;
-  totalInclTax: string;
-  payWithStripe: string;
-  emptyCart: string;
-  chooseShipping: string;
-  emailRequired: string;
-  nameRequired: string;
-  paymentError: string;
-}> = {
+===================================================== */
+const TRANSLATIONS: Record<Locale, any> = {
   fr: {
     title: "Commande",
     firstName: "Prénom",
@@ -160,40 +141,42 @@ const TRANSLATIONS: Record<Locale, {
     nameRequired: "Voor- en achternaam vereist",
     paymentError: "Betalingsfout",
   },
-  
 };
 
-/* -------------------------------------
+/* =====================================================
    HELPERS
-------------------------------------- */
-const LOCALES = ["fr", "en", "es", "de", "it", "nl", "pt"] as const;
-type ShippingLocale = "fr" | "en" | "es" | "de" | "it" | "nl";
+===================================================== */
+const LOCALES = ["fr", "en", "es", "de", "it", "nl"] as const;
 
 function getLocale(path: string | null): Locale {
   const l = path?.split("/")?.[1];
   return LOCALES.includes(l as Locale) ? (l as Locale) : "fr";
 }
 
-
+const LOCALE_TO_COUNTRY: Record<Locale, string> = {
+  fr: "FR",
+  en: "GB",
+  es: "ES",
+  de: "DE",
+  it: "IT",
+  nl: "NL",
+};
 
 function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-/* =====================================
+/* =====================================================
    PAGE
-===================================== */
+===================================================== */
 export default function CheckoutPage() {
   const pathname = usePathname();
   const locale = getLocale(pathname);
-const shippingLocale = locale as ShippingLocale;
   const t = TRANSLATIONS[locale];
 
   const { items, totalHT, totalVAT, totalTTC, clearCart } = useCart();
 
-  /* -------------------------------------
-     CLIENT (PRÉNOM / NOM SÉPARÉS)
-  ------------------------------------- */
+  /* ---------- CUSTOMER ---------- */
   const [customer, setCustomer] = useState({
     firstName: "",
     lastName: "",
@@ -204,9 +187,13 @@ const shippingLocale = locale as ShippingLocale;
     country: "FR",
   });
 
-  /* -------------------------------------
-     SHIPPING
-  ------------------------------------- */
+  /* ---------- FORCE COUNTRY FROM LOCALE ---------- */
+  useEffect(() => {
+    const country = LOCALE_TO_COUNTRY[locale] ?? "FR";
+    setCustomer((prev) => ({ ...prev, country }));
+  }, [locale]);
+
+  /* ---------- SHIPPING ---------- */
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod | null>(null);
@@ -214,9 +201,7 @@ const shippingLocale = locale as ShippingLocale;
     useState<RelayPoint | null>(null);
   const [loading, setLoading] = useState(false);
 
-  /* -------------------------------------
-     LOAD SHIPPING METHODS
-  ------------------------------------- */
+  /* ---------- LOAD SHIPPING ---------- */
   useEffect(() => {
     async function load() {
       setLoading(true);
@@ -265,24 +250,18 @@ const shippingLocale = locale as ShippingLocale;
     load();
   }, [customer.country, locale]);
 
-  /* -------------------------------------
-     TOTALS
-  ------------------------------------- */
+  /* ---------- TOTALS ---------- */
   const shippingTTC = shippingMethod?.priceTTC ?? 0;
   const finalTTC = totalTTC + shippingTTC;
 
-  /* -------------------------------------
-     PAY
-  ------------------------------------- */
+  /* ---------- PAY ---------- */
   async function pay() {
     if (!items.length) return alert(t.emptyCart);
     if (!shippingMethod) return alert(t.chooseShipping);
     if (!customer.email) return alert(t.emailRequired);
-    if (!customer.firstName || !customer.lastName) {
+    if (!customer.firstName || !customer.lastName)
       return alert(t.nameRequired);
-    }
 
-    // 🔥 NOM COMPLET CANONIQUE
     const fullName = `${customer.firstName.trim()} ${customer.lastName.trim()}`;
 
     const res = await fetch("/api/checkout", {
@@ -292,8 +271,6 @@ const shippingLocale = locale as ShippingLocale;
         items,
         locale,
         customerEmail: customer.email,
-
-        // ✅ FORMAT OFFICIEL PARTOUT
         shippingAddress: {
           name: fullName,
           firstName: customer.firstName,
@@ -303,127 +280,126 @@ const shippingLocale = locale as ShippingLocale;
           city: customer.city,
           country: customer.country,
         },
-
         shippingMethod,
         relayPoint,
       }),
     });
 
     const json = await res.json();
-
-    if (!res.ok || !json.url) {
-      alert(t.paymentError);
-      return;
-    }
+    if (!res.ok || !json.url) return alert(t.paymentError);
 
     clearCart();
     window.location.href = json.url;
   }
 
-  /* =====================================
+  /* =====================================================
      RENDER
-  ===================================== */
+  ===================================================== */
   return (
-    <main className="max-w-3xl mx-auto py-10 px-4 space-y-8">
-      <h1 className="text-3xl font-bold">{t.title}</h1>
+<main className="checkout">
+  <h1 className="checkout-title">{t.title}</h1>
 
-      {/* CLIENT */}
-      <section className="space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          <input
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={t.firstName}
-            value={customer.firstName}
-            onChange={(e) =>
-              setCustomer({ ...customer, firstName: e.target.value })
-            }
-          />
-          <input
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={t.lastName}
-            value={customer.lastName}
-            onChange={(e) =>
-              setCustomer({ ...customer, lastName: e.target.value })
-            }
-          />
-        </div>
-        <input
-          className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          type="email"
-          placeholder={t.email}
-          value={customer.email}
-          onChange={(e) =>
-            setCustomer({ ...customer, email: e.target.value })
-          }
-        />
-        <input
-          className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder={t.address}
-          value={customer.address}
-          onChange={(e) =>
-            setCustomer({ ...customer, address: e.target.value })
-          }
-        />
-        <div className="grid md:grid-cols-2 gap-4">
-          <input
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={t.postalCode}
-            value={customer.postalCode}
-            onChange={(e) =>
-              setCustomer({ ...customer, postalCode: e.target.value })
-            }
-          />
-          <input
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={t.city}
-            value={customer.city}
-            onChange={(e) =>
-              setCustomer({ ...customer, city: e.target.value })
-            }
-          />
-        </div>
-      </section>
+  {/* CLIENT */}
+  <section className="checkout-section">
+    <div className="checkout-grid-2">
+      <input
+        className="checkout-input"
+        placeholder={t.firstName}
+        value={customer.firstName}
+        onChange={(e) =>
+          setCustomer({ ...customer, firstName: e.target.value })
+        }
+      />
+      <input
+        className="checkout-input"
+        placeholder={t.lastName}
+        value={customer.lastName}
+        onChange={(e) =>
+          setCustomer({ ...customer, lastName: e.target.value })
+        }
+      />
+    </div>
 
-      {/* SHIPPING */}
-      {loading ? (
-        <p className="text-center text-gray-500">{t.loadingShipping}</p>
-      ) : (
-        <ChooseShipping
-          methods={methods}
-          locale={shippingLocale}
-          onMethodSelect={setShippingMethod}
-          onRelaySelect={setRelayPoint}
-        />
-      )}
+    <input
+      className="checkout-input"
+      type="email"
+      placeholder={t.email}
+      value={customer.email}
+      onChange={(e) =>
+        setCustomer({ ...customer, email: e.target.value })
+      }
+    />
 
-      {/* TOTAL */}
-      <section className="border-t pt-6 space-y-2">
-        <div className="flex justify-between text-gray-700">
-          <span>{t.subtotalExclTax}</span>
-          <span className="font-medium">{totalHT.toFixed(2)} €</span>
-        </div>
-        {totalVAT > 0 && (
-          <div className="flex justify-between text-gray-700">
-            <span>{t.productVAT}</span>
-            <span className="font-medium">{totalVAT.toFixed(2)} €</span>
-          </div>
-        )}
-        <div className="flex justify-between text-gray-700">
-          <span>{t.shippingInclTax}</span>
-          <span className="font-medium">{shippingTTC.toFixed(2)} €</span>
-        </div>
-        <div className="flex justify-between font-bold text-xl border-t pt-3 mt-3">
-          <span>{t.totalInclTax}</span>
-          <span>{finalTTC.toFixed(2)} €</span>
-        </div>
-      </section>
+    <input
+      className="checkout-input"
+      placeholder={t.address}
+      value={customer.address}
+      onChange={(e) =>
+        setCustomer({ ...customer, address: e.target.value })
+      }
+    />
 
-      <button
-        onClick={pay}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors"
-      >
-        {t.payWithStripe}
-      </button>
-    </main>
+    <div className="checkout-grid-2">
+      <input
+        className="checkout-input"
+        placeholder={t.postalCode}
+        value={customer.postalCode}
+        onChange={(e) =>
+          setCustomer({ ...customer, postalCode: e.target.value })
+        }
+      />
+      <input
+        className="checkout-input"
+        placeholder={t.city}
+        value={customer.city}
+        onChange={(e) =>
+          setCustomer({ ...customer, city: e.target.value })
+        }
+      />
+    </div>
+  </section>
+
+  {/* SHIPPING */}
+  {loading ? (
+    <p className="checkout-loading">{t.loadingShipping}</p>
+  ) : (
+    <ChooseShipping
+      methods={methods}
+      locale={locale}
+      onMethodSelect={setShippingMethod}
+      onRelaySelect={setRelayPoint}
+    />
+  )}
+
+  {/* TOTALS */}
+  <section className="checkout-totals">
+    <div className="checkout-row">
+      <span>{t.subtotalExclTax}</span>
+      <span>{totalHT.toFixed(2)} €</span>
+    </div>
+
+    {totalVAT > 0 && (
+      <div className="checkout-row">
+        <span>{t.productVAT}</span>
+        <span>{totalVAT.toFixed(2)} €</span>
+      </div>
+    )}
+
+    <div className="checkout-row">
+      <span>{t.shippingInclTax}</span>
+      <span>{shippingTTC.toFixed(2)} €</span>
+    </div>
+
+    <div className="checkout-row checkout-total">
+      <span>{t.totalInclTax}</span>
+      <span>{finalTTC.toFixed(2)} €</span>
+    </div>
+  </section>
+
+  <button onClick={pay} className="checkout-pay">
+    {t.payWithStripe}
+  </button>
+</main>
+
   );
 }

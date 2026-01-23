@@ -138,7 +138,6 @@ export default function AdminDashboardPage() {
       <div className="dash-head">
         <div>
           <h1 className="admin-title">📊 Dashboard</h1>
-          <p className="dash-sub">Vue rapide sur ton activité (Europe/Paris).</p>
         </div>
 
         <div className="dash-actions">

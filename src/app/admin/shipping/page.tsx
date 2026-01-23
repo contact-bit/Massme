@@ -41,6 +41,14 @@ const COUNTRIES: {
   { code: "CH", label: "Suisse", flag: "🇨🇭" },
 ];
 
+/* 🔑 LIEN PAYS → LOCALE (CRITIQUE) */
+const COUNTRY_TO_LOCALE: Record<CountryCode, ShippingLocale> = {
+  FR: "fr",
+  GB: "en",
+  DE: "de",
+  CH: "fr",
+};
+
 /* =====================================================
    PAGE
 ===================================================== */
@@ -143,42 +151,46 @@ export default function ShippingAdminPage() {
         ) : filtered.length === 0 ? (
           <p>Aucune méthode pour ce pays.</p>
         ) : (
-          filtered.map((m) => (
-            <div
-              key={m.id}
-              className="flex justify-between border rounded-md p-3 bg-white"
-            >
-              <div>
-                <p className="font-semibold">
-                  {Object.values(m.name)[0] || "—"}
-                  {!m.isActive && (
-                    <span className="text-xs text-red-500 ml-2">
-                      (désactivée)
-                    </span>
-                  )}
-                </p>
+          filtered.map((m) => {
+            const locale = COUNTRY_TO_LOCALE[m.country];
 
-                <p className="text-sm text-gray-500">
-                  {m.priceHT.toFixed(2)} € HT • TVA {m.vatRate}%
-                </p>
-              </div>
+            return (
+              <div
+                key={m.id}
+                className="flex justify-between border rounded-md p-3 bg-white"
+              >
+                <div>
+                  <p className="font-semibold">
+                    {m.name?.[locale] || "—"}
+                    {!m.isActive && (
+                      <span className="text-xs text-red-500 ml-2">
+                        (désactivée)
+                      </span>
+                    )}
+                  </p>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setEditing(m)}
-                  className="btn btn-primary"
-                >
-                  Configurer
-                </button>
-                <button
-                  onClick={() => handleDelete(m.id)}
-                  className="btn btn-danger"
-                >
-                  Supprimer
-                </button>
+                  <p className="text-sm text-gray-500">
+                    {m.priceHT.toFixed(2)} € HT • TVA {m.vatRate}%
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEditing(m)}
+                    className="btn btn-primary"
+                  >
+                    Configurer
+                  </button>
+                  <button
+                    onClick={() => handleDelete(m.id)}
+                    className="btn btn-danger"
+                  >
+                    Supprimer
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </section>
 

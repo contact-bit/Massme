@@ -1,0 +1,114 @@
+/* =====================================================
+   CHECKOUT – LAYOUT
+===================================================== */
+
+.checkout {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 4rem;
+}
+
+.checkout-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+/* =====================================================
+   FORM
+===================================================== */
+
+.checkout-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+}
+
+.checkout-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.checkout-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 0.95rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.checkout-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* =====================================================
+   SHIPPING
+===================================================== */
+
+.checkout-loading {
+  text-align: center;
+  color: #6b7280;
+  padding: 1.5rem 0;
+}
+
+/* =====================================================
+   TOTALS
+===================================================== */
+
+.checkout-totals {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1.5rem;
+}
+
+.checkout-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
+
+.checkout-row strong {
+  font-weight: 600;
+}
+
+.checkout-total {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* =====================================================
+   PAY BUTTON
+===================================================== */
+
+.checkout-pay {
+  width: 100%;
+  margin-top: 2rem;
+  padding: 1.1rem;
+  border-radius: 14px;
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.checkout-pay:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+}
+
+.checkout-pay:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
