@@ -47,32 +47,92 @@ function pickLangRecord(obj: any): Record<Lang, string> {
   return out;
 }
 
-/* ==================================
-   PATCH PRODUCT
-================================== */
-export async function PATCH(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await context.params;
+/* ----------------------------------
+   COMMON SECURITY
+---------------------------------- */
+function getAdminPassword(req: Request): { ok: boolean; error?: NextResponse } {
+  const headerPwd = req.headers.get("x-admin-password") || "";
+  const envPwd = process.env.ADMIN_PASSWORD || "";
 
-    /* ---------- SECURITY ---------- */
-    const headerPwd = req.headers.get("x-admin-password") || "";
-    const envPwd = process.env.ADMIN_PASSWORD || "";
-
-    if (!envPwd) {
-      return NextResponse.json(
+  if (!envPwd) {
+    return {
+      ok: false,
+      error: NextResponse.json(
         { error: "ADMIN_PASSWORD manquant côté serveur" },
         { status: 500 }
+      ),
+    };
+  }
+
+  if (headerPwd !== envPwd) {
+    return {
+      ok: false,
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+
+  return { ok: true };
+}
+
+/* ----------------------------------
+   EXTRACT ID FROM URL
+---------------------------------- */
+function getIdFromUrl(req: Request): string | null {
+  try {
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/").filter(Boolean);
+    const last = segments[segments.length - 1] || null;
+    return last && last !== "products" ? last : null;
+  } catch {
+    return null;
+  }
+}
+
+/* ==================================
+   DELETE PRODUCT (HARD DELETE)
+================================== */
+export async function DELETE(req: Request) {
+  try {
+    const sec = getAdminPassword(req);
+    if (!sec.ok && sec.error) return sec.error;
+
+    const id = getIdFromUrl(req);
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing product id" },
+        { status: 400 }
       );
     }
 
-    if (headerPwd !== envPwd) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // 🔥 suppression définitive du document
+    await dbAdmin.collection("products").doc(id).delete();
+
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (err) {
+    console.error("❌ PRODUCT DELETE ERROR:", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+/* ==================================
+   PATCH PRODUCT
+================================== */
+export async function PATCH(req: Request) {
+  try {
+    const sec = getAdminPassword(req);
+    if (!sec.ok && sec.error) return sec.error;
+
+    const id = getIdFromUrl(req);
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing product id" },
+        { status: 400 }
+      );
     }
 
-    /* ---------- BODY ---------- */
     const body = await req.json().catch(() => null);
     if (!body?.data || typeof body.data !== "object") {
       return NextResponse.json(
@@ -111,17 +171,15 @@ export async function PATCH(
 
     /* ---------- PRICES ---------- */
     const pricesByMarket: Record<Market, number> = {} as any;
-
     if (data.pricesByMarket && typeof data.pricesByMarket === "object") {
       for (const m of markets) {
         pricesByMarket[m] =
           Math.round(toNum(data.pricesByMarket[m]) * 100) / 100;
       }
     }
-
     update.pricesByMarket = pricesByMarket;
 
-    /* ---------- ✅ TVA PAR PAYS (FIX CRITIQUE) ---------- */
+    /* ---------- TVA ---------- */
     const vatByMarket: Record<
       Market,
       { enabled: boolean; rate: number }
@@ -140,22 +198,19 @@ export async function PATCH(
         vatByMarket[m] = { enabled: false, rate: 0 };
       }
     }
-
     update.vatByMarket = vatByMarket;
 
     /* ---------- LEGACY ---------- */
-    const DEFAULT_MARKET: Market = "FR";
-    if (pricesByMarket[DEFAULT_MARKET] != null) {
-      update.priceHT = pricesByMarket[DEFAULT_MARKET];
-      update.price = { eur: pricesByMarket[DEFAULT_MARKET] };
+    if (pricesByMarket.FR != null) {
+      update.priceHT = pricesByMarket.FR;
+      update.price = { eur: pricesByMarket.FR };
     }
 
     update.updatedAt = new Date().toISOString();
 
-    /* ---------- SAVE ---------- */
     await dbAdmin.collection("products").doc(id).update(update);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     console.error("❌ PRODUCT PATCH ERROR:", err);
     return NextResponse.json(

@@ -26,7 +26,11 @@ function getName(p: Product) {
 }
 
 function getPrice(p: Product) {
-  return typeof p.price === "number" ? p.price : typeof p.price?.eur === "number" ? p.price.eur : 0;
+  return typeof p.price === "number"
+    ? p.price
+    : typeof p.price?.eur === "number"
+    ? p.price.eur
+    : 0;
 }
 
 function moneyEUR(n: number) {
@@ -96,32 +100,54 @@ export default function ProductsAdminPage() {
       try {
         json = JSON.parse(txt);
       } catch {
-        // si ton endpoint renvoie direct {products} sans ok, on tente fallback
         json = null;
       }
 
       // ✅ Supporte 2 formats :
       // - { ok: true, products: [...] }
       // - { products: [...] }
-      const list: Product[] = Array.isArray(json?.products)
-        ? json.products
-        : Array.isArray((json as any)?.data?.products)
-        ? (json as any).data.products
-        : // si ton endpoint renvoie déjà { products } sans JSON.parse possible (rare), on essaye:
-          [];
+      const list: Product[] =
+        (Array.isArray(json?.products) && json.products) ||
+        (Array.isArray(json?.data?.products) && json.data.products) ||
+        [];
 
-      // Si { ok:false }, message
       if (json && json.ok === false) {
         throw new Error(json.error || "API produits: ok=false");
       }
 
-      setProducts(list);
+      setProducts(Array.isArray(list) ? list : []);
       setPage(1);
     } catch (e: any) {
       setProducts([]);
       setError(e?.message || "Erreur chargement produits");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteProduct = async (id: string) => {
+    if (!confirm("Supprimer ce produit ?")) return;
+    try {
+      const adminPassword = localStorage.getItem("admin_password") || "";
+      const adminToken = localStorage.getItem("admin_token") || "";
+
+      const headers: Record<string, string> = {};
+      if (adminPassword) headers["x-admin-password"] = adminPassword;
+      if (adminToken) headers["x-admin-token"] = adminToken;
+
+      const res = await fetch(`/api/admin/products/${id}`, {
+        method: "DELETE",
+        headers,
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || `HTTP ${res.status}`);
+      }
+
+      await fetchProducts();
+    } catch (e: any) {
+      alert("Erreur suppression produit : " + (e?.message || "inconnue"));
     }
   };
 
@@ -234,7 +260,9 @@ export default function ProductsAdminPage() {
               }}
               placeholder="Nom, ID, stock…"
             />
-            <div className="hint">{q ? `Filtre: “${qDebounced}”` : "Astuce: colle un ID produit"}</div>
+            <div className="hint">
+              {q ? `Filtre: “${qDebounced}”` : "Astuce: colle un ID produit"}
+            </div>
           </div>
 
           <div className="field">
@@ -296,10 +324,18 @@ export default function ProductsAdminPage() {
             <span className="muted">
               Page {currentPage} / {totalPages}
             </span>
-            <button className="btn btn-ghost" onClick={() => setPage((p) => clamp(p - 1, 1, totalPages))} disabled={currentPage <= 1}>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setPage((p) => clamp(p - 1, 1, totalPages))}
+              disabled={currentPage <= 1}
+            >
               ←
             </button>
-            <button className="btn btn-ghost" onClick={() => setPage((p) => clamp(p + 1, 1, totalPages))} disabled={currentPage >= totalPages}>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setPage((p) => clamp(p + 1, 1, totalPages))}
+              disabled={currentPage >= totalPages}
+            >
               →
             </button>
           </div>
@@ -350,7 +386,9 @@ export default function ProductsAdminPage() {
 
                       <div className="p-line">
                         <span className="price">{moneyEUR(price)}</span>
-                        <span className={`pill ${active ? "pill-on" : "pill-off"}`}>{active ? "Actif" : "Inactif"}</span>
+                        <span className={`pill ${active ? "pill-on" : "pill-off"}`}>
+                          {active ? "Actif" : "Inactif"}
+                        </span>
                       </div>
 
                       <div className="p-line muted small">
@@ -364,12 +402,22 @@ export default function ProductsAdminPage() {
                       <Link className="btn btn-primary btn-sm" href={`/admin/products/${p.id}`}>
                         Modifier
                       </Link>
+
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => deleteProduct(p.id)}
+                      >
+                        🗑 Supprimer
+                      </button>
+
                       <button
                         className="btn btn-ghost btn-sm"
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(p.id);
-                          } catch {}
+                          } catch {
+                            // ignore
+                          }
                         }}
                         title="Copier l'ID"
                       >
@@ -396,13 +444,22 @@ export default function ProductsAdminPage() {
         {!loading && !error && filtered.length > 0 && (
           <div className="p-foot">
             <div className="muted">
-              Affichage {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} / {filtered.length}
+              Affichage {(currentPage - 1) * pageSize + 1}–
+              {Math.min(currentPage * pageSize, filtered.length)} / {filtered.length}
             </div>
             <div className="p-foot-btns">
-              <button className="btn btn-ghost" onClick={() => setPage(1)} disabled={currentPage === 1}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setPage(1)}
+                disabled={currentPage === 1}
+              >
                 Début
               </button>
-              <button className="btn btn-ghost" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setPage(totalPages)}
+                disabled={currentPage === totalPages}
+              >
                 Fin
               </button>
             </div>
@@ -470,7 +527,11 @@ export default function ProductsAdminPage() {
         .kpi {
           border: 1px solid rgba(11, 18, 32, 0.1);
           border-radius: 16px;
-          background: linear-gradient(180deg, rgba(11, 18, 32, 0.02), rgba(11, 18, 32, 0));
+          background: linear-gradient(
+            180deg,
+            rgba(11, 18, 32, 0.02),
+            rgba(11, 18, 32, 0)
+          );
           padding: 14px;
           box-shadow: 0 18px 50px rgba(11, 18, 32, 0.04);
         }
@@ -757,7 +818,12 @@ export default function ProductsAdminPage() {
         .skel-row {
           height: 52px;
           border-radius: 14px;
-          background: linear-gradient(90deg, rgba(11, 18, 32, 0.04), rgba(11, 18, 32, 0.08), rgba(11, 18, 32, 0.04));
+          background: linear-gradient(
+            90deg,
+            rgba(11, 18, 32, 0.04),
+            rgba(11, 18, 32, 0.08),
+            rgba(11, 18, 32, 0.04)
+          );
           background-size: 200% 100%;
           animation: shimmer 1.2s ease-in-out infinite;
         }
@@ -803,6 +869,13 @@ export default function ProductsAdminPage() {
           padding: 8px 10px;
           border-radius: 12px;
           font-size: 12px;
+        }
+
+        .btn-danger {
+          background: rgba(239, 68, 68, 1);
+          border-color: rgba(239, 68, 68, 1);
+          color: white;
+          box-shadow: 0 12px 26px rgba(239, 68, 68, 0.22);
         }
 
         @media (max-width: 1050px) {

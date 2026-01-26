@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 /* ----------------------------------
    TYPES
@@ -37,40 +35,42 @@ export default function ProductForm({
     if (!nameFr.trim()) {
       return setError("Le nom FR est obligatoire.");
     }
+    if (!priceHT || !stock) {
+      return setError("Prix et stock sont obligatoires.");
+    }
 
     setLoading(true);
     try {
-      await addDoc(collection(db, "products"), {
-        /* I18N */
-        name: {
-          fr: nameFr,
-        },
-        description: {
-          fr: descFr,
-        },
+      const adminPassword =
+        typeof window !== "undefined"
+          ? localStorage.getItem("admin_password") || ""
+          : "";
 
-        /* BASE */
-        imageUrl: imageUrl || null,
-        stock: Number(stock),
-        isActive: true,
-        applyVAT: true,
+      if (!adminPassword) {
+        setLoading(false);
+        return setError("Mot de passe admin manquant (reconnecte-toi).");
+      }
 
-        /* PRIX & PAYS (par défaut) */
-        markets: ["FR"],
-        pricesByMarket: {
-          FR: Number(priceHT),
+      const res = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-password": adminPassword,
         },
-        currencyByMarket: {
-          FR: "EUR",
-        },
-
-        /* LEGACY (si encore utilisé ailleurs) */
-        price: {
-          eur: Number(priceHT),
-        },
-
-        createdAt: new Date().toISOString(),
+        body: JSON.stringify({
+          nameFr,
+          descFr,
+          priceHT,
+          stock,
+          imageUrl,
+        }),
       });
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || `HTTP ${res.status}`);
+      }
 
       // reset
       setNameFr("");
@@ -80,9 +80,9 @@ export default function ProductForm({
       setImageUrl("");
 
       onSuccess();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setError("Erreur lors de la création du produit.");
+      setError(e?.message || "Erreur lors de la création du produit.");
     } finally {
       setLoading(false);
     }
