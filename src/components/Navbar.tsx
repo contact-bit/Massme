@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingCart } from "lucide-react";
-import { useCart } from "@/context/CartContext";
 import "@/styles/components/navbar.css";
 
 /* =====================================================
@@ -33,7 +31,6 @@ const TRANSLATIONS: Record<
   Locale,
   {
     notice: string;
-    cart: string;
     nav: {
       home: string;
       about: string;
@@ -45,7 +42,6 @@ const TRANSLATIONS: Record<
   fr: {
     notice:
       "🚧 Site en construction — certaines fonctionnalités peuvent être indisponibles.",
-    cart: "Panier",
     nav: {
       home: "Accueil",
       about: "Fonctionnement",
@@ -56,7 +52,6 @@ const TRANSLATIONS: Record<
   en: {
     notice:
       "🚧 Website under construction — some features may be unavailable.",
-    cart: "Cart",
     nav: {
       home: "Home",
       about: "How it works",
@@ -66,7 +61,6 @@ const TRANSLATIONS: Record<
   },
   es: {
     notice: "🚧 Sitio en construcción.",
-    cart: "Carrito",
     nav: {
       home: "Inicio",
       about: "Funcionamiento",
@@ -76,7 +70,6 @@ const TRANSLATIONS: Record<
   },
   de: {
     notice: "🚧 Website im Aufbau.",
-    cart: "Warenkorb",
     nav: {
       home: "Start",
       about: "Funktionsweise",
@@ -86,7 +79,6 @@ const TRANSLATIONS: Record<
   },
   it: {
     notice: "🚧 Sito in costruzione.",
-    cart: "Carrello",
     nav: {
       home: "Home",
       about: "Funzionamento",
@@ -96,7 +88,6 @@ const TRANSLATIONS: Record<
   },
   nl: {
     notice: "🚧 Website in aanbouw.",
-    cart: "Winkelwagen",
     nav: {
       home: "Home",
       about: "Werking",
@@ -112,7 +103,6 @@ const TRANSLATIONS: Record<
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { items, toggleCart } = useCart();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -120,12 +110,12 @@ export default function Navbar() {
 
   /* -------- Locale depuis URL -------- */
   const rawLocale = pathname?.split("/")[1];
-  const locale: Locale = LANGUAGES.some(l => l.code === rawLocale)
+  const locale: Locale = LANGUAGES.some((l) => l.code === rawLocale)
     ? (rawLocale as Locale)
     : "fr";
 
   const t = TRANSLATIONS[locale];
-  const currentLang = LANGUAGES.find(l => l.code === locale)!;
+  const currentLang = LANGUAGES.find((l) => l.code === locale)!;
 
   /* -------- Switch locale -------- */
   const switchLocaleHref = (newLocale: Locale) => {
@@ -174,7 +164,7 @@ export default function Navbar() {
           <div className="nav-lang-wrapper" ref={langRef}>
             <button
               className="nav-lang-btn"
-              onClick={() => setLangOpen(v => !v)}
+              onClick={() => setLangOpen((v) => !v)}
               type="button"
               aria-label="Change language"
             >
@@ -183,7 +173,7 @@ export default function Navbar() {
 
             {langOpen && (
               <div className="nav-lang-dropdown">
-                {LANGUAGES.map(l => (
+                {LANGUAGES.map((l) => (
                   <Link
                     key={l.code}
                     href={switchLocaleHref(l.code)}
@@ -197,25 +187,12 @@ export default function Navbar() {
               </div>
             )}
           </div>
-
-          {/* CART */}
-          <button
-            className="nav-cart-btn"
-            onClick={toggleCart}
-            type="button"
-            aria-label="Cart"
-          >
-            <ShoppingCart size={22} />
-            {items.length > 0 && (
-              <span className="nav-cart-badge">{items.length}</span>
-            )}
-          </button>
         </div>
 
         {/* MOBILE BURGER */}
         <button
           className="navbar-mobile-btn nav-mobile-only"
-          onClick={() => setMobileOpen(v => !v)}
+          onClick={() => setMobileOpen((v) => !v)}
           aria-label="Open menu"
         >
           ☰
@@ -247,7 +224,7 @@ export default function Navbar() {
           />
 
           <div className="mobile-lang-list">
-            {LANGUAGES.map(l => (
+            {LANGUAGES.map((l) => (
               <Link
                 key={l.code}
                 href={switchLocaleHref(l.code)}
@@ -258,17 +235,6 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-
-          <button
-            className="mobile-cart"
-            onClick={toggleCart}
-            type="button"
-          >
-            <ShoppingCart size={22} />
-            <span>
-              {t.cart} ({items.length})
-            </span>
-          </button>
         </div>
       )}
     </nav>

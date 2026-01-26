@@ -35,6 +35,14 @@ const TRANSLATIONS: Record<Locale, any> = {
     emailRequired: "Email requis",
     nameRequired: "Prénom et nom requis",
     paymentError: "Erreur paiement",
+    heardFromQuestion: "Comment avez-vous connu notre produit ?",
+    heardFromInternet: "Internet (recherche Google, site, etc.)",
+    heardFromSocial: "Réseaux sociaux",
+    heardFromMedical: "Recommandation médicale",
+    heardFromOther: "Autre",
+    heardFromOtherPlaceholder: "Précisez (ex : nom du médecin, nom du média, etc.)",
+    heardFromRequired: "Merci d’indiquer comment vous nous avez connus",
+    heardFromOtherRequired: "Merci de préciser si vous choisissez « Autre »",
   },
   en: {
     title: "Order",
@@ -56,6 +64,14 @@ const TRANSLATIONS: Record<Locale, any> = {
     emailRequired: "Email required",
     nameRequired: "First and last name required",
     paymentError: "Payment error",
+    heardFromQuestion: "How did you hear about our product?",
+    heardFromInternet: "Internet (Google search, website, etc.)",
+    heardFromSocial: "Social media",
+    heardFromMedical: "Medical recommendation",
+    heardFromOther: "Other",
+    heardFromOtherPlaceholder: "Please specify (e.g. doctor name, media, etc.)",
+    heardFromRequired: "Please tell us how you heard about us",
+    heardFromOtherRequired: "Please specify if you select \"Other\"",
   },
   es: {
     title: "Pedido",
@@ -77,6 +93,14 @@ const TRANSLATIONS: Record<Locale, any> = {
     emailRequired: "Email requerido",
     nameRequired: "Nombre y apellido requeridos",
     paymentError: "Error de pago",
+    heardFromQuestion: "¿Cómo conociste nuestro producto?",
+    heardFromInternet: "Internet (búsqueda en Google, web, etc.)",
+    heardFromSocial: "Redes sociales",
+    heardFromMedical: "Recomendación médica",
+    heardFromOther: "Otro",
+    heardFromOtherPlaceholder: "Especifica (por ejemplo, nombre del médico, medio, etc.)",
+    heardFromRequired: "Indícanos cómo nos conociste",
+    heardFromOtherRequired: "Especifica si eliges « Otro »",
   },
   de: {
     title: "Bestellung",
@@ -98,6 +122,14 @@ const TRANSLATIONS: Record<Locale, any> = {
     emailRequired: "E-Mail erforderlich",
     nameRequired: "Vor- und Nachname erforderlich",
     paymentError: "Zahlungsfehler",
+    heardFromQuestion: "Wie haben Sie von unserem Produkt erfahren?",
+    heardFromInternet: "Internet (Google-Suche, Website, etc.)",
+    heardFromSocial: "Soziale Netzwerke",
+    heardFromMedical: "Medizinische Empfehlung",
+    heardFromOther: "Andere",
+    heardFromOtherPlaceholder: "Bitte genauer angeben (z. B. Name des Arztes, Medium, etc.)",
+    heardFromRequired: "Bitte teilen Sie uns mit, wie Sie von uns gehört haben",
+    heardFromOtherRequired: "Bitte präzisieren, wenn Sie „Andere“ wählen",
   },
   it: {
     title: "Ordine",
@@ -119,6 +151,14 @@ const TRANSLATIONS: Record<Locale, any> = {
     emailRequired: "Email richiesta",
     nameRequired: "Nome e cognome richiesti",
     paymentError: "Errore di pagamento",
+    heardFromQuestion: "Come hai conosciuto il nostro prodotto?",
+    heardFromInternet: "Internet (ricerca Google, sito, ecc.)",
+    heardFromSocial: "Social network",
+    heardFromMedical: "Raccomandazione medica",
+    heardFromOther: "Altro",
+    heardFromOtherPlaceholder: "Specifica (es. nome del medico, media, ecc.)",
+    heardFromRequired: "Indica come ci hai conosciuti",
+    heardFromOtherRequired: "Specifica se scegli « Altro »",
   },
   nl: {
     title: "Bestelling",
@@ -140,6 +180,14 @@ const TRANSLATIONS: Record<Locale, any> = {
     emailRequired: "E-mail vereist",
     nameRequired: "Voor- en achternaam vereist",
     paymentError: "Betalingsfout",
+    heardFromQuestion: "Hoe heb je over ons product gehoord?",
+    heardFromInternet: "Internet (Google-zoekopdracht, website, enz.)",
+    heardFromSocial: "Sociale media",
+    heardFromMedical: "Medische aanbeveling",
+    heardFromOther: "Andere",
+    heardFromOtherPlaceholder: "Specificeer (bijv. naam arts, medium, enz.)",
+    heardFromRequired: "Laat ons weten hoe je ons gevonden hebt",
+    heardFromOtherRequired: "Specificeer als je \"Andere\" kiest",
   },
 };
 
@@ -167,6 +215,115 @@ function round2(n: number) {
 }
 
 /* =====================================================
+   CART SUMMARY (EN HAUT DE LA PAGE)
+===================================================== */
+function CartSummaryInline() {
+  const {
+    items,
+    totalHT,
+    totalVAT,
+    totalTTC,
+    updateQuantity,
+    removeItem,
+  } = useCart();
+
+  if (!items.length) {
+    return (
+      <section className="checkout-section">
+        <p>Votre panier est vide.</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="checkout-section checkout-cart">
+      <div className="checkout-cart-header">
+        <h2 className="checkout-cart-title">Votre panier</h2>
+        <span className="checkout-cart-count">
+          {items.length} article{items.length > 1 ? "s" : ""}
+        </span>
+      </div>
+
+      <div className="checkout-cart-list">
+        {items.map((item, index) => (
+          <div key={`${item.id}-${index}`} className="checkout-cart-item">
+            <div className="checkout-cart-thumb-wrap">
+              {item.imageUrl ? (
+                <img
+                  src={item.imageUrl}
+                  alt={item.name}
+                  className="checkout-cart-thumb"
+                />
+              ) : (
+                <div className="checkout-cart-thumb placeholder" />
+              )}
+            </div>
+
+            <div className="checkout-cart-main">
+              <p className="checkout-cart-name">{item.name}</p>
+              <p className="checkout-cart-unit">
+                {item.priceHT.toFixed(2)} € HT / unité
+              </p>
+
+              <div className="checkout-cart-bottom">
+                <div className="checkout-cart-qty">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateQuantity(item.id, item.quantity - 1)
+                    }
+                  >
+                    −
+                  </button>
+                  <span>{item.quantity}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateQuantity(item.id, item.quantity + 1)
+                    }
+                  >
+                    +
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  className="checkout-cart-remove"
+                  onClick={() => removeItem(item.id)}
+                >
+                  Retirer
+                </button>
+              </div>
+            </div>
+
+            <div className="checkout-cart-line-total">
+              {(item.priceHT * item.quantity).toFixed(2)} €
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="checkout-cart-summary">
+        <div className="checkout-cart-summary-row">
+          <span>Total HT</span>
+          <span>{totalHT.toFixed(2)} €</span>
+        </div>
+        {totalVAT > 0 && (
+          <div className="checkout-cart-summary-row">
+            <span>TVA</span>
+            <span>{totalVAT.toFixed(2)} €</span>
+          </div>
+        )}
+        <div className="checkout-cart-summary-row total">
+          <span>Total TTC produits</span>
+          <span>{totalTTC.toFixed(2)} €</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* =====================================================
    PAGE
 ===================================================== */
 export default function CheckoutPage() {
@@ -187,6 +344,12 @@ export default function CheckoutPage() {
     country: "FR",
   });
 
+  /* ---------- HOW DID YOU HEAR ABOUT US ---------- */
+  const [heardFrom, setHeardFrom] = useState<
+    "internet" | "social" | "medical" | "other" | ""
+  >("");
+  const [heardFromOther, setHeardFromOther] = useState("");
+
   /* ---------- FORCE COUNTRY FROM LOCALE ---------- */
   useEffect(() => {
     const country = LOCALE_TO_COUNTRY[locale] ?? "FR";
@@ -197,8 +360,7 @@ export default function CheckoutPage() {
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod | null>(null);
-  const [relayPoint, setRelayPoint] =
-    useState<RelayPoint | null>(null);
+  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
   const [loading, setLoading] = useState(false);
 
   /* ---------- LOAD SHIPPING ---------- */
@@ -226,9 +388,7 @@ export default function CheckoutPage() {
             : 0;
 
         const priceTTC =
-          vatRate > 0
-            ? round2(priceHT * (1 + vatRate / 100))
-            : priceHT;
+          vatRate > 0 ? round2(priceHT * (1 + vatRate / 100)) : priceHT;
 
         return {
           id: doc.id,
@@ -261,6 +421,9 @@ export default function CheckoutPage() {
     if (!customer.email) return alert(t.emailRequired);
     if (!customer.firstName || !customer.lastName)
       return alert(t.nameRequired);
+    if (!heardFrom) return alert(t.heardFromRequired);
+    if (heardFrom === "other" && !heardFromOther.trim())
+      return alert(t.heardFromOtherRequired);
 
     const fullName = `${customer.firstName.trim()} ${customer.lastName.trim()}`;
 
@@ -271,6 +434,8 @@ export default function CheckoutPage() {
         items,
         locale,
         customerEmail: customer.email,
+        heardFrom,
+        heardFromOther: heardFrom === "other" ? heardFromOther.trim() : null,
         shippingAddress: {
           name: fullName,
           firstName: customer.firstName,
@@ -296,110 +461,174 @@ export default function CheckoutPage() {
      RENDER
   ===================================================== */
   return (
-<main className="checkout">
-  <h1 className="checkout-title">{t.title}</h1>
+    <main className="checkout">
+      <h1 className="checkout-title">{t.title}</h1>
 
-  {/* CLIENT */}
-  <section className="checkout-section">
-    <div className="checkout-grid-2">
-      <input
-        className="checkout-input"
-        placeholder={t.firstName}
-        value={customer.firstName}
-        onChange={(e) =>
-          setCustomer({ ...customer, firstName: e.target.value })
-        }
-      />
-      <input
-        className="checkout-input"
-        placeholder={t.lastName}
-        value={customer.lastName}
-        onChange={(e) =>
-          setCustomer({ ...customer, lastName: e.target.value })
-        }
-      />
-    </div>
+      {/* VOTRE PANIER AU-DESSUS DES INFOS DE LIVRAISON */}
+      <CartSummaryInline />
 
-    <input
-      className="checkout-input"
-      type="email"
-      placeholder={t.email}
-      value={customer.email}
-      onChange={(e) =>
-        setCustomer({ ...customer, email: e.target.value })
-      }
-    />
+      {/* CLIENT */}
+      <section className="checkout-section">
+        <div className="checkout-grid-2">
+          <input
+            className="checkout-input"
+            placeholder={t.firstName}
+            value={customer.firstName}
+            onChange={(e) =>
+              setCustomer({ ...customer, firstName: e.target.value })
+            }
+          />
+          <input
+            className="checkout-input"
+            placeholder={t.lastName}
+            value={customer.lastName}
+            onChange={(e) =>
+              setCustomer({ ...customer, lastName: e.target.value })
+            }
+          />
+        </div>
 
-    <input
-      className="checkout-input"
-      placeholder={t.address}
-      value={customer.address}
-      onChange={(e) =>
-        setCustomer({ ...customer, address: e.target.value })
-      }
-    />
+        <input
+          className="checkout-input"
+          type="email"
+          placeholder={t.email}
+          value={customer.email}
+          onChange={(e) =>
+            setCustomer({ ...customer, email: e.target.value })
+          }
+        />
 
-    <div className="checkout-grid-2">
-      <input
-        className="checkout-input"
-        placeholder={t.postalCode}
-        value={customer.postalCode}
-        onChange={(e) =>
-          setCustomer({ ...customer, postalCode: e.target.value })
-        }
-      />
-      <input
-        className="checkout-input"
-        placeholder={t.city}
-        value={customer.city}
-        onChange={(e) =>
-          setCustomer({ ...customer, city: e.target.value })
-        }
-      />
-    </div>
-  </section>
+        <input
+          className="checkout-input"
+          placeholder={t.address}
+          value={customer.address}
+          onChange={(e) =>
+            setCustomer({ ...customer, address: e.target.value })
+          }
+        />
 
-  {/* SHIPPING */}
-  {loading ? (
-    <p className="checkout-loading">{t.loadingShipping}</p>
-  ) : (
-    <ChooseShipping
-      methods={methods}
-      locale={locale}
-      onMethodSelect={setShippingMethod}
-      onRelaySelect={setRelayPoint}
-    />
-  )}
+        <div className="checkout-grid-2">
+          <input
+            className="checkout-input"
+            placeholder={t.postalCode}
+            value={customer.postalCode}
+            onChange={(e) =>
+              setCustomer({ ...customer, postalCode: e.target.value })
+            }
+          />
+          <input
+            className="checkout-input"
+            placeholder={t.city}
+            value={customer.city}
+            onChange={(e) =>
+              setCustomer({ ...customer, city: e.target.value })
+            }
+          />
+        </div>
+      </section>
 
-  {/* TOTALS */}
-  <section className="checkout-totals">
-    <div className="checkout-row">
-      <span>{t.subtotalExclTax}</span>
-      <span>{totalHT.toFixed(2)} €</span>
-    </div>
+      {/* HOW DID YOU HEAR ABOUT US */}
+      <section className="checkout-section">
+        <h2 className="checkout-subtitle">{t.heardFromQuestion}</h2>
 
-    {totalVAT > 0 && (
-      <div className="checkout-row">
-        <span>{t.productVAT}</span>
-        <span>{totalVAT.toFixed(2)} €</span>
-      </div>
-    )}
+        <div className="checkout-radio-group">
+          <label className="checkout-radio-item">
+            <input
+              type="radio"
+              name="heardFrom"
+              value="internet"
+              checked={heardFrom === "internet"}
+              onChange={() => setHeardFrom("internet")}
+            />
+            <span>{t.heardFromInternet}</span>
+          </label>
 
-    <div className="checkout-row">
-      <span>{t.shippingInclTax}</span>
-      <span>{shippingTTC.toFixed(2)} €</span>
-    </div>
+          <label className="checkout-radio-item">
+            <input
+              type="radio"
+              name="heardFrom"
+              value="social"
+              checked={heardFrom === "social"}
+              onChange={() => setHeardFrom("social")}
+            />
+            <span>{t.heardFromSocial}</span>
+          </label>
 
-    <div className="checkout-row checkout-total">
-      <span>{t.totalInclTax}</span>
-      <span>{finalTTC.toFixed(2)} €</span>
-    </div>
-  </section>
+          <label className="checkout-radio-item">
+            <input
+              type="radio"
+              name="heardFrom"
+              value="medical"
+              checked={heardFrom === "medical"}
+              onChange={() => setHeardFrom("medical")}
+            />
+            <span>{t.heardFromMedical}</span>
+          </label>
 
-  <button onClick={pay} className="checkout-pay">
-    {t.payWithStripe}
-  </button>
-</main>
+          <label className="checkout-radio-item">
+            <input
+              type="radio"
+              name="heardFrom"
+              value="other"
+              checked={heardFrom === "other"}
+              onChange={() => setHeardFrom("other")}
+            />
+            <span>{t.heardFromOther}</span>
+          </label>
+        </div>
 
+        {heardFrom === "other" && (
+          <div className="checkout-heardfrom-other">
+            <input
+              className="checkout-input"
+              placeholder={t.heardFromOtherPlaceholder}
+              value={heardFromOther}
+              onChange={(e) => setHeardFromOther(e.target.value)}
+            />
+          </div>
+        )}
+      </section>
+
+      {/* SHIPPING */}
+      {loading ? (
+        <p className="checkout-loading">{t.loadingShipping}</p>
+      ) : (
+        <ChooseShipping
+          methods={methods}
+          locale={locale}
+          onMethodSelect={setShippingMethod}
+          onRelaySelect={setRelayPoint}
+        />
+      )}
+
+      {/* TOTALS */}
+      <section className="checkout-totals">
+        <div className="checkout-row">
+          <span>{t.subtotalExclTax}</span>
+          <span>{totalHT.toFixed(2)} €</span>
+        </div>
+
+        {totalVAT > 0 && (
+          <div className="checkout-row">
+            <span>{t.productVAT}</span>
+            <span>{totalVAT.toFixed(2)} €</span>
+          </div>
+        )}
+
+        <div className="checkout-row">
+          <span>{t.shippingInclTax}</span>
+          <span>{shippingTTC.toFixed(2)} €</span>
+        </div>
+
+        <div className="checkout-row checkout-total">
+          <span>{t.totalInclTax}</span>
+          <span>{finalTTC.toFixed(2)} €</span>
+        </div>
+      </section>
+
+      <button onClick={pay} className="checkout-pay">
+        {t.payWithStripe}
+      </button>
+    </main>
   );
 }

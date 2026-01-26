@@ -11,7 +11,6 @@ export type CartItem = {
   name: string;
   priceHT: number;
   quantity: number;
-
   imageUrl?: string;
   description?: string;
 
@@ -31,6 +30,7 @@ type CartContextType = {
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
+  updateQuantity: (id: string, quantity: number) => void;
 
   /** Totaux calculés UNE FOIS ici */
   totalHT: number;
@@ -111,6 +111,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  const updateQuantity = (id: string, quantity: number) => {
+    setItems((prev) =>
+      prev
+        .map((item) =>
+          item.id === id ? { ...item, quantity: Math.max(0, quantity) } : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
   /* =====================================================
      TOTALS (SOURCE DE VÉRITÉ)
   ===================================================== */
@@ -144,6 +154,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addItem,
         removeItem,
         clearCart,
+        updateQuantity,
         totalHT,
         totalVAT,
         totalTTC,

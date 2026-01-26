@@ -33,6 +33,8 @@ export async function POST(req: Request) {
       shippingMethod,
       relayPoint,
       disableVAT = false,
+      heardFrom,
+      heardFromOther,
     } = body;
 
     /* ------------------ VALIDATION ------------------ */
@@ -62,8 +64,7 @@ export async function POST(req: Request) {
     }));
 
     const itemsHT = cleanItems.reduce(
-      (sum: number, item: CartItem) =>
-        sum + item.priceHT * item.quantity,
+      (sum: number, item: CartItem) => sum + item.priceHT * item.quantity,
       0
     );
 
@@ -105,6 +106,9 @@ export async function POST(req: Request) {
         totalTTC,
         vatDisabled: disableVAT,
       },
+
+      heardFrom: heardFrom || null,
+      heardFromOther: heardFromOther || null,
 
       locale,
       status: "pending_payment",

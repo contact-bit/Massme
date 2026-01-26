@@ -47,6 +47,24 @@ export async function POST(req: Request) {
     };
 
     // ---------------------------------------------------------
+    // 🎯 Source "Comment avez-vous connu notre produit ?"
+    // ---------------------------------------------------------
+    const heardFrom: string | null = rawOrder.heardFrom || null;
+    const heardFromOther: string | null = rawOrder.heardFromOther || null;
+
+    let heardFromLabel = "Non renseigné";
+
+    if (heardFrom === "internet") heardFromLabel = "Internet";
+    else if (heardFrom === "social") heardFromLabel = "Réseaux sociaux";
+    else if (heardFrom === "medical") heardFromLabel = "Recommandation médicale";
+    else if (heardFrom === "other") heardFromLabel = "Autre";
+
+    const heardFromLine =
+      heardFrom === "other" && heardFromOther
+        ? `${heardFromLabel} – ${heardFromOther}`
+        : heardFromLabel;
+
+    // ---------------------------------------------------------
     // 📄 Génération de la facture PDF
     // ---------------------------------------------------------
     let pdfBase64 = "";
@@ -106,9 +124,15 @@ export async function POST(req: Request) {
       Une nouvelle commande vient d’être validée sur Massme.
     </p>
 
-    <div style="padding:18px; background:#f6faff; border-radius:10px; border:1px solid #d9e3f0; margin-bottom:30px;">
+    <div style="padding:18px; background:#f6faff; border-radius:10px; border:1px solid #d9e3f0; margin-bottom:20px;">
       <p style="margin:0; font-size:16px;"><b>ID Commande :</b> ${orderId}</p>
       <p style="margin:0; font-size:16px;"><b>Client :</b> ${customerEmail}</p>
+    </div>
+
+    <div style="padding:14px 18px; background:#fefce8; border-radius:10px; border:1px solid #facc15; margin-bottom:30px;">
+      <p style="margin:0; font-size:14px; color:#854d0e;">
+        <b>Comment il nous a connus :</b> ${heardFromLine}
+      </p>
     </div>
 
     <h3 style="margin-top:10px; font-size:20px; color:#111;">📦 Articles commandés</h3>
@@ -141,7 +165,6 @@ export async function POST(req: Request) {
     await resend.emails.send({
       from: "Massme • Orders <contact@hdconnects.com>",
       to: process.env.ADMIN_EMAIL!,
-      // si tu veux aussi le logisticien : bcc: process.env.LOGISTICS_EMAIL,
       subject: `🛒 Nouvelle commande – #${orderId}`,
       html: htmlTemplate,
       attachments: pdfBase64
@@ -156,7 +179,6 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ status: "admin email sent" });
-
   } catch (err) {
     console.error("❌ Error sending admin email:", err);
     return NextResponse.json({ error: err }, { status: 500 });

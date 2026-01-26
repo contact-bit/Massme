@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { collection, getDocs } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
@@ -93,7 +94,7 @@ type Product = {
   imageUrl?: string;
   isActive?: boolean;
 
-  markets: Market[];
+  markets: Market;
 
   pricesByMarket: Record<Market, number>;
   vatByMarket: Record<
@@ -127,6 +128,7 @@ function round2(n: number) {
 export default function ProductsClient({ locale }: { locale: Locale }) {
   const [products, setProducts] = useState<Product[]>([]);
   const { addItem } = useCart();
+  const router = useRouter();
 
   const safeLocale: Locale = UI[locale] ? locale : "fr";
   const T = UI[safeLocale];
@@ -169,8 +171,8 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
     );
   }
 
-  /* ---------------- ADD TO CART ---------------- */
-  const addToCart = (p: Product) => {
+  /* ---------------- ADD TO CART + REDIRECT ---------------- */
+  const addToCartAndGoCheckout = (p: Product) => {
     const name = pickLocaleValue(p.name, safeLocale);
     const desc = pickLocaleValue(p.description, safeLocale);
     const priceHT = Number(p.pricesByMarket?.[market] ?? 0);
@@ -192,6 +194,8 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
         rate: vat.rate,
       },
     });
+
+    router.push(`/${safeLocale}/checkout`);
   };
 
   /* ---------------- RENDER ---------------- */
@@ -257,7 +261,7 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
               </Link>
 
               <button
-                onClick={() => addToCart(p)}
+                onClick={() => addToCartAndGoCheckout(p)}
                 className="btn btn-primary"
               >
                 {T.add}

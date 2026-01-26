@@ -24,7 +24,7 @@ import "@/styles/pages/about.css";
 import "@/styles/pages/besoins.css";
 
 import Navbar from "@/components/Navbar";
-import CartDrawer from "@/components/CartDrawer";
+// import CartDrawer from "@/components/CartDrawer";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
 
@@ -39,11 +39,11 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
 
   return (
     <CartProvider>
-      <Navbar /> 
-      <CartDrawer />
-
+      <Navbar />
+      {/* Panier latéral désactivé pour ce projet.
+          Pour le réactiver dans une autre boutique :
+          <CartDrawer /> */}
       <main>{children}</main>
-
       <Footer />
     </CartProvider>
   );
