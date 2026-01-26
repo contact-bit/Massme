@@ -125,7 +125,7 @@ function round2(n: number) {
 ===================================================== */
 
 export default function ProductsClient({ locale }: { locale: Locale }) {
-  const [product, setProduct] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const { addItem } = useCart();
 
   const safeLocale: Locale = UI[locale] ? locale : "fr";
@@ -133,28 +133,35 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
 
   const market: Market = MARKET_BY_LOCALE[safeLocale];
 
-  /* ---------------- LOAD PRODUCT ---------------- */
+  /* ---------------- LOAD PRODUCTS ---------------- */
   useEffect(() => {
     async function load() {
       const snap = await getDocs(collection(db, "products"));
 
-      const p = snap.docs
-        .map((d) => ({ id: d.id, ...(d.data() as any) }))
-        .find(
-          (p) =>
-            p.isActive !== false &&
-            Array.isArray(p.markets) &&
-            p.markets.includes(market)
-        );
+      const all = snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as any),
+      })) as Product[];
 
-      setProduct(p || null);
+      console.log("ALL PRODUCTS RAW", all, "MARKET", market);
+
+      const filtered = all.filter(
+        (p) =>
+          p.isActive !== false &&
+          Array.isArray(p.markets) &&
+          p.markets.includes(market)
+      );
+
+      console.log("FILTERED PRODUCTS", filtered);
+
+      setProducts(filtered);
     }
 
     load();
   }, [market]);
 
   /* ---------------- NO PRODUCT ---------------- */
-  if (!product) {
+  if (!products.length) {
     return (
       <main className="products-page">
         <p className="text-center">{T.noProduct}</p>
@@ -162,34 +169,24 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
     );
   }
 
-  /* ---------------- DATA ---------------- */
-  const name = pickLocaleValue(product.name, safeLocale);
-  const desc = pickLocaleValue(product.description, safeLocale);
-
-  const priceHT = Number(product.pricesByMarket?.[market] ?? 0);
-
-  const vat =
-    product.vatByMarket?.[market] ?? {
-      enabled: false,
-      rate: 0,
-    };
-
-  const vatAmount = vat.enabled
-    ? round2((priceHT * vat.rate) / 100)
-    : 0;
-
-  const priceTTC = round2(priceHT + vatAmount);
-
   /* ---------------- ADD TO CART ---------------- */
-  const addToCart = () => {
+  const addToCart = (p: Product) => {
+    const name = pickLocaleValue(p.name, safeLocale);
+    const desc = pickLocaleValue(p.description, safeLocale);
+    const priceHT = Number(p.pricesByMarket?.[market] ?? 0);
+    const vat =
+      p.vatByMarket?.[market] ?? {
+        enabled: false,
+        rate: 0,
+      };
+
     addItem({
-      id: product.id,
+      id: p.id,
       name,
       priceHT,
       quantity: 1,
-      imageUrl: product.imageUrl,
+      imageUrl: p.imageUrl,
       description: desc,
-
       vat: {
         enabled: vat.enabled,
         rate: vat.rate,
@@ -199,61 +196,76 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
 
   /* ---------------- RENDER ---------------- */
   return (
-    <main className="products-page">
-      <div className="product-card">
-        <div className="product-img-wrapper">
-          <Image
-            src={product.imageUrl || "/placeholder.jpg"}
-            alt={name}
-            fill
-            className="product-img"
-          />
-        </div>
+    <main className="products-page products-grid">
+      {products.map((p) => {
+        const name = pickLocaleValue(p.name, safeLocale);
+        const desc = pickLocaleValue(p.description, safeLocale);
+        const priceHT = Number(p.pricesByMarket?.[market] ?? 0);
+        const vat =
+          p.vatByMarket?.[market] ?? {
+            enabled: false,
+            rate: 0,
+          };
+        const vatAmount = vat.enabled
+          ? round2((priceHT * vat.rate) / 100)
+          : 0;
+        const priceTTC = round2(priceHT + vatAmount);
 
-        <h1 className="product-title">{name}</h1>
+        return (
+          <article key={p.id} className="product-card">
+            <div className="product-img-wrapper">
+              <Image
+                src={p.imageUrl || "/placeholder.jpg"}
+                alt={name}
+                fill
+                className="product-img"
+              />
+            </div>
 
-        {desc && <p className="product-desc">{desc}</p>}
+            <h2 className="product-title">{name}</h2>
 
-        {/* PRICES */}
-        <div className="product-prices">
-          <p>
-            <strong>{T.priceHT} :</strong>{" "}
-            {priceHT.toFixed(2)} €
-          </p>
+            {desc && <p className="product-desc">{desc}</p>}
 
-          {vatAmount > 0 && (
-            <>
+            <div className="product-prices">
               <p>
-                <strong>
-                  {T.vat} ({vat.rate}%):
-                </strong>{" "}
-                {vatAmount.toFixed(2)} €
+                <strong>{T.priceHT} :</strong> {priceHT.toFixed(2)} €
               </p>
 
-              <p className="price-ttc">
-                <strong>{T.priceTTC} :</strong>{" "}
-                {priceTTC.toFixed(2)} €
-              </p>
-            </>
-          )}
-        </div>
+              {vatAmount > 0 && (
+                <>
+                  <p>
+                    <strong>
+                      {T.vat} ({vat.rate}%):
+                    </strong>{" "}
+                    {vatAmount.toFixed(2)} €
+                  </p>
 
-        <div className="product-actions">
-          <Link
-            href={`/${safeLocale}/products/${product.id}`}
-            className="btn btn-secondary"
-          >
-            {T.view}
-          </Link>
+                  <p className="price-ttc">
+                    <strong>{T.priceTTC} :</strong>{" "}
+                    {priceTTC.toFixed(2)} €
+                  </p>
+                </>
+              )}
+            </div>
 
-          <button
-            onClick={addToCart}
-            className="btn btn-primary"
-          >
-            {T.add}
-          </button>
-        </div>
-      </div>
+            <div className="product-actions">
+              <Link
+                href={`/${safeLocale}/products/${p.id}`}
+                className="btn btn-secondary"
+              >
+                {T.view}
+              </Link>
+
+              <button
+                onClick={() => addToCart(p)}
+                className="btn btn-primary"
+              >
+                {T.add}
+              </button>
+            </div>
+          </article>
+        );
+      })}
     </main>
   );
 }
