@@ -5,14 +5,36 @@ import { dbAdmin } from "@/lib/firebase.admin";
    TYPES
 ---------------------------------- */
 type Lang = "fr" | "en" | "es" | "de" | "it" | "nl" | "pt";
-type Market = "FR" | "BE" | "DE" | "AT" | "ES" | "IT" | "NL" | "PT" | "CH";
+type Market =
+  | "FR"
+  | "EN" // <-- ajouté
+  | "BE"
+  | "DE"
+  | "AT"
+  | "ES"
+  | "IT"
+  | "NL"
+  | "PT"
+  | "CH";
 type Currency = "EUR" | "CHF";
 
 const LANGS: Lang[] = ["fr", "en", "es", "de", "it", "nl", "pt"];
-const MARKETS: Market[] = ["FR", "BE", "DE", "AT", "ES", "IT", "NL", "PT", "CH"];
+const MARKETS: Market[] = [
+  "FR",
+  "EN", // <-- ajouté
+  "BE",
+  "DE",
+  "AT",
+  "ES",
+  "IT",
+  "NL",
+  "PT",
+  "CH",
+];
 
 const CURRENCY_BY_MARKET: Record<Market, Currency> = {
   FR: "EUR",
+  EN: "EUR", // <-- ajouté
   BE: "EUR",
   DE: "EUR",
   AT: "EUR",
@@ -45,6 +67,50 @@ function pickLangRecord(obj: any): Record<Lang, string> {
     out[l] = typeof obj?.[l] === "string" ? obj[l] : "";
   }
   return out;
+}
+
+/**
+ * Normalise un bloc markets / pricesByMarket / vatByMarket.
+ * - Si input.markets est vide ou invalide → fallbackMarkets.
+ * - Ne remplit prices / vat que pour les markets actifs.
+ */
+function normalizePricedByMarket(
+  input: any,
+  fallbackMarkets: Market[]
+): {
+  markets: Market[];
+  pricesByMarket: Record<Market, number>;
+  vatByMarket: Record<Market, { enabled: boolean; rate: number }>;
+} {
+  let markets: Market[] = fallbackMarkets;
+
+  if (Array.isArray(input?.markets)) {
+    const filtered = input.markets.filter(isMarket);
+    if (filtered.length > 0) {
+      markets = filtered;
+    }
+  }
+
+  const pricesByMarket: Record<Market, number> = {} as any;
+  const vatByMarket: Record<Market, { enabled: boolean; rate: number }> =
+    {} as any;
+
+  const srcPrices = input?.pricesByMarket;
+  const srcVat = input?.vatByMarket;
+
+  for (const m of markets) {
+    const rawPrice = srcPrices?.[m];
+    pricesByMarket[m] = Math.round(toNum(rawPrice) * 100) / 100;
+
+    const v = srcVat?.[m];
+    const rate = Math.max(0, toNum(v?.rate));
+    vatByMarket[m] = {
+      enabled: !!v?.enabled && rate > 0,
+      rate: !!v?.enabled && rate > 0 ? rate : 0,
+    };
+  }
+
+  return { markets, pricesByMarket, vatByMarket };
 }
 
 /* ----------------------------------
@@ -104,7 +170,6 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // 🔥 suppression définitive du document
     await dbAdmin.collection("products").doc(id).delete();
 
     return NextResponse.json({ ok: true }, { status: 200 });
@@ -154,56 +219,66 @@ export async function PATCH(req: Request) {
     if ("description" in data)
       update.description = pickLangRecord(data.description);
 
-    /* ---------- MARKETS ---------- */
-    let markets: Market[] = ["FR"];
+    /* ---------- PRODUIT : MARKETS / PRICES / TVA ---------- */
+    let productMarkets: Market[] = ["FR"];
     if (Array.isArray(data.markets)) {
       const filtered = data.markets.filter(isMarket);
-      if (filtered.length > 0) markets = filtered;
+      if (filtered.length > 0) {
+        productMarkets = filtered;
+      }
     }
-    update.markets = markets;
+    update.markets = productMarkets;
 
-    /* ---------- CURRENCY ---------- */
     const currencyByMarket: Record<Market, Currency> = {} as any;
-    for (const m of markets) {
+    for (const m of productMarkets) {
       currencyByMarket[m] = CURRENCY_BY_MARKET[m];
     }
     update.currencyByMarket = currencyByMarket;
 
-    /* ---------- PRICES ---------- */
-    const pricesByMarket: Record<Market, number> = {} as any;
-    if (data.pricesByMarket && typeof data.pricesByMarket === "object") {
-      for (const m of markets) {
-        pricesByMarket[m] =
-          Math.round(toNum(data.pricesByMarket[m]) * 100) / 100;
-      }
-    }
-    update.pricesByMarket = pricesByMarket;
+    const productPriced = normalizePricedByMarket(data, productMarkets);
+    update.pricesByMarket = productPriced.pricesByMarket;
+    update.vatByMarket = productPriced.vatByMarket;
 
-    /* ---------- TVA ---------- */
-    const vatByMarket: Record<
-      Market,
-      { enabled: boolean; rate: number }
-    > = {} as any;
+    /* ---------- VARIANTS ---------- */
+    if (Array.isArray(data.variants)) {
+      update.variants = data.variants.map((v: any) => {
+        const priced = normalizePricedByMarket(v, productMarkets);
 
-    if (data.vatByMarket && typeof data.vatByMarket === "object") {
-      for (const m of markets) {
-        const v = data.vatByMarket[m];
-        vatByMarket[m] = {
-          enabled: !!v?.enabled,
-          rate: Math.max(0, toNum(v?.rate)),
+        return {
+          id: String(v.id || ""),
+          label: String(v.label || ""),
+          imageUrl: v.imageUrl ? String(v.imageUrl) : "",
+          markets: priced.markets,
+          pricesByMarket: priced.pricesByMarket,
+          vatByMarket: priced.vatByMarket,
         };
-      }
+      });
     } else {
-      for (const m of markets) {
-        vatByMarket[m] = { enabled: false, rate: 0 };
-      }
+      update.variants = [];
     }
-    update.vatByMarket = vatByMarket;
 
-    /* ---------- LEGACY ---------- */
-    if (pricesByMarket.FR != null) {
-      update.priceHT = pricesByMarket.FR;
-      update.price = { eur: pricesByMarket.FR };
+    /* ---------- ADDONS ---------- */
+    if (Array.isArray(data.addons)) {
+      update.addons = data.addons.map((a: any) => {
+        const priced = normalizePricedByMarket(a, productMarkets);
+
+        return {
+          id: String(a.id || ""),
+          label: String(a.label || ""),
+          imageUrl: a.imageUrl ? String(a.imageUrl) : "",
+          markets: priced.markets,
+          pricesByMarket: priced.pricesByMarket,
+          vatByMarket: priced.vatByMarket,
+        };
+      });
+    } else {
+      update.addons = [];
+    }
+
+    /* ---------- LEGACY (OPTIONNEL) ---------- */
+    if (update.pricesByMarket && update.pricesByMarket.FR != null) {
+      update.priceHT = update.pricesByMarket.FR;
+      update.price = { eur: update.pricesByMarket.FR };
     }
 
     update.updatedAt = new Date().toISOString();

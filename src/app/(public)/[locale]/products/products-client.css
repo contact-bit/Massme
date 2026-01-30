@@ -1,0 +1,160 @@
+/* =====================================================
+   VARIANTES (COULEURS / MODÈLES)
+===================================================== */
+
+.product-variants-block {
+  margin-top: 0.85rem;
+}
+
+.product-variants-label {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: #0f172a;
+  margin-bottom: 0.45rem;
+}
+
+.product-variants-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  row-gap: 0.55rem;
+}
+
+.variant-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 0.8rem;
+  color: #374151;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.08s ease;
+}
+
+.variant-pill:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  box-shadow: 0 3px 10px rgba(148, 163, 184, 0.35);
+}
+
+.variant-pill:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+.variant-pill.active {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  border-color: #1d4ed8;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
+}
+
+.variant-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5e7eb;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.35);
+}
+
+.variant-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.variant-label {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  overflow: hidden;
+}
+
+/* =====================================================
+   ADDON / HOUSSE SUPPLÉMENTAIRE
+===================================================== */
+
+.product-addon-block {
+  margin-top: 1rem;
+}
+
+.product-addon-label {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: #0f172a;
+  margin-bottom: 0.4rem;
+}
+
+.product-addon-toggle {
+  display: inline-flex;
+  gap: 0.35rem;
+  background: #f9fafb;
+  padding: 0.18rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.addon-pill {
+  min-width: 2.9rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #4b5563;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.08s ease;
+}
+
+.addon-pill.active {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+  transform: translateY(-0.5px);
+}
+
+.addon-pill:not(.active):hover {
+  background: #e5e7eb;
+}
+
+.addon-pill:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
+}
+
+/* Petits écrans */
+@media (max-width: 640px) {
+  .product-variants-list {
+    gap: 0.3rem;
+    row-gap: 0.45rem;
+  }
+
+  .variant-pill {
+    padding: 0.28rem 0.6rem;
+  }
+
+  .variant-label {
+    font-size: 0.78rem;
+    max-width: 90px;
+  }
+
+  .product-addon-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

@@ -17,6 +17,7 @@ export type Locale =
 
 export type Market =
   | "FR"
+  | "EN"   // <-- on ajoute EN comme marché séparé
   | "IT"
   | "DE"
   | "ES"
@@ -32,7 +33,7 @@ export type Market =
 
 export const MARKET_BY_LOCALE: Record<Locale, Market> = {
   fr: "FR",
-  en: "FR", // anglais = marché France par défaut
+  en: "EN", // <-- EN pointe maintenant sur EN, plus sur FR
   es: "ES",
   de: "DE",
   it: "IT",

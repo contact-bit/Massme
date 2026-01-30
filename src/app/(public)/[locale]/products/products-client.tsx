@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { collection, getDocs } from "firebase/firestore";
-
 import { db } from "@/lib/firebase";
 import { useCart } from "@/context/CartContext";
 import { MARKET_BY_LOCALE, Locale, Market } from "@/lib/market";
+import "./products-client.css";
 
 /* =====================================================
    UI TEXT
@@ -23,6 +23,10 @@ const UI: Record<
     priceHT: string;
     vat: string;
     priceTTC: string;
+    chooseVariant: string;
+    extraCover: string;
+    yes: string;
+    no: string;
   }
 > = {
   fr: {
@@ -32,6 +36,10 @@ const UI: Record<
     priceHT: "Prix HT",
     vat: "TVA",
     priceTTC: "Prix TTC",
+    chooseVariant: "Choisissez votre modèle",
+    extraCover: "Housse supplémentaire bambou",
+    yes: "Oui",
+    no: "Non",
   },
   en: {
     noProduct: "No product available.",
@@ -40,6 +48,10 @@ const UI: Record<
     priceHT: "Price excl. VAT",
     vat: "VAT",
     priceTTC: "Price incl. VAT",
+    chooseVariant: "Choose your model",
+    extraCover: "Extra bamboo cover",
+    yes: "Yes",
+    no: "No",
   },
   es: {
     noProduct: "No hay productos disponibles.",
@@ -48,6 +60,10 @@ const UI: Record<
     priceHT: "Precio sin IVA",
     vat: "IVA",
     priceTTC: "Precio con IVA",
+    chooseVariant: "Elige tu modelo",
+    extraCover: "Funda adicional de bambú",
+    yes: "Sí",
+    no: "No",
   },
   de: {
     noProduct: "Kein Produkt verfügbar.",
@@ -56,6 +72,10 @@ const UI: Record<
     priceHT: "Preis exkl. MwSt",
     vat: "MwSt",
     priceTTC: "Preis inkl. MwSt",
+    chooseVariant: "Wähle dein Modell",
+    extraCover: "Zusätzlicher Bambusbezug",
+    yes: "Ja",
+    no: "Nein",
   },
   it: {
     noProduct: "Nessun prodotto disponibile.",
@@ -64,6 +84,10 @@ const UI: Record<
     priceHT: "Prezzo IVA esclusa",
     vat: "IVA",
     priceTTC: "Prezzo IVA inclusa",
+    chooseVariant: "Scegli il tuo modello",
+    extraCover: "Federa aggiuntiva in bambù",
+    yes: "Sì",
+    no: "No",
   },
   nl: {
     noProduct: "Geen product beschikbaar.",
@@ -72,6 +96,10 @@ const UI: Record<
     priceHT: "Prijs excl. btw",
     vat: "BTW",
     priceTTC: "Prijs incl. btw",
+    chooseVariant: "Kies je model",
+    extraCover: "Extra bamboe hoes",
+    yes: "Ja",
+    no: "Nee",
   },
   pt: {
     noProduct: "Nenhum produto disponível.",
@@ -80,12 +108,39 @@ const UI: Record<
     priceHT: "Preço sem IVA",
     vat: "IVA",
     priceTTC: "Preço com IVA",
+    chooseVariant: "Escolha o seu modèle",
+    extraCover: "Capa adicional de bambu",
+    yes: "Sim",
+    no: "Não",
   },
 };
 
 /* =====================================================
    TYPES
 ===================================================== */
+
+type VatConfig = {
+  enabled: boolean;
+  rate: number;
+};
+
+type ProductVariant = {
+  id: string;
+  label: string;
+  imageUrl?: string;
+  markets: Market[];
+  pricesByMarket: Record<Market, number>;
+  vatByMarket: Record<Market, VatConfig>;
+};
+
+type ProductAddon = {
+  id: string;
+  label: string;
+  imageUrl?: string;
+  markets: Market[];
+  pricesByMarket: Record<Market, number>;
+  vatByMarket: Record<Market, VatConfig>;
+};
 
 type Product = {
   id: string;
@@ -94,16 +149,13 @@ type Product = {
   imageUrl?: string;
   isActive?: boolean;
 
-  markets: Market;
+  markets: Market[];
 
   pricesByMarket: Record<Market, number>;
-  vatByMarket: Record<
-    Market,
-    {
-      enabled: boolean;
-      rate: number;
-    }
-  >;
+  vatByMarket: Record<Market, VatConfig>;
+
+  variants?: ProductVariant[];
+  addons?: ProductAddon[];
 };
 
 /* =====================================================
@@ -121,12 +173,52 @@ function round2(n: number) {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
+function getPriceHT(
+  pricesByMarket: Record<Market, number> | undefined,
+  market: Market
+): number {
+  if (!pricesByMarket) return 0;
+  return Number(pricesByMarket[market] ?? 0);
+}
+
+function getVat(
+  vatByMarket: Record<Market, VatConfig> | undefined,
+  market: Market
+): VatConfig {
+  const v = vatByMarket?.[market];
+  return v || { enabled: false, rate: 0 };
+}
+
+function getVariantImage(
+  p: Product,
+  variantsForMarket: ProductVariant[],
+  selectedVariantId: string | null
+) {
+  if (!variantsForMarket.length) {
+    return p.imageUrl || "/placeholder.jpg";
+  }
+
+  const chosen =
+    (selectedVariantId &&
+      variantsForMarket.find((v) => v.id === selectedVariantId)) ||
+    variantsForMarket[0];
+
+  return chosen?.imageUrl || p.imageUrl || "/placeholder.jpg";
+}
+
 /* =====================================================
    COMPONENT
 ===================================================== */
 
 export default function ProductsClient({ locale }: { locale: Locale }) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [selectedVariants, setSelectedVariants] = useState<
+    Record<string, string | null>
+  >({});
+  const [extraCoverChoice, setExtraCoverChoice] = useState<
+    Record<string, boolean>
+  >({});
+
   const { addItem } = useCart();
   const router = useRouter();
 
@@ -145,16 +237,12 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
         ...(d.data() as any),
       })) as Product[];
 
-      console.log("ALL PRODUCTS RAW", all, "MARKET", market);
-
       const filtered = all.filter(
         (p) =>
           p.isActive !== false &&
           Array.isArray(p.markets) &&
           p.markets.includes(market)
       );
-
-      console.log("FILTERED PRODUCTS", filtered);
 
       setProducts(filtered);
     }
@@ -171,29 +259,96 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
     );
   }
 
+  /* ---------------- HANDLERS ---------------- */
+  const handleSelectVariant = (productId: string, variantId: string) => {
+    setSelectedVariants((prev) => ({ ...prev, [productId]: variantId }));
+  };
+
+  const handleExtraCover = (productId: string, enabled: boolean) => {
+    setExtraCoverChoice((prev) => ({ ...prev, [productId]: enabled }));
+  };
+
   /* ---------------- ADD TO CART + REDIRECT ---------------- */
   const addToCartAndGoCheckout = (p: Product) => {
-    const name = pickLocaleValue(p.name, safeLocale);
+    const baseName = pickLocaleValue(p.name, safeLocale);
     const desc = pickLocaleValue(p.description, safeLocale);
-    const priceHT = Number(p.pricesByMarket?.[market] ?? 0);
-    const vat =
-      p.vatByMarket?.[market] ?? {
-        enabled: false,
-        rate: 0,
-      };
 
+    const variantsForMarket = Array.isArray(p.variants)
+      ? p.variants.filter(
+          (v) => Array.isArray(v.markets) && v.markets.includes(market)
+        )
+      : [];
+
+    const addonsForMarket = Array.isArray(p.addons)
+      ? p.addons.filter(
+          (a) => Array.isArray(a.markets) && a.markets.includes(market)
+        )
+      : [];
+
+    const hasVariants = variantsForMarket.length > 0;
+    const hasAddons = addonsForMarket.length > 0;
+
+    let mainPriceHT = getPriceHT(p.pricesByMarket, market);
+    let mainVat = getVat(p.vatByMarket, market);
+    let mainName = baseName;
+    let mainImage = p.imageUrl;
+
+    let selectedVariant: ProductVariant | null = null;
+
+    if (hasVariants) {
+      const chosenId =
+        selectedVariants[p.id] || variantsForMarket[0]?.id || undefined;
+      selectedVariant =
+        variantsForMarket.find((v) => v.id === chosenId) ||
+        variantsForMarket[0];
+
+      if (!selectedVariants[p.id] && selectedVariant) {
+        setSelectedVariants((prev) => ({ ...prev, [p.id]: selectedVariant!.id }));
+      }
+
+      if (selectedVariant) {
+        mainPriceHT = getPriceHT(selectedVariant.pricesByMarket, market);
+        mainVat = getVat(selectedVariant.vatByMarket, market);
+        mainName = `${baseName} – ${selectedVariant.label}`;
+        mainImage = selectedVariant.imageUrl || mainImage;
+      }
+    }
+
+    // ligne principale
     addItem({
-      id: p.id,
-      name,
-      priceHT,
+      id: hasVariants && selectedVariant ? `${p.id}:${selectedVariant.id}` : p.id,
+      name: mainName,
+      priceHT: mainPriceHT,
       quantity: 1,
-      imageUrl: p.imageUrl,
+      imageUrl: mainImage,
       description: desc,
       vat: {
-        enabled: vat.enabled,
-        rate: vat.rate,
+        enabled: mainVat.enabled,
+        rate: mainVat.rate,
       },
     });
+
+    // housse
+    if (hasAddons && extraCoverChoice[p.id]) {
+      const addon = addonsForMarket[0];
+      if (addon) {
+        const addonPriceHT = getPriceHT(addon.pricesByMarket, market);
+        const addonVat = getVat(addon.vatByMarket, market);
+
+        addItem({
+          id: `${p.id}:addon:${addon.id}`,
+          name: addon.label,
+          priceHT: addonPriceHT,
+          quantity: 1,
+          imageUrl: mainImage,
+          description: addon.label,
+          vat: {
+            enabled: addonVat.enabled,
+            rate: addonVat.rate,
+          },
+        });
+      }
+    }
 
     router.push(`/${safeLocale}/checkout`);
   };
@@ -204,22 +359,68 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
       {products.map((p) => {
         const name = pickLocaleValue(p.name, safeLocale);
         const desc = pickLocaleValue(p.description, safeLocale);
-        const priceHT = Number(p.pricesByMarket?.[market] ?? 0);
-        const vat =
-          p.vatByMarket?.[market] ?? {
-            enabled: false,
-            rate: 0,
-          };
-        const vatAmount = vat.enabled
-          ? round2((priceHT * vat.rate) / 100)
+
+        const variantsForMarket = Array.isArray(p.variants)
+          ? p.variants.filter(
+              (v) => Array.isArray(v.markets) && v.markets.includes(market)
+            )
+          : [];
+
+        const addonsForMarket = Array.isArray(p.addons)
+          ? p.addons.filter(
+              (a) => Array.isArray(a.markets) && a.markets.includes(market)
+            )
+          : [];
+
+        const hasVariants = variantsForMarket.length > 0;
+        const hasAddons = addonsForMarket.length > 0;
+
+        const selectedVariantId =
+          selectedVariants[p.id] || variantsForMarket[0]?.id || null;
+
+        // image dynamique selon variante
+        const imageSrc = getVariantImage(
+          p,
+          variantsForMarket,
+          selectedVariantId
+        );
+
+        // prix
+        let displayPriceHT = getPriceHT(p.pricesByMarket, market);
+        let displayVat = getVat(p.vatByMarket, market);
+
+        if (hasVariants && selectedVariantId) {
+          const v =
+            variantsForMarket.find((vv) => vv.id === selectedVariantId) ||
+            variantsForMarket[0];
+          if (v) {
+            displayPriceHT = getPriceHT(v.pricesByMarket, market);
+            displayVat = getVat(v.vatByMarket, market);
+          }
+        }
+
+        const addonSelected =
+          hasAddons && extraCoverChoice[p.id] ? addonsForMarket[0] : null;
+
+        let displayPriceWithAddonHT = displayPriceHT;
+        if (addonSelected) {
+          const addonPriceHT = getPriceHT(
+            addonSelected.pricesByMarket,
+            market
+          );
+          displayPriceWithAddonHT += addonPriceHT;
+        }
+
+        const vatAmount = displayVat.enabled
+          ? round2((displayPriceWithAddonHT * displayVat.rate) / 100)
           : 0;
-        const priceTTC = round2(priceHT + vatAmount);
+        const priceTTC = round2(displayPriceWithAddonHT + vatAmount);
 
         return (
           <article key={p.id} className="product-card">
             <div className="product-img-wrapper">
               <Image
-                src={p.imageUrl || "/placeholder.jpg"}
+                src={imageSrc}
                 alt={name}
                 fill
                 className="product-img"
@@ -230,16 +431,116 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
 
             {desc && <p className="product-desc">{desc}</p>}
 
+            {hasVariants && (
+              <div className="product-variants-block">
+                <p className="product-variants-label">
+                  {T.chooseVariant} :
+                </p>
+                <div className="product-variants-list">
+                  {variantsForMarket.map((v) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      className={
+                        selectedVariantId === v.id
+                          ? "variant-pill active"
+                          : "variant-pill"
+                      }
+                      onClick={() => handleSelectVariant(p.id, v.id)}
+                    >
+                      {v.imageUrl && (
+                        <span className="variant-thumb">
+                          <Image
+                            src={v.imageUrl}
+                            alt={v.label}
+                            width={40}
+                            height={40}
+                          />
+                        </span>
+                      )}
+                      <span className="variant-label">{v.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {hasAddons && (
+              <div className="product-addon-block">
+                {(() => {
+                  const firstAddon = addonsForMarket[0];
+                  const addonVat = firstAddon
+                    ? getVat(firstAddon.vatByMarket, market)
+                    : { enabled: false, rate: 0 };
+                  const addonPriceHT = firstAddon
+                    ? getPriceHT(firstAddon.pricesByMarket, market)
+                    : 0;
+                  const addonVatAmount =
+                    firstAddon && addonVat.enabled
+                      ? round2((addonPriceHT * addonVat.rate) / 100)
+                      : 0;
+                  const addonPriceTTC = round2(
+                    addonPriceHT + addonVatAmount
+                  );
+
+                  return (
+                    <>
+                      <p className="product-addon-label">
+                        {T.extraCover} :
+                        {firstAddon && (
+                          <span>
+                            {" "}
+                            (+{addonPriceHT.toFixed(2)} € HT
+                            {addonVat.enabled &&
+                              ` | TVA ${addonVat.rate}%: ${addonVatAmount.toFixed(
+                                2
+                              )} € | ${addonPriceTTC.toFixed(2)} € TTC`}
+                            )
+                          </span>
+                        )}
+                      </p>
+
+                      <div className="product-addon-toggle">
+                        <button
+                          type="button"
+                          className={
+                            extraCoverChoice[p.id]
+                              ? "addon-pill"
+                              : "addon-pill active"
+                          }
+                          onClick={() => handleExtraCover(p.id, false)}
+                        >
+                          {T.no}
+                        </button>
+                        <button
+                          type="button"
+                          className={
+                            extraCoverChoice[p.id]
+                              ? "addon-pill active"
+                              : "addon-pill"
+                          }
+                          onClick={() => handleExtraCover(p.id, true)}
+                        >
+                          {T.yes}
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+
             <div className="product-prices">
               <p>
-                <strong>{T.priceHT} :</strong> {priceHT.toFixed(2)} €
+                <strong>{T.priceHT} :</strong>{" "}
+                {displayPriceWithAddonHT.toFixed(2)} €
               </p>
 
               {vatAmount > 0 && (
                 <>
                   <p>
                     <strong>
-                      {T.vat} ({vat.rate}%):
+                      {T.vat} ({displayVat.rate}%):
                     </strong>{" "}
                     {vatAmount.toFixed(2)} €
                   </p>
