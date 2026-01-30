@@ -21,9 +21,9 @@ function parisStartOfDay(d: Date) {
     day: "2-digit",
   }).formatToParts(d);
 
-  const y = Number(parts.find(p => p.type === "year")?.value);
-  const m = Number(parts.find(p => p.type === "month")?.value);
-  const day = Number(parts.find(p => p.type === "day")?.value);
+  const y = Number(parts.find((p) => p.type === "year")?.value);
+  const m = Number(parts.find((p) => p.type === "month")?.value);
+  const day = Number(parts.find((p) => p.type === "day")?.value);
 
   return new Date(Date.UTC(y, m - 1, day, 0, 0, 0));
 }
@@ -65,7 +65,6 @@ export async function GET() {
 
     const productsCol = dbAdmin.collection("products");
     const ordersCol = dbAdmin.collection("orders");
-    const statsRef = dbAdmin.doc("stats/global");
 
     const now = new Date();
     const todayStart = parisStartOfDay(now);
@@ -74,16 +73,25 @@ export async function GET() {
     const prev7Start = addDays(last7Start, -7);
 
     /* =========================
-       STATS GLOBAL (SOURCE)
+       STATS GLOBAL (LIVE)
     ========================= */
-    const statsSnap = await statsRef.get();
-    const stats = statsSnap.data() ?? {};
 
-    const productsCount = Number(stats.productsCount ?? 0);
-    const activeProducts = Number(stats.activeProducts ?? 0);
-    const ordersCount = Number(stats.ordersCount ?? 0);
-    const paidOrdersCount = Number(stats.paidOrdersCount ?? 0);
-    const pendingCount = Math.max(0, ordersCount - paidOrdersCount);
+    // Produits
+    const productsSnap = await productsCol.get();
+    const products = productsSnap.docs.map((d) => d.data() as any);
+
+    const productsCount = products.length;
+    const activeProducts = products.filter((p) => p?.active === true).length;
+
+    // Toutes les commandes (pour les compteurs globaux)
+    const allOrdersSnap = await ordersCol.get();
+    const allOrders = allOrdersSnap.docs.map((d) => d.data() as any);
+
+    const ordersCount = allOrders.length;
+    const paidOrdersCount = allOrders.filter((o) => o?.status === "paid").length;
+    const pendingCount = allOrders.filter(
+      (o) => o?.status === "pending_payment"
+    ).length;
 
     /* =========================
        LOW STOCK
@@ -94,7 +102,7 @@ export async function GET() {
       .limit(5)
       .get();
 
-    const lowStock = lowStockSnap.docs.map(d => {
+    const lowStock = lowStockSnap.docs.map((d) => {
       const p: any = d.data();
       return {
         id: d.id,
@@ -111,7 +119,7 @@ export async function GET() {
       .limit(8)
       .get();
 
-    const lastOrders = lastOrdersSnap.docs.map(d => {
+    const lastOrders = lastOrdersSnap.docs.map((d) => {
       const o: any = d.data();
       const iso =
         o?.createdAt?.toDate?.()?.toISOString?.() ??
@@ -134,7 +142,7 @@ export async function GET() {
       .where("createdAt", ">=", prev7Start)
       .get();
 
-    const paidOrders = paid14Snap.docs.map(d => {
+    const paidOrders = paid14Snap.docs.map((d) => {
       const o: any = d.data();
       return {
         ...o,
@@ -148,22 +156,22 @@ export async function GET() {
     const prev7Ms = prev7Start.getTime();
 
     const revenueLast7 = paidOrders
-      .filter(o => o._ms >= last7Ms)
+      .filter((o) => o._ms >= last7Ms)
       .reduce((s, o) => s + orderTotalEUR(o), 0);
 
     const revenuePrev7 = paidOrders
-      .filter(o => o._ms >= prev7Ms && o._ms < last7Ms)
+      .filter((o) => o._ms >= prev7Ms && o._ms < last7Ms)
       .reduce((s, o) => s + orderTotalEUR(o), 0);
 
     const revenueToday = paidOrders
-      .filter(o => o._ms >= todayMs)
+      .filter((o) => o._ms >= todayMs)
       .reduce((s, o) => s + orderTotalEUR(o), 0);
 
     const revenueYesterday = paidOrders
-      .filter(o => o._ms >= yesterdayMs && o._ms < todayMs)
+      .filter((o) => o._ms >= yesterdayMs && o._ms < todayMs)
       .reduce((s, o) => s + orderTotalEUR(o), 0);
 
-    const paidLast7Count = paidOrders.filter(o => o._ms >= last7Ms).length;
+    const paidLast7Count = paidOrders.filter((o) => o._ms >= last7Ms).length;
     const aov = paidLast7Count > 0 ? revenueLast7 / paidLast7Count : 0;
 
     /* =========================
@@ -175,7 +183,7 @@ export async function GET() {
       const end = addDays(day, 1).getTime();
 
       const revenue = paidOrders
-        .filter(o => o._ms >= start && o._ms < end)
+        .filter((o) => o._ms >= start && o._ms < end)
         .reduce((s, o) => s + orderTotalEUR(o), 0);
 
       return {

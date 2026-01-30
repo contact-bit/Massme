@@ -31,13 +31,18 @@ type StatsResponse = {
   alerts: { tone: "info" | "warn" | "danger"; title: string; desc: string }[];
 };
 
-function eur(n: number) {
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(n);
+function eur(n: number | null | undefined) {
+  const v = typeof n === "number" && !isNaN(n) ? n : 0;
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  }).format(v);
 }
 
 function shortDate(iso: string | null) {
   if (!iso) return "—";
   const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
   return new Intl.DateTimeFormat("fr-FR", {
     timeZone: "Europe/Paris",
     year: "numeric",
@@ -49,10 +54,14 @@ function shortDate(iso: string | null) {
 }
 
 function deltaLabel(current: number, previous: number, pct: number) {
-  if (previous === 0 && current > 0) return { text: "Nouveau", tone: "pos" as const };
-  if (pct === 0) return { text: "0%", tone: "neu" as const };
-  if (pct > 0) return { text: `+${pct.toFixed(1)}%`, tone: "pos" as const };
-  return { text: `${pct.toFixed(1)}%`, tone: "neg" as const };
+  const c = current || 0;
+  const p = previous || 0;
+  const r = pct || 0;
+
+  if (p === 0 && c > 0) return { text: "Nouveau", tone: "pos" as const };
+  if (r === 0) return { text: "0%", tone: "neu" as const };
+  if (r > 0) return { text: `+${r.toFixed(1)}%`, tone: "pos" as const };
+  return { text: `${r.toFixed(1)}%`, tone: "neg" as const };
 }
 
 export default function AdminDashboardPage() {
@@ -75,7 +84,11 @@ export default function AdminDashboardPage() {
           throw new Error(json?.error ?? "Erreur stats");
         }
 
-        if (alive) setData(json);
+        if (!json || typeof json !== "object") {
+          throw new Error("Réponse stats invalide");
+        }
+
+        if (alive) setData(json as StatsResponse);
       } catch (e: any) {
         if (alive) setErr(e?.message ?? "Erreur inconnue");
       } finally {
@@ -90,7 +103,8 @@ export default function AdminDashboardPage() {
   }, []);
 
   const maxRevenue = useMemo(() => {
-    const max = Math.max(...(data?.series?.map((s) => s.revenue) ?? [0]));
+    const series = Array.isArray(data?.series) ? data!.series : [];
+    const max = Math.max(...(series.map((s) => s.revenue || 0) || [0]));
     return max <= 0 ? 1 : max;
   }, [data]);
 
@@ -130,8 +144,22 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const d7 = deltaLabel(data.kpis.revenueLast7, data.kpis.revenuePrev7, data.deltas.revenue7dPct);
-  const dd = deltaLabel(data.kpis.revenueToday, data.kpis.revenueYesterday, data.deltas.revenueDayPct);
+  const k = data.kpis || ({} as StatsResponse["kpis"]);
+  const deltas = data.deltas || ({} as StatsResponse["deltas"]);
+  const alerts = Array.isArray(data.alerts) ? data.alerts : [];
+  const lastOrders = Array.isArray(data.lastOrders) ? data.lastOrders : [];
+  const lowStock = Array.isArray(data.lowStock) ? data.lowStock : [];
+
+  const d7 = deltaLabel(
+    k.revenueLast7 ?? 0,
+    k.revenuePrev7 ?? 0,
+    deltas.revenue7dPct ?? 0
+  );
+  const dd = deltaLabel(
+    k.revenueToday ?? 0,
+    k.revenueYesterday ?? 0,
+    deltas.revenueDayPct ?? 0
+  );
 
   return (
     <div className="admin-page">
@@ -150,9 +178,9 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Alerts */}
-      {data.alerts?.length > 0 && (
+      {alerts.length > 0 && (
         <div className="dash-alerts">
-          {data.alerts.map((a, i) => (
+          {alerts.map((a, i) => (
             <div key={i} className={`dash-alert tone-${a.tone}`}>
               <div className="dash-alert-title">{a.title}</div>
               <div className="dash-alert-desc">{a.desc}</div>
@@ -166,23 +194,27 @@ export default function AdminDashboardPage() {
         <div className="dash-card">
           <div className="dash-card-top">
             <span className="dash-label">Produits</span>
-            <span className="dash-chip">{data.kpis.activeProducts}/{data.kpis.productsCount} actifs</span>
+            <span className="dash-chip">
+              {k.activeProducts ?? 0}/{k.productsCount ?? 0} actifs
+            </span>
           </div>
-          <div className="dash-value">{data.kpis.productsCount}</div>
+          <div className="dash-value">{k.productsCount ?? 0}</div>
           <div className="dash-foot">Catalogue total</div>
         </div>
 
         <div className="dash-card">
           <div className="dash-card-top">
             <span className="dash-label">Commandes</span>
-            {data.kpis.pendingCount > 0 ? (
-              <span className="dash-chip warn">{data.kpis.pendingCount} en attente</span>
+            {(k.pendingCount ?? 0) > 0 ? (
+              <span className="dash-chip warn">
+                {k.pendingCount} en attente
+              </span>
             ) : (
               <span className="dash-chip ok">Tout OK</span>
             )}
           </div>
-          <div className="dash-value">{data.kpis.ordersCount}</div>
-          <div className="dash-foot">{data.kpis.paidOrdersCount} payée(s)</div>
+          <div className="dash-value">{k.ordersCount ?? 0}</div>
+          <div className="dash-foot">{k.paidOrdersCount ?? 0} payée(s)</div>
         </div>
 
         <div className="dash-card highlight">
@@ -190,8 +222,8 @@ export default function AdminDashboardPage() {
             <span className="dash-label">CA (7 jours)</span>
             <span className={`dash-badge ${d7.tone}`}>{d7.text}</span>
           </div>
-          <div className="dash-value">{eur(data.kpis.revenueLast7)}</div>
-          <div className="dash-foot">AOV: {eur(data.kpis.aov)}</div>
+          <div className="dash-value">{eur(k.revenueLast7)}</div>
+          <div className="dash-foot">AOV: {eur(k.aov)}</div>
         </div>
 
         <div className="dash-card">
@@ -199,8 +231,10 @@ export default function AdminDashboardPage() {
             <span className="dash-label">CA (aujourd’hui)</span>
             <span className={`dash-badge ${dd.tone}`}>{dd.text}</span>
           </div>
-          <div className="dash-value">{eur(data.kpis.revenueToday)}</div>
-          <div className="dash-foot">Hier: {eur(data.kpis.revenueYesterday)}</div>
+          <div className="dash-value">{eur(k.revenueToday)}</div>
+          <div className="dash-foot">
+            Hier: {eur(k.revenueYesterday)}
+          </div>
         </div>
       </div>
 
@@ -210,19 +244,26 @@ export default function AdminDashboardPage() {
         <div className="dash-panel">
           <div className="dash-panel-head">
             <h2 className="dash-panel-title">Revenu — 7 derniers jours</h2>
-            <div className="dash-panel-meta">{eur(data.kpis.revenueLast7)}</div>
+            <div className="dash-panel-meta">{eur(k.revenueLast7)}</div>
           </div>
 
           <div className="dash-chart">
-            {data.series.map((s) => {
-              const h = Math.round((s.revenue / maxRevenue) * 100);
+            {(Array.isArray(data.series) ? data.series : []).map((s) => {
+              const h = Math.round(((s.revenue || 0) / maxRevenue) * 100);
               return (
                 <div key={s.day} className="dash-bar">
                   <div className="dash-bar-col">
-                    <div className="dash-bar-fill" style={{ height: `${h}%` }} />
+                    <div
+                      className="dash-bar-fill"
+                      style={{ height: `${h}%` }}
+                    />
                   </div>
-                  <div className="dash-bar-day">{s.day.slice(5)}</div>
-                  <div className="dash-bar-val">{s.revenue > 0 ? eur(s.revenue) : ""}</div>
+                  <div className="dash-bar-day">
+                    {s.day ? s.day.slice(5) : ""}
+                  </div>
+                  <div className="dash-bar-val">
+                    {s.revenue > 0 ? eur(s.revenue) : ""}
+                  </div>
                 </div>
               );
             })}
@@ -247,15 +288,21 @@ export default function AdminDashboardPage() {
               <div>Date</div>
             </div>
 
-            {data.lastOrders.length === 0 ? (
+            {lastOrders.length === 0 ? (
               <div className="dash-empty">Aucune commande.</div>
             ) : (
-              data.lastOrders.map((o) => (
+              lastOrders.map((o) => (
                 <div key={o.id} className="dash-row">
-                  <div className="mono">{o.id.slice(0, 6)}…</div>
+                  <div className="mono">
+                    {o.id ? `${o.id.slice(0, 6)}…` : "—"}
+                  </div>
                   <div className="truncate">{o.email || "—"}</div>
                   <div>
-                    <span className={`status-pill ${o.status === "paid" ? "paid" : "pending"}`}>
+                    <span
+                      className={`status-pill ${
+                        o.status === "paid" ? "paid" : "pending"
+                      }`}
+                    >
                       {o.status}
                     </span>
                   </div>
@@ -269,7 +316,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Low stock */}
-      {data.lowStock?.length > 0 && (
+      {lowStock.length > 0 && (
         <div className="dash-panel">
           <div className="dash-panel-head">
             <h2 className="dash-panel-title">Stock faible</h2>
@@ -279,7 +326,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="dash-lowstock">
-            {data.lowStock.map((p) => (
+            {lowStock.map((p) => (
               <div key={p.id} className="dash-lowstock-item">
                 <div className="truncate">{p.name}</div>
                 <div className="dash-chip warn">stock {p.stock}</div>
