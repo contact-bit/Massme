@@ -10,7 +10,7 @@ import "@/styles/components/navbar.css";
 ===================================================== */
 
 const LOGO_URL =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2456d5ba-af23-4219-7115-f54286a7c600/public";
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/500df708-673d-4a48-549d-d1b311a8e600/public";
 
 type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
@@ -35,6 +35,7 @@ const TRANSLATIONS: Record<
       home: string;
       about: string;
       products: string;
+      blog: string;
       contact: string;
     };
   }
@@ -46,6 +47,7 @@ const TRANSLATIONS: Record<
       home: "Accueil",
       about: "Fonctionnement",
       products: "Commander",
+      blog: "Blog",
       contact: "Contact",
     },
   },
@@ -56,6 +58,7 @@ const TRANSLATIONS: Record<
       home: "Home",
       about: "How it works",
       products: "Order",
+      blog: "Blog",
       contact: "Contact",
     },
   },
@@ -65,6 +68,7 @@ const TRANSLATIONS: Record<
       home: "Inicio",
       about: "Funcionamiento",
       products: "Comprar",
+      blog: "Blog",
       contact: "Contacto",
     },
   },
@@ -74,6 +78,7 @@ const TRANSLATIONS: Record<
       home: "Start",
       about: "Funktionsweise",
       products: "Bestellen",
+      blog: "Blog",
       contact: "Kontakt",
     },
   },
@@ -83,6 +88,7 @@ const TRANSLATIONS: Record<
       home: "Home",
       about: "Funzionamento",
       products: "Ordina",
+      blog: "Blog",
       contact: "Contatto",
     },
   },
@@ -92,6 +98,7 @@ const TRANSLATIONS: Record<
       home: "Home",
       about: "Werking",
       products: "Bestellen",
+      blog: "Blog",
       contact: "Contact",
     },
   },
@@ -158,6 +165,7 @@ export default function Navbar() {
           <NavLink href={`/${locale}`}>{t.nav.home}</NavLink>
           <NavLink href={`/${locale}/a-propos`}>{t.nav.about}</NavLink>
           <NavLink href={`/${locale}/products`}>{t.nav.products}</NavLink>
+          <NavLink href={`/${locale}/blog`}>{t.nav.blog}</NavLink>
           <NavLink href={`/${locale}/contact`}>{t.nav.contact}</NavLink>
 
           {/* LANG DROPDOWN */}
@@ -215,6 +223,11 @@ export default function Navbar() {
           <MobileLink
             href={`/${locale}/products`}
             label={t.nav.products}
+            onClick={() => setMobileOpen(false)}
+          />
+          <MobileLink
+            href={`/${locale}/blog`}
+            label={t.nav.blog}
             onClick={() => setMobileOpen(false)}
           />
           <MobileLink

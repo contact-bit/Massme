@@ -23,12 +23,12 @@ const DATA: Record<Locale, { title: string; items: Item[] }> = {
         a: "En général, il faut maintenir la position prescrite (souvent tête vers le sol). L'objectif est de garder la bulle en appui sur la zone à traiter. Suivez toujours les consignes de votre chirurgien.",
       },
       {
-        q: "Quand commander OculaRest ?",
+        q: "Quand commander VitectroMed ?",
         a: "Idéalement avant l'intervention, afin d'être prêt dès le retour à domicile et d'organiser sereinement votre convalescence.",
       },
       {
         q: "Est-ce un dispositif médical certifié ?",
-        a: "OculaRest est présenté comme un dispositif médical certifié CE. Référez-vous aux informations officielles du produit (notice / marquage) pour les détails exacts.",
+        a: "VitectroMed est présenté comme un dispositif médical certifié CE. Référez-vous aux informations officielles du produit (notice / marquage) pour les détails exacts.",
       },
       {
         q: "Est-il réutilisable après la convalescence ?",
@@ -48,7 +48,7 @@ const DATA: Record<Locale, { title: string; items: Item[] }> = {
         a: "In many cases, you must keep the prescribed position (often face-down). The goal is to keep the gas bubble pressing on the treated area. Always follow your surgeon's instructions.",
       },
       {
-        q: "When should I order OculaRest?",
+        q: "When should I order VitectroMed?",
         a: "Ideally before surgery, so you're ready as soon as you return home and can plan recovery with peace of mind.",
       },
       {
@@ -73,12 +73,12 @@ const DATA: Record<Locale, { title: string; items: Item[] }> = {
         a: "En muchos casos, debe mantener la posición prescrita (a menudo boca abajo). El objetivo es mantener la burbuja de gas presionando sobre el área tratada. Siempre siga las instrucciones de su cirujano.",
       },
       {
-        q: "¿Cuándo debo pedir OculaRest?",
+        q: "¿Cuándo debo pedir VitectroMed?",
         a: "Idealmente antes de la cirugía, para estar preparado tan pronto como regrese a casa y pueda planificar la recuperación con tranquilidad.",
       },
       {
         q: "¿Es un dispositivo médico certificado?",
-        a: "OculaRest se presenta como certificado CE. Consulte la información oficial del producto (etiquetado / documentación) para conocer los detalles exactos.",
+        a: "VitectroMed se presenta como certificado CE. Consulte la información oficial del producto (etiquetado / documentación) para conocer los detalles exactos.",
       },
       {
         q: "¿Se puede reutilizar después de la recuperación?",
@@ -148,7 +148,7 @@ const DATA: Record<Locale, { title: string; items: Item[] }> = {
         a: "In veel gevallen moet u de voorgeschreven positie aanhouden (vaak met het gezicht naar beneden). Het doel is om de gasbel op het behandelde gebied te houden. Volg altijd de instructies van uw chirurg.",
       },
       {
-        q: "Wanneer moet ik OculaRest bestellen?",
+        q: "Wanneer moet ik VitectroMed bestellen?",
         a: "Idealiter vóór de operatie, zodat u klaar bent zodra u thuiskomt en met een gerust hart kunt plannen voor herstel.",
       },
       {

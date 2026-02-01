@@ -21,11 +21,11 @@ const COPY: Record<Locale, {
 }> = {
   fr: {
     h1: "Un dispositif pensé pour votre confort et votre sécurité",
-    p1: "OculaRest est équipé d'une mousse à mémoire de forme et d'une housse en textile de bambou Oeko-Tex®, douce, respirante, antiallergique et antibactérienne.",
+    p1: "VitectroMed est équipé d'une mousse à mémoire de forme et d'une housse en textile de bambou Oeko-Tex®, douce, respirante, antiallergique et antibactérienne.",
     p2: "Son design ergonomique permet une bonne ventilation du visage, l'utilisation avec des lunettes et un alignement optimal de la colonne vertébrale.",
     made: "Conçu et fabriqué en France 🇫🇷",
     h2a: "À qui s'adresse",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     h2b: " ?",
     bullets: [
       "Patients opérés d'un trou maculaire",
@@ -36,11 +36,11 @@ const COPY: Record<Locale, {
   },
   en: {
     h1: "A device designed for your comfort and safety",
-    p1: "OculaRest features memory foam and a bamboo Oeko-Tex® cover that is soft, breathable, hypoallergenic and antibacterial.",
+    p1: "VitectroMed features memory foam and a bamboo Oeko-Tex® cover that is soft, breathable, hypoallergenic and antibacterial.",
     p2: "Its ergonomic design ensures good facial ventilation, allows use with glasses, and supports optimal spinal alignment.",
     made: "Designed & made in France 🇫🇷",
     h2a: "Who is",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     h2b: " for?",
     bullets: [
       "Patients after macular hole surgery",
@@ -51,11 +51,11 @@ const COPY: Record<Locale, {
   },
   es: {
     h1: "Un dispositivo diseñado para tu comodidad y seguridad",
-    p1: "OculaRest cuenta con espuma viscoelástica y una funda de bambú Oeko-Tex® que es suave, transpirable, hipoalergénica y antibacteriana.",
+    p1: "VitectroMed cuenta con espuma viscoelástica y una funda de bambú Oeko-Tex® que es suave, transpirable, hipoalergénica y antibacteriana.",
     p2: "Su diseño ergonómico garantiza una buena ventilación facial, permite el uso con gafas y favorece una alineación óptima de la columna vertebral.",
     made: "Diseñado y fabricado en Francia 🇫🇷",
     h2a: "¿Para quién es",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     h2b: "?",
     bullets: [
       "Pacientes operados de agujero macular",
@@ -66,11 +66,11 @@ const COPY: Record<Locale, {
   },
   de: {
     h1: "Ein Gerät für Ihren Komfort und Ihre Sicherheit",
-    p1: "OculaRest ist mit Memory-Schaum und einem Bambus-Oeko-Tex®-Bezug ausgestattet, der weich, atmungsaktiv, hypoallergen und antibakteriell ist.",
+    p1: "VitectroMed ist mit Memory-Schaum und einem Bambus-Oeko-Tex®-Bezug ausgestattet, der weich, atmungsaktiv, hypoallergen und antibakteriell ist.",
     p2: "Sein ergonomisches Design sorgt für gute Gesichtsbelüftung, ermöglicht die Verwendung mit Brille und unterstützt eine optimale Ausrichtung der Wirbelsäule.",
     made: "Entwickelt und hergestellt in Frankreich 🇫🇷",
     h2a: "Für wen ist",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     h2b: "?",
     bullets: [
       "Patienten nach Makulaloch-Operation",
@@ -81,11 +81,11 @@ const COPY: Record<Locale, {
   },
   it: {
     h1: "Un dispositivo pensato per il tuo comfort e la tua sicurezza",
-    p1: "OculaRest è dotato di schiuma memory e di una fodera in bambù Oeko-Tex® morbida, traspirante, ipoallergenica e antibatterica.",
+    p1: "VitectroMed è dotato di schiuma memory e di una fodera in bambù Oeko-Tex® morbida, traspirante, ipoallergenica e antibatterica.",
     p2: "Il suo design ergonomico garantisce una buona ventilazione del viso, consente l'uso con gli occhiali e favorisce un allineamento ottimale della colonna vertebrale.",
     made: "Progettato e prodotto in Francia 🇫🇷",
     h2a: "Per chi è",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     h2b: "?",
     bullets: [
       "Pazienti operati di foro maculare",
@@ -96,11 +96,11 @@ const COPY: Record<Locale, {
   },
   nl: {
     h1: "Een apparaat ontworpen voor uw comfort en veiligheid",
-    p1: "OculaRest is uitgerust met geheugenschuim en een bamboe Oeko-Tex® hoes die zacht, ademend, hypoallergeen en antibacterieel is.",
+    p1: "VitectroMed is uitgerust met geheugenschuim en een bamboe Oeko-Tex® hoes die zacht, ademend, hypoallergeen en antibacterieel is.",
     p2: "Het ergonomische ontwerp zorgt voor goede gezichtsventilatie, maakt gebruik met een bril mogelijk en ondersteunt een optimale uitlijning van de wervelkolom.",
     made: "Ontworpen en gemaakt in Frankrijk 🇫🇷",
     h2a: "Voor wie is",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     h2b: "?",
     bullets: [
       "Patiënten na maculagat-operatie",
@@ -128,7 +128,7 @@ export default function DeviceInfoSection({ locale }: Props) {
             {t.brand}
             <Image
               src={MINI_LOGO}
-              alt="OculaRest"
+              alt="VitectroMed"
               width={18}
               height={18}
               className="dev-mini"

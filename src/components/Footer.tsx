@@ -9,7 +9,7 @@ import "@/styles/components/footer.css";
    🌍 LOGO
 ------------------------------------------ */
 const LOGO_URL =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2456d5ba-af23-4219-7115-f54286a7c600/public";
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/5112d871-7854-47e2-2838-1790ba171700/public";
 
 /* ------------------------------------------
    🌍 LOCALES
@@ -65,7 +65,7 @@ const CONTENT: Record<
       links: [
         { label: "Accueil", href: "/fr" },
         { label: "Fonctionnement", href: "/fr/a-propos" },
-        { label: "Commander OculaRest", href: "/fr/products" },
+        { label: "Commander VitectroMed", href: "/fr/products" },
       ],
     },
     info: {
@@ -78,7 +78,7 @@ const CONTENT: Record<
     contact: {
       title: "Contact",
       ship: "Livraison France & Europe",
-      email: "contact@ocularest.com",
+      email: "contact@vitectromed.com",
       country: "France",
     },
     legalLinks: [
@@ -88,7 +88,7 @@ const CONTENT: Record<
       { label: "Remboursement", href: "/fr/remboursement" },
     ],
     bottom:
-      "© 2025 OculaRest — Tous droits réservés. Dispositif médical destiné à l’accompagnement post-opératoire après vitrectomie.",
+      "© 2025 VitectroMed — Tous droits réservés. Dispositif médical destiné à l’accompagnement post-opératoire après vitrectomie.",
   },
 
   en: {
@@ -103,7 +103,7 @@ const CONTENT: Record<
       links: [
         { label: "Home", href: "/en" },
         { label: "How it works", href: "/en/a-propos" },
-        { label: "Order OculaRest", href: "/en/products" },
+        { label: "Order VitectroMed", href: "/en/products" },
       ],
     },
     info: {
@@ -116,7 +116,7 @@ const CONTENT: Record<
     contact: {
       title: "Contact",
       ship: "Delivery in Europe",
-      email: "contact@ocularest.com",
+      email: "contact@vitectromed.com",
       country: "France",
     },
     legalLinks: [
@@ -126,7 +126,7 @@ const CONTENT: Record<
       { label: "Refunds", href: "/en/remboursement" },
     ],
     bottom:
-      "© 2025 OculaRest — All rights reserved. Medical device for post-operative vitrectomy recovery.",
+      "© 2025 VitectroMed — All rights reserved. Medical device for post-operative vitrectomy recovery.",
   },
 
   es: {
@@ -142,7 +142,7 @@ const CONTENT: Record<
       links: [
         { label: "Inicio", href: "/es" },
         { label: "Funcionamiento", href: "/es/a-propos" },
-        { label: "Comprar OculaRest", href: "/es/products" },
+        { label: "Comprar VitectroMed", href: "/es/products" },
       ],
     },
     info: {
@@ -155,7 +155,7 @@ const CONTENT: Record<
     contact: {
       title: "Contacto",
       ship: "Envíos en Europa",
-      email: "contact@ocularest.com",
+      email: "contact@vitectromed.com",
       country: "Francia",
     },
     legalLinks: [
@@ -165,7 +165,7 @@ const CONTENT: Record<
       { label: "Reembolsos", href: "/es/remboursement" },
     ],
     bottom:
-      "© 2025 OculaRest — Todos los derechos reservados.",
+      "© 2025 VitectroMed — Todos los derechos reservados.",
   },
 
   de: {
@@ -181,7 +181,7 @@ const CONTENT: Record<
       links: [
         { label: "Startseite", href: "/de" },
         { label: "Funktionsweise", href: "/de/a-propos" },
-        { label: "OculaRest bestellen", href: "/de/products" },
+        { label: "VitectroMed bestellen", href: "/de/products" },
       ],
     },
     info: {
@@ -194,7 +194,7 @@ const CONTENT: Record<
     contact: {
       title: "Kontakt",
       ship: "Lieferung in Europa",
-      email: "contact@ocularest.com",
+      email: "contact@vitectromed.com",
       country: "Frankreich",
     },
     legalLinks: [
@@ -204,7 +204,7 @@ const CONTENT: Record<
       { label: "Rückerstattung", href: "/de/remboursement" },
     ],
     bottom:
-      "© 2025 OculaRest — Alle Rechte vorbehalten.",
+      "© 2025 VitectroMed — Alle Rechte vorbehalten.",
   },
 
   it: {
@@ -220,7 +220,7 @@ const CONTENT: Record<
       links: [
         { label: "Home", href: "/it" },
         { label: "Funzionamento", href: "/it/a-propos" },
-        { label: "Acquista OculaRest", href: "/it/products" },
+        { label: "Acquista VitectroMed", href: "/it/products" },
       ],
     },
     info: {
@@ -233,7 +233,7 @@ const CONTENT: Record<
     contact: {
       title: "Contatto",
       ship: "Spedizione in Europa",
-      email: "contact@ocularest.com",
+      email: "contact@vitectromed.com",
       country: "Francia",
     },
     legalLinks: [
@@ -243,7 +243,7 @@ const CONTENT: Record<
       { label: "Rimborsi", href: "/it/remboursement" },
     ],
     bottom:
-      "© 2025 OculaRest — Tutti i diritti riservati.",
+      "© 2025 VitectroMed — Tutti i diritti riservati.",
   },
 
   nl: {
@@ -259,7 +259,7 @@ const CONTENT: Record<
       links: [
         { label: "Home", href: "/nl" },
         { label: "Werking", href: "/nl/a-propos" },
-        { label: "OculaRest bestellen", href: "/nl/products" },
+        { label: "VitectroMed bestellen", href: "/nl/products" },
       ],
     },
     info: {
@@ -272,7 +272,7 @@ const CONTENT: Record<
     contact: {
       title: "Contact",
       ship: "Levering in Europa",
-      email: "contact@ocularest.com",
+      email: "contact@vitectromed.com",
       country: "Frankrijk",
     },
     legalLinks: [
@@ -282,7 +282,7 @@ const CONTENT: Record<
       { label: "Terugbetaling", href: "/nl/remboursement" },
     ],
     bottom:
-      "© 2025 OculaRest — Alle rechten voorbehouden.",
+      "© 2025 VitectroMed — Alle rechten voorbehouden.",
   },
 
   pt: {
@@ -298,7 +298,7 @@ const CONTENT: Record<
       links: [
         { label: "Início", href: "/pt" },
         { label: "Funcionamento", href: "/pt/a-propos" },
-        { label: "Comprar OculaRest", href: "/pt/products" },
+        { label: "Comprar VitectroMed", href: "/pt/products" },
       ],
     },
     info: {
@@ -311,7 +311,7 @@ const CONTENT: Record<
     contact: {
       title: "Contato",
       ship: "Envio para a Europa",
-      email: "contact@ocularest.com",
+      email: "contact@vitectromed.com",
       country: "França",
     },
     legalLinks: [
@@ -321,7 +321,7 @@ const CONTENT: Record<
       { label: "Reembolsos", href: "/pt/remboursement" },
     ],
     bottom:
-      "© 2025 OculaRest — Todos os direitos reservados.",
+      "© 2025 VitectroMed — Todos os direitos reservados.",
   },
 };
 
@@ -343,7 +343,7 @@ export default function Footer() {
       <div className="footer-container footer-compact">
         {/* Brand */}
         <div className="footer-brand">
-          <Image src={LOGO_URL} alt="OculaRest" width={140} height={44} />
+          <Image src={LOGO_URL} alt="VitectroMed" width={140} height={44} />
           <p className="footer-desc">{T.desc}</p>
 
           <ul className="footer-badges">

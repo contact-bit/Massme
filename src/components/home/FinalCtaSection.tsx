@@ -20,60 +20,60 @@ const COPY: Record<Locale, {
 }> = {
   fr: {
     title: "Prêt à être accompagné pendant votre convalescence ?",
-    pBefore: "OculaRest",
+    pBefore: "VitectroMed",
     pAfter:
       "vous aide à traverser cette période post-opératoire dans les meilleures conditions possibles, en alliant maintien postural, confort et sérénité.",
-    primary: "Commander OculaRest",
+    primary: "Commander VitectroMed",
     secondary: "Nous contacter pour être conseillé",
     orderHref: "/fr/products",
     contactHref: "/fr/contact",
   },
   en: {
     title: "Ready to be supported throughout your recovery?",
-    pBefore: "OculaRest",
+    pBefore: "VitectroMed",
     pAfter:
       "helps you through this post-operative period in the best possible conditions—combining posture support, comfort, and peace of mind.",
-    primary: "Order OculaRest",
+    primary: "Order VitectroMed",
     secondary: "Contact us for advice",
     orderHref: "/en/products",
     contactHref: "/en/contact",
   },
   es: {
     title: "¿Listo para recibir apoyo durante tu convalecencia?",
-    pBefore: "OculaRest",
+    pBefore: "VitectroMed",
     pAfter:
       "te ayuda a atravesar este período postoperatorio en las mejores condiciones posibles, combinando soporte postural, comodidad y tranquilidad.",
-    primary: "Pedir OculaRest",
+    primary: "Pedir VitectroMed",
     secondary: "Contáctanos para recibir asesoramiento",
     orderHref: "/es/products",
     contactHref: "/es/contact",
   },
   de: {
     title: "Bereit, während Ihrer Genesung unterstützt zu werden?",
-    pBefore: "OculaRest",
+    pBefore: "VitectroMed",
     pAfter:
       "hilft Ihnen, diese postoperative Phase unter den bestmöglichen Bedingungen zu durchlaufen und kombiniert Haltungsunterstützung, Komfort und Seelenfrieden.",
-    primary: "OculaRest bestellen",
+    primary: "VitectroMed bestellen",
     secondary: "Kontaktieren Sie uns für Beratung",
     orderHref: "/de/products",
     contactHref: "/de/contact",
   },
   it: {
     title: "Pronto a essere supportato durante la tua convalescenza?",
-    pBefore: "OculaRest",
+    pBefore: "VitectroMed",
     pAfter:
       "ti aiuta ad attraversare questo periodo post-operatorio nelle migliori condizioni possibili, combinando supporto posturale, comfort e serenità.",
-    primary: "Ordina OculaRest",
+    primary: "Ordina VitectroMed",
     secondary: "Contattaci per ricevere consigli",
     orderHref: "/it/products",
     contactHref: "/it/contact",
   },
   nl: {
     title: "Klaar om ondersteund te worden tijdens je herstel?",
-    pBefore: "OculaRest",
+    pBefore: "VitectroMed",
     pAfter:
       "helpt je door deze postoperatieve periode onder de best mogelijke omstandigheden—met houdingsondersteuning, comfort en gemoedsrust.",
-    primary: "Bestel OculaRest",
+    primary: "Bestel VitectroMed",
     secondary: "Neem contact met ons op voor advies",
     orderHref: "/nl/products",
     contactHref: "/nl/contact",
@@ -93,7 +93,7 @@ export default function FinalCtaSection({ locale }: Props) {
             {t.pBefore}
             <Image
               src={MINI_LOGO}
-              alt="OculaRest"
+              alt="VitectroMed"
               width={18}
               height={18}
               className="fcta-mini"

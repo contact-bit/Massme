@@ -13,7 +13,7 @@ type HeroProps = {
    ASSETS
 ========================= */
 const LOGO_URL =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2db3d899-6352-4cf7-26bb-f27c541f4200/public";
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/5112d871-7854-47e2-2838-1790ba171700/public";
 
 const PRODUCT_URL =
   "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/63950d11-1ac7-4c4d-13a1-f7278cd7b600/public";
@@ -36,7 +36,7 @@ const HERO_CONTENT: Record<
     subtitle:
       "Maintenez facilement la position prescrite après une opération du trou maculaire ou du décollement de la rétine.",
     body:
-      "OculaRest est un dispositif médical certifié conçu pour accompagner les patients durant leur convalescence post-opératoire tout en soulageant les cervicales.",
+      "VitectroMed est un dispositif médical certifié conçu pour accompagner les patients durant leur convalescence post-opératoire tout en soulageant les cervicales.",
   },
 
   en: {
@@ -44,7 +44,7 @@ const HERO_CONTENT: Record<
     subtitle:
       "Easily maintain the prescribed position after macular hole or retinal detachment surgery.",
     body:
-      "OculaRest is a certified medical device designed to support patients during post-operative recovery while relieving neck strain.",
+      "VitectroMed is a certified medical device designed to support patients during post-operative recovery while relieving neck strain.",
   },
 
   es: {
@@ -52,7 +52,7 @@ const HERO_CONTENT: Record<
     subtitle:
       "Mantenga fácilmente la posición prescrita tras una cirugía del agujero macular o desprendimiento de retina.",
     body:
-      "OculaRest es un dispositivo médico certificado diseñado para acompañar a los pacientes durante su recuperación postoperatoria y aliviar las cervicales.",
+      "VitectroMed es un dispositivo médico certificado diseñado para acompañar a los pacientes durante su recuperación postoperatoria y aliviar las cervicales.",
   },
 
   de: {
@@ -60,7 +60,7 @@ const HERO_CONTENT: Record<
     subtitle:
       "Halten Sie nach einer Makulaloch- oder Netzhautablösungsoperation einfach die vorgeschriebene Position ein.",
     body:
-      "OculaRest ist ein zertifiziertes Medizinprodukt zur Unterstützung der postoperativen Genesung und zur Entlastung der Halswirbelsäule.",
+      "VitectroMed ist ein zertifiziertes Medizinprodukt zur Unterstützung der postoperativen Genesung und zur Entlastung der Halswirbelsäule.",
   },
 
   it: {
@@ -68,7 +68,7 @@ const HERO_CONTENT: Record<
     subtitle:
       "Mantieni facilmente la posizione prescritta dopo un intervento al foro maculare o al distacco della retina.",
     body:
-      "OculaRest è un dispositivo medico certificato progettato per supportare i pazienti durante la convalescenza post-operatoria alleviando la tensione cervicale.",
+      "VitectroMed è un dispositivo medico certificato progettato per supportare i pazienti durante la convalescenza post-operatoria alleviando la tensione cervicale.",
   },
 
   nl: {
@@ -76,7 +76,7 @@ const HERO_CONTENT: Record<
     subtitle:
       "Houd eenvoudig de voorgeschreven houding aan na een maculagat- of netvliesloslatingsoperatie.",
     body:
-      "OculaRest is een gecertificeerd medisch hulpmiddel dat patiënten ondersteunt tijdens het postoperatieve herstel en de nek ontlast.",
+      "VitectroMed is een gecertificeerd medisch hulpmiddel dat patiënten ondersteunt tijdens het postoperatieve herstel en de nek ontlast.",
   },
 };
 
@@ -95,7 +95,7 @@ export default function HeroSection({ locale }: HeroProps) {
           <div className="hero-left">
             <Image
               src={LOGO_URL}
-              alt="OculaRest"
+              alt="VitectroMed"
               width={180}
               height={56}
               className="hero-logo"
@@ -115,7 +115,7 @@ export default function HeroSection({ locale }: HeroProps) {
               <div className="hero-product">
                 <Image
                   src={PRODUCT_URL}
-                  alt="OculaRest"
+                  alt="VitectroMed"
                   fill
                   className="hero-product-img"
                   priority

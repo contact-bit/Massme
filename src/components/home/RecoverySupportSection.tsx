@@ -24,50 +24,50 @@ const COPY: Record<Locale, {
   eyeAlt: string;
 }> = {
   fr: {
-    title1: "OculaRest",
+    title1: "VitectroMed",
     title2: "vous accompagne",
     title3: "pendant toute votre convalescence",
-    p1: "OculaRest a été conçu pour répondre précisément aux contraintes de la convalescence après vitrectomie.",
+    p1: "VitectroMed a été conçu pour répondre précisément aux contraintes de la convalescence après vitrectomie.",
     p2: "Il permet de maintenir la position prescrite par votre chirurgien tout en améliorant votre confort, de jour comme de nuit.",
     eyeAlt: "Illustration œil",
   },
   en: {
-    title1: "OculaRest",
+    title1: "VitectroMed",
     title2: "supports you",
     title3: "throughout your recovery",
-    p1: "OculaRest was designed to meet the specific constraints of recovery after vitrectomy.",
+    p1: "VitectroMed was designed to meet the specific constraints of recovery after vitrectomy.",
     p2: "It helps maintain the position prescribed by your surgeon while improving comfort, day and night.",
     eyeAlt: "Eye illustration",
   },
   es: {
-    title1: "OculaRest",
+    title1: "VitectroMed",
     title2: "te acompaña",
     title3: "durante toda tu convalecencia",
-    p1: "OculaRest fue diseñado para cumplir con las restricciones específicas de la recuperación después de vitrectomía.",
+    p1: "VitectroMed fue diseñado para cumplir con las restricciones específicas de la recuperación después de vitrectomía.",
     p2: "Ayuda a mantener la posición prescrita por su cirujano mientras mejora la comodidad, día y noche.",
     eyeAlt: "Ilustración de ojo",
   },
   de: {
-    title1: "OculaRest",
+    title1: "VitectroMed",
     title2: "begleitet Sie",
     title3: "während Ihrer gesamten Genesung",
-    p1: "OculaRest wurde entwickelt, um den spezifischen Anforderungen der Genesung nach einer Vitrektomie gerecht zu werden.",
+    p1: "VitectroMed wurde entwickelt, um den spezifischen Anforderungen der Genesung nach einer Vitrektomie gerecht zu werden.",
     p2: "Es hilft, die von Ihrem Chirurgen vorgeschriebene Position beizubehalten und gleichzeitig den Komfort Tag und Nacht zu verbessern.",
     eyeAlt: "Augenillustration",
   },
   it: {
-    title1: "OculaRest",
+    title1: "VitectroMed",
     title2: "ti accompagna",
     title3: "durante tutta la tua convalescenza",
-    p1: "OculaRest è stato progettato per soddisfare i vincoli specifici della convalescenza dopo vitrectomia.",
+    p1: "VitectroMed è stato progettato per soddisfare i vincoli specifici della convalescenza dopo vitrectomia.",
     p2: "Aiuta a mantenere la posizione prescritta dal chirurgo migliorando al contempo il comfort, giorno e notte.",
     eyeAlt: "Illustrazione dell'occhio",
   },
   nl: {
-    title1: "OculaRest",
+    title1: "VitectroMed",
     title2: "ondersteunt u",
     title3: "tijdens uw gehele herstel",
-    p1: "OculaRest is ontworpen om te voldoen aan de specifieke beperkingen van herstel na vitrectomie.",
+    p1: "VitectroMed is ontworpen om te voldoen aan de specifieke beperkingen van herstel na vitrectomie.",
     p2: "Het helpt de door uw chirurg voorgeschreven positie te behouden en verbetert tegelijkertijd het comfort, dag en nacht.",
     eyeAlt: "Oogillustratie",
   },
@@ -95,7 +95,7 @@ export default function RecoverySupportSection({ locale }: Props) {
             {t.title1}
             <Image
               src={MINI_LOGO}
-              alt="OculaRest"
+              alt="VitectroMed"
               width={20}
               height={20}
               className="rs-mini"

@@ -22,7 +22,7 @@ const CONTENT: Record<Locale, {
 }> = {
   fr: {
     line1_left: "Coussin vitrectomie",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     line2: "Le 1er ",
     highlight: "DISPOSITIF MÉDICAL certifié CE",
     line2_end: " pour la convalescence après vitrectomie.",
@@ -30,7 +30,7 @@ const CONTENT: Record<Locale, {
   },
   en: {
     line1_left: "Vitrectomy cushion",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     line2: "The first ",
     highlight: "CE-certified medical device",
     line2_end: " for recovery after vitrectomy.",
@@ -38,7 +38,7 @@ const CONTENT: Record<Locale, {
   },
   es: {
     line1_left: "Cojín para vitrectomía",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     line2: "El 1er ",
     highlight: "DISPOSITIVO MÉDICO certificado CE",
     line2_end: " para la convalecencia después de vitrectomía.",
@@ -46,7 +46,7 @@ const CONTENT: Record<Locale, {
   },
   de: {
     line1_left: "Vitrektomie-Kissen",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     line2: "Das 1. ",
     highlight: "CE-zertifizierte MEDIZINPRODUKT",
     line2_end: " für die Genesung nach Vitrektomie.",
@@ -54,7 +54,7 @@ const CONTENT: Record<Locale, {
   },
   it: {
     line1_left: "Cuscino per vitrectomia",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     line2: "Il 1° ",
     highlight: "DISPOSITIVO MEDICO certificato CE",
     line2_end: " per la convalescenza dopo vitrectomia.",
@@ -62,7 +62,7 @@ const CONTENT: Record<Locale, {
   },
   nl: {
     line1_left: "Vitrectomie kussen",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     line2: "Het 1e ",
     highlight: "CE-gecertificeerd MEDISCH HULPMIDDEL",
     line2_end: " voor herstel na vitrectomie.",
@@ -84,7 +84,7 @@ export default function CredibilityStrip({ locale }: Props) {
             <span className="cred-brand-logo">
               <Image
                 src={OCULAREST_SMALL_LOGO}
-                alt="OculaRest"
+                alt="VitectroMed"
                 width={22}
                 height={22}
                 className="cred-logo-img"

@@ -1,96 +1,85 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
+import { CONTENT, type Locale } from "./_content";
 
 export const dynamic = "force-dynamic";
-
-const CONTENT = {
-  fr: {
-    title: "Blog",
-    subtitle: "Explorez nos articles, conseils et actualités.",
-    posts: [
-      {
-        id: "1",
-        title: "Bien dormir après une opération",
-        date: "12 Janvier 2024",
-        excerpt:
-          "Découvrez nos conseils pour mieux dormir et accélérer votre récupération.",
-        image: "/placeholder.jpg",
-      },
-      {
-        id: "2",
-        title: "Soulager les douleurs cervicales efficacement",
-        date: "28 Décembre 2023",
-        excerpt:
-          "Les meilleures postures et accessoires pour réduire les tensions du cou.",
-        image: "/placeholder.jpg",
-      },
-    ],
-    readMore: "Lire la suite",
-  },
-
-  en: {
-    title: "Blog",
-    subtitle: "Explore our articles, tips and latest updates.",
-    posts: [
-      {
-        id: "1",
-        title: "Sleeping well after surgery",
-        date: "January 12, 2024",
-        excerpt:
-          "Discover our tips to sleep better and speed up your recovery.",
-        image: "/placeholder.jpg",
-      },
-      {
-        id: "2",
-        title: "How to relieve cervical pain efficiently",
-        date: "December 28, 2023",
-        excerpt:
-          "The best positions and tools to reduce neck tension.",
-        image: "/placeholder.jpg",
-      },
-    ],
-    readMore: "Read more",
-  },
-} as const;
 
 export default async function BlogPage({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = await params;
 
-  const t = CONTENT[locale as "fr" | "en"];
+  const t = CONTENT[locale];
   if (!t) return notFound();
 
   return (
-    <main className="blog-page">
-      {/* HEADER */}
-      <header className="blog-header">
-        <h1>{t.title}</h1>
-        <p>{t.subtitle}</p>
+    <main
+      style={{
+        maxWidth: "1000px",
+        margin: "0 auto",
+        padding: "24px 16px",
+      }}
+    >
+      <header style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: "2rem", marginBottom: 8 }}>{t.title}</h1>
+        <p style={{ color: "#555" }}>{t.subtitle}</p>
       </header>
 
-      {/* LISTE DES ARTICLES */}
-      <section className="blog-grid">
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: "20px",
+        }}
+      >
         {t.posts.map((post) => (
-          <article key={post.id} className="blog-card">
-            <div className="blog-card-img">
+          <article
+            key={post.id}
+            style={{
+              border: "1px solid #eee",
+              borderRadius: "12px",
+              padding: "12px",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                height: "180px",
+                borderRadius: "10px",
+                overflow: "hidden",
+                marginBottom: "12px",
+              }}
+            >
               <Image
                 src={post.image}
                 alt={post.title}
                 fill
+                style={{ objectFit: "cover" }}
               />
             </div>
 
-            <div className="blog-card-body">
-              <h2 className="blog-card-title">{post.title}</h2>
-              <p className="blog-card-date">{post.date}</p>
-              <p className="blog-card-excerpt">{post.excerpt}</p>
+            <div>
+              <h2 style={{ fontSize: "1.1rem", marginBottom: 4 }}>
+                {post.title}
+              </h2>
+              <p style={{ fontSize: "0.85rem", color: "#777", marginBottom: 8 }}>
+                {post.date}
+              </p>
+              <p style={{ fontSize: "0.95rem", marginBottom: 12 }}>
+                {post.excerpt}
+              </p>
 
-              <a href="#" className="blog-card-link">
+              <Link
+                href={`/${locale}/blog/${post.id}`}
+                style={{ fontSize: "0.9rem", color: "#2563eb" }}
+              >
                 {t.readMore}
-              </a>
+              </Link>
             </div>
           </article>
         ))}

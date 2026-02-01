@@ -31,7 +31,7 @@ const COPY: Record<Locale, {
       {
         label: "Étape 2:",
         textBefore: "Vous installez ",
-        brand: "OculaRest",
+        brand: "VitectroMed",
         textAfter: " en quelques secondes, sur votre lit ou sur une table.",
       },
       {
@@ -51,7 +51,7 @@ const COPY: Record<Locale, {
       {
         label: "Step 2:",
         textBefore: "You set up ",
-        brand: "OculaRest",
+        brand: "VitectroMed",
         textAfter: " in seconds, on your bed or on a table.",
       },
       {
@@ -71,7 +71,7 @@ const COPY: Record<Locale, {
       {
         label: "Paso 2:",
         textBefore: "Instala ",
-        brand: "OculaRest",
+        brand: "VitectroMed",
         textAfter: " en segundos, en su cama o en una mesa.",
       },
       {
@@ -91,7 +91,7 @@ const COPY: Record<Locale, {
       {
         label: "Schritt 2:",
         textBefore: "Sie richten ",
-        brand: "OculaRest",
+        brand: "VitectroMed",
         textAfter: " in Sekunden ein, auf Ihrem Bett oder auf einem Tisch.",
       },
       {
@@ -111,7 +111,7 @@ const COPY: Record<Locale, {
       {
         label: "Passaggio 2:",
         textBefore: "Installi ",
-        brand: "OculaRest",
+        brand: "VitectroMed",
         textAfter: " in pochi secondi, sul tuo letto o su un tavolo.",
       },
       {
@@ -131,7 +131,7 @@ const COPY: Record<Locale, {
       {
         label: "Stap 2:",
         textBefore: "U installeert ",
-        brand: "OculaRest",
+        brand: "VitectroMed",
         textAfter: " in enkele seconden, op uw bed of op een tafel.",
       },
       {
@@ -168,7 +168,7 @@ export default function StepsSection({ locale }: Props) {
                 {t.steps[1].brand}
                 <Image
                   src={MINI_LOGO}
-                  alt="OculaRest"
+                  alt="VitectroMed"
                   width={18}
                   height={18}
                   className="step-mini"

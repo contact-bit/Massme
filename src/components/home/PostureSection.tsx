@@ -7,7 +7,7 @@ type Props = {
 };
 
 const POSTURE_IMAGE_URL =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/95bc0f65-b90c-40c2-1167-b0d2f1857000/public";
+  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/25934eca-f978-4cbf-dfe1-5ddf77c36100/public";
 
 const DATA: Record<Locale, { alt: string; caption: string }> = {
   fr: {

@@ -20,7 +20,7 @@ const COPY: Record<Locale, {
 }> = {
   fr: {
     titleA: "Pourquoi",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     titleB: "est différent",
     bullets: [
       "Maintien fiable de la position post-opératoire",
@@ -32,7 +32,7 @@ const COPY: Record<Locale, {
   },
   en: {
     titleA: "Why",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     titleB: "is different",
     bullets: [
       "Reliable support for the prescribed post-op position",
@@ -44,7 +44,7 @@ const COPY: Record<Locale, {
   },
   es: {
     titleA: "Por qué",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     titleB: "es diferente",
     bullets: [
       "Soporte fiable para la posición postoperatoria prescrita",
@@ -56,7 +56,7 @@ const COPY: Record<Locale, {
   },
   de: {
     titleA: "Warum",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     titleB: "anders ist",
     bullets: [
       "Zuverlässige Unterstützung für die vorgeschriebene postoperative Position",
@@ -68,7 +68,7 @@ const COPY: Record<Locale, {
   },
   it: {
     titleA: "Perché",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     titleB: "è diverso",
     bullets: [
       "Supporto affidabile per la posizione post-operatoria prescritta",
@@ -80,7 +80,7 @@ const COPY: Record<Locale, {
   },
   nl: {
     titleA: "Waarom",
-    brand: "OculaRest",
+    brand: "VitectroMed",
     titleB: "anders is",
     bullets: [
       "Betrouwbare ondersteuning voor de voorgeschreven postoperatieve positie",
@@ -114,7 +114,7 @@ export default function WhyDifferentSection({ locale }: Props) {
             {t.brand}
             <Image
               src={MINI_LOGO}
-              alt="OculaRest"
+              alt="VitectroMed"
               width={18}
               height={18}
               className="why-mini"
