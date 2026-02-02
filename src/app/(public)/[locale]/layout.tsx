@@ -23,7 +23,7 @@ import "@/styles/pages/besoins.css";
 
 import { CartProvider } from "@/context/CartContext";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer"; // adapte le chemin
+import Footer from "@/components/Footer";
 
 interface LayoutProps {
   children: ReactNode;
