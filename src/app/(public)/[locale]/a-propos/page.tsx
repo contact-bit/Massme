@@ -1,1157 +1,563 @@
+// src/app/(public)/[locale]/a-propos/page.tsx
 import { notFound } from "next/navigation";
+import "@/styles/pages/a-propos.css";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Locales Europe (tu peux en retirer/ajouter facilement)
- */
-type Locale =
-  | "fr"
-  | "en"
-  | "es"
-  | "de"
-  | "it"
-  | "pt"
-  | "nl"
-  | "pl"
-  | "sv"
-  | "da"
-  | "no"
-  | "fi"
-  | "cs"
-  | "hu"
-  | "ro"
-  | "bg"
-  | "el"
-  | "sk"
-  | "sl"
-  | "hr"
-  | "et"
-  | "lv"
-  | "lt"
-  | "mt"
-  | "ga";
+type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
-type Section = { heading: string; text: string };
-type Content = { title: string; subtitle: string; sections: Section[] };
+type Section = {
+  heading: string;
+  text: string;
+};
 
-/**
- * ✅ Contenu multi-langue
- * - Traductions naturelles (pas du mot à mot)
- * - Ton médical/prudent (pas de promesse)
- */
+type FAQ = {
+  q: string;
+  a: string;
+};
+
+type Content = {
+  title: string;
+  subtitle: string;
+  lead: string;
+  highlights: string[];
+  sections: Section[];
+  faq: FAQ[];
+  seoTopics: string[];
+};
+
 const CONTENT: Record<Locale, Content> = {
   fr: {
-    title: "À propos d’VitectroMed",
+    title: "À propos de VitectroMed",
     subtitle:
-      "Le dispositif conçu pour accompagner la convalescence après vitrectomie avec injection de gaz",
+      "Un dispositif d’accompagnement conçu pour la convalescence après vitrectomie avec injection de gaz.",
+    lead:
+      "VitectroMed a été pensé en collaboration avec des professionnels de santé pour aider les patients opérés d’une vitrectomie à mieux respecter la position post‑opératoire recommandée, tout en améliorant le confort au quotidien. Il ne remplace pas un avis médical et doit toujours être utilisé conformément aux recommandations de l’équipe soignante.",
+    highlights: [
+      "Dispositif d’accompagnement après vitrectomie avec injection de gaz.",
+      "Aide à maintenir la position prescrite plus facilement et plus longtemps.",
+      "Contribue à réduire l’inconfort lié au maintien prolongé de la posture.",
+      "Conçu comme un complément aux recommandations de votre ophtalmologue.",
+    ],
     sections: [
       {
         heading: "Pourquoi VitectroMed a été créé ?",
-        text: `
-VitectroMed est né d’un constat simple : après une vitrectomie avec injection de gaz, le respect strict de la position post-opératoire est essentiel.
-
-Pour de nombreux patients, maintenir cette position pendant plusieurs jours (parfois davantage) est difficile. L’inconfort, les tensions cervicales et la fatigue rendent la convalescence plus éprouvante.
-
-VitectroMed a été conçu pour faciliter le maintien de la position prescrite tout en améliorant le confort au quotidien.
-        `,
+        text:
+          "VitectroMed est né d’un constat simple : après une vitrectomie avec injection de gaz, le respect strict de la position post‑opératoire est essentiel pour créer de bonnes conditions de récupération.\n\n" +
+          "Dans la pratique, de nombreux patients témoignent de la difficulté à maintenir cette position pendant plusieurs jours : douleurs cervicales, tensions dans le dos, fatigue, gêne lors du sommeil ou des activités du quotidien.\n\n" +
+          "L’objectif de VitectroMed est d’apporter un soutien pratique pendant cette période, en proposant un dispositif dédié au maintien de la posture recommandée par le chirurgien.",
       },
       {
         heading: "À quoi sert VitectroMed pendant la convalescence ?",
-        text: `
-VitectroMed aide à maintenir plus facilement la posture recommandée par le chirurgien afin d’optimiser les conditions de récupération.
-
-En réduisant les contraintes liées à la position, il permet au patient de mieux tenir la durée nécessaire, avec moins de douleurs et moins de compensations musculaires.
-
-L’objectif est simple : aider le patient à rester correctement positionné, plus longtemps, et dans de meilleures conditions.
-        `,
+        text:
+          "VitectroMed aide le patient à adopter et à maintenir plus facilement la posture indiquée par le chirurgien après l’intervention.\n\n" +
+          "En réduisant les contraintes liées au maintien prolongé de la position (pression sur les cervicales, recherche constante d’appuis, positions de compensation), le dispositif peut contribuer à rendre la convalescence plus supportable au quotidien.\n\n" +
+          "Il s’inscrit comme un outil d’accompagnement : il ne modifie pas la prescription médicale, mais aide le patient à mieux la suivre.",
       },
       {
-        heading: "Confort et stabilité",
-        text: `
-VitectroMed a été pensé pour offrir un bon maintien, de jour comme de nuit, tout en favorisant une posture plus stable.
-
-Il contribue à diminuer les tensions au niveau du cou et des épaules, souvent liées au maintien prolongé de la position.
-
-Chaque élément a été conçu pour être simple à utiliser et rassurant pendant la période post-opératoire.
-        `,
+        heading: "Confort et stabilité au quotidien",
+        text:
+          "VitectroMed a été pensé pour offrir un maintien stable, de jour comme de nuit, tout en restant simple à installer et à ajuster.\n\n" +
+          "Le dispositif vise à favoriser une posture plus régulière, à limiter les mouvements de compensation et à diminuer les tensions au niveau du cou, des épaules et du haut du dos.\n\n" +
+          "Sa conception privilégie la praticité : possibilité d’utilisation dans différentes situations du quotidien (repos, lecture, moments calmes), sans mécanisme complexe.",
       },
       {
-        heading: "Pour qui est conçu VitectroMed ?",
-        text: `
-VitectroMed s’adresse aux patients opérés d’une vitrectomie avec injection de gaz, lorsque le chirurgien prescrit une position post-opératoire.
-
-Il est également utile pour les personnes qui souhaitent une solution plus confortable afin de respecter au mieux les recommandations médicales pendant la convalescence.
-        `,
+        heading: "Pour qui VitectroMed est‑il destiné ?",
+        text:
+          "VitectroMed est destiné aux patients opérés d’une vitrectomie avec injection de gaz, lorsque le chirurgien prescrit une position post‑opératoire spécifique.\n\n" +
+          "Il peut également intéresser les patients qui recherchent une solution d’accompagnement pour mieux respecter les consignes de positionnement, lorsque cela leur est recommandé par leur équipe médicale.\n\n" +
+          "En cas de doute sur la pertinence du dispositif dans votre situation, il est indispensable d’en parler à votre ophtalmologue ou à un professionnel de santé.",
       },
       {
-        heading: "Important",
-        text: `
-VitectroMed ne remplace pas un avis médical.
-
-La position à respecter, la durée et les consignes dépendent de votre situation et doivent être validées par votre chirurgien ou votre équipe médicale.
-        `,
+        heading: "Important – rôle du médecin",
+        text:
+          "VitectroMed ne remplace pas un avis médical, un examen clinique ni un suivi spécialisé.\n\n" +
+          "La position à respecter, la durée pendant laquelle elle doit être maintenue, ainsi que l’ensemble des consignes post‑opératoires dépendent de chaque patient et doivent être définies par le chirurgien ou l’équipe soignante.\n\n" +
+          "Avant d’utiliser VitectroMed, et en cas de douleur inhabituelle, d’inconfort important ou de question sur votre récupération, il est essentiel de consulter votre médecin.",
       },
+    ],
+    faq: [
+      {
+        q: "VitectroMed remplace‑t‑il un dispositif médical prescrit par le chirurgien ?",
+        a: "Non. VitectroMed est un dispositif d’accompagnement. Il ne remplace ni les équipements spécifiques éventuellement prescrits, ni les recommandations de votre chirurgien. Toute décision concernant votre traitement ou votre position doit rester médicale.",
+      },
+      {
+        q: "Puis‑je utiliser VitectroMed sans avis médical préalable ?",
+        a: "Il est toujours recommandé d’en parler à votre ophtalmologue ou à l’équipe soignante, afin de vérifier que le dispositif est adapté à votre situation et compatible avec les consignes qui vous ont été données.",
+      },
+      {
+        q: "Combien de temps dois‑je garder la position recommandée après l’opération ?",
+        a: "La durée dépend entièrement de votre cas, du type d’intervention réalisée et des choix de votre chirurgien. Seul votre médecin peut vous indiquer la durée et les modalités de la position à respecter.",
+      },
+    ],
+    seoTopics: [
+      "vitrectomie",
+      "position post‑opératoire face‑down",
+      "récupération après chirurgie de la rétine",
+      "dispositif d’accompagnement post‑chirurgical",
     ],
   },
 
   en: {
     title: "About VitectroMed",
-    subtitle: "The device designed to support recovery after vitrectomy with gas injection",
+    subtitle:
+      "A support device designed for recovery after vitrectomy with gas injection.",
+    lead:
+      "VitectroMed was developed with input from healthcare professionals to help patients who have undergone vitrectomy better follow their prescribed post‑operative positioning, while improving day‑to‑day comfort. It does not replace medical advice and must always be used according to your medical team’s recommendations.",
+    highlights: [
+      "Support device for recovery after vitrectomy with intraocular gas.",
+      "Helps maintain the prescribed post‑operative position more easily.",
+      "May reduce discomfort related to prolonged positioning.",
+      "Designed as a complement to your ophthalmologist’s recommendations.",
+    ],
     sections: [
       {
         heading: "Why was VitectroMed created?",
-        text: `
-VitectroMed was created from a simple observation: after a vitrectomy with gas injection, strictly maintaining the post-operative position is essential.
-
-For many patients, holding this position for several days (sometimes longer) can be difficult. Discomfort, neck strain and fatigue can make recovery more challenging.
-
-VitectroMed was designed to make it easier to maintain the prescribed position while improving everyday comfort.
-        `,
+        text:
+          "VitectroMed was created from a simple observation: after vitrectomy with gas injection, strictly maintaining the post‑operative position is essential to support proper healing conditions.\n\n" +
+          "In real life, many patients find it difficult to hold this position for several days: neck and back pain, fatigue, and discomfort during sleep or everyday activities are frequently reported.\n\n" +
+          "VitectroMed aims to provide practical support during this period by offering a dedicated device to help maintain the position recommended by the surgeon.",
       },
       {
-        heading: "What is VitectroMed used for during recovery?",
-        text: `
-VitectroMed helps patients maintain the position recommended by their surgeon in order to support optimal recovery conditions.
-
-By reducing the physical constraints associated with prolonged positioning, it can help patients keep the required posture longer, with less discomfort and fewer compensations.
-
-The goal is simple: help patients stay correctly positioned for longer, in better conditions.
-        `,
+        heading: "How does VitectroMed help during recovery?",
+        text:
+          "VitectroMed helps patients adopt and maintain the posture indicated by their surgeon after the procedure.\n\n" +
+          "By reducing the physical constraints associated with prolonged positioning (pressure on the neck, constant search for support, compensatory positions), the device can make the recovery period more manageable.\n\n" +
+          "It is an aid to adherence: it does not replace the medical prescription, but supports patients in following it more easily.",
       },
       {
-        heading: "Comfort and stability",
-        text: `
-VitectroMed is designed to provide stable support, day and night, while promoting a more consistent posture.
-
-It can help reduce strain in the neck and shoulders, which often occurs when maintaining the recovery position.
-
-Every detail is designed to be easy to use and reassuring throughout the post-operative period.
-        `,
+        heading: "Comfort and stability in everyday life",
+        text:
+          "VitectroMed is designed to provide stable support, day and night, while remaining easy to set up and adjust.\n\n" +
+          "The device promotes a more consistent posture, limits compensation movements and may help reduce strain in the neck, shoulders and upper back.\n\n" +
+          "Its design focuses on practicality: it can be used in various daily situations (rest, quiet activities), without complex mechanisms.",
       },
       {
-        heading: "Who is VitectroMed designed for?",
-        text: `
-VitectroMed is intended for patients who have undergone a vitrectomy with gas injection when a specific post-operative position is prescribed by the surgeon.
-
-It is also helpful for anyone looking for a more comfortable solution to follow medical positioning instructions during recovery.
-        `,
+        heading: "Who is VitectroMed for?",
+        text:
+          "VitectroMed is intended for patients who have undergone vitrectomy with gas injection when a specific post‑operative position is prescribed by their surgeon.\n\n" +
+          "It may also be useful for patients looking for additional support to better follow positioning instructions, when recommended by their medical team.\n\n" +
+          "If you are unsure whether VitectroMed is appropriate in your situation, you should discuss it with your ophthalmologist or another healthcare professional.",
       },
       {
-        heading: "Important",
-        text: `
-VitectroMed does not replace medical advice.
-
-The position to follow, the duration and instructions depend on your individual case and must be confirmed by your surgeon or medical team.
-        `,
+        heading: "Important – the role of your medical team",
+        text:
+          "VitectroMed does not replace medical advice, clinical examination or specialized follow‑up.\n\n" +
+          "The position to maintain, how long it should be held and all post‑operative instructions depend on each individual case and must be defined by your surgeon or medical team.\n\n" +
+          "Before using VitectroMed, and in case of unusual pain, significant discomfort or any concern about your recovery, you should contact a doctor.",
       },
+    ],
+    faq: [
+      {
+        q: "Does VitectroMed replace a medical device prescribed by the surgeon?",
+        a: "No. VitectroMed is a support device. It does not replace specific equipment or recommendations prescribed by your surgeon. All treatment decisions, including positioning, must remain medical.",
+      },
+      {
+        q: "Can I use VitectroMed without talking to my doctor?",
+        a: "You should always check with your ophthalmologist or care team first, to ensure that the device is suitable for your situation and consistent with the instructions you have been given.",
+      },
+      {
+        q: "How long do I need to maintain the post‑operative position?",
+        a: "The duration depends entirely on your individual case, the procedure performed and your surgeon’s choices. Only your doctor can tell you how long and how strictly the position should be maintained.",
+      },
+    ],
+    seoTopics: [
+      "vitrectomy recovery",
+      "face‑down positioning after vitrectomy",
+      "post‑operative retinal surgery support",
+      "medical positioning aid device",
     ],
   },
 
   es: {
     title: "Acerca de VitectroMed",
     subtitle:
-      "El dispositivo diseñado para apoyar la recuperación tras una vitrectomía con inyección de gas",
+      "Dispositivo de apoyo para la recuperación tras una vitrectomía con inyección de gas.",
+    lead:
+      "VitectroMed se ha desarrollado con el apoyo de profesionales sanitarios para ayudar a los pacientes operados de vitrectomía a seguir mejor la postura posoperatoria recomendada, mejorando al mismo tiempo el confort diario. No sustituye el consejo médico y debe utilizarse siempre según las indicaciones del equipo sanitario.",
+    highlights: [
+      "Dispositivo de apoyo tras vitrectomía con inyección de gas.",
+      "Ayuda a mantener la postura prescrita de forma más sencilla.",
+      "Puede reducir el malestar asociado al mantenimiento prolongado de la posición.",
+      "Pensado como complemento a las recomendaciones de su oftalmólogo.",
+    ],
     sections: [
       {
         heading: "¿Por qué se creó VitectroMed?",
-        text: `
-VitectroMed nació de una observación sencilla: después de una vitrectomía con inyección de gas, mantener estrictamente la postura posoperatoria es esencial.
-
-Para muchos pacientes, sostener esa posición durante varios días (a veces más) puede ser difícil. La incomodidad, la tensión cervical y el cansancio hacen que la recuperación sea más exigente.
-
-VitectroMed se diseñó para facilitar el mantenimiento de la posición indicada y mejorar el confort diario.
-        `,
+        text:
+          "VitectroMed nació de una observación sencilla: tras una vitrectomía con inyección de gas, respetar estrictamente la postura posoperatoria es esencial para favorecer buenas condiciones de recuperación.\n\n" +
+          "En la práctica, muchos pacientes describen la dificultad de mantener esa postura durante varios días: dolor cervical, tensión en la espalda, cansancio y molestias durante el sueño o las actividades cotidianas.\n\n" +
+          "VitectroMed tiene como objetivo aportar un apoyo práctico durante este periodo mediante un dispositivo dedicado a facilitar el mantenimiento de la postura recomendada por el cirujano.",
       },
       {
-        heading: "¿Para qué sirve VitectroMed durante la recuperación?",
-        text: `
-VitectroMed ayuda a mantener más fácilmente la postura recomendada por el cirujano para favorecer buenas condiciones de recuperación.
-
-Al reducir las limitaciones asociadas a la postura, puede ayudar a sostenerla durante más tiempo con menos molestias.
-
-El objetivo es sencillo: ayudar a permanecer bien posicionado, por más tiempo, en mejores condiciones.
-        `,
+        heading: "¿Cómo ayuda VitectroMed durante la recuperación?",
+        text:
+          "VitectroMed ayuda al paciente a adoptar y mantener más fácilmente la postura indicada por el cirujano tras la intervención.\n\n" +
+          "Al reducir parte de las limitaciones físicas asociadas al mantenimiento prolongado de la posición, el dispositivo puede contribuir a que la recuperación resulte más llevadera en el día a día.\n\n" +
+          "Se trata de una herramienta de acompañamiento: no modifica la prescripción médica, sino que ayuda al paciente a seguirla mejor.",
       },
       {
-        heading: "Comodidad y estabilidad",
-        text: `
-VitectroMed está pensado para aportar un apoyo estable, de día y de noche, y favorecer una postura más constante.
-
-Puede ayudar a reducir la tensión en cuello y hombros, frecuente cuando se mantiene una posición durante mucho tiempo.
-
-Cada detalle está diseñado para ser fácil de usar y tranquilizador durante el postoperatorio.
-        `,
+        heading: "Comodidad y estabilidad en el día a día",
+        text:
+          "VitectroMed está diseñado para ofrecer un apoyo estable, tanto de día como de noche, y seguir siendo fácil de colocar y ajustar.\n\n" +
+          "Favorece una postura más constante, limita los movimientos de compensación y puede ayudar a reducir la tensión en cuello, hombros y parte alta de la espalda.\n\n" +
+          "Su diseño prioriza la practicidad: puede utilizarse en distintos momentos del día (descanso, lectura, actividades tranquilas) sin mecanismos complejos.",
       },
       {
-        heading: "¿Para quién está diseñado VitectroMed?",
-        text: `
-VitectroMed está destinado a pacientes operados de vitrectomía con inyección de gas cuando el cirujano prescribe una postura posoperatoria.
-
-También es útil para quienes buscan una solución más cómoda para seguir las indicaciones médicas durante la recuperación.
-        `,
+        heading: "¿Para quién está indicado VitectroMed?",
+        text:
+          "VitectroMed está destinado a pacientes operados de vitrectomía con inyección de gas cuando el cirujano prescribe una postura posoperatoria específica.\n\n" +
+          "También puede ser útil para quienes buscan una solución de apoyo adicional para cumplir mejor las indicaciones de posicionamiento, siempre que su equipo médico lo considere adecuado.\n\n" +
+          "En caso de duda sobre si el dispositivo es apropiado para usted, es importante consultarlo con su oftalmólogo o con otro profesional de la salud.",
       },
       {
-        heading: "Importante",
-        text: `
-VitectroMed no sustituye el consejo médico.
-
-La postura, la duración y las indicaciones dependen de cada caso y deben confirmarse con el cirujano o el equipo médico.
-        `,
+        heading: "Importante: el papel del equipo médico",
+        text:
+          "VitectroMed no sustituye el consejo médico, la exploración clínica ni el seguimiento especializado.\n\n" +
+          "La postura que debe mantenerse, el tiempo durante el que hay que conservarla y el resto de las recomendaciones posoperatorias dependen de cada paciente y deben definirse con el cirujano o el equipo sanitario.\n\n" +
+          "Antes de utilizar VitectroMed, y ante cualquier dolor inusual, molestia importante o duda sobre la recuperación, es esencial consultar al médico.",
       },
+    ],
+    faq: [
+      {
+        q: "¿Sustituye VitectroMed a un dispositivo médico prescrito por el cirujano?",
+        a: "No. VitectroMed es un dispositivo de apoyo. No sustituye a los equipos específicos ni a las recomendaciones indicadas por el cirujano. Todas las decisiones relativas a su tratamiento deben seguir siendo médicas.",
+      },
+      {
+        q: "¿Puedo usar VitectroMed sin comentarlo con mi médico?",
+        a: "Siempre se recomienda hablarlo primero con su oftalmólogo o con el equipo sanitario, para comprobar que el dispositivo es adecuado para su situación y compatible con las indicaciones que ha recibido.",
+      },
+      {
+        q: "¿Durante cuánto tiempo debo mantener la postura recomendada?",
+        a: "La duración depende por completo de su caso, del tipo de intervención y de las decisiones del cirujano. Solo su médico puede indicarle cuánto tiempo y de qué manera debe mantener la postura.",
+      },
+    ],
+    seoTopics: [
+      "recuperación tras vitrectomía",
+      "postura boca abajo después de vitrectomía",
+      "soporte posoperatorio para cirugía de retina",
+      "dispositivo de apoyo para posicionamiento médico",
     ],
   },
 
   de: {
     title: "Über VitectroMed",
-    subtitle: "Das Gerät zur Unterstützung der Erholung nach einer Vitrektomie mit Gasinjektion",
+    subtitle:
+      "Medizinisches Hilfsmittel zur Unterstützung der Erholung nach Vitrektomie mit Gasinjektion.",
+    lead:
+      "VitectroMed wurde mit Unterstützung von medizinischen Fachkräften entwickelt, um Patientinnen und Patienten nach einer Vitrektomie dabei zu helfen, die verordnete postoperative Lagerung besser einzuhalten und den Alltagskomfort zu verbessern. Das Produkt ersetzt keine ärztliche Beratung und muss immer gemäß den Empfehlungen des Behandlungsteams verwendet werden.",
+    highlights: [
+      "Begleitendes Hilfsmittel nach Vitrektomie mit Gasinjektion.",
+      "Unterstützt das Einhalten der verordneten postoperativen Lagerung.",
+      "Kann Belastungen und Beschwerden durch langfristige Lagerung reduzieren.",
+      "Als Ergänzung zu den Empfehlungen Ihrer Augenärztin/Ihres Augenarztes konzipiert.",
+    ],
     sections: [
       {
         heading: "Warum wurde VitectroMed entwickelt?",
-        text: `
-VitectroMed entstand aus einer einfachen Beobachtung: Nach einer Vitrektomie mit Gasinjektion ist es wichtig, die postoperative Lagerung konsequent einzuhalten.
-
-Für viele Patientinnen und Patienten ist es schwierig, diese Position über mehrere Tage (manchmal länger) beizubehalten. Unbehagen, Nackenverspannungen und Müdigkeit können die Erholung erschweren.
-
-VitectroMed wurde entwickelt, um die verordnete Position leichter einzuhalten und den Alltag komfortabler zu machen.
-        `,
+        text:
+          "VitectroMed entstand aus einer einfachen Beobachtung: Nach einer Vitrektomie mit Gasinjektion ist die konsequente Einhaltung der verordneten Lagerung wichtig, um gute Voraussetzungen für die Heilung zu schaffen.\n\n" +
+          "In der Realität berichten viele Patientinnen und Patienten von Schwierigkeiten, die Position über mehrere Tage zu halten: Nacken‑ und Rückenschmerzen, Müdigkeit und Unbehagen beim Schlafen oder im Alltag.\n\n" +
+          "VitectroMed soll in dieser Phase eine praktische Unterstützung bieten, indem es ein Hilfsmittel zur Verfügung stellt, das speziell für die postoperative Lagerung entwickelt wurde.",
       },
       {
-        heading: "Wozu dient VitectroMed während der Erholung?",
-        text: `
-VitectroMed hilft, die vom Operateur empfohlene Position leichter einzuhalten, um gute Erholungsbedingungen zu unterstützen.
-
-Durch die Reduktion der Belastung kann es helfen, die erforderliche Haltung länger und mit weniger Beschwerden beizubehalten.
-
-Das Ziel ist einfach: besser positioniert bleiben, länger, unter besseren Bedingungen.
-        `,
+        heading: "Wie unterstützt VitectroMed in der Erholungsphase?",
+        text:
+          "VitectroMed hilft, die vom Operateur empfohlene Position nach der Operation leichter einzunehmen und zu halten.\n\n" +
+          "Durch die Reduktion bestimmter Belastungen, die mit einer langen Lagerung einhergehen, kann das Hilfsmittel dazu beitragen, die Erholungszeit im Alltag besser zu bewältigen.\n\n" +
+          "Es versteht sich als Ergänzung zur ärztlichen Verordnung und ersetzt diese nicht.",
       },
       {
-        heading: "Komfort und Stabilität",
-        text: `
-VitectroMed ist auf stabilen Halt ausgelegt, tagsüber und nachts, und fördert eine gleichmäßigere Haltung.
-
-Es kann helfen, Verspannungen in Nacken und Schultern zu reduzieren, die bei längerem Halten der Position häufig auftreten.
-
-Alle Elemente sind so gestaltet, dass sie einfach zu nutzen und in der postoperativen Phase beruhigend sind.
-        `,
+        heading: "Komfort und Stabilität im Alltag",
+        text:
+          "VitectroMed ist auf stabilen Halt ausgelegt – tagsüber und nachts – und gleichzeitig einfach zu positionieren und anzupassen.\n\n" +
+          "Es fördert eine gleichmäßigere Haltung, begrenzt kompensatorische Bewegungen und kann Verspannungen im Nacken‑, Schulter‑ und oberen Rückenbereich verringern.\n\n" +
+          "Der Fokus liegt auf Alltagstauglichkeit: Das Hilfsmittel kann in ruhigen Alltagssituationen genutzt werden, ohne komplexe Mechanik.",
       },
       {
         heading: "Für wen ist VitectroMed gedacht?",
-        text: `
-VitectroMed richtet sich an Patientinnen und Patienten nach einer Vitrektomie mit Gasinjektion, wenn eine spezielle postoperative Position verordnet wurde.
-
-Es kann auch für Personen hilfreich sein, die eine komfortablere Lösung suchen, um medizinische Lagerungshinweise bestmöglich einzuhalten.
-        `,
+        text:
+          "VitectroMed richtet sich an Patientinnen und Patienten nach einer Vitrektomie mit Gasinjektion, wenn eine spezielle postoperative Position verordnet wurde.\n\n" +
+          "Es kann zudem für Personen interessant sein, die eine zusätzliche Unterstützung wünschen, um medizinische Lagerungsempfehlungen besser umzusetzen – sofern dies mit dem Behandlungsteam abgestimmt ist.\n\n" +
+          "Im Zweifelsfall sollte immer die Augenärztin/der Augenarzt oder eine andere medizinische Fachkraft einbezogen werden.",
       },
       {
-        heading: "Wichtig",
-        text: `
-VitectroMed ersetzt keine medizinische Beratung.
-
-Position, Dauer und Anweisungen sind individuell und müssen mit dem Operateur oder dem medizinischen Team abgestimmt werden.
-        `,
+        heading: "Wichtig – Rolle der Ärztin/des Arztes",
+        text:
+          "VitectroMed ersetzt keine ärztliche Beratung, keine klinische Untersuchung und keinen spezialisierten Verlauf.\n\n" +
+          "Lagerung, Dauer und postoperatives Vorgehen sind individuell und müssen von der Operateurin/dem Operateur oder dem Behandlungsteam festgelegt werden.\n\n" +
+          "Vor der Anwendung von VitectroMed – und bei ungewöhnlichen Schmerzen, starkem Unbehagen oder Unsicherheit hinsichtlich des Heilungsverlaufs – sollte unbedingt ärztlicher Rat eingeholt werden.",
       },
+    ],
+    faq: [
+      {
+        q: "Ersetzt VitectroMed ein vom Operateur verordnetes Medizinprodukt?",
+        a: "Nein. VitectroMed ist ein begleitendes Hilfsmittel und ersetzt weder spezifische medizinische Produkte noch individuelle ärztliche Empfehlungen. Entscheidungen zur Behandlung und Lagerung bleiben immer medizinische Entscheidungen.",
+      },
+      {
+        q: "Kann ich VitectroMed ohne Rücksprache mit meiner Ärztin/meinem Arzt verwenden?",
+        a: "Es wird dringend empfohlen, die Anwendung vorab mit der Augenärztin/dem Augenarzt oder dem medizinischen Team zu besprechen, um sicherzustellen, dass VitectroMed für Ihre Situation geeignet ist.",
+      },
+      {
+        q: "Wie lange muss ich die verordnete Position halten?",
+        a: "Die Dauer richtet sich nach Ihrem individuellen Fall, der durchgeführten Operation und den Entscheidungen der Operateurin/des Operateurs. Nur die behandelnde Ärztin/der behandelnde Arzt kann hierzu eine verlässliche Angabe machen.",
+      },
+    ],
+    seoTopics: [
+      "Vitrektomie Erholungsphase",
+      "Bauchlage nach Vitrektomie",
+      "Unterstützung nach Netzhautchirurgie",
+      "medizinisches Lagerungshilfsmittel",
     ],
   },
 
   it: {
     title: "Chi è VitectroMed",
     subtitle:
-      "Il dispositivo progettato per supportare la convalescenza dopo vitrectomia con iniezione di gas",
+      "Dispositivo di supporto per la convalescenza dopo vitrectomia con iniezione di gas.",
+    lead:
+      "VitectroMed è stato progettato con il contributo di professionisti sanitari per aiutare i pazienti sottoposti a vitrectomia a seguire meglio la posizione post‑operatoria raccomandata, migliorando al tempo stesso il comfort quotidiano. Non sostituisce il parere medico e deve essere utilizzato solo secondo le indicazioni del team curante.",
+    highlights: [
+      "Dispositivo di supporto dopo vitrectomia con iniezione di gas.",
+      "Aiuta a mantenere la posizione prescritta in modo più semplice.",
+      "Può contribuire a ridurre il disagio legato al mantenimento prolungato della postura.",
+      "Pensato come complemento alle raccomandazioni dell’oculista.",
+    ],
     sections: [
       {
         heading: "Perché è stato creato VitectroMed?",
-        text: `
-VitectroMed nasce da un’osservazione semplice: dopo una vitrectomia con iniezione di gas, rispettare rigorosamente la posizione post-operatoria è fondamentale.
-
-Per molti pazienti, mantenere questa posizione per diversi giorni (a volte più a lungo) è difficile. Disagio, tensioni cervicali e stanchezza possono rendere la convalescenza più impegnativa.
-
-VitectroMed è stato progettato per facilitare il mantenimento della posizione prescritta e migliorare il comfort quotidiano.
-        `,
+        text:
+          "VitectroMed nasce da una constatazione semplice: dopo una vitrectomia con iniezione di gas, il rispetto rigoroso della posizione post‑operatoria è fondamentale per favorire buone condizioni di recupero.\n\n" +
+          "Nella pratica, molti pazienti riferiscono che è difficile mantenere la postura indicata per diversi giorni: compaiono spesso dolori cervicali, tensioni dorsali, stanchezza e disturbi del sonno.\n\n" +
+          "L’obiettivo di VitectroMed è fornire un supporto pratico in questa fase, attraverso un dispositivo dedicato al mantenimento della postura raccomandata dal chirurgo.",
       },
       {
-        heading: "A cosa serve VitectroMed durante la convalescenza?",
-        text: `
-VitectroMed aiuta a mantenere più facilmente la postura consigliata dal chirurgo per favorire buone condizioni di recupero.
-
-Riducendo i vincoli legati alla posizione, può aiutare a mantenerla più a lungo con meno fastidi.
-
-L’obiettivo è semplice: aiutare il paziente a restare ben posizionato più a lungo, in condizioni migliori.
-        `,
+        heading: "Come aiuta VitectroMed durante la convalescenza?",
+        text:
+          "VitectroMed aiuta il paziente ad adottare e mantenere più facilmente la postura indicata dal chirurgo dopo l’intervento.\n\n" +
+          "Riducendo parte dei vincoli legati al mantenimento prolungato della stessa posizione, il dispositivo può contribuire a rendere la convalescenza più gestibile nella vita di tutti i giorni.\n\n" +
+          "Si tratta di uno strumento di accompagnamento: non sostituisce la prescrizione medica, ma ne facilita il rispetto.",
       },
       {
-        heading: "Comfort e stabilità",
-        text: `
-VitectroMed è pensato per offrire supporto stabile, di giorno e di notte, favorendo una postura più costante.
-
-Può contribuire a ridurre le tensioni su collo e spalle, spesso legate al mantenimento prolungato della posizione.
-
-Ogni dettaglio è progettato per essere semplice da usare e rassicurante nel periodo post-operatorio.
-        `,
+        heading: "Comfort e stabilità nella vita quotidiana",
+        text:
+          "VitectroMed è pensato per offrire un supporto stabile, giorno e notte, rimanendo semplice da posizionare e regolare.\n\n" +
+          "Favorisce una postura più costante, limita i movimenti di compensazione e può contribuire a ridurre le tensioni a livello di collo, spalle e parte alta della schiena.\n\n" +
+          "Il design privilegia la praticità: può essere utilizzato in diversi momenti della giornata (riposo, lettura, attività tranquille) senza meccanismi complessi.",
       },
       {
-        heading: "Per chi è progettato VitectroMed?",
-        text: `
-VitectroMed è destinato ai pazienti sottoposti a vitrectomia con iniezione di gas quando il chirurgo prescrive una specifica posizione post-operatoria.
-
-È utile anche per chi desidera una soluzione più confortevole per seguire al meglio le indicazioni mediche durante la convalescenza.
-        `,
+        heading: "A chi è destinato VitectroMed?",
+        text:
+          "VitectroMed è destinato ai pazienti sottoposti a vitrectomia con iniezione di gas quando il chirurgo prescrive una specifica posizione post‑operatoria.\n\n" +
+          "Può essere utile anche a chi cerca un supporto aggiuntivo per seguire al meglio le indicazioni di posizionamento, sempre previo confronto con il team medico.\n\n" +
+          "In caso di dubbi sull’utilizzo del dispositivo nella propria situazione, è importante parlarne con il proprio oculista o con un professionista sanitario.",
       },
       {
-        heading: "Importante",
-        text: `
-VitectroMed non sostituisce il parere medico.
-
-Posizione, durata e indicazioni dipendono dal caso individuale e devono essere confermati dal chirurgo o dal team medico.
-        `,
+        heading: "Importante – il ruolo del medico",
+        text:
+          "VitectroMed non sostituisce il parere medico, la visita clinica o il follow‑up specialistico.\n\n" +
+          "Posizione, durata e modalità del posizionamento post‑operatorio dipendono dal singolo caso e devono essere definite dal chirurgo o dal team curante.\n\n" +
+          "Prima di utilizzare VitectroMed, e in presenza di dolore insolito, forte disagio o qualsiasi dubbio sull’andamento della convalescenza, è essenziale consultare il medico.",
       },
     ],
-  },
-
-  pt: {
-    title: "Sobre o VitectroMed",
-    subtitle:
-      "O dispositivo concebido para apoiar a recuperação após vitrectomia com injeção de gás",
-    sections: [
+    faq: [
       {
-        heading: "Por que o VitectroMed foi criado?",
-        text: `
-O VitectroMed nasceu de uma observação simples: após uma vitrectomia com injeção de gás, manter rigorosamente a posição pós-operatória é essencial.
-
-Para muitos pacientes, manter essa posição durante vários dias (por vezes mais) pode ser difícil. O desconforto, a tensão no pescoço e a fadiga podem tornar a recuperação mais exigente.
-
-O VitectroMed foi concebido para facilitar a manutenção da posição prescrita e melhorar o conforto no dia a dia.
-        `,
+        q: "VitectroMed sostituisce un dispositivo medico prescritto dal chirurgo?",
+        a: "No. VitectroMed è un dispositivo di supporto. Non sostituisce gli eventuali dispositivi specifici né le indicazioni terapeutiche del chirurgo. Le decisioni sul trattamento devono rimanere mediche.",
       },
       {
-        heading: "Para que serve o VitectroMed durante a recuperação?",
-        text: `
-O VitectroMed ajuda a manter mais facilmente a postura recomendada pelo cirurgião, favorecendo boas condições de recuperação.
-
-Ao reduzir as limitações associadas à postura, pode ajudar a mantê-la por mais tempo com menos desconforto.
-
-O objetivo é simples: ajudar a permanecer corretamente posicionado por mais tempo, em melhores condições.
-        `,
+        q: "Posso usare VitectroMed senza consultare prima il medico?",
+        a: "È sempre consigliabile parlarne prima con l’oculista o con il team sanitario, per verificare che il dispositivo sia adatto al proprio caso e coerente con le indicazioni ricevute.",
       },
       {
-        heading: "Conforto e estabilidade",
-        text: `
-O VitectroMed foi pensado para oferecer apoio estável, de dia e de noite, promovendo uma postura mais consistente.
-
-Pode ajudar a reduzir a tensão no pescoço e nos ombros, comum quando se mantém uma posição por muito tempo.
-
-Cada detalhe foi desenhado para ser fácil de usar e tranquilizador durante o período pós-operatório.
-        `,
+        q: "Per quanto tempo devo mantenere la posizione raccomandata?",
+        a: "La durata dipende dal singolo caso, dal tipo di intervento e dalle decisioni del chirurgo. Solo il medico può indicare quanto a lungo va mantenuta la posizione prescritta.",
       },
-      {
-        heading: "Para quem o VitectroMed é indicado?",
-        text: `
-O VitectroMed é destinado a pacientes submetidos a vitrectomia com injeção de gás quando o cirurgião prescreve uma posição pós-operatória.
-
-Também é útil para quem procura uma solução mais confortável para seguir as orientações médicas durante a recuperação.
-        `,
-      },
-      {
-        heading: "Importante",
-        text: `
-O VitectroMed não substitui aconselhamento médico.
-
-A posição, a duração e as instruções dependem do seu caso e devem ser confirmadas pelo cirurgião ou equipa médica.
-        `,
-      },
+    ],
+    seoTopics: [
+      "recupero dopo vitrectomia",
+      "posizione faccia in giù dopo vitrectomia",
+      "supporto post‑operatorio per chirurgia retinica",
+      "dispositivo di supporto per il posizionamento",
     ],
   },
 
   nl: {
     title: "Over VitectroMed",
     subtitle:
-      "Het hulpmiddel dat herstel ondersteunt na een vitrectomie met gasinjectie",
+      "Hulpmiddel ter ondersteuning van het herstel na vitrectomie met gasinjectie.",
+    lead:
+      "VitectroMed is ontwikkeld in samenwerking met zorgprofessionals om patiënten na een vitrectomie te helpen de voorgeschreven postoperatieve houding beter aan te houden, met meer comfort in het dagelijks leven. Het vervangt geen medisch advies en moet altijd volgens de aanbevelingen van het behandelteam worden gebruikt.",
+    highlights: [
+      "Hulpmiddel ter ondersteuning na vitrectomie met gasinjectie.",
+      "Helpt de voorgeschreven houding eenvoudiger en langer vol te houden.",
+      "Kan ongemak door langdurige houding verminderen.",
+      "Ontworpen als aanvulling op het advies van uw oogarts.",
+    ],
     sections: [
       {
         heading: "Waarom is VitectroMed ontwikkeld?",
-        text: `
-VitectroMed is ontstaan vanuit een eenvoudige vaststelling: na een vitrectomie met gasinjectie is het strikt aanhouden van de postoperatieve houding essentieel.
-
-Voor veel patiënten is het lastig om deze houding meerdere dagen (soms langer) vol te houden. Ongemak, nekspanning en vermoeidheid kunnen het herstel zwaarder maken.
-
-VitectroMed is ontworpen om het makkelijker te maken de voorgeschreven houding aan te houden en het dagelijkse comfort te verbeteren.
-        `,
+        text:
+          "VitectroMed is ontstaan vanuit een eenvoudige vaststelling: na een vitrectomie met gasinjectie is het strikt aanhouden van de postoperatieve houding belangrijk om goede omstandigheden voor herstel te creëren.\n\n" +
+          "In de praktijk geven veel patiënten aan dat het moeilijk is om deze houding meerdere dagen achter elkaar vol te houden: nek‑ en rugklachten, vermoeidheid en slaapproblemen komen vaak voor.\n\n" +
+          "VitectroMed wil in deze periode praktische ondersteuning bieden met een hulpmiddel dat specifiek is ontworpen om de door de chirurg aanbevolen houding aan te houden.",
       },
       {
-        heading: "Waarvoor dient VitectroMed tijdens het herstel?",
-        text: `
-VitectroMed helpt om de door de chirurg aanbevolen houding eenvoudiger aan te houden en zo goede herstelomstandigheden te ondersteunen.
-
-Door de fysieke belasting van langdurig positioneren te verminderen, kan het helpen de houding langer vol te houden met minder ongemak.
-
-Het doel is eenvoudig: helpen om correct gepositioneerd te blijven, langer en in betere omstandigheden.
-        `,
+        heading: "Hoe helpt VitectroMed tijdens het herstel?",
+        text:
+          "VitectroMed helpt patiënten de voorgeschreven houding na de ingreep makkelijker aan te nemen en vast te houden.\n\n" +
+          "Door bepaalde fysieke belasting van langdurige positionering te verminderen, kan het hulpmiddel het herstel in het dagelijks leven beter hanteerbaar maken.\n\n" +
+          "Het is een begeleidend hulpmiddel: het vervangt de medische voorschriften niet, maar ondersteunt de patiënt om deze beter op te volgen.",
       },
       {
-        heading: "Comfort en stabiliteit",
-        text: `
-VitectroMed is ontworpen voor stabiele ondersteuning, zowel overdag als ’s nachts, en bevordert een constantere houding.
-
-Het kan helpen spanning in nek en schouders te verminderen, wat vaak voorkomt bij langdurig dezelfde houding.
-
-Elk detail is ontworpen om eenvoudig te gebruiken en geruststellend te zijn in de postoperatieve periode.
-        `,
+        heading: "Comfort en stabiliteit in het dagelijks leven",
+        text:
+          "VitectroMed is ontworpen voor stabiele ondersteuning, overdag en ’s nachts, en is eenvoudig te plaatsen en aan te passen.\n\n" +
+          "Het bevordert een constantere houding, beperkt compenserende bewegingen en kan spanning in nek, schouders en bovenrug helpen verminderen.\n\n" +
+          "Het ontwerp is gericht op praktische toepasbaarheid: te gebruiken in rustige dagelijkse situaties zonder complexe mechanismen.",
       },
       {
         heading: "Voor wie is VitectroMed bedoeld?",
-        text: `
-VitectroMed is bedoeld voor patiënten die een vitrectomie met gasinjectie hebben ondergaan wanneer een specifieke postoperatieve houding is voorgeschreven.
-
-Het is ook geschikt voor wie een comfortabelere oplossing zoekt om medische houdingsinstructies zo goed mogelijk op te volgen tijdens het herstel.
-        `,
+        text:
+          "VitectroMed is bedoeld voor patiënten die een vitrectomie met gasinjectie hebben ondergaan en van wie de chirurg een specifieke postoperatieve houding heeft voorgeschreven.\n\n" +
+          "Het kan ook nuttig zijn voor mensen die extra ondersteuning zoeken om medische houdingsinstructies beter op te volgen, mits dit is afgestemd met het behandelteam.\n\n" +
+          "Bij twijfel of VitectroMed in uw geval geschikt is, is het belangrijk dit met uw oogarts of een andere zorgverlener te bespreken.",
       },
       {
-        heading: "Belangrijk",
-        text: `
-VitectroMed vervangt geen medisch advies.
-
-De houding, duur en instructies zijn individueel en moeten worden bevestigd door de chirurg of het medisch team.
-        `,
+        heading: "Belangrijk – de rol van uw arts",
+        text:
+          "VitectroMed vervangt geen medisch advies, geen lichamelijk onderzoek en geen specialistische follow‑up.\n\n" +
+          "De houding die u moet aannemen, de duur en overige instructies zijn individueel en moeten worden bepaald door uw chirurg of medisch team.\n\n" +
+          "Bij gebruik van VitectroMed – en bij ongewone pijn, duidelijk ongemak of twijfel over uw herstel – moet u altijd een arts raadplegen.",
       },
     ],
-  },
-
-  pl: {
-    title: "O VitectroMed",
-    subtitle:
-      "Urządzenie zaprojektowane, aby wspierać rekonwalescencję po witrektomii z podaniem gazu",
-    sections: [
+    faq: [
       {
-        heading: "Dlaczego powstał VitectroMed?",
-        text: `
-VitectroMed powstał z prostej obserwacji: po witrektomii z podaniem gazu ścisłe utrzymywanie pozycji pooperacyjnej jest kluczowe.
-
-Dla wielu pacjentów utrzymanie tej pozycji przez kilka dni (czasem dłużej) bywa trudne. Dyskomfort, napięcie karku i zmęczenie mogą utrudniać rekonwalescencję.
-
-VitectroMed zaprojektowano, aby ułatwić utrzymanie zaleconej pozycji i poprawić codzienny komfort.
-        `,
+        q: "Vervangt VitectroMed een medisch hulpmiddel dat door de chirurg is voorgeschreven?",
+        a: "Nee. VitectroMed is een ondersteunend hulpmiddel. Het vervangt geen specifieke medische hulpmiddelen of persoonlijke aanbevelingen van uw arts. Beslissingen over behandeling en houding blijven altijd medisch.",
       },
       {
-        heading: "Do czego służy VitectroMed w trakcie rekonwalescencji?",
-        text: `
-VitectroMed pomaga łatwiej utrzymać pozycję zalecaną przez chirurga, wspierając dobre warunki powrotu do zdrowia.
-
-Zmniejszając obciążenia związane z pozycjonowaniem, może pomóc dłużej utrzymać wymaganą postawę przy mniejszym dyskomforcie.
-
-Cel jest prosty: pomóc pozostać prawidłowo ułożonym dłużej i w lepszych warunkach.
-        `,
+        q: "Kan ik VitectroMed gebruiken zonder overleg met mijn arts?",
+        a: "Het is sterk aan te raden dit eerst met uw oogarts of behandelteam te bespreken, zodat kan worden beoordeeld of het hulpmiddel geschikt is voor uw situatie.",
       },
       {
-        heading: "Komfort i stabilność",
-        text: `
-VitectroMed zaprojektowano tak, aby zapewniał stabilne podparcie w dzień i w nocy oraz sprzyjał bardziej stałej postawie.
-
-Może pomóc zmniejszyć napięcie szyi i barków, często związane z długotrwałym utrzymywaniem pozycji.
-
-Każdy element jest prosty w użyciu i ma dawać poczucie bezpieczeństwa w okresie pooperacyjnym.
-        `,
-      },
-      {
-        heading: "Dla kogo jest VitectroMed?",
-        text: `
-VitectroMed jest przeznaczony dla pacjentów po witrektomii z podaniem gazu, gdy chirurg zaleca określoną pozycję pooperacyjną.
-
-Jest też pomocny dla osób, które szukają wygodniejszego rozwiązania, aby jak najlepiej przestrzegać zaleceń medycznych podczas rekonwalescencji.
-        `,
-      },
-      {
-        heading: "Ważne",
-        text: `
-VitectroMed nie zastępuje porady lekarskiej.
-
-Pozycja, czas trwania i zalecenia zależą od indywidualnej sytuacji i muszą zostać potwierdzone przez chirurga lub zespół medyczny.
-        `,
+        q: "Hoelang moet ik de voorgeschreven houding aanhouden?",
+        a: "De duur hangt volledig af van uw persoonlijke situatie, de uitgevoerde ingreep en de beslissing van uw chirurg. Alleen uw arts kan hierover een betrouwbaar advies geven.",
       },
     ],
-  },
-
-  // --- Nordics / others (courts mais complets) ---
-  sv: {
-    title: "Om VitectroMed",
-    subtitle: "Enheten som stödjer återhämtning efter vitrektomi med gasinjektion",
-    sections: [
-      { heading: "Varför skapades VitectroMed?", text: `
-VitectroMed skapades utifrån en enkel insikt: efter vitrektomi med gasinjektion är det avgörande att följa den postoperativa positionen.
-
-För många patienter är det svårt att hålla positionen i flera dagar. Obehag, nackspänningar och trötthet kan göra återhämtningen tuffare.
-
-VitectroMed är utformat för att underlätta den ordinerade positionen och förbättra komforten i vardagen.
-      `},
-      { heading: "Vad används VitectroMed till under återhämtning?", text: `
-VitectroMed hjälper till att enklare hålla den position som kirurgen rekommenderar för att stödja goda återhämtningsförhållanden.
-
-Genom att minska belastningen kan det hjälpa att hålla positionen längre med mindre obehag.
-
-Målet är enkelt: hjälpa dig att vara korrekt positionerad längre och under bättre förutsättningar.
-      `},
-      { heading: "Komfort och stabilitet", text: `
-VitectroMed är utformat för stabilt stöd både dag och natt och för en mer konsekvent hållning.
-
-Det kan hjälpa till att minska spänningar i nacke och axlar som ofta uppstår vid långvarig positionering.
-
-Varje detalj är designad för att vara enkel att använda och trygg under den postoperativa perioden.
-      `},
-      { heading: "Vem är VitectroMed för?", text: `
-VitectroMed är avsett för patienter som genomgått vitrektomi med gasinjektion när en specifik postoperativ position har ordinerats.
-
-Det kan också vara användbart för den som vill ha en mer bekväm lösning för att följa medicinska instruktioner under återhämtning.
-      `},
-      { heading: "Viktigt", text: `
-VitectroMed ersätter inte medicinsk rådgivning.
-
-Position, varaktighet och instruktioner är individuella och ska bekräftas av kirurg eller vårdteam.
-      `},
-    ],
-  },
-
-  da: {
-    title: "Om VitectroMed",
-    subtitle: "Enheden der støtter restitution efter vitrektomi med gasinjektion",
-    sections: [
-      { heading: "Hvorfor blev VitectroMed skabt?", text: `
-VitectroMed blev skabt ud fra en enkel observation: efter vitrektomi med gasinjektion er det vigtigt at overholde den postoperative stilling.
-
-For mange patienter er det svært at holde stillingen i flere dage. Ubehag, nakkespændinger og træthed kan gøre forløbet mere krævende.
-
-VitectroMed er designet til at gøre det nemmere at holde den ordinerede position og forbedre komforten i hverdagen.
-      `},
-      { heading: "Hvad bruges VitectroMed til under restitution?", text: `
-VitectroMed hjælper med lettere at holde den position, som kirurgen anbefaler, for at støtte gode restitutionsbetingelser.
-
-Ved at reducere belastningen kan det hjælpe med at holde stillingen længere med mindre ubehag.
-
-Målet er enkelt: hjælpe med at forblive korrekt positioneret længere og under bedre forhold.
-      `},
-      { heading: "Komfort og stabilitet", text: `
-VitectroMed er udformet til stabil støtte dag og nat og til en mere ensartet holdning.
-
-Det kan hjælpe med at reducere spændinger i nakke og skuldre, som ofte opstår ved længere tids positionering.
-
-Hver detalje er designet til at være enkel at bruge og tryg i den postoperative periode.
-      `},
-      { heading: "Hvem er VitectroMed til?", text: `
-VitectroMed er til patienter efter vitrektomi med gasinjektion, når kirurgen har ordineret en bestemt postoperativ position.
-
-Det kan også være nyttigt for dem, der ønsker en mere komfortabel løsning til at følge medicinske instruktioner under restitution.
-      `},
-      { heading: "Vigtigt", text: `
-VitectroMed erstatter ikke lægelig rådgivning.
-
-Position, varighed og instruktioner er individuelle og skal bekræftes af kirurg eller sundhedsteam.
-      `},
-    ],
-  },
-
-  no: {
-    title: "Om VitectroMed",
-    subtitle: "Enheten som støtter restitusjon etter vitrektomi med gassinjeksjon",
-    sections: [
-      { heading: "Hvorfor ble VitectroMed laget?", text: `
-VitectroMed ble laget ut fra en enkel observasjon: etter vitrektomi med gassinjeksjon er det avgjørende å følge den postoperative posisjonen.
-
-For mange pasienter er det vanskelig å holde posisjonen i flere dager. Ubehag, nakkespenninger og tretthet kan gjøre restitusjonen mer krevende.
-
-VitectroMed er utviklet for å gjøre det enklere å holde foreskrevet posisjon og bedre komforten i hverdagen.
-      `},
-      { heading: "Hva brukes VitectroMed til under restitusjon?", text: `
-VitectroMed hjelper med å holde posisjonen kirurgen anbefaler, for å støtte gode forhold for bedring.
-
-Ved å redusere belastningen kan det hjelpe å holde posisjonen lenger med mindre ubehag.
-
-Målet er enkelt: hjelpe deg å være korrekt posisjonert lenger og under bedre forhold.
-      `},
-      { heading: "Komfort og stabilitet", text: `
-VitectroMed er utformet for stabil støtte, dag og natt, og en mer konsekvent holdning.
-
-Det kan bidra til å redusere spenninger i nakke og skuldre som ofte oppstår ved langvarig posisjonering.
-
-Hver detalj er laget for å være enkel å bruke og trygg i den postoperative perioden.
-      `},
-      { heading: "Hvem er VitectroMed for?", text: `
-VitectroMed er for pasienter etter vitrektomi med gassinjeksjon når en spesifikk postoperativ posisjon er foreskrevet.
-
-Det kan også være nyttig for de som ønsker en mer komfortabel løsning for å følge medisinske instrukser under restitusjon.
-      `},
-      { heading: "Viktig", text: `
-VitectroMed erstatter ikke medisinsk rådgivning.
-
-Posisjon, varighet og instrukser er individuelle og må bekreftes av kirurg eller behandlingsteam.
-      `},
-    ],
-  },
-
-  fi: {
-    title: "Tietoa VitectroMedista",
-    subtitle: "Laite, joka tukee toipumista vitrektomian ja kaasuinjektion jälkeen",
-    sections: [
-      { heading: "Miksi VitectroMed kehitettiin?", text: `
-VitectroMed kehitettiin yksinkertaisesta havainnosta: vitrektomian ja kaasuinjektion jälkeen leikkauksen jälkeisen asennon noudattaminen on tärkeää.
-
-Monille potilaille asennon ylläpito useiden päivien ajan on vaikeaa. Epämukavuus, niskajännitys ja väsymys voivat tehdä toipumisesta raskaampaa.
-
-VitectroMed on suunniteltu helpottamaan määrätyn asennon ylläpitoa ja parantamaan arjen mukavuutta.
-      `},
-      { heading: "Mihin VitectroMedia käytetään toipumisen aikana?", text: `
-VitectroMed auttaa ylläpitämään kirurgin suosittelemaa asentoa ja tukee hyviä toipumisolosuhteita.
-
-Kuormitusta vähentämällä se voi auttaa pitämään asennon pidempään pienemmällä epämukavuudella.
-
-Tavoite on yksinkertainen: auttaa pysymään oikein asennossa pidempään ja paremmissa olosuhteissa.
-      `},
-      { heading: "Mukavuus ja vakaus", text: `
-VitectroMed tarjoaa vakaata tukea päivällä ja yöllä ja edistää tasaisempaa asentoa.
-
-Se voi auttaa vähentämään niskan ja hartioiden rasitusta, joka on yleistä pitkäkestoisessa asennossa.
-
-Jokainen yksityiskohta on suunniteltu helppokäyttöiseksi ja rauhoittavaksi leikkauksen jälkeisenä aikana.
-      `},
-      { heading: "Kenelle VitectroMed on tarkoitettu?", text: `
-VitectroMed on tarkoitettu potilaille vitrektomian ja kaasuinjektion jälkeen, kun kirurgi määrää tietyn leikkauksen jälkeisen asennon.
-
-Se voi olla hyödyllinen myös niille, jotka haluavat mukavamman ratkaisun lääketieteellisten ohjeiden noudattamiseen toipumisen aikana.
-      `},
-      { heading: "Tärkeää", text: `
-VitectroMed ei korvaa lääketieteellistä neuvontaa.
-
-Asento, kesto ja ohjeet ovat yksilöllisiä ja ne tulee varmistaa kirurgilta tai hoitotiimiltä.
-      `},
-    ],
-  },
-
-  // --- Central/East Europe (versions complètes mais compactes) ---
-  cs: {
-    title: "O VitectroMed",
-    subtitle: "Zařízení navržené pro podporu rekonvalescence po vitrektomii s aplikací plynu",
-    sections: [
-      { heading: "Proč byl VitectroMed vytvořen?", text: `
-VitectroMed vznikl z jednoduchého zjištění: po vitrektomii s aplikací plynu je zásadní důsledně dodržovat pooperační polohu.
-
-Pro mnoho pacientů je obtížné tuto polohu udržet několik dní. Nepohodlí, napětí v šíji a únava mohou rekonvalescenci ztížit.
-
-VitectroMed je navržen tak, aby usnadnil udržení předepsané polohy a zlepšil každodenní komfort.
-      `},
-      { heading: "K čemu VitectroMed slouží během rekonvalescence?", text: `
-VitectroMed pomáhá snáze udržet polohu doporučenou chirurgem a podpořit tak vhodné podmínky pro zotavení.
-
-Snížením zátěže spojené s dlouhodobým polohováním může pomoci vydržet déle s menším nepohodlím.
-
-Cíl je jednoduchý: pomoci zůstat správně polohovaný déle a v lepších podmínkách.
-      `},
-      { heading: "Komfort a stabilita", text: `
-VitectroMed je navržen pro stabilní oporu ve dne i v noci a pro konzistentnější držení těla.
-
-Může pomoci snížit napětí v oblasti krku a ramen, které se často objevuje při dlouhodobém udržování polohy.
-
-Každý detail je navržen tak, aby byl snadno použitelný a uklidňující v pooperačním období.
-      `},
-      { heading: "Pro koho je VitectroMed určen?", text: `
-VitectroMed je určen pro pacienty po vitrektomii s aplikací plynu, pokud chirurg předepsal specifickou pooperační polohu.
-
-Je užitečný i pro ty, kteří hledají pohodlnější řešení pro dodržení lékařských pokynů během rekonvalescence.
-      `},
-      { heading: "Důležité", text: `
-VitectroMed nenahrazuje lékařské doporučení.
-
-Poloha, délka trvání a pokyny jsou individuální a musí je potvrdit chirurg nebo zdravotnický tým.
-      `},
-    ],
-  },
-
-  hu: {
-    title: "Az VitectroMedsről",
-    subtitle: "Eszköz a gázinjekcióval végzett vitrektómia utáni felépülés támogatására",
-    sections: [
-      { heading: "Miért készült az VitectroMed?", text: `
-Az VitectroMed egy egyszerű megfigyelésből született: gázinjekcióval végzett vitrektómia után kulcsfontosságú a posztoperatív testhelyzet szigorú betartása.
-
-Sok beteg számára nehéz több napon át megtartani ezt a pozíciót. A kellemetlenség, nyaki feszülés és fáradtság megnehezítheti a felépülést.
-
-Az VitectroMed célja, hogy megkönnyítse az előírt testhelyzet fenntartását és javítsa a mindennapi komfortot.
-      `},
-      { heading: "Mire szolgál az VitectroMed a felépülés alatt?", text: `
-Az VitectroMed segít könnyebben megtartani a sebész által javasolt testhelyzetet, támogatva a megfelelő gyógyulási feltételeket.
-
-A terhelés csökkentésével segíthet hosszabb ideig megtartani a szükséges pozíciót kevesebb kellemetlenséggel.
-
-A cél egyszerű: helyesen pozicionált állapot fenntartása hosszabb ideig, jobb körülmények között.
-      `},
-      { heading: "Kényelem és stabilitás", text: `
-Az VitectroMed stabil támaszt nyújt nappal és éjjel, és következetesebb testtartást támogat.
-
-Segíthet csökkenteni a nyak és váll feszülését, ami gyakori a hosszan tartó pozíció esetén.
-
-Minden részlet könnyű használatra és a posztoperatív időszak megnyugtató támogatására készült.
-      `},
-      { heading: "Kinek készült az VitectroMed?", text: `
-Az VitectroMed azoknak a betegeknek készült, akik gázinjekcióval végzett vitrektómián estek át, és a sebész speciális posztoperatív testhelyzetet írt elő.
-
-Hasznos lehet mindenkinek, aki kényelmesebb megoldást keres az orvosi utasítások betartásához a felépülés alatt.
-      `},
-      { heading: "Fontos", text: `
-Az VitectroMed nem helyettesíti az orvosi tanácsot.
-
-A testhelyzet, az időtartam és az utasítások egyéniek, és a sebésznek vagy az egészségügyi csapatnak kell megerősítenie.
-      `},
-    ],
-  },
-
-  ro: {
-    title: "Despre VitectroMed",
-    subtitle: "Dispozitivul conceput pentru a sprijini recuperarea după vitrectomie cu injecție de gaz",
-    sections: [
-      { heading: "De ce a fost creat VitectroMed?", text: `
-VitectroMed a pornit de la o observație simplă: după vitrectomie cu injecție de gaz, menținerea strictă a poziției postoperatorii este esențială.
-
-Pentru mulți pacienți, menținerea acestei poziții timp de mai multe zile poate fi dificilă. Disconfortul, tensiunea cervicală și oboseala pot îngreuna recuperarea.
-
-VitectroMed a fost conceput pentru a facilita menținerea poziției prescrise și pentru a îmbunătăți confortul zilnic.
-      `},
-      { heading: "La ce folosește VitectroMed în timpul recuperării?", text: `
-VitectroMed ajută la menținerea mai ușoară a poziției recomandate de chirurg, sprijinind condiții bune de recuperare.
-
-Prin reducerea constrângerilor, poate ajuta la menținerea posturii necesare mai mult timp, cu mai puțin disconfort.
-
-Scopul este simplu: să te ajute să rămâi corect poziționat mai mult timp, în condiții mai bune.
-      `},
-      { heading: "Confort și stabilitate", text: `
-VitectroMed este proiectat pentru sprijin stabil zi și noapte, favorizând o postură mai constantă.
-
-Poate ajuta la reducerea tensiunii din zona gâtului și a umerilor, frecventă în poziționarea prelungită.
-
-Fiecare detaliu este conceput pentru utilizare ușoară și pentru a oferi siguranță în perioada postoperatorie.
-      `},
-      { heading: "Pentru cine este VitectroMed?", text: `
-VitectroMed este destinat pacienților operați de vitrectomie cu injecție de gaz atunci când chirurgul recomandă o poziție postoperatorie.
-
-Este util și pentru cei care doresc o soluție mai confortabilă pentru a respecta recomandările medicale în timpul recuperării.
-      `},
-      { heading: "Important", text: `
-VitectroMed nu înlocuiește sfatul medical.
-
-Poziția, durata și instrucțiunile depind de situația ta și trebuie confirmate de chirurg sau echipa medicală.
-      `},
-    ],
-  },
-
-  bg: {
-    title: "За VitectroMed",
-    subtitle: "Устройство, създадено да подпомага възстановяването след витректомия с газова инжекция",
-    sections: [
-      { heading: "Защо е създаден VitectroMed?", text: `
-VitectroMed е създаден на базата на проста идея: след витректомия с газова инжекция е важно стриктно да се спазва следоперативната позиция.
-
-За много пациенти е трудно да задържат тази позиция няколко дни. Дискомфортът, напрежението във врата и умората могат да направят възстановяването по-тежко.
-
-VitectroMed е проектиран да улесни поддържането на предписаната позиция и да подобри ежедневния комфорт.
-      `},
-      { heading: "За какво служи VitectroMed по време на възстановяване?", text: `
-VitectroMed помага по-лесно да се поддържа препоръчаната от хирурга позиция и да се подпомогнат условията за възстановяване.
-
-Като намалява натоварването, може да помогне позицията да се задържи по-дълго с по-малко дискомфорт.
-
-Целта е проста: да помогне да останете правилно позиционирани по-дълго и при по-добри условия.
-      `},
-      { heading: "Комфорт и стабилност", text: `
-VitectroMed е създаден за стабилна опора денем и нощем и за по-постоянна стойка.
-
-Може да помогне за намаляване на напрежението във врата и раменете при продължително задържане на позиция.
-
-Всеки детайл е проектиран да е лесен за употреба и успокояващ през следоперативния период.
-      `},
-      { heading: "За кого е предназначен VitectroMed?", text: `
-VitectroMed е предназначен за пациенти след витректомия с газова инжекция, когато хирургът е предписал следоперативна позиция.
-
-Полезен е и за хора, които търсят по-удобно решение, за да следват медицинските указания по време на възстановяване.
-      `},
-      { heading: "Важно", text: `
-VitectroMed не замества медицински съвет.
-
-Позицията, продължителността и указанията са индивидуални и трябва да бъдат потвърдени от хирурга или медицинския екип.
-      `},
-    ],
-  },
-
-  el: {
-    title: "Σχετικά με το VitectroMed",
-    subtitle: "Η συσκευή που υποστηρίζει την ανάρρωση μετά από υαλοειδεκτομή με έγχυση αερίου",
-    sections: [
-      { heading: "Γιατί δημιουργήθηκε το VitectroMed;", text: `
-Το VitectroMed δημιουργήθηκε από μια απλή παρατήρηση: μετά από υαλοειδεκτομή με έγχυση αερίου, η αυστηρή τήρηση της μετεγχειρητικής θέσης είναι απαραίτητη.
-
-Για πολλούς ασθενείς, η διατήρηση αυτής της θέσης για αρκετές ημέρες είναι δύσκολη. Η δυσφορία, η καταπόνηση του αυχένα και η κόπωση μπορεί να κάνουν την ανάρρωση πιο απαιτητική.
-
-Το VitectroMed σχεδιάστηκε για να διευκολύνει τη διατήρηση της συνιστώμενης θέσης και να βελτιώσει την καθημερινή άνεση.
-      `},
-      { heading: "Σε τι χρησιμεύει το VitectroMed κατά την ανάρρωση;", text: `
-Το VitectroMed βοηθά στην ευκολότερη διατήρηση της θέσης που συστήνει ο χειρουργός, υποστηρίζοντας καλύτερες συνθήκες ανάρρωσης.
-
-Μειώνοντας την καταπόνηση, μπορεί να βοηθήσει να διατηρείται η απαιτούμενη στάση για περισσότερο χρόνο με λιγότερη δυσφορία.
-
-Στόχος είναι απλός: να βοηθήσει να παραμείνετε σωστά τοποθετημένοι για περισσότερο, σε καλύτερες συνθήκες.
-      `},
-      { heading: "Άνεση και σταθερότητα", text: `
-Το VitectroMed έχει σχεδιαστεί για σταθερή υποστήριξη μέρα και νύχτα και για πιο σταθερή στάση.
-
-Μπορεί να βοηθήσει στη μείωση της καταπόνησης σε αυχένα και ώμους που συχνά εμφανίζεται με παρατεταμένη θέση.
-
-Κάθε λεπτομέρεια είναι σχεδιασμένη για εύκολη χρήση και αίσθημα ασφάλειας στη μετεγχειρητική περίοδο.
-      `},
-      { heading: "Για ποιον είναι το VitectroMed;", text: `
-Το VitectroMed απευθύνεται σε ασθενείς που υποβλήθηκαν σε υαλοειδεκτομή με έγχυση αερίου όταν έχει δοθεί συγκεκριμένη μετεγχειρητική οδηγία θέσης.
-
-Είναι επίσης χρήσιμο για όσους θέλουν μια πιο άνετη λύση ώστε να ακολουθούν τις ιατρικές οδηγίες κατά την ανάρρωση.
-      `},
-      { heading: "Σημαντικό", text: `
-Το VitectroMed δεν αντικαθιστά ιατρική συμβουλή.
-
-Η θέση, η διάρκεια και οι οδηγίες εξαρτώνται από την περίπτωσή σας και πρέπει να επιβεβαιωθούν από τον χειρουργό ή την ιατρική ομάδα.
-      `},
-    ],
-  },
-
-  // --- plus petits pays / versions courtes mais pro ---
-  sk: {
-    title: "O VitectroMed",
-    subtitle: "Zariadenie navrhnuté na podporu rekonvalescencie po vitrektómii s aplikáciou plynu",
-    sections: [
-      { heading: "Prečo vznikol VitectroMed?", text: `
-VitectroMed vznikol z jednoduchého poznatku: po vitrektómii s aplikáciou plynu je dôležité dôsledne dodržiavať pooperačnú polohu.
-
-Pre mnohých pacientov je náročné udržať túto polohu niekoľko dní. Nepohodlie, napätie šije a únava môžu zotavenie sťažiť.
-
-VitectroMed je navrhnutý tak, aby uľahčil udržiavanie predpísanej polohy a zlepšil každodenný komfort.
-      `},
-      { heading: "Na čo slúži VitectroMed počas rekonvalescencie?", text: `
-VitectroMed pomáha ľahšie udržať polohu odporúčanú chirurgom a podporiť tak vhodné podmienky na zotavenie.
-
-Znížením záťaže môže pomôcť udržať potrebnú polohu dlhšie s menším nepohodlím.
-
-Cieľ je jednoduchý: pomôcť zostať správne polohovaný dlhšie a v lepších podmienkach.
-      `},
-      { heading: "Pohodlie a stabilita", text: `
-VitectroMed poskytuje stabilnú oporu vo dne aj v noci a podporuje konzistentnejšie držanie tela.
-
-Môže pomôcť znížiť napätie v oblasti krku a ramien pri dlhodobom udržiavaní polohy.
-
-Detaily sú navrhnuté tak, aby boli jednoduché na použitie a upokojujúce v pooperačnom období.
-      `},
-      { heading: "Pre koho je VitectroMed určený?", text: `
-VitectroMed je určený pre pacientov po vitrektómii s aplikáciou plynu, ak chirurg predpísal špecifickú pooperačnú polohu.
-
-Je užitočný aj pre tých, ktorí chcú pohodlnejšie riešenie na dodržiavanie lekárskych pokynov počas rekonvalescencie.
-      `},
-      { heading: "Dôležité", text: `
-VitectroMed nenahrádza lekárske odporúčanie.
-
-Poloha, trvanie a pokyny sú individuálne a musia byť potvrdené chirurgom alebo zdravotníckym tímom.
-      `},
-    ],
-  },
-
-  sl: {
-    title: "O VitectroMed",
-    subtitle: "Naprava za podporo okrevanja po vitrektomiji z injekcijo plina",
-    sections: [
-      { heading: "Zakaj je bil VitectroMed ustvarjen?", text: `
-VitectroMed je nastal iz preprostega spoznanja: po vitrektomiji z injekcijo plina je ključnega pomena dosledno upoštevati pooperativni položaj.
-
-Za mnoge paciente je težko ohranjati ta položaj več dni. Neudobje, napetost v vratu in utrujenost lahko otežijo okrevanje.
-
-VitectroMed je zasnovan, da olajša vzdrževanje predpisanega položaja in izboljša vsakodnevno udobje.
-      `},
-      { heading: "Za kaj se VitectroMed uporablja med okrevanjem?", text: `
-VitectroMed pomaga lažje ohranjati položaj, ki ga priporoči kirurg, in tako podpira dobre pogoje za okrevanje.
-
-Z zmanjšanjem obremenitev lahko pomaga ohranjati zahtevano držo dlje časa z manj neugodja.
-
-Cilj je preprost: pomagati ostati pravilno nameščen dlje časa in v boljših pogojih.
-      `},
-      { heading: "Udobje in stabilnost", text: `
-VitectroMed je zasnovan za stabilno oporo podnevi in ponoči ter bolj dosledno držo.
-
-Lahko pomaga zmanjšati napetost v vratu in ramenih, ki se pogosto pojavi pri dolgotrajnem položaju.
-
-Vsaka podrobnost je zasnovana za enostavno uporabo in občutek varnosti v pooperativnem obdobju.
-      `},
-      { heading: "Komu je VitectroMed namenjen?", text: `
-VitectroMed je namenjen pacientom po vitrektomiji z injekcijo plina, ko je predpisan specifičen pooperativni položaj.
-
-Uporaben je tudi za tiste, ki želijo udobnejšo rešitev za upoštevanje medicinskih navodil med okrevanjem.
-      `},
-      { heading: "Pomembno", text: `
-VitectroMed ne nadomešča zdravniškega nasveta.
-
-Položaj, trajanje in navodila so individualni in jih mora potrditi kirurg ali zdravstvena ekipa.
-      `},
-    ],
-  },
-
-  hr: {
-    title: "O VitectroMedu",
-    subtitle: "Uređaj osmišljen za potporu oporavku nakon vitrektomije s injekcijom plina",
-    sections: [
-      { heading: "Zašto je VitectroMed napravljen?", text: `
-VitectroMed je nastao iz jednostavne spoznaje: nakon vitrektomije s injekcijom plina važno je strogo poštivati postoperativni položaj.
-
-Mnogim pacijentima je teško zadržati taj položaj nekoliko dana. Nelagoda, napetost u vratu i umor mogu otežati oporavak.
-
-VitectroMed je dizajniran kako bi olakšao održavanje propisanog položaja i poboljšao svakodnevnu udobnost.
-      `},
-      { heading: "Čemu služi VitectroMed tijekom oporavka?", text: `
-VitectroMed pomaže lakše održavati položaj koji preporuči kirurg, podržavajući povoljne uvjete oporavka.
-
-Smanjenjem opterećenja može pomoći zadržati potrebnu posturu dulje uz manje nelagode.
-
-Cilj je jednostavan: pomoći ostati pravilno pozicioniran dulje i u boljim uvjetima.
-      `},
-      { heading: "Udobnost i stabilnost", text: `
-VitectroMed je osmišljen za stabilnu potporu danju i noću te za dosljedniji položaj.
-
-Može pomoći smanjiti napetost u vratu i ramenima kod dugotrajnog položaja.
-
-Svaki detalj je dizajniran za jednostavno korištenje i osjećaj sigurnosti u postoperativnom razdoblju.
-      `},
-      { heading: "Kome je VitectroMed namijenjen?", text: `
-VitectroMed je namijenjen pacijentima nakon vitrektomije s injekcijom plina kada je propisan specifičan postoperativni položaj.
-
-Koristan je i za one koji žele udobnije rješenje kako bi se što bolje pridržavali medicinskih uputa tijekom oporavka.
-      `},
-      { heading: "Važno", text: `
-VitectroMed ne zamjenjuje liječnički savjet.
-
-Položaj, trajanje i upute ovise o individualnom slučaju i moraju se potvrditi s kirurgom ili medicinskim timom.
-      `},
-    ],
-  },
-
-  et: {
-    title: "VitectroMedist",
-    subtitle: "Seade, mis toetab taastumist pärast vitrektoomiat koos gaasi süstimisega",
-    sections: [
-      { heading: "Miks VitectroMed loodi?", text: `
-VitectroMed loodi lihtsast tähelepanekust: pärast vitrektoomiat koos gaasi süstimisega on oluline järgida rangelt operatsioonijärgset asendit.
-
-Paljudel patsientidel on raske seda asendit hoida mitu päeva. Ebamugavus, kaelapinged ja väsimus võivad taastumist raskendada.
-
-VitectroMed on loodud selleks, et aidata hoida ettenähtud asendit lihtsamalt ja parandada igapäevast mugavust.
-      `},
-      { heading: "Milleks VitectroMedi kasutatakse taastumise ajal?", text: `
-VitectroMed aitab kergemini hoida kirurgi soovitatud asendit, toetades häid taastumistingimusi.
-
-Koormuse vähendamisega võib see aidata hoida vajalikku asendit kauem väiksema ebamugavusega.
-
-Eesmärk on lihtne: aidata püsida õigesti positsioneerituna kauem ja paremates tingimustes.
-      `},
-      { heading: "Mugavus ja stabiilsus", text: `
-VitectroMed on loodud stabiilseks toeks päeval ja öösel ning ühtlasema kehahoiaku soodustamiseks.
-
-See võib aidata vähendada kaela ja õlgade pinget, mis tekib sageli pikaajalise asendi hoidmisel.
-
-Iga detail on mõeldud lihtsaks kasutamiseks ja rahustavaks toeks operatsioonijärgsel perioodil.
-      `},
-      { heading: "Kellele VitectroMed on mõeldud?", text: `
-VitectroMed on mõeldud patsientidele pärast vitrektoomiat koos gaasi süstimisega, kui kirurg määrab kindla operatsioonijärgse asendi.
-
-See võib olla kasulik ka neile, kes soovivad mugavamat lahendust meditsiiniliste juhiste järgimiseks taastumise ajal.
-      `},
-      { heading: "Oluline", text: `
-VitectroMed ei asenda meditsiinilist nõu.
-
-Asend, kestus ja juhised on individuaalsed ning need peab kinnitama kirurg või ravimeeskond.
-      `},
-    ],
-  },
-
-  lv: {
-    title: "Par VitectroMed",
-    subtitle: "Ierīce, kas palīdz atveseļoties pēc vitrektomijas ar gāzes injekciju",
-    sections: [
-      { heading: "Kāpēc tika izveidots VitectroMed?", text: `
-VitectroMed radās no vienkārša novērojuma: pēc vitrektomijas ar gāzes injekciju ir svarīgi stingri ievērot pēcoperācijas pozīciju.
-
-Daudziem pacientiem ir grūti šo pozīciju noturēt vairākas dienas. Diskomforts, kakla sasprindzinājums un nogurums var apgrūtināt atveseļošanos.
-
-VitectroMed ir izstrādāts, lai atvieglotu noteiktās pozīcijas uzturēšanu un uzlabotu ikdienas komfortu.
-      `},
-      { heading: "Kam VitectroMed tiek izmantots atveseļošanās laikā?", text: `
-VitectroMed palīdz vieglāk noturēt ķirurga ieteikto pozīciju, atbalstot labus atveseļošanās apstākļus.
-
-Samazinot slodzi, tas var palīdzēt ilgāk noturēt nepieciešamo pozīciju ar mazāku diskomfortu.
-
-Mērķis ir vienkāršs: palīdzēt palikt pareizi pozicionētam ilgāk un labākos apstākļos.
-      `},
-      { heading: "Komforts un stabilitāte", text: `
-VitectroMed ir paredzēts stabilam atbalstam dienā un naktī un konsekventākai stājai.
-
-Tas var palīdzēt mazināt kakla un plecu sasprindzinājumu, kas bieži rodas ilgstošas pozīcijas dēļ.
-
-Katrs elements ir izstrādāts vieglai lietošanai un drošības sajūtai pēcoperācijas periodā.
-      `},
-      { heading: "Kam ir paredzēts VitectroMed?", text: `
-VitectroMed ir paredzēts pacientiem pēc vitrektomijas ar gāzes injekciju, ja ķirurgs ir noteicis specifisku pēcoperācijas pozīciju.
-
-Tas var noderēt arī tiem, kas vēlas ērtāku risinājumu medicīnisko norādījumu ievērošanai atveseļošanās laikā.
-      `},
-      { heading: "Svarīgi", text: `
-VitectroMed neaizstāj medicīnisku konsultāciju.
-
-Pozīcija, ilgums un norādījumi ir individuāli un jāapstiprina ķirurgam vai medicīnas komandai.
-      `},
-    ],
-  },
-
-  lt: {
-    title: "Apie VitectroMed",
-    subtitle: "Prietaisas, skirtas padėti atsigauti po vitrektomijos su dujų injekcija",
-    sections: [
-      { heading: "Kodėl buvo sukurtas VitectroMed?", text: `
-VitectroMed sukurtas remiantis paprastu pastebėjimu: po vitrektomijos su dujų injekcija svarbu griežtai laikytis pooperacinės padėties.
-
-Daugeliui pacientų sunku išlaikyti šią padėtį kelias dienas. Diskomfortas, kaklo įtampa ir nuovargis gali apsunkinti atsigavimą.
-
-VitectroMed sukurtas tam, kad būtų lengviau išlaikyti paskirtą padėtį ir pagerinti kasdienį komfortą.
-      `},
-      { heading: "Kam naudojamas VitectroMed atsigavimo metu?", text: `
-VitectroMed padeda lengviau išlaikyti chirurgo rekomenduojamą padėtį ir sudaryti geresnes atsigavimo sąlygas.
-
-Mažindamas apkrovą, jis gali padėti ilgiau išlaikyti reikalingą padėtį su mažesniu diskomfortu.
-
-Tikslas paprastas: padėti išlikti teisingoje padėtyje ilgiau ir geresnėmis sąlygomis.
-      `},
-      { heading: "Komfortas ir stabilumas", text: `
-VitectroMed sukurtas stabiliai atramai dieną ir naktį bei nuoseklesnei laikysenai.
-
-Jis gali padėti sumažinti kaklo ir pečių įtampą, kuri dažnai atsiranda ilgai išlaikant padėtį.
-
-Kiekviena detalė sukurta patogiam naudojimui ir saugumo jausmui pooperaciniu laikotarpiu.
-      `},
-      { heading: "Kam skirtas VitectroMed?", text: `
-VitectroMed skirtas pacientams po vitrektomijos su dujų injekcija, kai chirurgas paskiria konkrečią pooperacinę padėtį.
-
-Jis taip pat gali būti naudingas tiems, kurie nori patogesnio sprendimo laikytis medicininių nurodymų atsigavimo metu.
-      `},
-      { heading: "Svarbu", text: `
-VitectroMed nepakeičia gydytojo konsultacijos.
-
-Padėtis, trukmė ir nurodymai yra individualūs ir turi būti patvirtinti chirurgo ar medicinos komandos.
-      `},
-    ],
-  },
-
-  mt: {
-    title: "Dwar VitectroMed",
-    subtitle: "Apparat iddisinjat biex jappoġġja r-rkupru wara vitrektomija b’injezzjoni ta’ gass",
-    sections: [
-      { heading: "Għaliex inħoloq VitectroMed?", text: `
-VitectroMed inħoloq minn osservazzjoni sempliċi: wara vitrektomija b’injezzjoni ta’ gass, huwa essenzjali li tinżamm il-pożizzjoni ta’ wara l-operazzjoni.
-
-Għal ħafna pazjenti, li żżomm din il-pożizzjoni għal diversi jiem jista’ jkun diffiċli. Skumdità, tensjoni fl-għonq u għeja jistgħu jagħmlu r-rkupru aktar impenjattiv.
-
-VitectroMed huwa ddisinjat biex jagħmilha aktar faċli li tinżamm il-pożizzjoni preskritta u biex itejjeb il-kumdità ta’ kuljum.
-      `},
-      { heading: "Għalxiex jintuża VitectroMed waqt ir-rkupru?", text: `
-VitectroMed jgħin biex tinżamm aktar faċilment il-pożizzjoni rakkomandata mill-kirurgu u biex jappoġġja kundizzjonijiet tajbin ta’ rkupru.
-
-Billi jnaqqas il-piż, jista’ jgħin biex tinżamm il-pożizzjoni meħtieġa għal iktar żmien b’inqas skumdità.
-
-L-għan hu sempliċi: jgħin biex tibqa’ f’pożizzjoni korretta għal iktar żmien u f’kundizzjonijiet aħjar.
-      `},
-      { heading: "Kumdità u stabbiltà", text: `
-VitectroMed huwa maħsub għal appoġġ stabbli matul il-jum u l-lejl u għal pożizzjoni aktar konsistenti.
-
-Jista’ jgħin inaqqas it-tensjoni fl-għonq u fl-ispallejn li spiss iseħħ meta tinżamm pożizzjoni għal żmien twil.
-
-Kull dettall huwa ddisinjat biex ikun faċli biex jintuża u rassiguranti matul il-perjodu ta’ wara l-operazzjoni.
-      `},
-      { heading: "Għal min hu ddisinjat VitectroMed?", text: `
-VitectroMed huwa ddisinjat għal pazjenti wara vitrektomija b’injezzjoni ta’ gass meta l-kirurgu jippreskrivi pożizzjoni partikolari.
-
-Jista’ jkun utli wkoll għal min irid soluzzjoni aktar komda biex isegwi l-istruzzjonijiet mediċi waqt ir-rkupru.
-      `},
-      { heading: "Importanti", text: `
-VitectroMed ma jissostitwixxix parir mediku.
-
-Il-pożizzjoni, it-tul u l-istruzzjonijiet jiddependu mill-każ tiegħek u għandhom jiġu kkonfermati mill-kirurgu jew mit-tim mediku.
-      `},
-    ],
-  },
-
-  ga: {
-    title: "Maidir le VitectroMed",
-    subtitle:
-      "An gléas a dearadh chun tacú le téarnamh tar éis vitrectomy le hinstealladh gáis",
-    sections: [
-      { heading: "Cén fáth ar cruthaíodh VitectroMed?", text: `
-Cruthaíodh VitectroMed ó bhreathnóireacht shimplí: tar éis vitrectomy le hinstealladh gáis, tá sé ríthábhachtach an suíomh iar-oibríochta a choinneáil go docht.
-
-Bíonn sé deacair do go leor othar an suíomh seo a choinneáil ar feadh roinnt laethanta. Is féidir míchompord, teannas muiníl agus tuirse an téarnamh a dhéanamh níos dúshlánaí.
-
-Dearadh VitectroMed chun cabhrú leis an suíomh forordaithe a choinneáil níos éasca agus chun compord laethúil a fheabhsú.
-      `},
-      { heading: "Cad chuige a úsáidtear VitectroMed le linn an téarnaimh?", text: `
-Cabhraíonn VitectroMed leis an suíomh a mholann an máinlia a choinneáil níos éasca, ag tacú le coinníollacha maithe téarnaimh.
-
-Trí ualach fisiciúil a laghdú, is féidir leis cabhrú an suíomh riachtanach a choinneáil níos faide le níos lú míchompord.
-
-Is é an sprioc simplí: cabhrú leat fanacht i suíomh ceart ar feadh níos faide agus i gcoinníollacha níos fearr.
-      `},
-      { heading: "Compord agus cobhsaíocht", text: `
-Tá VitectroMed deartha le haghaidh tacaíochta cobhsaí, lá agus oíche, agus chun seasamh níos comhsheasmhaí a chur chun cinn.
-
-Is féidir leis cabhrú le teannas sa mhuineál agus sna guaillí a laghdú a tharlaíonn go minic le suíomh leanúnach.
-
-Tá gach mionsonra deartha le bheith éasca le húsáid agus suaimhneach le linn na tréimhse iar-oibríochta.
-      `},
-      { heading: "Cé dó a dearadh VitectroMed?", text: `
-Tá VitectroMed beartaithe do dhaoine a ndearnadh vitrectomy le hinstealladh gáis orthu nuair a ordaíonn an máinlia suíomh iar-oibríochta ar leith.
-
-Tá sé úsáideach freisin dóibh siúd atá ag lorg réiteach níos compordaí chun treoracha leighis a leanúint le linn téarnaimh.
-      `},
-      { heading: "Tábhachtach", text: `
-Ní chuireann VitectroMed comhairle leighis in ionad.
-
-Braitheann an suíomh, an fad agus na treoracha ar do chás féin agus ní mór iad a dheimhniú leis an máinlia nó leis an bhfoireann leighis.
-      `},
+    seoTopics: [
+      "herstel na vitrectomie",
+      "buikligging na vitrectomie",
+      "ondersteuning na netvliesoperatie",
+      "medisch positioneringshulpmiddel",
     ],
   },
 };
 
-/**
- * --- PAGE ABOUT ---
- */
-export default async function AboutPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+interface PageProps {
+  params: Promise<{ locale: Locale }>;
+}
 
-  const t = CONTENT[locale as Locale];
+export default async function AboutPage({ params }: PageProps) {
+  const { locale } = await params;
+  const t = CONTENT[locale];
+
   if (!t) return notFound();
+
+  const important = t.sections.find((s) =>
+    s.heading.toLowerCase().includes("important")
+  );
+  const otherSections = t.sections.filter((s) => s !== important);
 
   return (
     <main className="about-page">
       <div className="about-header">
+        <p className="about-eyebrow">VitectroMed · Vitrectomy support</p>
         <h1>{t.title}</h1>
-        <p>{t.subtitle}</p>
+        <p className="about-subtitle">{t.subtitle}</p>
       </div>
 
-      <div className="about-content">
-        {t.sections.map((section, index) => (
-          <section key={index} className="about-section">
-            <h2>{section.heading}</h2>
-            {section.text
-              .split("\n")
-              .map((p, i) => (p.trim() ? <p key={i}>{p.trim()}</p> : null))}
-          </section>
+      <section className="about-lead">
+        <p>{t.lead}</p>
+      </section>
+
+      <section className="about-highlights">
+        {t.highlights.map((item, i) => (
+          <div key={i} className="about-highlight">
+            <span className="about-highlight-dot" />
+            <p>{item}</p>
+          </div>
         ))}
+      </section>
+
+      <div className="about-layout">
+        <section className="about-main">
+          {otherSections.map((section, index) => (
+            <article key={index} className="about-section">
+              <h2>{section.heading}</h2>
+              {section.text.split("\n").map((p, i) =>
+                p.trim() ? <p key={i}>{p.trim()}</p> : null
+              )}
+            </article>
+          ))}
+        </section>
+
+        <aside className="about-aside">
+          {important && (
+            <div className="about-important">
+              <h3>{important.heading}</h3>
+              {important.text.split("\n").map((p, i) =>
+                p.trim() ? <p key={i}>{p.trim()}</p> : null
+              )}
+            </div>
+          )}
+
+          <div className="about-facts">
+            <h3>En résumé</h3>
+            <ul>
+              {t.highlights.map((h, i) => (
+                <li key={i}>{h}</li>
+              ))}
+            </ul>
+          </div>
+
+          {t.faq.length > 0 && (
+            <div className="about-faq">
+              <h3>Questions fréquentes</h3>
+              <ul>
+                {t.faq.map((item, i) => (
+                  <li key={i}>
+                    <strong>{item.q}</strong>
+                    <p>{item.a}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {t.seoTopics && (
+            <div className="about-tags">
+              <h4>Mots‑clés médicaux</h4>
+              <div className="about-tags-list">
+                {t.seoTopics.map((topic) => (
+                  <span key={topic} className="about-tag">
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
       </div>
+
+      <section className="about-bottom-note">
+        <p>
+          Les informations présentées sur cette page ont pour objectif d’expliquer
+          le rôle de VitectroMed en tant que dispositif d’accompagnement après
+          vitrectomie. Elles ne remplacent pas un avis médical personnalisé ni une
+          consultation auprès d’un professionnel de santé.
+        </p>
+      </section>
     </main>
   );
 }

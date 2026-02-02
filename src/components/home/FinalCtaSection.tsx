@@ -9,72 +9,75 @@ type Props = {
 const MINI_LOGO =
   "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2c995c35-dbef-45d8-a0b2-70075a919800/public";
 
-const COPY: Record<Locale, {
-  title: string;
-  pBefore: string;
-  pAfter: string;
-  primary: string;
-  secondary: string;
-  orderHref: string;
-  contactHref: string;
-}> = {
+const COPY: Record<
+  Locale,
+  {
+    title: string;
+    pBefore: string;
+    pAfter: string;
+    primary: string;
+    secondary: string;
+    orderHref: string;
+    contactHref: string;
+  }
+> = {
   fr: {
-    title: "Prêt à être accompagné pendant votre convalescence ?",
+    title: "Prêt à organiser votre récupération après vitrectomie ?",
     pBefore: "VitectroMed",
     pAfter:
-      "vous aide à traverser cette période post-opératoire dans les meilleures conditions possibles, en alliant maintien postural, confort et sérénité.",
+      "vous aide à traverser cette période post‑opératoire dans les meilleures conditions possibles, en combinant maintien postural, confort et sérénité à domicile.",
     primary: "Commander VitectroMed",
-    secondary: "Nous contacter pour être conseillé",
+    secondary: "Parler à un conseiller",
     orderHref: "/fr/products",
     contactHref: "/fr/contact",
   },
   en: {
-    title: "Ready to be supported throughout your recovery?",
+    title: "Ready to plan your vitrectomy recovery at home?",
     pBefore: "VitectroMed",
     pAfter:
-      "helps you through this post-operative period in the best possible conditions—combining posture support, comfort, and peace of mind.",
+      "helps you go through this post‑operative period in the best possible conditions—combining posture support, comfort and peace of mind during face‑down recovery.",
     primary: "Order VitectroMed",
-    secondary: "Contact us for advice",
+    secondary: "Talk to a specialist",
     orderHref: "/en/products",
     contactHref: "/en/contact",
   },
   es: {
-    title: "¿Listo para recibir apoyo durante tu convalecencia?",
+    title: "¿Listo para organizar tu recuperación tras vitrectomía?",
     pBefore: "VitectroMed",
     pAfter:
-      "te ayuda a atravesar este período postoperatorio en las mejores condiciones posibles, combinando soporte postural, comodidad y tranquilidad.",
+      "te ayuda a vivir este periodo postoperatorio en las mejores condiciones posibles, combinando soporte postural, comodidad y tranquilidad en casa.",
     primary: "Pedir VitectroMed",
-    secondary: "Contáctanos para recibir asesoramiento",
+    secondary: "Hablar con un especialista",
     orderHref: "/es/products",
     contactHref: "/es/contact",
   },
   de: {
-    title: "Bereit, während Ihrer Genesung unterstützt zu werden?",
+    title: "Bereit, Ihre Vitrektomie‑Genesung zu Hause zu planen?",
     pBefore: "VitectroMed",
     pAfter:
-      "hilft Ihnen, diese postoperative Phase unter den bestmöglichen Bedingungen zu durchlaufen und kombiniert Haltungsunterstützung, Komfort und Seelenfrieden.",
+      "unterstützt Sie in der postoperativen Phase, indem es Haltungsstabilität, Komfort und mehr Gelassenheit während der Bauchlage vereint.",
     primary: "VitectroMed bestellen",
-    secondary: "Kontaktieren Sie uns für Beratung",
+    secondary: "Beratung anfordern",
     orderHref: "/de/products",
     contactHref: "/de/contact",
   },
   it: {
-    title: "Pronto a essere supportato durante la tua convalescenza?",
+    title: "Pronto a organizzare il recupero dopo vitrectomia?",
     pBefore: "VitectroMed",
     pAfter:
-      "ti aiuta ad attraversare questo periodo post-operatorio nelle migliori condizioni possibili, combinando supporto posturale, comfort e serenità.",
+      "ti aiuta ad affrontare questo periodo post‑operatorio nelle migliori condizioni possibili, unendo supporto posturale, comfort e serenità a casa.",
     primary: "Ordina VitectroMed",
-    secondary: "Contattaci per ricevere consigli",
+    secondary: "Parla con un esperto",
     orderHref: "/it/products",
     contactHref: "/it/contact",
   },
   nl: {
-    title: "Klaar om ondersteund te worden tijdens je herstel?",
+    title: "Klaar om uw vitrectomie‑herstel thuis te organiseren?",
     pBefore: "VitectroMed",
     pAfter:
-      "helpt je door deze postoperatieve periode onder de best mogelijke omstandigheden—met houdingsondersteuning, comfort en gemoedsrust.",
+      "helpt u deze postoperatieve periode zo goed mogelijk door te komen, met houdingsondersteuning, comfort en extra gemoedsrust tijdens de buikligging.",
     primary: "Bestel VitectroMed",
-    secondary: "Neem contact met ons op voor advies",
+    secondary: "Advies vragen",
     orderHref: "/nl/products",
     contactHref: "/nl/contact",
   },
@@ -86,7 +89,7 @@ export default function FinalCtaSection({ locale }: Props) {
   return (
     <section className="fcta">
       <div className="fcta-inner">
-        <h3 className="fcta-title">{t.title}</h3>
+        <h2 className="fcta-title">{t.title}</h2>
 
         <p className="fcta-text">
           <span className="fcta-brand">
@@ -103,7 +106,7 @@ export default function FinalCtaSection({ locale }: Props) {
         </p>
 
         <div className="fcta-actions">
-          <a className="fcta-btn fcta-btn-outline" href={t.orderHref}>
+          <a className="fcta-btn fcta-btn-primary" href={t.orderHref}>
             <span>{t.primary}</span>
             <Image
               src={MINI_LOGO}
@@ -114,7 +117,7 @@ export default function FinalCtaSection({ locale }: Props) {
             />
           </a>
 
-          <a className="fcta-btn fcta-btn-solid" href={t.contactHref}>
+          <a className="fcta-btn fcta-btn-secondary" href={t.contactHref}>
             {t.secondary}
           </a>
         </div>

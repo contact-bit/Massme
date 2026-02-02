@@ -1,40 +1,85 @@
 /* ===============================================
-   CONTACT PAGE — MASSME STYLE PREMIUM
+   CONTACT PAGE — OculaRest / VitectroMed
 ================================================ */
 
 .contact-page {
-  max-width: 700px;
+  width: 100%;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 60px 20px;
+  padding: 80px 32px 96px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+  color: #0f172a;
 }
 
 .contact-header {
-  text-align: center;
-  margin-bottom: 40px;
+  max-width: 720px;
+  margin: 0 auto 40px auto;
+  text-align: left;
+}
+
+.contact-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(15, 23, 42, 0.55);
+  margin: 0 0 8px;
 }
 
 .contact-header h1 {
-  font-size: 36px;
+  font-size: 2.1rem;
   font-weight: 700;
-  color: var(--color-secondary);
+  color: #0f172a;
+  margin: 0 0 10px;
 }
 
-.contact-header p {
-  font-size: 18px;
-  color: var(--color-muted);
-  margin-top: 8px;
+.contact-subtitle {
+  font-size: 1rem;
+  color: rgba(15, 23, 42, 0.8);
+  margin: 0 0 8px;
 }
 
-/* FORM */
+.contact-seo-intro {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(15, 23, 42, 0.75);
+  margin: 0;
+}
+
+/* Layout 2 colonnes */
+.contact-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: flex-start;
+}
+
+/* Mobile : 1 colonne */
+@media (max-width: 900px) {
+  .contact-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .contact-page {
+    padding: 60px 20px 80px;
+  }
+
+  .contact-header h1 {
+    font-size: 1.8rem;
+  }
+}
+
+/* FORMULAIRE */
 .contact-form {
   background: #ffffff;
   border-radius: 20px;
-  padding: 35px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid #eee;
+  padding: 28px 26px 32px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 20px;
 }
 
 .contact-field {
@@ -45,63 +90,105 @@
 
 .contact-field label {
   font-weight: 600;
-  color: var(--color-secondary);
+  color: #0f172a;
+  font-size: 0.9rem;
 }
 
 .contact-field input,
 .contact-field textarea {
   width: 100%;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid #ddd;
-  font-size: 15px;
-  font-family: var(--font-main);
-  background: #fafafa;
-  transition: border var(--transition-fast), background var(--transition-fast);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #f9fafb;
+  transition: border 0.15s ease, background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .contact-field input:focus,
 .contact-field textarea:focus {
-  border-color: var(--color-primary);
-  background: #fff;
+  border-color: #2563eb;
+  background: #ffffff;
   outline: none;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
 }
 
 .contact-field textarea {
-  height: 160px;
-  resize: none;
+  min-height: 160px;
+  resize: vertical;
 }
 
-/* SUBMIT BUTTON */
+/* BOUTON SUBMIT */
 .contact-submit {
+  margin-top: 4px;
   width: 100%;
-  background: var(--color-primary);
+  background: #2563eb;
   color: white;
   border: none;
-  padding: 16px;
-  border-radius: 14px;
-  font-size: 17px;
+  padding: 13px 16px;
+  border-radius: 999px;
+  font-size: 0.98rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--transition);
+  transition: background 0.15s ease, transform 0.1s ease,
+    box-shadow 0.15s ease;
 }
 
-.contact-submit:hover {
-  background: var(--color-primary-dark);
+.contact-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.35);
 }
 
-/* FOOTER EMAIL */
+.contact-submit:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* STATUTS */
+.contact-status {
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.contact-status--success {
+  color: #15803d;
+}
+
+.contact-status--error {
+  color: #b91c1c;
+}
+
+/* ASIDE INFOS */
+.contact-aside {
+  padding: 10px 4px;
+}
+
+.contact-aside-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: #0f172a;
+}
+
+.contact-aside-text {
+  margin: 0 0 16px;
+  font-size: 0.93rem;
+  line-height: 1.8;
+  color: rgba(15, 23, 42, 0.8);
+}
+
 .contact-email {
-  margin-top: 35px;
-  text-align: center;
-  font-size: 15px;
-  color: var(--color-muted);
+  font-size: 0.92rem;
+  color: rgba(15, 23, 42, 0.8);
 }
 
 .contact-email a {
-  color: var(--color-primary);
+  color: #2563eb;
   font-weight: 600;
-  margin-left: 5px;
+  margin-left: 4px;
 }
 
 .contact-email a:hover {

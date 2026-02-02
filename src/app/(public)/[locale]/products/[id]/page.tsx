@@ -1,5 +1,7 @@
 "use client";
 
+import "./product-detail.css";
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
@@ -34,14 +36,17 @@ type Product = {
    TRANSLATIONS
 ===================================================== */
 
-const TRANSLATIONS: Record<Locale, {
-  loading: string;
-  notFound: string;
-  priceExclTax: string;
-  vat: string;
-  priceInclTax: string;
-  addToCart: string;
-}> = {
+const TRANSLATIONS: Record<
+  Locale,
+  {
+    loading: string;
+    notFound: string;
+    priceExclTax: string;
+    vat: string;
+    priceInclTax: string;
+    addToCart: string;
+  }
+> = {
   fr: {
     loading: "Chargement…",
     notFound: "Produit introuvable.",
@@ -115,28 +120,12 @@ function round2(n: number) {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
-/**
- * 🔒 NORMALISE LES CLÉS MARCHÉ
- * - "it", "IT ", "Italie" → "IT"
- */
 function normalizeMarketKey(key: string): Market | null {
   const k = key.trim().toUpperCase();
-  const allowed: Market[] = [
-    "FR",
-    "IT",
-    "DE",
-    "ES",
-    "NL",
-    "PT",
-    "BE",
-    "CH",
-  ];
+  const allowed: Market[] = ["FR", "IT", "DE", "ES", "NL", "PT", "BE", "CH"];
   return allowed.includes(k as Market) ? (k as Market) : null;
 }
 
-/**
- * 🔒 LECTURE TVA SAFE
- */
 function getVATForMarket(
   vatByMarket: Record<string, RawVAT> | undefined,
   market: Market
@@ -148,9 +137,7 @@ function getVATForMarket(
     if (normalized === market) {
       const enabled = value?.enabled === true;
       const rate =
-        typeof value?.rate === "number" && value.rate > 0
-          ? value.rate
-          : 0;
+        typeof value?.rate === "number" && value.rate > 0 ? value.rate : 0;
 
       return {
         enabled: enabled && rate > 0,
@@ -162,9 +149,6 @@ function getVATForMarket(
   return { enabled: false, rate: 0 };
 }
 
-/**
- * 🔒 LECTURE PRIX SAFE
- */
 function getPriceForMarket(
   pricesByMarket: Record<string, number> | undefined,
   market: Market
@@ -218,11 +202,19 @@ export default function ProductPage() {
   }, [productId]);
 
   if (loading) {
-    return <p className="py-10 text-center">{t.loading}</p>;
+    return (
+      <main className="product-detail-page">
+        <p className="product-detail-loading">{t.loading}</p>
+      </main>
+    );
   }
 
   if (!product) {
-    return <p className="py-10 text-center">{t.notFound}</p>;
+    return (
+      <main className="product-detail-page">
+        <p className="product-detail-loading">{t.notFound}</p>
+      </main>
+    );
   }
 
   /* ---------------- DATA ---------------- */
@@ -230,13 +222,9 @@ export default function ProductPage() {
   const desc = pickLocaleValue(product.description, locale);
 
   const priceHT = getPriceForMarket(product.pricesByMarket, market);
-
   const vat = getVATForMarket(product.vatByMarket, market);
 
-  const vatAmount = vat.enabled
-    ? round2((priceHT * vat.rate) / 100)
-    : 0;
-
+  const vatAmount = vat.enabled ? round2((priceHT * vat.rate) / 100) : 0;
   const priceTTC = round2(priceHT + vatAmount);
 
   /* ---------------- ADD TO CART ---------------- */
@@ -248,7 +236,6 @@ export default function ProductPage() {
       quantity: 1,
       imageUrl: product.imageUrl,
       description: desc,
-
       vat: {
         enabled: vat.enabled,
         rate: vat.rate,
@@ -258,47 +245,56 @@ export default function ProductPage() {
 
   /* ---------------- RENDER ---------------- */
   return (
-    <main className="max-w-3xl mx-auto py-10 px-4">
-      <div className="space-y-6">
-        <div className="relative w-full aspect-square bg-gray-100 rounded">
-          <Image
-            src={product.imageUrl || "/placeholder.jpg"}
-            alt={name}
-            fill
-            className="object-contain"
-          />
-        </div>
+    <main className="product-detail-page">
+      <div className="product-detail-container">
+        <section className="product-detail-grid">
+          {/* IMAGE */}
+          <div className="product-detail-image-wrapper">
+            <Image
+              src={product.imageUrl || "/placeholder.jpg"}
+              alt={name}
+              fill
+              className="product-detail-image"
+            />
+          </div>
 
-        <h1 className="text-2xl font-bold">{name}</h1>
+          {/* CONTENU */}
+          <div className="product-detail-content">
+            <p className="product-detail-eyebrow">
+              VitectroMed · Vitrectomy support
+            </p>
+            <h1 className="product-detail-title">{name}</h1>
 
-        {desc && <p className="text-gray-600">{desc}</p>}
+            {desc && (
+              <p className="product-detail-description">{desc}</p>
+            )}
 
-        {/* PRICES */}
-        <div className="space-y-1">
-          <p>
-            {t.priceExclTax} : <strong>{priceHT.toFixed(2)} €</strong>
-          </p>
-
-          {vat.enabled && (
-            <>
+            <div className="product-detail-price-row">
               <p>
-                {t.vat} ({vat.rate}%) :{" "}
-                <strong>{vatAmount.toFixed(2)} €</strong>
+                {t.priceExclTax} : <strong>{priceHT.toFixed(2)} €</strong>
               </p>
 
-              <p className="text-lg font-semibold">
-                {t.priceInclTax} : {priceTTC.toFixed(2)} €
-              </p>
-            </>
-          )}
-        </div>
+              {vat.enabled && (
+                <>
+                  <p>
+                    {t.vat} ({vat.rate}%) :{" "}
+                    <strong>{vatAmount.toFixed(2)} €</strong>
+                  </p>
 
-        <button
-          onClick={addToCart}
-          className="bg-black text-white px-6 py-3 rounded hover:bg-gray-800 transition"
-        >
-          {t.addToCart}
-        </button>
+                  <p className="product-detail-price-ttc">
+                    {t.priceInclTax} : {priceTTC.toFixed(2)} €
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="product-detail-actions">
+              <button className="btn-primary" onClick={addToCart}>
+                {t.addToCart}
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );

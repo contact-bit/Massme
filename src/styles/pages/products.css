@@ -1,41 +1,52 @@
 /* PAGE PRODUITS — Style premium monoproduit */
 
 .products-page {
-  max-width: 900px;
+  width: 100%;
+  max-width: 1400px;      /* encore plus large */
   margin: 0 auto;
-  padding: 80px 20px;
+  padding: 80px 40px;
 }
 
-/* CARD */
+
+/* CARD : passe en 2 colonnes sur desktop */
 .product-card {
   background: #ffffff;
   border-radius: var(--radius-lg);
-  padding: 40px;
+  padding: 40px 40px 48px;
   box-shadow: var(--shadow-lg);
 
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1.1fr 1.2fr;  /* image / texte */
+  gap: 40px;
   align-items: center;
-  gap: 30px;
 
-  text-align: center;
+  text-align: left;        /* texte aligné à gauche */
+}
+
+/* Mobile : on garde une colonne */
+@media (max-width: 900px) {
+  .product-card {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .product-actions {
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 /* IMAGE */
 .product-img-wrapper {
   width: 100%;
-  max-width: 420px;
+  max-width: none;         /* on laisse la colonne gérer la largeur */
   height: 420px;
 
-  position: relative; /* obligatoire pour Image fill */
+  position: relative;
   overflow: hidden;
 
   border-radius: var(--radius-lg);
   background: var(--color-bg-alt);
-}
-
-.product-img {
-  object-fit: contain;
 }
 
 /* TITRE */
@@ -43,32 +54,34 @@
   font-size: 32px;
   font-weight: 700;
   color: var(--color-secondary);
+  margin-bottom: 12px;
 }
 
 /* DESCRIPTION */
 .product-desc {
-  max-width: 600px;
+  max-width: 620px;
   font-size: 17px;
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--color-muted);
 }
 
 /* PRIX */
 .product-price {
-  font-size: 30px;
+  font-size: 28px;
   color: var(--color-primary);
   font-weight: 700;
+  margin: 20px 0 10px;
 }
 
 /* ACTIONS */
 .product-actions {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  max-width: 320px;
+  flex-direction: row;     /* boutons côte à côte sur desktop */
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 100%;
 }
 
 .product-actions .btn {
-  width: 100%;
+  min-width: 180px;
 }

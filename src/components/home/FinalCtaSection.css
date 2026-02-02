@@ -1,99 +1,155 @@
 /* =========================
-   FINAL CTA
+   FINAL CTA – vitrectomie
 ========================= */
 
 .fcta {
-  background: #ffffff;
+  padding: 3.6rem 0 4.2rem;
+  color: #0b1220;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
 }
 
 .fcta-inner {
   max-width: 980px;
   margin: 0 auto;
-  padding: 26px 20px 44px;
+  padding: 0 1.8rem 0;
   text-align: center;
 }
 
+/* Titre + texte */
+
 .fcta-title {
-  margin: 0 0 12px;
-  font-size: 14px;
-  font-weight: 900;
+  margin: 0 0 0.8rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   color: #0b1220;
 }
 
 .fcta-text {
-  margin: 0 auto 18px;
-  max-width: 78ch;
-  font-size: 12.5px;
-  line-height: 1.65;
-  color: rgba(11, 18, 32, 0.72);
+  margin: 0 auto 1.7rem;
+  max-width: 70ch;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: rgba(11, 18, 32, 0.8);
 }
 
 .fcta-brand {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.4rem;
   font-weight: 900;
   color: #1e63ff;
 }
 
 .fcta-mini {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
 }
 
-/* buttons */
+/* Boutons */
+
 .fcta-actions {
-  display: grid;
-  gap: 12px;
-  justify-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem;
 }
 
 .fcta-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-
+  gap: 0.55rem;
   text-decoration: none;
-  font-weight: 900;
-  font-size: 12.5px;
+  font-weight: 800;
+  font-size: 0.9rem;
   line-height: 1;
-
-  padding: 12px 18px;
-  border-radius: 10px;
-
-  min-width: 260px;
+  border-radius: 999px;
+  padding: 0.8rem 1.5rem;
+  min-width: 240px;
+  cursor: pointer;
 }
 
-.fcta-btn-outline {
-  border: 2px solid #2f6efb;
-  color: #2f6efb;
-  background: #ffffff;
-}
+/* Primary */
 
-.fcta-btn-solid {
-  border: 0;
+.fcta-btn-primary {
   color: #ffffff;
-  background: #2f6efb;
-  box-shadow: 0 10px 22px rgba(11, 18, 32, 0.10);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.35);
+  border: 0;
 }
 
-/* desktop */
-@media (min-width: 720px) {
-  .fcta-actions {
-    gap: 14px;
+/* Secondary */
+
+.fcta-btn-secondary {
+  color: #1e3a8a;
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+}
+
+/* Hover (desktop) */
+
+@media (hover: hover) {
+  .fcta-btn-primary {
+    transition: transform 160ms ease, box-shadow 160ms ease,
+      background 160ms ease;
   }
 
-  .fcta-btn {
-    min-width: 320px;
+  .fcta-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 22px 55px rgba(37, 99, 235, 0.45);
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  }
+
+  .fcta-btn-secondary {
+    transition: transform 160ms ease, box-shadow 160ms ease,
+      border-color 160ms ease, background 160ms ease;
+  }
+
+  .fcta-btn-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+    border-color: rgba(37, 99, 235, 0.5);
+    background: #f9fbff;
   }
 }
 
-/* mobile */
+/* Desktop */
+
+@media (min-width: 900px) {
+  .fcta {
+    padding: 3.9rem 0 4.4rem;
+  }
+
+  .fcta-inner {
+    padding: 0 2.2rem;
+  }
+
+  .fcta-title {
+    font-size: 1.35rem;
+  }
+}
+
+/* Mobile */
+
 @media (max-width: 520px) {
   .fcta-inner {
-    padding: 22px 16px 38px;
+    padding: 0 1.3rem;
+  }
+
+  .fcta-title {
+    font-size: 1.18rem;
+  }
+
+  .fcta-text {
+    font-size: 0.9rem;
+  }
+
+  .fcta-actions {
+    flex-direction: column;
   }
 
   .fcta-btn {

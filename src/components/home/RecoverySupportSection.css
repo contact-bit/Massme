@@ -1,40 +1,61 @@
-/* =========================
-   RECOVERY SUPPORT SECTION
-========================= */
+/* RecoverySupportSection.css
+   Section éditoriale “récupération après vitrectomie”
+---------------------------------------------------- */
 
 .rs {
-  background: #ffffff;
+  padding: 4.6rem 0;
+  color: #0b1220;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
 }
 
 .rs-inner {
-  max-width: 1180px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 20px 20px 40px;
-  text-align: center;
+  padding: 0 1.6rem 3.2rem;
+  box-sizing: border-box;
 }
 
-/* Image montage top */
+/* Bandeau visuel haut */
+
 .rs-top-img {
   width: 100%;
   height: auto;
-  border-radius: 14px;
+  border-radius: 20px;
   display: block;
-  margin-bottom: 30px;
+  margin-bottom: 2.4rem;
+  object-fit: cover;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
 }
 
-/* Titre */
+/* Header éditorial */
+
+.rs-header {
+  text-align: left;
+  margin-bottom: 2.5rem;
+}
+
+.rs-eyebrow {
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+}
+
 .rs-title {
-  font-size: clamp(22px, 2.6vw, 30px);
-  font-weight: 900;
-  line-height: 1.25;
+  font-size: clamp(1.9rem, 3.2vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.15;
   color: #0b1220;
-  margin: 0 0 22px;
+  margin: 0 0 0.9rem;
 }
 
 .rs-brand {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.4rem;
   color: #1e63ff;
   font-weight: 900;
 }
@@ -49,68 +70,134 @@
   color: #1e63ff;
 }
 
-/* Bloc image œil */
-.rs-eye {
-  position: relative;
-  max-width: 900px;
-  margin: 0 auto;
-  height: 360px; /* ✅ nécessaire pour Image fill */
-  border-radius: 18px;
-  overflow: hidden;
-  background: #f3f4f6;
-}
-
-/* Image visible */
-.rs-eye-img {
-  object-fit: cover;
-  opacity: 0.95;
-  filter: contrast(1.05) saturate(1.05);
-}
-
-/* Zone texte par-dessus l'image */
-.rs-eye-text {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;  /* ✅ centre verticalement */
-  gap: 14px;
-  padding: 28px;
-  z-index: 2;
-}
-
-/* "pills" lisibles (fond blanc derrière le texte seulement) */
-.rs-pill {
-  margin: 0 auto;
+.rs-lead {
   max-width: 72ch;
-  font-size: 14px;
-  line-height: 1.65;
-  color: rgba(11, 18, 32, 0.86);
+  font-size: 0.97rem;
+  line-height: 1.85;
+  color: rgba(15, 23, 42, 0.9);
+}
 
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(6px);
+/* Article corps */
+
+.rs-article {
+  text-align: left;
+  margin-top: 0.9rem;
+}
+
+.rs-block-title {
+  font-size: 1.06rem;
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+  color: #0f172a;
+}
+
+.rs-block-intro {
+  font-size: 0.95rem;
+  line-height: 1.9;
+  color: rgba(15, 23, 42, 0.96);
+  margin-bottom: 1.3rem;
+}
+
+/* Liste bénéfices */
+
+.rs-list-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #0f172a;
+}
+
+.rs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.2rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.rs-list-item {
+  position: relative;
+  padding-left: 1.35rem;
+  font-size: 0.93rem;
+  line-height: 1.8;
+  color: rgba(15, 23, 42, 0.95);
+}
+
+.rs-list-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+/* Encadré d’avertissement */
+
+.rs-note {
+  margin-top: 0.8rem;
+  padding: 1rem 1.2rem;
   border-radius: 14px;
-  padding: 12px 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.98);
+}
 
-  box-shadow: 0 12px 30px rgba(11, 18, 32, 0.10);
+.rs-note-title {
+  font-size: 0.84rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 0.3rem;
+}
+
+.rs-note-text {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: rgba(15, 23, 42, 0.95);
+}
+
+/* Desktop : section qui “remplit” sans forcer */
+
+@media (min-width: 1024px) {
+  .rs {
+    padding: 4.8rem 0;
+  }
+
+  .rs-inner {
+    max-width: 1120px;
+    min-height: 70vh;
+  }
 }
 
 /* Mobile */
-@media (max-width: 600px) {
+
+@media (max-width: 640px) {
+  .rs {
+    padding: 3.5rem 0;
+    background: #ffffff;
+  }
+
   .rs-inner {
-    padding: 16px 16px 32px;
+    padding: 0 1.25rem 2.6rem;
   }
 
-  .rs-eye {
-    height: 300px;
+  .rs-top-img {
+    margin-bottom: 1.9rem;
+    border-radius: 16px;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
   }
 
-  .rs-eye-text {
-    padding: 16px;
+  .rs-title {
+    font-size: 1.8rem;
   }
 
-  .rs-pill {
-    font-size: 13px;
-    padding: 10px 12px;
+  .rs-lead,
+  .rs-block-intro,
+  .rs-list-item,
+  .rs-note-text {
+    font-size: 0.9rem;
   }
 }

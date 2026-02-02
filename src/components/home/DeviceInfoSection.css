@@ -1,85 +1,153 @@
-/* =========================
-   DEVICE INFO SECTION
-========================= */
+/* DeviceInfoSection.css
+   Fiche produit : dispositif de récupération
+------------------------------------------------ */
 
 .dev {
-  background: #ffffff;
+  padding: 3.6rem 0 4rem;
+  color: #0b1220;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
 }
 
 .dev-inner {
-  max-width: 900px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 26px 20px 34px;
-  text-align: center;
+  padding: 0 1.6rem;
+  box-sizing: border-box;
+  display: grid;
+  gap: 2.2rem;
+}
+
+/* Bloc descriptif */
+
+.dev-header {
+  text-align: left;
 }
 
 .dev-title {
-  margin: 0 0 10px;
-  font-size: 14px;
-  font-weight: 900;
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   color: #0b1220;
 }
 
 .dev-p {
-  margin: 10px auto 0;
-  max-width: 82ch;
-  font-size: 13px;
-  line-height: 1.6;
-  color: rgba(11, 18, 32, 0.74);
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: rgba(15, 23, 42, 0.88);
+}
+
+.dev-p-last {
+  margin-bottom: 0.9rem;
 }
 
 .dev-made {
-  margin-top: 10px;
-  font-size: 12px;
-  font-weight: 900;
-  color: #1e63ff;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.04);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.9);
 }
 
-/* second block */
+/* Bloc “pour qui” */
+
+.dev-audience {
+  text-align: left;
+}
+
 .dev-title2 {
-  margin: 18px 0 10px;
-  font-size: 13px;
-  font-weight: 900;
+  margin: 0 0 0.5rem;
+  font-size: 1.02rem;
+  font-weight: 750;
   color: #0b1220;
 }
 
 .dev-brand {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.35rem;
   color: #1e63ff;
+  font-weight: 800;
 }
 
 .dev-mini {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
 }
 
-/* bullets */
+.dev-bullets-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.9);
+}
+
+/* Liste */
+
 .dev-list {
-  list-style: disc;
-  padding-left: 22px;
-  margin: 0 auto;
-  max-width: 680px;
-  text-align: left; /* comme la capture */
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
-  gap: 6px;
+  gap: 0.4rem;
 }
 
 .dev-li {
-  font-size: 12.5px;
-  line-height: 1.55;
-  color: rgba(11, 18, 32, 0.74);
+  position: relative;
+  padding-left: 1.35rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: rgba(15, 23, 42, 0.88);
 }
 
-/* mobile */
-@media (max-width: 520px) {
+.dev-li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+/* Layout desktop : 2 colonnes */
+
+@media (min-width: 900px) {
   .dev-inner {
-    padding: 22px 16px 28px;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr);
+    align-items: flex-start;
+  }
+
+  .dev {
+    padding: 3.8rem 0 4.3rem;
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 640px) {
+  .dev {
+    padding: 3.2rem 0 3.6rem;
+    background: #ffffff;
+  }
+
+  .dev-inner {
+    padding: 0 1.25rem;
   }
 
   .dev-title {
-    font-size: 13px;
+    font-size: 1.15rem;
+  }
+
+  .dev-p,
+  .dev-li {
+    font-size: 0.9rem;
   }
 }

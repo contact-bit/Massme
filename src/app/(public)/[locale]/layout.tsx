@@ -1,11 +1,10 @@
-import { ReactNode } from "react";
+// src/app/(public)/[locale]/layout.tsx
+import type { ReactNode } from "react";
 
-/* TOKENS & THEMES */
 import "@/styles/tokens.css";
 import "@/styles/themes.css";
 import "@/styles/utilities.css";
 
-/* COMPONENTS */
 import "@/styles/components/buttons.css";
 import "@/styles/components/navbar.css";
 import "@/styles/components/footer.css";
@@ -13,7 +12,6 @@ import "@/styles/components/cartDrawer.css";
 import "@/styles/components/productCard.css";
 import "@/styles/components/productList.css";
 
-/* PAGES */
 import "@/styles/pages/home.css";
 import "@/styles/pages/products.css";
 import "@/styles/pages/checkout.css";
@@ -23,10 +21,9 @@ import "@/styles/pages/blog.css";
 import "@/styles/pages/about.css";
 import "@/styles/pages/besoins.css";
 
-import Navbar from "@/components/Navbar";
-// import CartDrawer from "@/components/CartDrawer";
-import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer"; // adapte le chemin
 
 interface LayoutProps {
   children: ReactNode;
@@ -39,12 +36,11 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
 
   return (
     <CartProvider>
-      <Navbar />
-      {/* Panier latéral désactivé pour ce projet.
-          Pour le réactiver dans une autre boutique :
-          <CartDrawer /> */}
-      <main>{children}</main>
-      <Footer />
+      <div className="public-shell">
+        <Navbar locale={safeLocale} />
+        <main className="public-main">{children}</main>
+        <Footer />
+      </div>
     </CartProvider>
   );
 }

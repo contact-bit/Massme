@@ -1,0 +1,13 @@
+:root {
+  --vm-blue: #1e6dff;
+  --vm-blue-light: #a8d4ff;
+  --vm-bg-dark: #020617;
+  --vm-text: #ffffff;
+  --vm-text-muted: #cbd5f5;
+
+  --vm-radius-lg: 24px;
+  --vm-radius-md: 16px;
+  --vm-radius-sm: 10px;
+
+  --vm-shadow-soft: 0 18px 45px rgba(7, 14, 35, 0.7);
+}

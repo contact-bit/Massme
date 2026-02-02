@@ -1,14 +1,14 @@
 "use client";
 
+import "./products-client.css";
+
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useCart } from "@/context/CartContext";
 import { MARKET_BY_LOCALE, Locale, Market } from "@/lib/market";
-import "./products-client.css";
 
 /* =====================================================
    UI TEXT
@@ -18,7 +18,7 @@ const UI: Record<
   Locale,
   {
     noProduct: string;
-    view: string;
+    loading: string;
     add: string;
     priceHT: string;
     vat: string;
@@ -27,11 +27,13 @@ const UI: Record<
     extraCover: string;
     yes: string;
     no: string;
+    heroTitle: string;
+    heroSubtitle: string;
   }
 > = {
   fr: {
-    noProduct: "Aucun produit disponible.",
-    view: "Voir le produit →",
+    noProduct: "Aucun produit disponible pour le moment.",
+    loading: "Chargement des produits...",
     add: "Ajouter au panier 🛒",
     priceHT: "Prix HT",
     vat: "TVA",
@@ -40,10 +42,13 @@ const UI: Record<
     extraCover: "Housse supplémentaire bambou",
     yes: "Oui",
     no: "Non",
+    heroTitle: "Découvrez le dispositif VitectroMed",
+    heroSubtitle:
+      "Une solution pensée pour accompagner la convalescence après vitrectomie, avec une gestion claire des modèles, options et prix selon votre pays.",
   },
   en: {
-    noProduct: "No product available.",
-    view: "View product →",
+    noProduct: "No product available at the moment.",
+    loading: "Loading products...",
     add: "Add to cart 🛒",
     priceHT: "Price excl. VAT",
     vat: "VAT",
@@ -52,10 +57,13 @@ const UI: Record<
     extraCover: "Extra bamboo cover",
     yes: "Yes",
     no: "No",
+    heroTitle: "Discover the VitectroMed device",
+    heroSubtitle:
+      "A dedicated solution to support recovery after vitrectomy, with clear models, options and pricing adapted to your country.",
   },
   es: {
-    noProduct: "No hay productos disponibles.",
-    view: "Ver producto →",
+    noProduct: "No hay productos disponibles por el momento.",
+    loading: "Cargando productos...",
     add: "Añadir al carrito 🛒",
     priceHT: "Precio sin IVA",
     vat: "IVA",
@@ -64,22 +72,28 @@ const UI: Record<
     extraCover: "Funda adicional de bambú",
     yes: "Sí",
     no: "No",
+    heroTitle: "Descubre el dispositivo VitectroMed",
+    heroSubtitle:
+      "Una solución pensada para acompañar la recuperación tras vitrectomía, con modelos, opciones y precios adaptados a tu país.",
   },
   de: {
-    noProduct: "Kein Produkt verfügbar.",
-    view: "Produkt ansehen →",
+    noProduct: "Derzeit ist kein Produkt verfügbar.",
+    loading: "Produkte werden geladen...",
     add: "In den Warenkorb 🛒",
-    priceHT: "Preis exkl. MwSt",
-    vat: "MwSt",
-    priceTTC: "Preis inkl. MwSt",
+    priceHT: "Preis exkl. MwSt.",
+    vat: "MwSt.",
+    priceTTC: "Preis inkl. MwSt.",
     chooseVariant: "Wähle dein Modell",
     extraCover: "Zusätzlicher Bambusbezug",
     yes: "Ja",
     no: "Nein",
+    heroTitle: "Entdecken Sie das VitectroMed‑Hilfsmittel",
+    heroSubtitle:
+      "Eine Lösung zur Unterstützung der Erholung nach Vitrektomie – mit klaren Modellen, Optionen und Preisen je nach Land.",
   },
   it: {
-    noProduct: "Nessun prodotto disponibile.",
-    view: "Vedi prodotto →",
+    noProduct: "Nessun prodotto disponibile al momento.",
+    loading: "Caricamento dei prodotti...",
     add: "Aggiungi al carrello 🛒",
     priceHT: "Prezzo IVA esclusa",
     vat: "IVA",
@@ -88,30 +102,24 @@ const UI: Record<
     extraCover: "Federa aggiuntiva in bambù",
     yes: "Sì",
     no: "No",
+    heroTitle: "Scopri il dispositivo VitectroMed",
+    heroSubtitle:
+      "Una soluzione pensata per supportare la convalescenza dopo vitrectomia, con modelli, opzioni e prezzi adattati al tuo paese.",
   },
   nl: {
-    noProduct: "Geen product beschikbaar.",
-    view: "Bekijk product →",
+    noProduct: "Momenteel is er geen product beschikbaar.",
+    loading: "Producten worden geladen...",
     add: "Toevoegen aan winkelwagen 🛒",
     priceHT: "Prijs excl. btw",
     vat: "BTW",
     priceTTC: "Prijs incl. btw",
     chooseVariant: "Kies je model",
-    extraCover: "Extra bamboe hoes",
+    extraCover: "Extra bamboehoes",
     yes: "Ja",
     no: "Nee",
-  },
-  pt: {
-    noProduct: "Nenhum produto disponível.",
-    view: "Ver produto →",
-    add: "Adicionar ao carrinho 🛒",
-    priceHT: "Preço sem IVA",
-    vat: "IVA",
-    priceTTC: "Preço com IVA",
-    chooseVariant: "Escolha o seu modèle",
-    extraCover: "Capa adicional de bambu",
-    yes: "Sim",
-    no: "Não",
+    heroTitle: "Ontdek het VitectroMed‑hulpmiddel",
+    heroSubtitle:
+      "Een oplossing ter ondersteuning van het herstel na vitrectomie, met duidelijke modellen, opties en prijzen per land.",
   },
 };
 
@@ -150,7 +158,6 @@ type Product = {
   isActive?: boolean;
 
   markets: Market[];
-
   pricesByMarket: Record<Market, number>;
   vatByMarket: Record<Market, VatConfig>;
 
@@ -218,6 +225,7 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
   const [extraCoverChoice, setExtraCoverChoice] = useState<
     Record<string, boolean>
   >({});
+  const [loading, setLoading] = useState(true);
 
   const { addItem } = useCart();
   const router = useRouter();
@@ -230,6 +238,7 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
   /* ---------------- LOAD PRODUCTS ---------------- */
   useEffect(() => {
     async function load() {
+      setLoading(true);
       const snap = await getDocs(collection(db, "products"));
 
       const all = snap.docs.map((d) => ({
@@ -245,21 +254,14 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
       );
 
       setProducts(filtered);
+      setLoading(false);
     }
 
     load();
   }, [market]);
 
-  /* ---------------- NO PRODUCT ---------------- */
-  if (!products.length) {
-    return (
-      <main className="products-page">
-        <p className="text-center">{T.noProduct}</p>
-      </main>
-    );
-  }
-
   /* ---------------- HANDLERS ---------------- */
+
   const handleSelectVariant = (productId: string, variantId: string) => {
     setSelectedVariants((prev) => ({ ...prev, [productId]: variantId }));
   };
@@ -268,7 +270,6 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
     setExtraCoverChoice((prev) => ({ ...prev, [productId]: enabled }));
   };
 
-  /* ---------------- ADD TO CART + REDIRECT ---------------- */
   const addToCartAndGoCheckout = (p: Product) => {
     const baseName = pickLocaleValue(p.name, safeLocale);
     const desc = pickLocaleValue(p.description, safeLocale);
@@ -354,9 +355,30 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
   };
 
   /* ---------------- RENDER ---------------- */
+
   return (
-    <main className="products-page products-grid">
-      {products.map((p) => {
+    <main className="products-page">
+      <header className="products-header">
+        <p className="products-eyebrow">VitectroMed · Vitrectomy support</p>
+        <h1 className="products-title">{T.heroTitle}</h1>
+        <p className="products-subtitle">{T.heroSubtitle}</p>
+      </header>
+
+      {loading && (
+        <div className="products-loading">
+          <span className="loader" />
+          <p>{T.loading}</p>
+        </div>
+      )}
+
+      {!loading && !products.length && (
+        <section className="products-empty">
+          <p>{T.noProduct}</p>
+        </section>
+      )}
+
+      {!loading && products.length > 0 && (() => {
+        const p = products[0]; // mono‑produit
         const name = pickLocaleValue(p.name, safeLocale);
         const desc = pickLocaleValue(p.description, safeLocale);
 
@@ -378,14 +400,12 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
         const selectedVariantId =
           selectedVariants[p.id] || variantsForMarket[0]?.id || null;
 
-        // image dynamique selon variante
         const imageSrc = getVariantImage(
           p,
           variantsForMarket,
           selectedVariantId
         );
 
-        // prix
         let displayPriceHT = getPriceHT(p.pricesByMarket, market);
         let displayVat = getVat(p.vatByMarket, market);
 
@@ -404,10 +424,7 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
 
         let displayPriceWithAddonHT = displayPriceHT;
         if (addonSelected) {
-          const addonPriceHT = getPriceHT(
-            addonSelected.pricesByMarket,
-            market
-          );
+          const addonPriceHT = getPriceHT(addonSelected.pricesByMarket, market);
           displayPriceWithAddonHT += addonPriceHT;
         }
 
@@ -417,7 +434,8 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
         const priceTTC = round2(displayPriceWithAddonHT + vatAmount);
 
         return (
-          <article key={p.id} className="product-card">
+          <section className="product-card">
+            {/* IMAGE */}
             <div className="product-img-wrapper">
               <Image
                 src={imageSrc}
@@ -427,150 +445,146 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
               />
             </div>
 
-            <h2 className="product-title">{name}</h2>
+            {/* CONTENU */}
+            <div className="product-body">
+              <h2 className="product-title">{name}</h2>
+              {desc && <p className="product-desc">{desc}</p>}
 
-            {desc && <p className="product-desc">{desc}</p>}
-
-            {hasVariants && (
-              <div className="product-variants-block">
-                <p className="product-variants-label">
-                  {T.chooseVariant} :
-                </p>
-                <div className="product-variants-list">
-                  {variantsForMarket.map((v) => (
-                    <button
-                      key={v.id}
-                      type="button"
-                      className={
-                        selectedVariantId === v.id
-                          ? "variant-pill active"
-                          : "variant-pill"
-                      }
-                      onClick={() => handleSelectVariant(p.id, v.id)}
-                    >
-                      {v.imageUrl && (
-                        <span className="variant-thumb">
-                          <Image
-                            src={v.imageUrl}
-                            alt={v.label}
-                            width={40}
-                            height={40}
-                          />
-                        </span>
-                      )}
-                      <span className="variant-label">{v.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {hasAddons && (
-              <div className="product-addon-block">
-                {(() => {
-                  const firstAddon = addonsForMarket[0];
-                  const addonVat = firstAddon
-                    ? getVat(firstAddon.vatByMarket, market)
-                    : { enabled: false, rate: 0 };
-                  const addonPriceHT = firstAddon
-                    ? getPriceHT(firstAddon.pricesByMarket, market)
-                    : 0;
-                  const addonVatAmount =
-                    firstAddon && addonVat.enabled
-                      ? round2((addonPriceHT * addonVat.rate) / 100)
-                      : 0;
-                  const addonPriceTTC = round2(
-                    addonPriceHT + addonVatAmount
-                  );
-
-                  return (
-                    <>
-                      <p className="product-addon-label">
-                        {T.extraCover} :
-                        {firstAddon && (
-                          <span>
-                            {" "}
-                            (+{addonPriceHT.toFixed(2)} € HT
-                            {addonVat.enabled &&
-                              ` | TVA ${addonVat.rate}%: ${addonVatAmount.toFixed(
-                                2
-                              )} € | ${addonPriceTTC.toFixed(2)} € TTC`}
-                            )
+              {hasVariants && (
+                <div className="product-variants-block">
+                  <p className="product-variants-label">
+                    {T.chooseVariant} :
+                  </p>
+                  <div className="product-variants-list">
+                    {variantsForMarket.map((v) => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        className={
+                          selectedVariantId === v.id
+                            ? "variant-pill active"
+                            : "variant-pill"
+                        }
+                        onClick={() => handleSelectVariant(p.id, v.id)}
+                      >
+                        {v.imageUrl && (
+                          <span className="variant-thumb">
+                            <Image
+                              src={v.imageUrl}
+                              alt={v.label}
+                              width={40}
+                              height={40}
+                            />
                           </span>
                         )}
-                      </p>
-
-                      <div className="product-addon-toggle">
-                        <button
-                          type="button"
-                          className={
-                            extraCoverChoice[p.id]
-                              ? "addon-pill"
-                              : "addon-pill active"
-                          }
-                          onClick={() => handleExtraCover(p.id, false)}
-                        >
-                          {T.no}
-                        </button>
-                        <button
-                          type="button"
-                          className={
-                            extraCoverChoice[p.id]
-                              ? "addon-pill active"
-                              : "addon-pill"
-                          }
-                          onClick={() => handleExtraCover(p.id, true)}
-                        >
-                          {T.yes}
-                        </button>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            )}
-
-            <div className="product-prices">
-              <p>
-                <strong>{T.priceHT} :</strong>{" "}
-                {displayPriceWithAddonHT.toFixed(2)} €
-              </p>
-
-              {vatAmount > 0 && (
-                <>
-                  <p>
-                    <strong>
-                      {T.vat} ({displayVat.rate}%):
-                    </strong>{" "}
-                    {vatAmount.toFixed(2)} €
-                  </p>
-
-                  <p className="price-ttc">
-                    <strong>{T.priceTTC} :</strong>{" "}
-                    {priceTTC.toFixed(2)} €
-                  </p>
-                </>
+                        <span className="variant-label">{v.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
-            </div>
 
-            <div className="product-actions">
-              <Link
-                href={`/${safeLocale}/products/${p.id}`}
-                className="btn btn-secondary"
-              >
-                {T.view}
-              </Link>
+              {hasAddons && (
+                <div className="product-addon-block">
+                  {(() => {
+                    const firstAddon = addonsForMarket[0];
+                    const addonVat = firstAddon
+                      ? getVat(firstAddon.vatByMarket, market)
+                      : { enabled: false, rate: 0 };
+                    const addonPriceHT = firstAddon
+                      ? getPriceHT(firstAddon.pricesByMarket, market)
+                      : 0;
+                    const addonVatAmount =
+                      firstAddon && addonVat.enabled
+                        ? round2((addonPriceHT * addonVat.rate) / 100)
+                        : 0;
+                    const addonPriceTTC = round2(
+                      addonPriceHT + addonVatAmount
+                    );
 
-              <button
-                onClick={() => addToCartAndGoCheckout(p)}
-                className="btn btn-primary"
-              >
-                {T.add}
-              </button>
+                    return (
+                      <>
+                        <p className="product-addon-label">
+                          {T.extraCover} :
+                          {firstAddon && (
+                            <span>
+                              {" "}
+                              (+{addonPriceHT.toFixed(2)} € HT
+                              {addonVat.enabled &&
+                                ` | TVA ${addonVat.rate}%: ${addonVatAmount.toFixed(
+                                  2
+                                )} € | ${addonPriceTTC.toFixed(
+                                  2
+                                )} € TTC`}
+                              )
+                            </span>
+                          )}
+                        </p>
+
+                        <div className="product-addon-toggle">
+                          <button
+                            type="button"
+                            className={
+                              extraCoverChoice[p.id]
+                                ? "addon-pill"
+                                : "addon-pill active"
+                            }
+                            onClick={() => handleExtraCover(p.id, false)}
+                          >
+                            {T.no}
+                          </button>
+                          <button
+                            type="button"
+                            className={
+                              extraCoverChoice[p.id]
+                                ? "addon-pill active"
+                                : "addon-pill"
+                            }
+                            onClick={() => handleExtraCover(p.id, true)}
+                          >
+                            {T.yes}
+                          </button>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+
+              <div className="product-prices">
+                <p>
+                  <strong>{T.priceHT} :</strong>{" "}
+                  {displayPriceWithAddonHT.toFixed(2)} €
+                </p>
+
+                {vatAmount > 0 && (
+                  <>
+                    <p>
+                      <strong>
+                        {T.vat} ({displayVat.rate}%):
+                      </strong>{" "}
+                      {vatAmount.toFixed(2)} €
+                    </p>
+
+                    <p className="price-ttc">
+                      <strong>{T.priceTTC} :</strong> {priceTTC.toFixed(2)} €
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className="product-actions">
+                <button
+                  onClick={() => addToCartAndGoCheckout(p)}
+                  className="btn btn-primary"
+                >
+                  {T.add}
+                </button>
+              </div>
             </div>
-          </article>
+          </section>
         );
-      })}
+      })()}
     </main>
   );
 }

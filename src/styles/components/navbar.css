@@ -1,378 +1,269 @@
 /* -----------------------------------------
-   NAVBAR — OculaRest / DA Premium
-   ✔ Desktop + Mobile
-   ✔ Dropdown langues (flags)
-   ✔ UX e-commerce premium
+   NAVBAR — VitectroMed
 ------------------------------------------ */
 
-/* =========================
-   SITE NOTICE
-========================= */
 .site-notice {
   width: 100%;
-  background: #f1f6ff;
-  color: #1e63ff;
+  background: linear-gradient(90deg, #e0edff, #f5f7ff);
+  color: #1e40af;
   text-align: center;
-  font-size: 12px;
+  font-size: 0.78rem;
   font-weight: 700;
-  padding: 7px 12px;
-  border-bottom: 1px solid rgba(30, 99, 255, 0.15);
-  z-index: 100;
+  padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.18);
+  z-index: 40;
 }
 
-/* =========================
-   NAVBAR WRAPPER
-========================= */
 .navbar {
   position: sticky;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(32, 27, 27, 0.08);
-  box-shadow: 0 8px 24px rgba(32, 27, 27, 0.06);
+
+  width: 100%;
+  backdrop-filter: blur(14px);
+  border-: 1px solid rgba(15, 23, 42, 0.06);
 }
 
-/* Container */
 .navbar-container {
-  max-width: 1280px;
+  max-width: 90%;
   margin: 0 auto;
-  padding: 14px 16px;
+  padding: 0.7rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 0.9rem;
 }
 
-/* =========================
-   RESPONSIVE VISIBILITY
-========================= */
-.nav-mobile-only {
-  display: block;
-}
+/* MOBILE FIRST – par défaut on cache la nav desktop */
+
 .nav-desktop {
-  display: none;
+  display: none !important;
 }
+
+.nav-mobile-only {
+  display: block !important;
+}
+
+/* Desktop à partir de 768px */
 
 @media (min-width: 768px) {
-  .nav-mobile-only {
-    display: none !important;
-  }
   .nav-desktop {
     display: flex !important;
     align-items: center;
-    gap: 18px;
+    gap: 1.3rem;
+  }
+
+  .nav-mobile-only {
+    display: none !important;
   }
 }
 
-/* =========================
-   LOGO
-========================= */
+/* Logo */
+
 .navbar-logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.6rem;
   text-decoration: none;
-  font-family: var(--font-title);
-  font-weight: 800;
-  letter-spacing: -0.4px;
 }
 
 .navbar-logo-img {
-  width: 62px;
-  height: 62px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
 }
 
-/* =========================
-   DESKTOP NAV LINKS
-========================= */
+/* Liens desktop */
+
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 0.7rem;
 }
 
 .nav-link {
   font-family: var(--font-main);
   color: var(--color-text);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 650;
   text-decoration: none;
-  padding: 8px 10px;
+  padding: 0.4rem 0.65rem;
   border-radius: 999px;
-  transition: background var(--transition-fast),
+  transition:
+    background var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
 .nav-link:hover {
-  background: rgba(42, 113, 255, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   color: var(--color-primary);
   transform: translateY(-1px);
 }
 
-/* =========================
-   LANG DROPDOWN (FLAGS)
-========================= */
+/* Lang desktop */
+
 .nav-lang-wrapper {
   position: relative;
   display: inline-flex;
 }
 
 .nav-lang-btn {
-  background: var(--color-bg-alt);
-  border: 1px solid rgba(32, 27, 27, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 999px;
-  padding: 8px 10px;
-
+  padding: 0.4rem 0.6rem;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-
+  gap: 0.45rem;
   cursor: pointer;
-  font-size: 16px;
-
-  transition: background var(--transition-fast),
+  font-size: 0.96rem;
+  background: #f8fafc;
+  transition:
+    background var(--transition-fast),
     border var(--transition-fast),
     transform var(--transition-fast);
 }
 
 .nav-lang-btn:hover {
-  background: rgba(42, 113, 255, 0.1);
-  border-color: rgba(42, 113, 255, 0.22);
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.26);
   transform: translateY(-1px);
 }
 
 .nav-lang-flag {
-  font-size: 18px;
+  font-size: 1.1rem;
   line-height: 1;
 }
 
-/* Dropdown */
 .nav-lang-dropdown {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
   min-width: 220px;
-
-  background: #fff;
-  border: 1px solid rgba(32, 27, 27, 0.1);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 16px;
-  box-shadow: 0 18px 40px rgba(32, 27, 27, 0.14);
-
-  padding: 8px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+  padding: 0.5rem;
   z-index: 1000;
-
   animation: fadeIn 0.16s ease-out;
 }
 
 .nav-lang-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-
+  gap: 0.6rem;
   text-decoration: none;
   font-family: var(--font-main);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 800;
   color: var(--color-text);
-
-  padding: 10px 12px;
+  padding: 0.55rem 0.6rem;
   border-radius: 12px;
-
-  transition: background var(--transition-fast),
+  transition:
+    background var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
 .nav-lang-item:hover {
-  background: rgba(42, 113, 255, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   color: var(--color-primary);
   transform: translateX(2px);
 }
 
-/* =========================
-   CART BUTTON
-========================= */
-.nav-cart-btn {
-  position: relative;
+/* Burger mobile */
+
+.navbar-mobile-btn {
   width: 40px;
   height: 40px;
-
-  border: none;
-  background: transparent;
   border-radius: 999px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  cursor: pointer;
-  color: var(--color-text);
-
-  transition: background var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.nav-cart-btn:hover {
-  background: rgba(42, 113, 255, 0.1);
-  transform: translateY(-1px);
-}
-
-.nav-cart-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-
-  min-width: 18px;
-  height: 18px;
-  padding: 0 6px;
-
-  border-radius: 999px;
-  background: var(--color-primary);
-  color: #fff;
-
-  font-size: 11px;
-  font-weight: 950;
-
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  border: 2px solid #fff;
-  box-shadow: 0 10px 18px rgba(42, 113, 255, 0.28);
-}
-
-/* =========================
-   MOBILE BURGER
-========================= */
-.navbar-mobile-btn {
-  width: 44px;
-  height: 44px;
-
-  border-radius: 999px;
-  border: 1px solid rgba(32, 27, 27, 0.08);
-  background: var(--color-bg-alt);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 22px;
+  font-size: 1.35rem;
   cursor: pointer;
-
-  transition: background var(--transition-fast),
+  transition:
+    background var(--transition-fast),
     border var(--transition-fast),
     transform var(--transition-fast);
 }
 
 .navbar-mobile-btn:hover {
-  background: rgba(42, 113, 255, 0.1);
-  border-color: rgba(42, 113, 255, 0.22);
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.22);
   transform: translateY(-1px);
 }
 
-/* =========================
-   MOBILE MENU
-========================= */
+/* Mobile menu */
+
 .mobile-menu {
-  background: #fff;
-  border-top: 1px solid rgba(32, 27, 27, 0.08);
-  padding: 12px;
+  background: #ffffff;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 0.6rem 0.8rem 0.85rem;
   animation: fadeIn 0.18s ease-out;
 }
 
 .mobile-link {
   display: block;
   text-decoration: none;
-
   font-family: var(--font-main);
-  font-size: 1rem;
+  font-size: 0.98rem;
   font-weight: 900;
   color: var(--color-text);
-
-  padding: 12px;
+  padding: 0.7rem 0.7rem;
   border-radius: 14px;
-
-  transition: background var(--transition-fast),
+  transition:
+    background var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
 .mobile-link:hover {
-  background: rgba(42, 113, 255, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   color: var(--color-primary);
   transform: translateX(2px);
 }
 
-/* Languages (mobile) */
+/* Langues mobile */
+
 .mobile-lang-list {
-  margin-top: 12px;
-  padding: 10px;
+  margin-top: 0.65rem;
+  padding: 0.6rem;
   border-radius: 16px;
-  background: rgba(246, 245, 245, 0.55);
-  border: 1px solid rgba(32, 27, 27, 0.06);
+  background: rgba(248, 250, 252, 0.95);
+  border: 1px solid rgba(15, 23, 42, 0.06);
   display: grid;
-  gap: 6px;
+  gap: 0.35rem;
 }
 
 .mobile-lang-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-
+  gap: 0.6rem;
   font-weight: 900;
   text-decoration: none;
   color: var(--color-text);
-
-  padding: 12px;
+  padding: 0.6rem 0.7rem;
   border-radius: 14px;
-
-  transition: background var(--transition-fast),
+  transition:
+    background var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
 .mobile-lang-item:hover {
-  background: rgba(42, 113, 255, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   color: var(--color-primary);
   transform: translateX(2px);
 }
 
-/* Mobile cart */
-.mobile-cart {
-  width: 100%;
-  margin-top: 10px;
+/* Animation */
 
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(32, 27, 27, 0.08);
-
-  background: rgba(42, 113, 255, 0.1);
-  color: var(--color-primary);
-  font-weight: 950;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-
-  cursor: pointer;
-  transition: background var(--transition-fast),
-    border var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.mobile-cart:hover {
-  background: rgba(42, 113, 255, 0.14);
-  border-color: rgba(42, 113, 255, 0.22);
-  transform: translateY(-1px);
-}
-
-/* =========================
-   ANIMATION
-========================= */
 @keyframes fadeIn {
   from {
     opacity: 0;

@@ -1,40 +1,59 @@
-/* =========================
-   CREDIBILITY STRIP
-========================= */
+/* CredibilityStrip.css — version simple, propre et responsive */
 
 .cred {
-  background: #ffffff;
+  padding: 2.5rem 0;
+  color: #0b1220;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
 }
 
 .cred-inner {
-  max-width: 1180px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 14px 20px 10px;
-  text-align: center;
+  padding: 0 1.5rem;
 }
 
-/* Ligne 1 */
-.cred-line1 {
-  display: inline-flex;
+/* Bande du haut */
+
+.cred-top {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+/* Ligne 1 (coussin vitrectomie + logo) */
+
+.cred-line1 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
   line-height: 1.2;
 }
 
 .cred-muted {
-  color: rgba(11, 18, 32, 0.65);
+  color: rgba(15, 23, 42, 0.65);
 }
 
 .cred-brand {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.35rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #f9fafb;
 }
 
 .cred-brand-text {
-  font-weight: 700;
-  color: #1e63ff;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .cred-brand-logo {
@@ -44,53 +63,171 @@
 }
 
 .cred-logo-img {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
+  border-radius: 999px;
 }
 
-/* Ligne 2 */
+/* Ligne 2 (texte CE) */
+
 .cred-line2 {
-  margin: 8px auto 10px;
-  font-size: 13px;
-  line-height: 1.35;
-  color: rgba(11, 18, 32, 0.75);
-  max-width: 820px;
+  flex: 1;
+  text-align: center;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: #0f172a;
 }
 
 .cred-highlight {
-  font-weight: 800;
-  color: #12b76a; /* vert "medical" */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #047857;
 }
 
-/* CE */
-.cred-ce {
-  display: flex;
-  justify-content: center;
+/* Pastille CE à droite */
+
+.cred-ce-pill {
+  display: inline-flex;
   align-items: center;
-  padding-top: 4px;
+  gap: 0.45rem;
+  padding: 0.2rem 0.55rem 0.2rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, 0.06);
+  border: 1px solid rgba(22, 163, 74, 0.3);
 }
 
 .cred-ce-img {
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
-  opacity: 0.95;
 }
 
-/* Mobile */
-@media (max-width: 420px) {
-  .cred-inner {
-    padding: 12px 16px 8px;
+.cred-ce-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #047857;
+}
+
+/* Bloc explicatif bas */
+
+.cred-body {
+  display: grid;
+  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.7fr);
+  gap: 1.75rem;
+  margin-top: 1.8rem;
+}
+
+.cred-main {
+  max-width: 640px;
+}
+
+.cred-expl-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.5rem;
+  color: #0b1220;
+}
+
+.cred-expl-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(15, 23, 42, 0.8);
+}
+
+/* Colonne liste */
+
+.cred-side {
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.cred-expl-subtitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #0b1220;
+}
+
+.cred-expl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cred-expl-item {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: rgba(15, 23, 42, 0.8);
+}
+
+.cred-expl-item + .cred-expl-item {
+  margin-top: 0.25rem;
+}
+
+.cred-expl-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #16a34a;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .cred-top {
+    flex-direction: column;
+    align-items: flex-start;
+    border-radius: 1rem;
   }
 
-  .cred-line1,
   .cred-line2 {
-    font-size: 12px;
+    text-align: left;
   }
 
-  .cred-ce-img {
-    width: 34px;
-    height: 34px;
+  .cred-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cred-side {
+    margin-top: 0.4rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .cred {
+    padding: 2rem 0;
+  }
+
+  .cred-inner {
+    padding: 0 1.1rem;
+  }
+
+  .cred-top {
+    padding: 0.8rem 0.9rem;
+  }
+
+  .cred-line1 {
+    font-size: 0.78rem;
+  }
+
+  .cred-line2 {
+    font-size: 0.8rem;
+  }
+
+  .cred-expl-title {
+    font-size: 1.02rem;
+  }
+
+  .cred-expl-text,
+  .cred-expl-item {
+    font-size: 0.86rem;
   }
 }

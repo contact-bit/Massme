@@ -1,10 +1,10 @@
 :root {
-  /* 🎨 Couleurs principales - STYLE C (bleu moderne) */
-  --color-primary: #2563eb;        /* bleu principal */
-  --color-primary-light: #3b82f6;  /* survol / accent */
-  --color-primary-dark: #1d4ed8;   /* clic / état actif */
+  /* 🎨 Couleurs principales */
+  --color-primary: #2563eb;
+  --color-primary-light: #3b82f6;
+  --color-primary-dark: #1d4ed8;
 
-  --color-secondary: #111827;      /* gris très foncé pour texte/titres */
+  --color-secondary: #111827;
 
   /* Neutres */
   --color-bg: #ffffff;
@@ -41,4 +41,13 @@
   /* Transitions */
   --transition-fast: 0.15s ease;
   --transition: 0.25s ease;
+
+  /* ---------- Thème HERO VitectroMed ---------- */
+  --vm-text: #000000;          /* texte principal noir */
+  --vm-text-muted: #4b5563;    /* texte secondaire gris foncé */
+  --vm-blue: #2563eb;
+  --vm-blue-light: #3b82f6;
+  --vm-bg-dark: #020617;
+  --vm-radius-lg: 16px;
+  --vm-shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.35);
 }

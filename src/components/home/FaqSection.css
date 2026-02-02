@@ -1,63 +1,88 @@
 /* =========================
-   FAQ
+   FAQ – vitrectomie & position bulle
 ========================= */
 
 .faq {
-  background: #ffffff;
+  padding: 3.4rem 0 4rem;
+  color: #0b1220;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
 }
 
 .faq-inner {
   max-width: 980px;
   margin: 0 auto;
-  padding: 22px 20px 40px;
+  padding: 0 1.6rem 2.8rem;
   text-align: center;
 }
 
+/* Header */
+
+.faq-header {
+  margin-bottom: 2rem;
+}
+
 .faq-title {
-  margin: 0 0 14px;
+  margin: 0 0 0.45rem;
   font-weight: 900;
   color: #0b1220;
-  font-size: 14px;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
+
+.faq-intro {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: rgba(11, 18, 32, 0.78);
+}
+
+/* Liste des questions */
 
 .faq-list {
   display: grid;
-  gap: 12px;
+  gap: 0.75rem;
 }
+
+/* Item */
 
 .faq-item {
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
 }
 
-/* bouton bleu */
+/* Bouton question */
+
 .faq-btn {
   width: 100%;
   border: 0;
   cursor: pointer;
-  background: #2f6efb;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
   color: #ffffff;
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 14px 14px 0 0;
+  padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  box-shadow: 0 10px 22px rgba(11, 18, 32, 0.10);
+  gap: 0.75rem;
 }
 
 .faq-q {
-  font-size: 12.5px;
-  line-height: 1.35;
+  font-size: 0.86rem;
+  line-height: 1.4;
   font-weight: 800;
-  text-align: center;         /* comme la capture */
+  text-align: left;
   flex: 1;
 }
 
 .faq-chevron {
   flex: 0 0 auto;
-  font-size: 14px;
-  opacity: 0.95;
+  font-size: 0.9rem;
+  opacity: 0.96;
   transition: transform 180ms ease;
 }
 
@@ -65,7 +90,8 @@
   transform: rotate(180deg);
 }
 
-/* panel */
+/* Panel réponse */
+
 .faq-panel {
   overflow: hidden;
   transition: max-height 220ms ease;
@@ -73,23 +99,69 @@
 }
 
 .faq-a {
-  padding: 12px 14px 14px;
+  padding: 0.85rem 1rem 0.95rem;
   text-align: left;
-  font-size: 12.5px;
-  line-height: 1.6;
-  color: rgba(11, 18, 32, 0.75);
-  border: 1px solid rgba(11, 18, 32, 0.08);
-  border-top: 0;
-  border-radius: 0 0 12px 12px;
+  font-size: 0.86rem;
+  line-height: 1.75;
+  color: rgba(11, 18, 32, 0.84);
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
 }
 
-/* mobile */
+/* Hover (desktop) */
+
+@media (hover: hover) {
+  .faq-btn {
+    transition: background 160ms ease, box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+
+  .faq-btn:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+    box-shadow: 0 18px 46px rgba(15, 23, 42, 0.3);
+    transform: translateY(-1px);
+  }
+}
+
+/* Desktop */
+
+@media (min-width: 900px) {
+  .faq {
+    padding: 3.6rem 0 4.2rem;
+  }
+
+  .faq-inner {
+    padding-bottom: 3rem;
+  }
+
+  .faq-list {
+    gap: 0.85rem;
+  }
+
+  .faq-a {
+    font-size: 0.88rem;
+  }
+}
+
+/* Mobile */
+
 @media (max-width: 520px) {
   .faq-inner {
-    padding: 18px 14px 34px;
+    padding: 0 1.15rem 2.4rem;
+  }
+
+  .faq-title {
+    font-size: 1.04rem;
+  }
+
+  .faq-intro {
+    font-size: 0.88rem;
   }
 
   .faq-q {
-    font-size: 12px;
+    font-size: 0.84rem;
+  }
+
+  .faq-a {
+    font-size: 0.84rem;
   }
 }

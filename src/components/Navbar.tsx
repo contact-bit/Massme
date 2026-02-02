@@ -5,20 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "@/styles/components/navbar.css";
 
-/* =====================================================
-   CONFIG
-===================================================== */
-
 const LOGO_URL =
   "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/500df708-673d-4a48-549d-d1b311a8e600/public";
 
 type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
-const LANGUAGES: {
-  code: Locale;
-  label: string;
-  flag: string;
-}[] = [
+const LANGUAGES: { code: Locale; label: string; flag: string }[] = [
   { code: "fr", label: "Français", flag: "🇫🇷" },
   { code: "en", label: "English", flag: "🇬🇧" },
   { code: "es", label: "Español", flag: "🇪🇸" },
@@ -104,10 +96,6 @@ const TRANSLATIONS: Record<
   },
 };
 
-/* =====================================================
-   COMPONENT
-===================================================== */
-
 export default function Navbar() {
   const pathname = usePathname();
 
@@ -115,22 +103,18 @@ export default function Navbar() {
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
 
-  /* -------- Locale depuis URL -------- */
   const rawLocale = pathname?.split("/")[1];
-  const locale: Locale = LANGUAGES.some((l) => l.code === rawLocale)
-    ? (rawLocale as Locale)
-    : "fr";
+  const locale: Locale =
+    LANGUAGES.some((l) => l.code === rawLocale) ? (rawLocale as Locale) : "fr";
 
   const t = TRANSLATIONS[locale];
   const currentLang = LANGUAGES.find((l) => l.code === locale)!;
 
-  /* -------- Switch locale -------- */
   const switchLocaleHref = (newLocale: Locale) => {
     if (!pathname) return `/${newLocale}`;
     return pathname.replace(/^\/[a-z]{2}/, `/${newLocale}`);
   };
 
-  /* -------- Close lang dropdown on outside click -------- */
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (langRef.current && !langRef.current.contains(e.target as Node)) {
@@ -141,122 +125,115 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* =====================================================
-     RENDER
-  ===================================================== */
-
   return (
-    <nav className="navbar">
+    <header>
       <div className="site-notice">{t.notice}</div>
 
-      <div className="navbar-container">
-        {/* LOGO */}
-        <Link href={`/${locale}`} className="navbar-logo">
-          <img
-            src={LOGO_URL}
-            alt="OculaRest"
-            className="navbar-logo-img"
-            loading="eager"
-          />
-        </Link>
+      <nav className="navbar">
+        <div className="navbar-container">
+          {/* LOGO */}
+          <Link href={`/${locale}`} className="navbar-logo">
+            <img
+              src={LOGO_URL}
+              alt="VitectroMed"
+              className="navbar-logo-img"
+              loading="eager"
+            />
+          </Link>
 
-        {/* DESKTOP NAV */}
-        <div className="nav-links nav-desktop">
-          <NavLink href={`/${locale}`}>{t.nav.home}</NavLink>
-          <NavLink href={`/${locale}/a-propos`}>{t.nav.about}</NavLink>
-          <NavLink href={`/${locale}/products`}>{t.nav.products}</NavLink>
-          <NavLink href={`/${locale}/blog`}>{t.nav.blog}</NavLink>
-          <NavLink href={`/${locale}/contact`}>{t.nav.contact}</NavLink>
+          {/* NAV DESKTOP (doit ABSOLUMENT avoir nav-desktop) */}
+          <div className="nav-links nav-desktop">
+            <NavLink href={`/${locale}`}>{t.nav.home}</NavLink>
+            <NavLink href={`/${locale}/a-propos`}>{t.nav.about}</NavLink>
+            <NavLink href={`/${locale}/products`}>{t.nav.products}</NavLink>
+            <NavLink href={`/${locale}/blog`}>{t.nav.blog}</NavLink>
+            <NavLink href={`/${locale}/contact`}>{t.nav.contact}</NavLink>
 
-          {/* LANG DROPDOWN */}
-          <div className="nav-lang-wrapper" ref={langRef}>
-            <button
-              className="nav-lang-btn"
-              onClick={() => setLangOpen((v) => !v)}
-              type="button"
-              aria-label="Change language"
-            >
-              <span className="nav-lang-flag">{currentLang.flag}</span>
-            </button>
-
-            {langOpen && (
-              <div className="nav-lang-dropdown">
-                {LANGUAGES.map((l) => (
-                  <Link
-                    key={l.code}
-                    href={switchLocaleHref(l.code)}
-                    className="nav-lang-item"
-                    onClick={() => setLangOpen(false)}
-                  >
-                    <span>{l.flag}</span>
-                    <span>{l.label}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* MOBILE BURGER */}
-        <button
-          className="navbar-mobile-btn nav-mobile-only"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-label="Open menu"
-        >
-          ☰
-        </button>
-      </div>
-
-      {/* MOBILE MENU */}
-      {mobileOpen && (
-        <div className="mobile-menu nav-mobile-only">
-          <MobileLink
-            href={`/${locale}`}
-            label={t.nav.home}
-            onClick={() => setMobileOpen(false)}
-          />
-          <MobileLink
-            href={`/${locale}/a-propos`}
-            label={t.nav.about}
-            onClick={() => setMobileOpen(false)}
-          />
-          <MobileLink
-            href={`/${locale}/products`}
-            label={t.nav.products}
-            onClick={() => setMobileOpen(false)}
-          />
-          <MobileLink
-            href={`/${locale}/blog`}
-            label={t.nav.blog}
-            onClick={() => setMobileOpen(false)}
-          />
-          <MobileLink
-            href={`/${locale}/contact`}
-            label={t.nav.contact}
-            onClick={() => setMobileOpen(false)}
-          />
-
-          <div className="mobile-lang-list">
-            {LANGUAGES.map((l) => (
-              <Link
-                key={l.code}
-                href={switchLocaleHref(l.code)}
-                className="mobile-lang-item"
-                onClick={() => setMobileOpen(false)}
+            <div className="nav-lang-wrapper" ref={langRef}>
+              <button
+                className="nav-lang-btn"
+                onClick={() => setLangOpen((v) => !v)}
+                type="button"
+                aria-label="Change language"
               >
-                {l.flag} {l.label}
-              </Link>
-            ))}
+                <span className="nav-lang-flag">{currentLang.flag}</span>
+              </button>
+
+              {langOpen && (
+                <div className="nav-lang-dropdown">
+                  {LANGUAGES.map((l) => (
+                    <Link
+                      key={l.code}
+                      href={switchLocaleHref(l.code)}
+                      className="nav-lang-item"
+                      onClick={() => setLangOpen(false)}
+                    >
+                      <span>{l.flag}</span>
+                      <span>{l.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* BURGER MOBILE (doit avoir nav-mobile-only) */}
+          <button
+            className="navbar-mobile-btn nav-mobile-only"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
         </div>
-      )}
-    </nav>
+
+        {/* MENU MOBILE (doit avoir nav-mobile-only) */}
+        {mobileOpen && (
+          <div className="mobile-menu nav-mobile-only">
+            <MobileLink
+              href={`/${locale}`}
+              label={t.nav.home}
+              onClick={() => setMobileOpen(false)}
+            />
+            <MobileLink
+              href={`/${locale}/a-propos`}
+              label={t.nav.about}
+              onClick={() => setMobileOpen(false)}
+            />
+            <MobileLink
+              href={`/${locale}/products`}
+              label={t.nav.products}
+              onClick={() => setMobileOpen(false)}
+            />
+            <MobileLink
+              href={`/${locale}/blog`}
+              label={t.nav.blog}
+              onClick={() => setMobileOpen(false)}
+            />
+            <MobileLink
+              href={`/${locale}/contact`}
+              label={t.nav.contact}
+              onClick={() => setMobileOpen(false)}
+            />
+
+            <div className="mobile-lang-list">
+              {LANGUAGES.map((l) => (
+                <Link
+                  key={l.code}
+                  href={switchLocaleHref(l.code)}
+                  className="mobile-lang-item"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {l.flag} {l.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </nav>
+    </header>
   );
 }
-
-/* =====================================================
-   SUB COMPONENTS
-===================================================== */
 
 const NavLink = ({
   href,
