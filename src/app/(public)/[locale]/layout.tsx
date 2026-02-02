@@ -1,4 +1,3 @@
-// src/app/(public)/[locale]/layout.tsx
 import type { ReactNode } from "react";
 
 import "@/styles/tokens.css";

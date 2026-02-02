@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "@/styles/components/navbar.css";
@@ -96,16 +97,16 @@ const TRANSLATIONS: Record<
   },
 };
 
-export default function Navbar() {
+interface NavbarProps {
+  locale: Locale;
+}
+
+export default function Navbar({ locale }: NavbarProps) {
   const pathname = usePathname();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
-
-  const rawLocale = pathname?.split("/")[1];
-  const locale: Locale =
-    LANGUAGES.some((l) => l.code === rawLocale) ? (rawLocale as Locale) : "fr";
 
   const t = TRANSLATIONS[locale];
   const currentLang = LANGUAGES.find((l) => l.code === locale)!;
@@ -141,7 +142,7 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* NAV DESKTOP (doit ABSOLUMENT avoir nav-desktop) */}
+          {/* NAV DESKTOP */}
           <div className="nav-links nav-desktop">
             <NavLink href={`/${locale}`}>{t.nav.home}</NavLink>
             <NavLink href={`/${locale}/a-propos`}>{t.nav.about}</NavLink>
@@ -177,7 +178,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* BURGER MOBILE (doit avoir nav-mobile-only) */}
+          {/* BURGER MOBILE */}
           <button
             className="navbar-mobile-btn nav-mobile-only"
             onClick={() => setMobileOpen((v) => !v)}
@@ -187,7 +188,7 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* MENU MOBILE (doit avoir nav-mobile-only) */}
+        {/* MENU MOBILE */}
         {mobileOpen && (
           <div className="mobile-menu nav-mobile-only">
             <MobileLink
@@ -240,7 +241,7 @@ const NavLink = ({
   children,
 }: {
   href: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) => (
   <Link href={href} className="nav-link">
     {children}

@@ -31,6 +31,7 @@ const HERO_CONTENT: Record<
       "VitectroMed est un dispositif médical certifié conçu pour accompagner les patients durant leur convalescence post-opératoire tout en soulageant les cervicales.",
     badge: "Dispositif médical certifié",
     cta: "Découvrir VitectroMed",
+    secondary: "Positionnez-vous sans effort", // ✅ ajouté
   },
   en: {
     title: "Recovery after vitrectomy with gas injection",
@@ -40,6 +41,7 @@ const HERO_CONTENT: Record<
       "VitectroMed is a certified medical device designed to support patients during post-operative recovery while relieving neck strain.",
     badge: "Certified medical device",
     cta: "Discover VitectroMed",
+    secondary: "Position yourself effortlessly", // ✅ ajouté
   },
   es: {
     title: "Recuperación tras vitrectomía con inyección de gas",
@@ -49,6 +51,7 @@ const HERO_CONTENT: Record<
       "VitectroMed es un dispositivo médico certificado diseñado para acompañar a los pacientes durante su recuperación postoperatoria y aliviar las cervicales.",
     badge: "Dispositivo médico certificado",
     cta: "Descubrir VitectroMed",
+    secondary: "Colóquese sin esfuerzo", // ✅ ajouté
   },
   de: {
     title: "Genesung nach Vitrektomie mit Gasinjektion",
@@ -58,15 +61,17 @@ const HERO_CONTENT: Record<
       "VitectroMed ist ein zertifiziertes Medizinprodukt zur Unterstützung der postoperativen Genesung und zur Entlastung der Halswirbelsäule.",
     badge: "Zertifiziertes Medizinprodukt",
     cta: "VitectroMed entdecken",
+    secondary: "Positionieren Sie sich mühelos", // ✅ ajouté
   },
   it: {
     title: "Recupero dopo vitrectomia con iniezione di gas",
     subtitle:
-      "Mantieni facilement la posizione prescritta dopo un intervento al foro maculare o al distacco della retina.",
+      "Mantieni facilmente la posizione prescritta dopo un intervento al foro maculare o al distacco della retina.",
     body:
       "VitectroMed è un dispositivo medico certificato progettato per supportare i pazienti durante la convalescenza post-operatoria alleviando la tensione cervicale.",
     badge: "Dispositivo medico certificato",
     cta: "Scopri VitectroMed",
+    secondary: "Posizionati senza sforzo", // ✅ ajouté
   },
   nl: {
     title: "Herstel na vitrectomie met gasinjectie",
@@ -76,6 +81,7 @@ const HERO_CONTENT: Record<
       "VitectroMed is een gecertificeerd medisch hulpmiddel dat patiënten ondersteunt tijdens het postoperatieve herstel en de nek ontlast.",
     badge: "Gecertificeerd medisch hulpmiddel",
     cta: "Ontdek VitectroMed",
+    secondary: "Positioneer jezelf moeiteloos", // ✅ ajouté
   },
 };
 
