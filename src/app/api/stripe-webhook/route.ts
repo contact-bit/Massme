@@ -67,6 +67,7 @@ const EMAIL_I18N: Record<
 /* =====================================================
    RAW BODY → BUFFER (Stripe requirement)
 ===================================================== */
+
 async function buffer(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader();
   const chunks: Uint8Array[] = [];
@@ -83,6 +84,7 @@ async function buffer(stream: ReadableStream<Uint8Array>) {
 /* =====================================================
    STRIPE WEBHOOK
 ===================================================== */
+
 export async function POST(req: Request) {
   const signature = req.headers.get("stripe-signature");
 
@@ -110,14 +112,13 @@ export async function POST(req: Request) {
   /* =====================================================
      CHECKOUT SESSION COMPLETED
   ===================================================== */
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
     const orderId = session.metadata?.order_id;
     const customerEmail =
-      session.customer_details?.email ||
-      session.customer_email ||
-      null;
+      session.customer_details?.email || session.customer_email || null;
 
     if (!orderId || !customerEmail) {
       console.error("⚠️ order_id ou email manquant");
@@ -167,7 +168,7 @@ export async function POST(req: Request) {
       };
     });
 
-    /* ---------------- SHIPPING ---------------- */
+    /* ---------------- SHIPPING (HT / TTC) ---------------- */
     const sm = savedOrder.shippingMethod || {};
     const shippingHT = Number(sm.priceHT ?? sm.price ?? 0);
     const vatRate = Number(sm.vatRate ?? 0);
@@ -191,6 +192,10 @@ export async function POST(req: Request) {
       ...savedOrder,
       items,
       shippingMethod,
+
+      // ✅ Prix HT de la livraison utilisé par generateInvoicePDF
+      shippingPrice: shippingHT,
+
       customerFirstName: firstName,
       customerLastName: lastName,
     };
@@ -206,11 +211,9 @@ export async function POST(req: Request) {
 
     /* ---------------- PDF + EMAIL ---------------- */
     try {
-      const pdfBuffer = await generateInvoicePDF(
-        normalizedOrder,
-        orderId,
-        { locale }
-      );
+      const pdfBuffer = await generateInvoicePDF(normalizedOrder, orderId, {
+        locale,
+      });
 
       await resend.emails.send({
         from: "Massme • Support <contact@hdconnects.com>",

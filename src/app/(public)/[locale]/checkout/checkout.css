@@ -18,7 +18,7 @@
 }
 
 /* =====================================================
-   SECTIONS (PANIER + FORM + SURVEY)
+   SECTIONS (PANIER + LIVRAISON + FORM + SURVEY)
 ===================================================== */
 
 .checkout-section {
@@ -38,10 +38,15 @@
 }
 
 .checkout-subtitle {
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #111827;
+  margin: 0 0 0.75rem 0;
+  color: #333;
+}
+
+/* Variante pour la section livraison si tu veux la différencier légèrement */
+.checkout-section-shipping {
+  background: radial-gradient(circle at top left, #f9fafb 0, #ffffff 55%);
 }
 
 /* =====================================================
@@ -304,6 +309,7 @@
   margin-bottom: 0.55rem;
   color: #374151;
   font-size: 0.97rem;
+  align-items: flex-start;
 }
 
 .checkout-row span:last-child {
@@ -316,6 +322,42 @@
   margin-top: 1.1rem;
   padding-top: 1.1rem;
   border-top: 1px solid #e5e7eb;
+}
+
+/* Bloc prix livraison + TVA livraison en colonne à droite */
+
+.checkout-shipping-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.checkout-shipping-amount span {
+  font-variant-numeric: tabular-nums;
+}
+
+.checkout-shipping-vat {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* =====================================================
+   CHECKBOX "MÊME ADRESSE"
+===================================================== */
+
+.checkout-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem 0;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.checkout-checkbox input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: #2563eb;
 }
 
 /* =====================================================
@@ -346,87 +388,3 @@
   transform: translateY(0);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
-
-/* ... tout ton CSS existant ... */
-
-/* =====================================================
-   TOTALS
-===================================================== */
-
-.checkout-totals {
-  border-top: 1px solid #e5e7eb;
-  padding-top: 1.75rem;
-  margin-top: 0.5rem;
-}
-
-.checkout-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.55rem;
-  color: #374151;
-  font-size: 0.97rem;
-  align-items: flex-start; /* important pour que la colonne droite parte du haut */
-}
-
-.checkout-row span:last-child {
-  font-variant-numeric: tabular-nums;
-}
-
-.checkout-total {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-top: 1.1rem;
-  padding-top: 1.1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-/* Bloc prix livraison + TVA livraison en colonne à droite */
-/* =====================================================
-   TOTALS
-===================================================== */
-
-.checkout-totals {
-  border-top: 1px solid #e5e7eb;
-  padding-top: 1.75rem;
-  margin-top: 0.5rem;
-}
-
-/* IMPORTANT : on garde flex + on ajoute align-items:flex-start */
-.checkout-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.55rem;
-  color: #374151;
-  font-size: 0.97rem;
-  align-items: flex-start; /* <= ajoute bien cette ligne */
-}
-
-.checkout-row span:last-child {
-  font-variant-numeric: tabular-nums;
-}
-
-.checkout-total {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-top: 1.1rem;
-  padding-top: 1.1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-/* NOUVEAU : bloc montant livraison + TVA empilés à droite */
-.checkout-shipping-amount {
-  display: flex;
-  flex-direction: column;   /* empile prix + TVA */
-  align-items: flex-end;    /* aligné à droite */
-}
-
-.checkout-shipping-amount span {
-  font-variant-numeric: tabular-nums;
-}
-
-.checkout-shipping-vat {
-  font-size: 0.85rem;
-  color: #6b7280;
-}
-
-

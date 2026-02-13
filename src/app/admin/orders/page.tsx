@@ -9,6 +9,8 @@ type OrderItem = {
   description?: string;
 };
 
+type LangCode = "fr" | "en" | "es" | "de" | "it" | "nl";
+
 type Order = {
   id: string;
   email?: string;
@@ -29,6 +31,7 @@ type Order = {
   __total?: number;
   __email?: string;
   __itemsLabel?: string;
+  __lang?: LangCode;
 };
 
 type StatusFilter =
@@ -61,28 +64,26 @@ function safeLower(v: any) {
 function parseCreatedAt(value: any): Date | null {
   if (!value) return null;
 
-  // Firestore Timestamp (admin/sdk) => toDate()
-  if (typeof value === "object" && typeof value.toDate === "function") {
+  if (typeof value === "object" && typeof (value as any).toDate === "function") {
     try {
-      const d = value.toDate();
+      const d = (value as any).toDate();
       if (d instanceof Date && !isNaN(d.getTime())) return d;
     } catch {}
   }
 
-  // Timestamp-like shapes: { seconds, nanoseconds } / { _seconds, _nanoseconds }
   if (typeof value === "object") {
     const sec =
-      typeof value.seconds === "number"
-        ? value.seconds
-        : typeof value._seconds === "number"
-        ? value._seconds
+      typeof (value as any).seconds === "number"
+        ? (value as any).seconds
+        : typeof (value as any)._seconds === "number"
+        ? (value as any)._seconds
         : null;
 
     const nano =
-      typeof value.nanoseconds === "number"
-        ? value.nanoseconds
-        : typeof value._nanoseconds === "number"
-        ? value._nanoseconds
+      typeof (value as any).nanoseconds === "number"
+        ? (value as any).nanoseconds
+        : typeof (value as any)._nanoseconds === "number"
+        ? (value as any)._nanoseconds
         : 0;
 
     if (typeof sec === "number") {
@@ -404,6 +405,10 @@ function OrderDetails({
           <div className="kvKey">Email</div>
           <div className="kvVal">{email}</div>
         </div>
+        <div className="kv">
+          <div className="kvKey">Langue</div>
+          <div className="kvVal">{order.__lang || "—"}</div>
+        </div>
         <div className="rowBtns">
           <button className="btn btn--soft" onClick={onCopyId}>
             Copier ID
@@ -489,6 +494,8 @@ export default function AdminOrdersPage() {
   const [to, setTo] = useState(todayISO());
   const [sort, setSort] = useState<SortKey>("date_desc");
 
+  const [lang, setLang] = useState<LangCode | "all">("all");
+
   const [page, setPage] = useState(1);
   const pageSize = 12;
 
@@ -511,7 +518,6 @@ export default function AdminOrdersPage() {
     (toastIt as any)._t = window.setTimeout(() => setToast(""), 1500);
   };
 
-  // ✅ anti double-fetch (React strict mode / double mount en dev)
   const didFetchRef = useRef(false);
 
   const fetchOrders = async () => {
@@ -548,12 +554,23 @@ export default function AdminOrdersPage() {
         const total = getTotal(o);
         const email = o.email ?? o.shippingAddress?.email ?? "—";
 
+        // normalisation pays → code langue
+        const rawCountry = safeLower((o as any).shippingAddress?.country);
+        let lang: LangCode | undefined;
+        if (rawCountry.startsWith("fr")) lang = "fr";
+        else if (rawCountry.startsWith("en")) lang = "en";
+        else if (rawCountry.startsWith("es")) lang = "es";
+        else if (rawCountry.startsWith("de")) lang = "de";
+        else if (rawCountry.startsWith("it")) lang = "it";
+        else if (rawCountry.startsWith("nl")) lang = "nl";
+
         return {
           ...o,
           __created: created,
           __total: total,
           __email: email,
           __itemsLabel: buildItemsLabel(items),
+          __lang: lang,
         };
       });
 
@@ -569,7 +586,6 @@ export default function AdminOrdersPage() {
   };
 
   useEffect(() => {
-    // ✅ évite les 2 appels en dev
     if (didFetchRef.current) return;
     didFetchRef.current = true;
 
@@ -599,6 +615,10 @@ export default function AdminOrdersPage() {
         if (!d) return false;
         if (fromD && d.getTime() < fromD.getTime()) return false;
         if (toD && d.getTime() > toD.getTime()) return false;
+      }
+
+      if (lang !== "all") {
+        if (o.__lang !== lang) return false;
       }
 
       if (!qn) return true;
@@ -635,12 +655,14 @@ export default function AdminOrdersPage() {
     });
 
     return out;
-  }, [orders, qDebounced, status, from, to, sort]);
+  }, [orders, qDebounced, status, from, to, sort, lang]);
 
   const stats = useMemo(() => {
     const count = filtered.length;
     const paidCount = filtered.filter((o) => o.status === "paid").length;
-    const pendingCount = filtered.filter((o) => o.status === "pending_payment").length;
+    const pendingCount = filtered.filter(
+      (o) => o.status === "pending_payment"
+    ).length;
 
     const totalEUR = filtered.reduce((sum, o) => sum + (o.__total ?? 0), 0);
     const paidEUR = filtered
@@ -670,13 +692,12 @@ export default function AdminOrdersPage() {
     for (const o of paged) next[o.id] = target;
     setSelected(next);
   };
-  const toggleOne = (id: string) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+  const toggleOne = (id: string) =>
+    setSelected((s) => ({ ...s, [id]: !s[id] }));
   const clearSelection = () => setSelected({});
 
-  // placeholders actions
   const markPaid = (id: string) => alert(`TODO: marquer payé ${id}`);
 
-  // ✅ suppression réelle via API + update local (0 requêtes inutiles)
   const deleteOrder = async (id: string) => {
     const ok = confirm("Supprimer cette commande ? (irréversible)");
     if (!ok) return;
@@ -701,7 +722,6 @@ export default function AdminOrdersPage() {
       const txt = await res.text();
       if (!res.ok) throw new Error(txt || `HTTP ${res.status}`);
 
-      // ✅ retire en local (pas de refetch)
       setOrders((prev) => prev.filter((o) => o.id !== id));
       setSelected((prev) => {
         const n = { ...prev };
@@ -725,355 +745,571 @@ export default function AdminOrdersPage() {
 
   return (
     <>
-      {/* CSS embarqué => plus de “blanc bizarre” */}
       <style jsx global>{`
-        :root{
+        :root {
           --bg: #f5f7fb;
           --card: #ffffff;
           --text: #0b1220;
-          --muted: rgba(11,18,32,.6);
-          --border: rgba(11,18,32,.10);
-          --shadow: 0 18px 40px rgba(11,18,32,.08);
-          --shadow2: 0 12px 26px rgba(11,18,32,.06);
+          --muted: rgba(11, 18, 32, 0.6);
+          --border: rgba(11, 18, 32, 0.1);
+          --shadow: 0 18px 40px rgba(11, 18, 32, 0.08);
+          --shadow2: 0 12px 26px rgba(11, 18, 32, 0.06);
           --radius: 18px;
         }
-        body { background: var(--bg); }
-        .adminWrap{
+        body {
+          background: var(--bg);
+        }
+        .adminWrap {
           max-width: 1280px;
           margin: 0 auto;
           padding: 18px 16px 90px;
           color: var(--text);
         }
-        .topBar{
+        .topBar {
           position: sticky;
           top: 0;
           z-index: 10;
           margin: -18px -16px 14px;
           padding: 14px 16px;
-          background: rgba(245,247,251,.78);
+          background: rgba(245, 247, 251, 0.78);
           backdrop-filter: blur(12px);
-          border-bottom: 1px solid rgba(11,18,32,.08);
+          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
         }
-        .title{ font-size: 22px; font-weight: 950; margin: 0; }
-        .sub{ margin-top: 4px; font-size: 13px; color: var(--muted); }
+        .title {
+          font-size: 22px;
+          font-weight: 950;
+          margin: 0;
+        }
+        .sub {
+          margin-top: 4px;
+          font-size: 13px;
+          color: var(--muted);
+        }
 
-        .row{ display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
-        .rowRight{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .row {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          flex-wrap: wrap;
+        }
+        .rowRight {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
 
-        .gridKpi{
-          display:grid;
+        .gridKpi {
+          display: grid;
           grid-template-columns: repeat(4, minmax(220px, 1fr));
           gap: 12px;
           margin-top: 8px;
         }
-        @media (max-width: 980px){
-          .gridKpi{ grid-template-columns: 1fr 1fr; }
+        @media (max-width: 980px) {
+          .gridKpi {
+            grid-template-columns: 1fr 1fr;
+          }
         }
-        @media (max-width: 520px){
-          .gridKpi{ grid-template-columns: 1fr; }
+        @media (max-width: 520px) {
+          .gridKpi {
+            grid-template-columns: 1fr;
+          }
         }
 
-        .card{
+        .card {
           background: var(--card);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           box-shadow: var(--shadow2);
         }
-        .cardPad{ padding: 14px; }
+        .cardPad {
+          padding: 14px;
+        }
 
-        .kLabel{ font-size: 12px; color: var(--muted); font-weight: 850; }
-        .kValue{ font-size: 22px; font-weight: 950; margin-top: 6px; }
-        .kSub{ font-size: 12px; color: var(--muted); margin-top: 4px; }
+        .kLabel {
+          font-size: 12px;
+          color: var(--muted);
+          font-weight: 850;
+        }
+        .kValue {
+          font-size: 22px;
+          font-weight: 950;
+          margin-top: 6px;
+        }
+        .kSub {
+          font-size: 12px;
+          color: var(--muted);
+          margin-top: 4px;
+        }
 
-        .filters{
-          display:grid;
-          grid-template-columns: 1.6fr .85fr .85fr .85fr 1fr auto;
+        .filters {
+          display: grid;
+          grid-template-columns: 1.6fr 0.85fr 0.85fr 0.85fr 0.85fr auto;
           gap: 12px;
           align-items: end;
         }
-        @media (max-width: 980px){
-          .filters{ grid-template-columns: 1fr 1fr; }
+        @media (max-width: 980px) {
+          .filters {
+            grid-template-columns: 1fr 1fr;
+          }
         }
 
-        .field label{
-          display:block;
-          font-size:12px;
+        .field label {
+          display: block;
+          font-size: 12px;
           font-weight: 900;
-          color: rgba(11,18,32,.7);
+          color: rgba(11, 18, 32, 0.7);
           margin-bottom: 6px;
         }
-        .input, .select{
-          width:100%;
+        .input,
+        .select {
+          width: 100%;
           height: 42px;
           border-radius: 14px;
-          border: 1px solid rgba(11,18,32,.14);
-          background: rgba(255,255,255,.92);
+          border: 1px solid rgba(11, 18, 32, 0.14);
+          background: rgba(255, 255, 255, 0.92);
           padding: 0 12px;
           outline: none;
-          color: rgba(11,18,32,.92);
-          box-shadow: 0 10px 22px rgba(11,18,32,.06);
+          color: rgba(11, 18, 32, 0.92);
+          box-shadow: 0 10px 22px rgba(11, 18, 32, 0.06);
         }
-        .input:focus, .select:focus{
-          border-color: rgba(11,18,32,.30);
-          box-shadow: 0 16px 34px rgba(11,18,32,.10);
+        .input:focus,
+        .select:focus {
+          border-color: rgba(11, 18, 32, 0.3);
+          box-shadow: 0 16px 34px rgba(11, 18, 32, 0.1);
         }
 
-        .btn{
+        .btn {
           height: 42px;
           padding: 0 14px;
           border-radius: 14px;
-          border: 1px solid rgba(11,18,32,.14);
-          background: rgba(255,255,255,.92);
+          border: 1px solid rgba(11, 18, 32, 0.14);
+          background: rgba(255, 255, 255, 0.92);
           font-weight: 900;
-          color: rgba(11,18,32,.92);
+          color: rgba(11, 18, 32, 0.92);
           cursor: pointer;
-          box-shadow: 0 12px 26px rgba(11,18,32,.06);
-          transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
-          display:inline-flex;
-          align-items:center;
+          box-shadow: 0 12px 26px rgba(11, 18, 32, 0.06);
+          transition: transform 0.12s ease, box-shadow 0.12s ease,
+            background 0.12s ease;
+          display: inline-flex;
+          align-items: center;
           gap: 8px;
         }
-        .btn:hover{ box-shadow: 0 18px 40px rgba(11,18,32,.10); }
-        .btn:active{ transform: translateY(1px); }
-        .btn:disabled{ opacity: .6; cursor: not-allowed; }
+        .btn:hover {
+          box-shadow: 0 18px 40px rgba(11, 18, 32, 0.1);
+        }
+        .btn:active {
+          transform: translateY(1px);
+        }
+        .btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
 
-        .btn--primary{
-          background: rgba(11,18,32,.92);
+        .btn--primary {
+          background: rgba(11, 18, 32, 0.92);
           color: white;
-          border-color: rgba(11,18,32,.20);
+          border-color: rgba(11, 18, 32, 0.2);
         }
-        .btn--ghost{
-          background: rgba(11,18,32,.04);
-          border-color: rgba(11,18,32,.10);
+        .btn--ghost {
+          background: rgba(11, 18, 32, 0.04);
+          border-color: rgba(11, 18, 32, 0.1);
         }
-        .btn--soft{
-          background: rgba(11,18,32,.04);
-          border-color: rgba(11,18,32,.10);
+        .btn--soft {
+          background: rgba(11, 18, 32, 0.04);
+          border-color: rgba(11, 18, 32, 0.1);
         }
 
-        .listHead{
+        .listHead {
           padding: 12px 14px;
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
           gap: 10px;
-          border-bottom: 1px solid rgba(11,18,32,.08);
+          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
         }
-        .listTitle{ font-weight: 950; }
-        .muted{ color: var(--muted); font-size: 13px; }
+        .listTitle {
+          font-weight: 950;
+        }
+        .muted {
+          color: var(--muted);
+          font-size: 13px;
+        }
 
-        /* Desktop table */
-        .tableWrap{ width:100%; overflow-x:auto; }
-        table{ width:100%; border-collapse: collapse; min-width: 1080px; }
-        th{
-          text-align:left;
-          font-size:12px;
+        .tableWrap {
+          width: 100%;
+          overflow-x: auto;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          min-width: 1080px;
+        }
+        th {
+          text-align: left;
+          font-size: 12px;
           padding: 12px 12px;
-          color: rgba(11,18,32,.65);
+          color: rgba(11, 18, 32, 0.65);
           font-weight: 950;
           white-space: nowrap;
-          background: rgba(11,18,32,.03);
+          background: rgba(11, 18, 32, 0.03);
         }
-        td{
+        td {
           padding: 12px 12px;
           font-size: 13px;
-          color: rgba(11,18,32,.92);
-          border-top: 1px solid rgba(11,18,32,.06);
+          color: rgba(11, 18, 32, 0.92);
+          border-top: 1px solid rgba(11, 18, 32, 0.06);
           vertical-align: top;
           background: white;
         }
 
-        .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .mono {
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
 
-        .actions{ display:flex; justify-content:flex-end; gap: 8px; flex-wrap: wrap; }
+        .actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
 
-        .iconBtn{
+        .iconBtn {
           width: 40px;
           height: 40px;
           border-radius: 14px;
-          display:inline-flex;
-          align-items:center;
-          justify-content:center;
-          border: 1px solid rgba(11,18,32,.10);
-          background: rgba(11,18,32,.04);
-          color: rgba(11,18,32,.90);
-          box-shadow: 0 12px 26px rgba(11,18,32,.06);
-          cursor:pointer;
-          transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(11, 18, 32, 0.1);
+          background: rgba(11, 18, 32, 0.04);
+          color: rgba(11, 18, 32, 0.9);
+          box-shadow: 0 12px 26px rgba(11, 18, 32, 0.06);
+          cursor: pointer;
+          transition: transform 0.12s ease, box-shadow 0.12s ease,
+            background 0.12s ease;
         }
-        .iconBtn:hover{ box-shadow: 0 18px 40px rgba(11,18,32,.10); }
-        .iconBtn:active{ transform: translateY(1px); }
-        .iconBtn:disabled{ opacity:.55; cursor:not-allowed; box-shadow:none; }
-        .iconBtn--primary{ background: rgba(11,18,32,.92); color: white; border-color: rgba(11,18,32,.20); }
-        .iconBtn--success{ background: rgba(16,185,129,.14); color: rgba(5,150,105,1); border-color: rgba(16,185,129,.26); }
-        .iconBtn--danger{ background: rgba(239,68,68,.12); color: rgba(220,38,38,1); border-color: rgba(239,68,68,.26); }
+        .iconBtn:hover {
+          box-shadow: 0 18px 40px rgba(11, 18, 32, 0.1);
+        }
+        .iconBtn:active {
+          transform: translateY(1px);
+        }
+        .iconBtn:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        .iconBtn--primary {
+          background: rgba(11, 18, 32, 0.92);
+          color: white;
+          border-color: rgba(11, 18, 32, 0.2);
+        }
+        .iconBtn--success {
+          background: rgba(16, 185, 129, 0.14);
+          color: rgba(5, 150, 105, 1);
+          border-color: rgba(16, 185, 129, 0.26);
+        }
+        .iconBtn--danger {
+          background: rgba(239, 68, 68, 0.12);
+          color: rgba(220, 38, 38, 1);
+          border-color: rgba(239, 68, 68, 0.26);
+        }
 
-        .pill{
-          display:inline-flex;
-          align-items:center;
+        .pill {
+          display: inline-flex;
+          align-items: center;
           padding: 5px 10px;
           border-radius: 999px;
           font-size: 12px;
           font-weight: 950;
-          background: rgba(11,18,32,.06);
-          color: rgba(11,18,32,.85);
+          background: rgba(11, 18, 32, 0.06);
+          color: rgba(11, 18, 32, 0.85);
           white-space: nowrap;
         }
-        .pill--paid{ background: rgba(16,185,129,.14); color: rgba(5,150,105,1); }
-        .pill--pending{ background: rgba(245,158,11,.14); color: rgba(217,119,6,1); }
-        .pill--canceled{ background: rgba(239,68,68,.14); color: rgba(220,38,38,1); }
-        .pill--refunded{ background: rgba(59,130,246,.14); color: rgba(37,99,235,1); }
-        .pill--other{ background: rgba(148,163,184,.18); color: rgba(30,41,59,.95); }
+        .pill--paid {
+          background: rgba(16, 185, 129, 0.14);
+          color: rgba(5, 150, 105, 1);
+        }
+        .pill--pending {
+          background: rgba(245, 158, 11, 0.14);
+          color: rgba(217, 119, 6, 1);
+        }
+        .pill--canceled {
+          background: rgba(239, 68, 68, 0.14);
+          color: rgba(220, 38, 38, 1);
+        }
+        .pill--refunded {
+          background: rgba(59, 130, 246, 0.14);
+          color: rgba(37, 99, 235, 1);
+        }
+        .pill--other {
+          background: rgba(148, 163, 184, 0.18);
+          color: rgba(30, 41, 59, 0.95);
+        }
 
-        .footer{
+        .footer {
           padding: 12px 14px;
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           gap: 10px;
-          border-top: 1px solid rgba(11,18,32,.08);
+          border-top: 1px solid rgba(11, 18, 32, 0.08);
           flex-wrap: wrap;
         }
 
-        /* mobile cards */
-        .hideMobile{ display:block; }
-        .showMobile{ display:none; }
-        @media (max-width: 900px){
-          .hideMobile{ display:none; }
-          .showMobile{ display:block; }
+        .hideMobile {
+          display: block;
         }
-        .cards{ padding: 12px; display:grid; gap: 12px; }
-        .orderCard{
-          border: 1px solid rgba(11,18,32,.10);
+        .showMobile {
+          display: none;
+        }
+        @media (max-width: 900px) {
+          .hideMobile {
+            display: none;
+          }
+          .showMobile {
+            display: block;
+          }
+        }
+        .cards {
+          padding: 12px;
+          display: grid;
+          gap: 12px;
+        }
+        .orderCard {
+          border: 1px solid rgba(11, 18, 32, 0.1);
           border-radius: 16px;
           padding: 12px;
           background: white;
           box-shadow: var(--shadow2);
         }
-        .cardTop{ display:flex; justify-content:space-between; gap: 10px; align-items:flex-start; }
-        .amount{ font-weight: 950; font-size: 16px; }
-        .date{ font-size: 12px; color: var(--muted); margin-top: 2px; }
-        .cardBody{ margin-top: 10px; font-size: 13px; }
-        .cardEmail{ margin-top: 6px; color: rgba(11,18,32,.75); }
-        .cardItems{ margin-top: 6px; }
-        .cardBtns{ margin-top: 12px; display:flex; gap: 10px; flex-wrap: wrap; align-items:center; }
-        .selectLine{ margin-top: 10px; display:flex; justify-content:space-between; align-items:center; }
+        .cardTop {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          align-items: flex-start;
+        }
+        .amount {
+          font-weight: 950;
+          font-size: 16px;
+        }
+        .date {
+          font-size: 12px;
+          color: var(--muted);
+          margin-top: 2px;
+        }
+        .cardBody {
+          margin-top: 10px;
+          font-size: 13px;
+        }
+        .cardEmail {
+          margin-top: 6px;
+          color: rgba(11, 18, 32, 0.75);
+        }
+        .cardItems {
+          margin-top: 6px;
+        }
+        .cardBtns {
+          margin-top: 12px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+        .selectLine {
+          margin-top: 10px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
 
-        /* Drawer */
-        .drawerBackdrop{
+        .drawerBackdrop {
           position: fixed;
           inset: 0;
-          background: rgba(0,0,0,.35);
+          background: rgba(0, 0, 0, 0.35);
           opacity: 0;
           pointer-events: none;
-          transition: opacity .18s ease;
+          transition: opacity 0.18s ease;
           z-index: 50;
         }
-        .drawerBackdrop--open{
+        .drawerBackdrop--open {
           opacity: 1;
           pointer-events: auto;
         }
-        .drawer{
+        .drawer {
           position: fixed;
           top: 0;
           right: 0;
           height: 100%;
           width: min(560px, 94vw);
           background: white;
-          border-left: 1px solid rgba(11,18,32,.10);
-          box-shadow: 0 20px 60px rgba(0,0,0,.20);
+          border-left: 1px solid rgba(11, 18, 32, 0.1);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
           transform: translateX(102%);
-          transition: transform .22s ease;
+          transition: transform 0.22s ease;
           z-index: 51;
-          display:flex;
+          display: flex;
           flex-direction: column;
         }
-        .drawer--open{ transform: translateX(0); }
-        .drawerHead{
+        .drawer--open {
+          transform: translateX(0);
+        }
+        .drawerHead {
           padding: 14px;
-          border-bottom: 1px solid rgba(11,18,32,.08);
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
+          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           gap: 10px;
         }
-        .drawerTitle{ font-weight: 950; font-size: 14px; }
-        .drawerBody{ padding: 14px; overflow:auto; }
+        .drawerTitle {
+          font-weight: 950;
+          font-size: 14px;
+        }
+        .drawerBody {
+          padding: 14px;
+          overflow: auto;
+        }
 
-        /* Details */
-        .detailGrid{ display:grid; gap: 14px; }
-        .detailTop{ display:flex; justify-content:space-between; align-items:flex-start; gap: 10px; }
-        .detailAmount{ font-weight: 950; font-size: 18px; }
-        .detailDate{ margin-top: 4px; color: var(--muted); font-size: 12px; }
+        .detailGrid {
+          display: grid;
+          gap: 14px;
+        }
+        .detailTop {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .detailAmount {
+          font-weight: 950;
+          font-size: 18px;
+        }
+        .detailDate {
+          margin-top: 4px;
+          color: var(--muted);
+          font-size: 12px;
+        }
 
-        .box{
-          border: 1px solid rgba(11,18,32,.10);
+        .box {
+          border: 1px solid rgba(11, 18, 32, 0.1);
           border-radius: 16px;
           padding: 12px;
-          background: rgba(11,18,32,.02);
+          background: rgba(11, 18, 32, 0.02);
         }
-        .boxTitle{ font-weight: 950; font-size: 13px; margin-bottom: 10px; }
-        .kv{
-          display:grid;
+        .boxTitle {
+          font-weight: 950;
+          font-size: 13px;
+          margin-bottom: 10px;
+        }
+        .kv {
+          display: grid;
           grid-template-columns: 90px 1fr;
           gap: 10px;
           font-size: 13px;
-          align-items:start;
+          align-items: start;
           margin-top: 6px;
         }
-        .kvKey{ color: var(--muted); font-weight: 850; }
-        .kvVal{ color: rgba(11,18,32,.92); font-weight: 850; }
-        .rowBtns{ margin-top: 10px; display:flex; gap: 8px; flex-wrap: wrap; }
+        .kvKey {
+          color: var(--muted);
+          font-weight: 850;
+        }
+        .kvVal {
+          color: rgba(11, 18, 32, 0.92);
+          font-weight: 850;
+        }
+        .rowBtns {
+          margin-top: 10px;
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
 
-        .items{ display:grid; gap: 10px; }
-        .itemCard{
-          border: 1px solid rgba(11,18,32,.10);
+        .items {
+          display: grid;
+          gap: 10px;
+        }
+        .itemCard {
+          border: 1px solid rgba(11, 18, 32, 0.1);
           border-radius: 16px;
           padding: 12px;
           background: white;
-          display:flex;
-          justify-content:space-between;
+          display: flex;
+          justify-content: space-between;
           gap: 12px;
         }
-        .itemLeft{ min-width: 0; }
-        .itemName{ font-weight: 900; font-size: 13px; }
-        .itemDesc{ margin-top: 4px; font-size: 12px; color: var(--muted); }
-        .itemMeta{ margin-top: 6px; font-size: 12px; color: var(--muted); }
-        .itemPrice{ font-weight: 950; white-space: nowrap; }
+        .itemLeft {
+          min-width: 0;
+        }
+        .itemName {
+          font-weight: 900;
+          font-size: 13px;
+        }
+        .itemDesc {
+          margin-top: 4px;
+          font-size: 12px;
+          color: var(--muted);
+        }
+        .itemMeta {
+          margin-top: 6px;
+          font-size: 12px;
+          color: var(--muted);
+        }
+        .itemPrice {
+          font-weight: 950;
+          white-space: nowrap;
+        }
 
-        .sum{
+        .sum {
           margin-top: 12px;
-          border-top: 1px solid rgba(11,18,32,.08);
+          border-top: 1px solid rgba(11, 18, 32, 0.08);
           padding-top: 12px;
-          display:grid;
+          display: grid;
           gap: 6px;
         }
-        .sumRow{ display:flex; justify-content:space-between; gap: 10px; font-size: 13px; }
-        .sumKey{ color: rgba(11,18,32,.65); font-weight: 850; }
-        .sumVal{ color: rgba(11,18,32,.92); font-weight: 900; }
-        .sumRow--total{ margin-top: 4px; }
-        .sumKey--total, .sumVal--total{ font-weight: 950; }
-
-        .addr{
+        .sumRow {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
           font-size: 13px;
-          color: rgba(11,18,32,.85);
+        }
+        .sumKey {
+          color: rgba(11, 18, 32, 0.65);
+          font-weight: 850;
+        }
+        .sumVal {
+          color: rgba(11, 18, 32, 0.92);
+          font-weight: 900;
+        }
+        .sumRow--total {
+          margin-top: 4px;
+        }
+        .sumKey--total,
+        .sumVal--total {
+          font-weight: 950;
+        }
+
+        .addr {
+          font-size: 13px;
+          color: rgba(11, 18, 32, 0.85);
           white-space: pre-wrap;
         }
 
-        .toast{
+        .toast {
           position: fixed;
           right: 16px;
           bottom: 16px;
           z-index: 60;
           padding: 10px 12px;
           border-radius: 16px;
-          border: 1px solid rgba(11,18,32,.12);
-          background: rgba(255,255,255,.92);
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          background: rgba(255, 255, 255, 0.92);
           backdrop-filter: blur(10px);
-          box-shadow: 0 18px 40px rgba(11,18,32,.14);
+          box-shadow: 0 18px 40px rgba(11, 18, 32, 0.14);
           font-weight: 950;
           font-size: 13px;
-          color: rgba(11,18,32,.92);
+          color: rgba(11, 18, 32, 0.92);
         }
       `}</style>
 
@@ -1084,15 +1320,18 @@ export default function AdminOrdersPage() {
           <div className="row">
             <div style={{ flex: 1, minWidth: 280 }}>
               <h1 className="title">📦 Commandes</h1>
-              <div className="sub">
-              </div>
+              <div className="sub"></div>
             </div>
 
             <div className="rowRight">
               <a className="btn btn--ghost" href="/admin/export">
                 📤 Export
               </a>
-              <button className="btn btn--ghost" onClick={fetchOrders} disabled={loading}>
+              <button
+                className="btn btn--ghost"
+                onClick={fetchOrders}
+                disabled={loading}
+              >
                 ↻ Rafraîchir
               </button>
               {selectedIds.length > 0 ? (
@@ -1104,7 +1343,6 @@ export default function AdminOrdersPage() {
           </div>
         </div>
 
-        {/* KPI */}
         <div className="gridKpi">
           <div className="card cardPad">
             <div className="kLabel">Commandes</div>
@@ -1133,7 +1371,6 @@ export default function AdminOrdersPage() {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="card cardPad" style={{ marginTop: 14 }}>
           <div className="filters">
             <div className="field">
@@ -1148,7 +1385,9 @@ export default function AdminOrdersPage() {
                 }}
               />
               <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-                {q ? `Filtre: “${qDebounced}”` : "Astuce: colle un ID Firestore / Stripe"}
+                {q
+                  ? `Filtre: “${qDebounced}”`
+                  : "Astuce: colle un ID Firestore / Stripe"}
               </div>
             </div>
 
@@ -1158,7 +1397,7 @@ export default function AdminOrdersPage() {
                 className="select"
                 value={status}
                 onChange={(e) => {
-                  setStatus(e.target.value as any);
+                  setStatus(e.target.value as StatusFilter);
                   setPage(1);
                 }}
               >
@@ -1168,6 +1407,26 @@ export default function AdminOrdersPage() {
                 <option value="refunded">refunded</option>
                 <option value="canceled">canceled</option>
                 <option value="other">autres</option>
+              </select>
+            </div>
+
+            <div className="field">
+              <label>Langue</label>
+              <select
+                className="select"
+                value={lang}
+                onChange={(e) => {
+                  setLang(e.target.value as LangCode | "all");
+                  setPage(1);
+                }}
+              >
+                <option value="all">Toutes</option>
+                <option value="fr">FR</option>
+                <option value="en">EN</option>
+                <option value="es">ES</option>
+                <option value="de">DE</option>
+                <option value="it">IT</option>
+                <option value="nl">NL</option>
               </select>
             </div>
 
@@ -1203,7 +1462,7 @@ export default function AdminOrdersPage() {
                 className="select"
                 value={sort}
                 onChange={(e) => {
-                  setSort(e.target.value as any);
+                  setSort(e.target.value as SortKey);
                   setPage(1);
                 }}
               >
@@ -1223,6 +1482,7 @@ export default function AdminOrdersPage() {
                   setSort("date_desc");
                   setFrom(firstDayOfMonthISO());
                   setTo(todayISO());
+                  setLang("all");
                   setPage(1);
                 }}
               >
@@ -1232,7 +1492,6 @@ export default function AdminOrdersPage() {
           </div>
         </div>
 
-        {/* List */}
         <div className="card" style={{ marginTop: 14, overflow: "hidden" }}>
           <div className="listHead">
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -1240,7 +1499,14 @@ export default function AdminOrdersPage() {
               <div className="muted">{filtered.length} résultat(s)</div>
             </div>
 
-            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
               <div className="muted">
                 Page {currentPage} / {totalPages}
               </div>
@@ -1281,11 +1547,6 @@ export default function AdminOrdersPage() {
               >
                 {error}
               </pre>
-              <div style={{ marginTop: 12 }}>
-                <button className="btn btn--ghost" onClick={fetchOrders}>
-                  Réessayer
-                </button>
-              </div>
             </div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: 16 }} className="muted">
@@ -1293,109 +1554,143 @@ export default function AdminOrdersPage() {
             </div>
           ) : (
             <>
-              {/* Desktop */}
-              <div className="hideMobile tableWrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th style={{ width: 42 }}>
-                        <input type="checkbox" checked={allPageSelected} onChange={toggleAllPage} />
-                      </th>
-                      <th>Date</th>
-                      <th>ID</th>
-                      <th>Email</th>
-                      <th>Statut</th>
-                      <th>Articles</th>
-                      <th style={{ textAlign: "right" }}>Total</th>
-                      <th style={{ textAlign: "right" }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paged.map((o) => (
-                      <tr key={o.id}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={!!selected[o.id]}
-                            onChange={() => toggleOne(o.id)}
-                          />
-                        </td>
-                        <td>{formatDateFR(o.__created ?? null)}</td>
-                        <td className="mono">{compactId(o.id)}</td>
-                        <td>{o.__email || "—"}</td>
-                        <td>
-                          <StatusPill status={o.status} />
-                        </td>
-                        <td title={o.__itemsLabel}>{o.__itemsLabel || "—"}</td>
-                        <td style={{ textAlign: "right", fontWeight: 950 }}>
-                          {moneyEUR(o.__total ?? 0)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                          <div className="actions">
-                            <ActionIconButton
-                              title="Voir"
-                              variant="primary"
-                              icon={<IconEye />}
-                              onClick={() => setDrawerId(o.id)}
+              <div className="hideMobile">
+                <div className="tableWrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>
+                          <label
+                            style={{
+                              display: "inline-flex",
+                              gap: 6,
+                              alignItems: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={allPageSelected}
+                              onChange={toggleAllPage}
                             />
-                            <ActionIconButton
-                              title="Copier ID"
-                              icon={<IconCopy />}
-                              onClick={async () => {
-                                await copyText(o.id);
-                                toastIt("ID copié ✅");
-                              }}
-                            />
-                            <ActionIconButton
-                              title="Marquer payé"
-                              variant="success"
-                              icon={<IconCheck />}
-                              onClick={() => markPaid(o.id)}
-                            />
-                            <ActionIconButton
-                              title="Supprimer"
-                              variant="danger"
-                              icon={<IconTrash />}
-                              disabled={!!deleting[o.id]}
-                              onClick={() => deleteOrder(o.id)}
-                            />
-                          </div>
-                        </td>
+                            <span>Sélect.</span>
+                          </label>
+                        </th>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Email</th>
+                        <th>Langue</th>
+                        <th>Status</th>
+                        <th>Produits</th>
+                        <th>Total</th>
+                        <th style={{ textAlign: "right" }}>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {paged.map((o) => (
+                        <tr key={o.id}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={!!selected[o.id]}
+                              onChange={() => toggleOne(o.id)}
+                            />
+                          </td>
+                          <td className="mono">{compactId(o.id)}</td>
+                          <td>{formatDateFR(o.__created ?? null)}</td>
+                          <td>{o.__email || "—"}</td>
+                          <td>{o.__lang || "—"}</td>
+                          <td>
+                            <StatusPill status={o.status} />
+                          </td>
+                          <td>{o.__itemsLabel || "—"}</td>
+                          <td>{moneyEUR(o.__total ?? 0)}</td>
+                          <td>
+                            <div className="actions">
+                              <ActionIconButton
+                                title="Voir"
+                                onClick={() => setDrawerId(o.id)}
+                                icon={<IconEye />}
+                                variant="primary"
+                              />
+                              <ActionIconButton
+                                title="Copier ID"
+                                onClick={async () => {
+                                  await copyText(o.id);
+                                  toastIt("ID copié ✅");
+                                }}
+                                icon={<IconCopy />}
+                              />
+                              <ActionIconButton
+                                title="Marquer payé"
+                                onClick={() => markPaid(o.id)}
+                                icon={<IconCheck />}
+                                variant="success"
+                              />
+                              <ActionIconButton
+                                title="Supprimer"
+                                onClick={() => deleteOrder(o.id)}
+                                icon={<IconTrash />}
+                                variant="danger"
+                                disabled={!!deleting[o.id]}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
                 <div className="footer">
                   <div className="muted">
-                    Affichage {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} / {filtered.length}
+                    {selectedIds.length > 0
+                      ? `${selectedIds.length} sélectionnée(s)`
+                      : ""}
                   </div>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <button className="btn btn--ghost" onClick={() => setPage(1)} disabled={currentPage === 1}>
-                      Début
-                    </button>
-                    <button className="btn btn--ghost" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <button
+                      className="btn btn--ghost"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage <= 1}
+                    >
                       ←
                     </button>
-                    <button className="btn btn--ghost" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                    <button
+                      className="btn btn--ghost"
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={currentPage >= totalPages}
+                    >
                       →
-                    </button>
-                    <button className="btn btn--ghost" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}>
-                      Fin
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Mobile */}
               <div className="showMobile">
                 <div className="cards">
                   {paged.map((o) => (
                     <div key={o.id} className="orderCard">
                       <div className="cardTop">
                         <div>
-                          <div className="amount">{moneyEUR(o.__total ?? 0)}</div>
-                          <div className="date">{formatDateFR(o.__created ?? null)}</div>
+                          <div className="amount">
+                            {moneyEUR(o.__total ?? 0)}
+                          </div>
+                          <div className="date">
+                            {formatDateFR(o.__created ?? null)}
+                          </div>
+                          <div className="date">
+                            Langue: {o.__lang || "—"}
+                          </div>
                         </div>
                         <StatusPill status={o.status} />
                       </div>
@@ -1403,11 +1698,16 @@ export default function AdminOrdersPage() {
                       <div className="cardBody">
                         <div className="mono">{compactId(o.id)}</div>
                         <div className="cardEmail">{o.__email || "—"}</div>
-                        <div className="cardItems">{o.__itemsLabel || "—"}</div>
+                        <div className="cardItems">
+                          {o.__itemsLabel || "—"}
+                        </div>
                       </div>
 
                       <div className="cardBtns">
-                        <button className="btn btn--primary" onClick={() => setDrawerId(o.id)}>
+                        <button
+                          className="btn btn--primary"
+                          onClick={() => setDrawerId(o.id)}
+                        >
                           Voir
                         </button>
                         <button
@@ -1419,7 +1719,10 @@ export default function AdminOrdersPage() {
                         >
                           Copier ID
                         </button>
-                        <button className="btn btn--ghost" onClick={() => markPaid(o.id)}>
+                        <button
+                          className="btn btn--ghost"
+                          onClick={() => markPaid(o.id)}
+                        >
                           Payé
                         </button>
                         <button
@@ -1432,8 +1735,18 @@ export default function AdminOrdersPage() {
                       </div>
 
                       <div className="selectLine">
-                        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <input type="checkbox" checked={!!selected[o.id]} onChange={() => toggleOne(o.id)} />
+                        <label
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            alignItems: "center",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={!!selected[o.id]}
+                            onChange={() => toggleOne(o.id)}
+                          />
                           <span className="muted" style={{ fontSize: 12 }}>
                             Sélectionner
                           </span>
@@ -1445,11 +1758,27 @@ export default function AdminOrdersPage() {
 
                 <div className="footer" style={{ borderTop: "none" }}>
                   <div className="muted">{filtered.length} résultat(s)</div>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <button className="btn btn--ghost" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      alignItems: "center",
+                    }}
+                  >
+                    <button
+                      className="btn btn--ghost"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage <= 1}
+                    >
                       ←
                     </button>
-                    <button className="btn btn--ghost" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages}>
+                    <button
+                      className="btn btn--ghost"
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={currentPage >= totalPages}
+                    >
                       →
                     </button>
                   </div>
@@ -1459,11 +1788,12 @@ export default function AdminOrdersPage() {
           )}
         </div>
 
-        {/* Drawer */}
         <Drawer
           open={!!drawerId}
           onClose={() => setDrawerId(null)}
-          title={activeOrder ? `Commande ${compactId(activeOrder.id)}` : "Commande"}
+          title={
+            activeOrder ? `Commande ${compactId(activeOrder.id)}` : "Commande"
+          }
         >
           {!activeOrder ? (
             <div className="muted">Chargement…</div>

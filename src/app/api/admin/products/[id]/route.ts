@@ -1,3 +1,4 @@
+// src/app/api/admin/products/[id]/route.ts
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 
@@ -7,7 +8,7 @@ import { dbAdmin } from "@/lib/firebase.admin";
 type Lang = "fr" | "en" | "es" | "de" | "it" | "nl" | "pt";
 type Market =
   | "FR"
-  | "EN" // <-- ajouté
+  | "EN"
   | "BE"
   | "DE"
   | "AT"
@@ -19,22 +20,11 @@ type Market =
 type Currency = "EUR" | "CHF";
 
 const LANGS: Lang[] = ["fr", "en", "es", "de", "it", "nl", "pt"];
-const MARKETS: Market[] = [
-  "FR",
-  "EN", // <-- ajouté
-  "BE",
-  "DE",
-  "AT",
-  "ES",
-  "IT",
-  "NL",
-  "PT",
-  "CH",
-];
+const MARKETS: Market[] = ["FR", "EN", "BE", "DE", "AT", "ES", "IT", "NL", "PT", "CH"];
 
 const CURRENCY_BY_MARKET: Record<Market, Currency> = {
   FR: "EUR",
-  EN: "EUR", // <-- ajouté
+  EN: "EUR",
   BE: "EUR",
   DE: "EUR",
   AT: "EUR",
@@ -71,8 +61,6 @@ function pickLangRecord(obj: any): Record<Lang, string> {
 
 /**
  * Normalise un bloc markets / pricesByMarket / vatByMarket.
- * - Si input.markets est vide ou invalide → fallbackMarkets.
- * - Ne remplit prices / vat que pour les markets actifs.
  */
 function normalizePricedByMarket(
   input: any,
@@ -213,6 +201,11 @@ export async function PATCH(req: Request) {
     if ("imageUrl" in data) update.imageUrl = data.imageUrl || null;
     if ("isActive" in data) update.isActive = !!data.isActive;
     if ("stock" in data) update.stock = Math.max(0, toInt(data.stock));
+
+    // 🔥 nouveau : gestion du stock oui/non
+    if ("manageStock" in data) {
+      update.manageStock = !!data.manageStock;
+    }
 
     /* ---------- I18N ---------- */
     if ("name" in data) update.name = pickLangRecord(data.name);

@@ -15,18 +15,13 @@ const LOGO_URL =
 export type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
 type I18nDict = {
-  // Header / Brand
   BRAND: string;
   BRAND_BY: string;
   WEBSITE: string;
-
-  // Invoice
   FACTURE: string;
   CLIENT: string;
   DATE: string;
   INVOICE_NO: string;
-
-  // Order / Table
   YOUR_ORDER: string;
   EMAIL: string;
   REFERENCE: string;
@@ -35,21 +30,15 @@ type I18nDict = {
   UNIT_PRICE: string;
   TOTAL_PRICE: string;
   SHIPPING: string;
-
-  // Totals
   TOTAL_HT: string;
   VAT: string;
   TOTAL_TTC: string;
-
-  // Payment
   PAYMENT_TITLE: string;
   PAYMENT_METHOD: string;
   PAYMENT_DATE: string;
   EARLY_DISCOUNT: string;
   LATE_PENALTY: string;
   RECOVERY: string;
-
-  // Status / Footer
   PAID: string;
   FOOTER_TITLE: string;
   FOOTER_TEXT: string;
@@ -60,12 +49,10 @@ export const I18N: Record<Locale, I18nDict> = {
     BRAND: "OculaRest",
     BRAND_BY: "par Lazurco",
     WEBSITE: "www.ocularest.fr",
-
     FACTURE: "FACTURE",
     CLIENT: "Client",
     DATE: "Date :",
     INVOICE_NO: "N° Facture :",
-
     YOUR_ORDER: "Votre commande",
     EMAIL: "Email client :",
     REFERENCE: "Référence",
@@ -74,11 +61,9 @@ export const I18N: Record<Locale, I18nDict> = {
     UNIT_PRICE: "Prix unitaire HT",
     TOTAL_PRICE: "Prix total HT",
     SHIPPING: "Livraison",
-
     TOTAL_HT: "Total HT",
     VAT: "TVA",
     TOTAL_TTC: "Total TTC",
-
     PAYMENT_TITLE: "Conditions de paiement :",
     PAYMENT_METHOD: "Mode de paiement : Carte bancaire",
     PAYMENT_DATE: "Paiement reçu le :",
@@ -86,23 +71,19 @@ export const I18N: Record<Locale, I18nDict> = {
     LATE_PENALTY: "Pénalité de retard : 3 fois le taux légal",
     RECOVERY:
       "Indemnité forfaitaire de 40 EUR pour frais de recouvrement (art. L441-5 du code de commerce).",
-
     PAID: "FACTURE ACQUITTEE",
     FOOTER_TITLE: "Réserve de propriété",
     FOOTER_TEXT:
       "Lazurco conserve l'entière propriété des biens jusqu'au paiement complet de la commande (loi 80335 du 12 mai 1980).",
   },
-
   en: {
     BRAND: "OculaRest",
     BRAND_BY: "by Lazurco",
     WEBSITE: "www.ocularest.fr",
-
     FACTURE: "INVOICE",
     CLIENT: "Customer",
     DATE: "Date:",
     INVOICE_NO: "Invoice No:",
-
     YOUR_ORDER: "Your order",
     EMAIL: "Customer email:",
     REFERENCE: "Reference",
@@ -111,34 +92,28 @@ export const I18N: Record<Locale, I18nDict> = {
     UNIT_PRICE: "Unit price excl. VAT",
     TOTAL_PRICE: "Total excl. VAT",
     SHIPPING: "Shipping",
-
     TOTAL_HT: "Subtotal",
     VAT: "VAT",
     TOTAL_TTC: "Total incl. VAT",
-
     PAYMENT_TITLE: "Payment conditions:",
     PAYMENT_METHOD: "Payment method: Credit card",
     PAYMENT_DATE: "Payment received on:",
     EARLY_DISCOUNT: "Early payment discount: none",
     LATE_PENALTY: "Late payment penalty: 3× legal interest rate",
     RECOVERY: "Fixed compensation of 40 EUR for recovery costs.",
-
     PAID: "PAID INVOICE",
     FOOTER_TITLE: "Retention of title",
     FOOTER_TEXT:
       "Ownership of goods remains with Lazurco until full payment is received.",
   },
-
   es: {
     BRAND: "OculaRest",
     BRAND_BY: "por Lazurco",
     WEBSITE: "www.ocularest.fr",
-
     FACTURE: "FACTURA",
     CLIENT: "Cliente",
     DATE: "Fecha:",
     INVOICE_NO: "N° Factura:",
-
     YOUR_ORDER: "Su pedido",
     EMAIL: "Email del cliente:",
     REFERENCE: "Referencia",
@@ -147,34 +122,28 @@ export const I18N: Record<Locale, I18nDict> = {
     UNIT_PRICE: "Precio unitario sin IVA",
     TOTAL_PRICE: "Total sin IVA",
     SHIPPING: "Envío",
-
     TOTAL_HT: "Total sin IVA",
     VAT: "IVA",
     TOTAL_TTC: "Total con IVA",
-
     PAYMENT_TITLE: "Condiciones de pago:",
     PAYMENT_METHOD: "Método de pago: Tarjeta",
     PAYMENT_DATE: "Pago recibido el:",
     EARLY_DISCOUNT: "Descuento por pronto pago: ninguno",
     LATE_PENALTY: "Penalización por retraso: 3× interés legal",
     RECOVERY: "Indemnización fija de 40 EUR por costes de cobro.",
-
     PAID: "FACTURA PAGADA",
     FOOTER_TITLE: "Reserva de dominio",
     FOOTER_TEXT:
-      "Lazurco conserva la propiedad de los bienes hasta el pago completo.",
+      "Lazurco conserva la propiedad de los bienes jusqu'au paiement complet.",
   },
-
   de: {
     BRAND: "OculaRest",
     BRAND_BY: "von Lazurco",
     WEBSITE: "www.ocularest.fr",
-
     FACTURE: "RECHNUNG",
     CLIENT: "Kunde",
     DATE: "Datum:",
     INVOICE_NO: "Rechnungsnummer:",
-
     YOUR_ORDER: "Ihre Bestellung",
     EMAIL: "Kunden-E-Mail:",
     REFERENCE: "Referenz",
@@ -183,34 +152,28 @@ export const I18N: Record<Locale, I18nDict> = {
     UNIT_PRICE: "Stückpreis netto",
     TOTAL_PRICE: "Gesamt netto",
     SHIPPING: "Lieferung",
-
     TOTAL_HT: "Zwischensumme",
     VAT: "MwSt",
     TOTAL_TTC: "Gesamtbetrag",
-
     PAYMENT_TITLE: "Zahlungsbedingungen:",
     PAYMENT_METHOD: "Zahlungsart: Kreditkarte",
     PAYMENT_DATE: "Zahlung erhalten am:",
     EARLY_DISCOUNT: "Skonto: keiner",
     LATE_PENALTY: "Verzugszinsen: 3× gesetzlicher Zinssatz",
     RECOVERY: "Pauschale Entschädigung von 40 EUR für Inkassokosten.",
-
     PAID: "BEZAHLTE RECHNUNG",
     FOOTER_TITLE: "Eigentumsvorbehalt",
     FOOTER_TEXT:
       "Die Ware bleibt bis zur vollständigen Bezahlung Eigentum von Lazurco.",
   },
-
   it: {
     BRAND: "OculaRest",
     BRAND_BY: "di Lazurco",
     WEBSITE: "www.ocularest.fr",
-
     FACTURE: "FATTURA",
     CLIENT: "Cliente",
     DATE: "Data:",
     INVOICE_NO: "N° Fattura:",
-
     YOUR_ORDER: "Il tuo ordine",
     EMAIL: "Email cliente:",
     REFERENCE: "Riferimento",
@@ -219,34 +182,28 @@ export const I18N: Record<Locale, I18nDict> = {
     UNIT_PRICE: "Prezzo unitario IVA escl.",
     TOTAL_PRICE: "Totale IVA escl.",
     SHIPPING: "Spedizione",
-
     TOTAL_HT: "Totale IVA escl.",
     VAT: "IVA",
     TOTAL_TTC: "Totale IVA incl.",
-
     PAYMENT_TITLE: "Condizioni di pagamento:",
     PAYMENT_METHOD: "Metodo di pagamento: Carta",
     PAYMENT_DATE: "Pagamento ricevuto il:",
     EARLY_DISCOUNT: "Sconto pagamento anticipato: nessuno",
-    LATE_PENALTY: "Penale di ritardo: 3× tasso legale",
+    LATE_PENALTY: "Penale di ritardo : 3× tasso legale",
     RECOVERY: "Indennità fissa di 40 EUR per spese di recupero.",
-
     PAID: "FATTURA PAGATA",
     FOOTER_TITLE: "Riserva di proprietà",
     FOOTER_TEXT:
       "La proprietà dei beni rimane a Lazurco fino al pagamento completo.",
   },
-
   nl: {
     BRAND: "OculaRest",
     BRAND_BY: "door Lazurco",
     WEBSITE: "www.ocularest.fr",
-
     FACTURE: "FACTUUR",
     CLIENT: "Klant",
     DATE: "Datum:",
     INVOICE_NO: "Factuurnummer:",
-
     YOUR_ORDER: "Uw bestelling",
     EMAIL: "Klant e-mail:",
     REFERENCE: "Referentie",
@@ -255,18 +212,15 @@ export const I18N: Record<Locale, I18nDict> = {
     UNIT_PRICE: "Stuksprijs excl. btw",
     TOTAL_PRICE: "Totaal excl. btw",
     SHIPPING: "Verzending",
-
     TOTAL_HT: "Subtotaal",
     VAT: "BTW",
     TOTAL_TTC: "Totaal incl. btw",
-
     PAYMENT_TITLE: "Betalingsvoorwaarden:",
     PAYMENT_METHOD: "Betaalmethode: Creditcard",
     PAYMENT_DATE: "Betaling ontvangen op:",
     EARLY_DISCOUNT: "Korting bij vooruitbetaling: geen",
     LATE_PENALTY: "Boete bij te late betaling: 3× wettelijke rente",
     RECOVERY: "Vaste vergoeding van 40 EUR voor incassokosten.",
-
     PAID: "BETAALDE FACTUUR",
     FOOTER_TITLE: "Eigendomsvoorbehoud",
     FOOTER_TEXT:
@@ -274,10 +228,20 @@ export const I18N: Record<Locale, I18nDict> = {
   },
 };
 
-
 /* =========================================================
    TYPES
 ========================================================= */
+
+type ShippingAddress = {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+};
 
 type OrderItem = {
   name?: any;
@@ -286,12 +250,21 @@ type OrderItem = {
   quantity?: number;
 };
 
+type OrderTotals = {
+  totalHT?: number;
+  totalVAT?: number;
+  totalTTC?: number;
+  vatRate?: number;
+};
+
 type Order = {
   email?: string;
   items?: OrderItem[];
-  shippingAddress?: any;
+  shippingAddress?: ShippingAddress;
+  billingAddress?: ShippingAddress;
   shippingMethod?: { price?: number | { eur?: number } };
-  shippingPrice?: number;
+  shippingPrice?: number; // HT
+  totals?: OrderTotals;
 };
 
 type GenOpts = {
@@ -345,12 +318,10 @@ const getItemName = (it: OrderItem) => {
   return it.name?.fr || it.name?.en || "Produit";
 };
 
+/** Livraison : on lit shippingPrice (HT) */
 const getShippingPrice = (order: Order) => {
-  if (typeof order.shippingPrice === "number") return order.shippingPrice;
-  const p = order.shippingMethod?.price;
-  if (typeof p === "number") return p;
-  if (typeof p === "object" && typeof p.eur === "number") return p.eur;
-  return 0;
+  const v = order.shippingPrice;
+  return typeof v === "number" ? v : 0;
 };
 
 async function loadLogo(pdfDoc: PDFDocument) {
@@ -383,8 +354,6 @@ export async function generateInvoicePDF(
   const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  /* === COULEURS / LAYOUT === */
-
   const BLUE = rgb(0.14, 0.35, 0.86);
   const BLUE_DARK = rgb(0.05, 0.18, 0.55);
   const INK = rgb(0.06, 0.07, 0.1);
@@ -402,7 +371,7 @@ export async function generateInvoicePDF(
   const rightW = W - rightX - M;
 
   const issueDate = opts.issueDate ?? new Date();
-  const VAT = typeof opts.vatRate === "number" ? opts.vatRate : 0.2;
+  const VAT = order.totals?.vatRate ?? opts.vatRate ?? 0.2;
 
   const invoiceNumber =
     opts.invoiceNumber ??
@@ -411,13 +380,8 @@ export async function generateInvoicePDF(
       "0"
     )}${String(issueDate.getDate()).padStart(2, "0")}`;
 
-
-    /* =========================
-     HEADER TOP
-  ========================= */
-
+  /* HEADER TOP */
   let yTop = H - M;
-
   const logo = await loadLogo(pdfDoc);
   if (logo) {
     const maxW = 110;
@@ -428,7 +392,6 @@ export async function generateInvoicePDF(
   }
 
   let yLeft = H - M - 80;
-
   const companyLines = [
     "LAZURCO",
     "189 avenue de Fabron",
@@ -440,7 +403,6 @@ export async function generateInvoicePDF(
     "Email : contact@hdconnects.com",
     "Site : www.ocularest.fr",
   ];
-
   for (const line of companyLines) {
     if (!line) {
       yLeft -= 10;
@@ -456,13 +418,8 @@ export async function generateInvoicePDF(
     yLeft -= 12;
   }
 
-  /* =========================
-     HEADER RIGHT BOX
-  ========================= */
-
   const headerH = 44;
   const headerY = H - M - headerH;
-
   page.drawRectangle({
     x: rightX,
     y: headerY,
@@ -472,7 +429,6 @@ export async function generateInvoicePDF(
     borderWidth: 1,
     color: rgb(1, 1, 1),
   });
-
   page.drawRectangle({
     x: rightX,
     y: headerY + headerH - 9,
@@ -480,7 +436,6 @@ export async function generateInvoicePDF(
     height: 9,
     color: BLUE,
   });
-
   page.drawText("OculaRest", {
     x: rightX + 14,
     y: headerY + 18,
@@ -488,7 +443,6 @@ export async function generateInvoicePDF(
     font: bold,
     color: INK,
   });
-
   page.drawText("par Lazurco", {
     x: rightX + 14,
     y: headerY + 6,
@@ -496,7 +450,6 @@ export async function generateInvoicePDF(
     font: regular,
     color: MUTED,
   });
-
   const factW = bold.widthOfTextAtSize(t.FACTURE, 11);
   page.drawText(t.FACTURE, {
     x: rightX + rightW - factW - 14,
@@ -506,14 +459,9 @@ export async function generateInvoicePDF(
     color: INK,
   });
 
-  /* =========================
-     CLIENT BOX
-  ========================= */
-
   const clientBoxYTop = headerY - 16;
   const clientBoxH = 95;
   const clientBoxY = clientBoxYTop - clientBoxH;
-
   page.drawRectangle({
     x: rightX,
     y: clientBoxY,
@@ -523,7 +471,6 @@ export async function generateInvoicePDF(
     borderWidth: 1,
     color: rgb(1, 1, 1),
   });
-
   page.drawRectangle({
     x: rightX,
     y: clientBoxY + clientBoxH - 18,
@@ -531,7 +478,6 @@ export async function generateInvoicePDF(
     height: 18,
     color: BLUE_DARK,
   });
-
   const clientLabelW = bold.widthOfTextAtSize(t.CLIENT, 10);
   page.drawText(t.CLIENT, {
     x: rightX + rightW / 2 - clientLabelW / 2,
@@ -541,9 +487,11 @@ export async function generateInvoicePDF(
     color: rgb(1, 1, 1),
   });
 
+  // ----- BLOC CLIENT (avec téléphone) -----
   const a = order.shippingAddress || {};
-  let cy = clientBoxY + clientBoxH - 36;
+  const billing = order.billingAddress || {};
 
+  let cy = clientBoxY + clientBoxH - 36;
   const clientLines = [
     safeString(a.name).toUpperCase(),
     safeString(a.address),
@@ -562,13 +510,20 @@ export async function generateInvoicePDF(
     cy -= 13;
   }
 
-  /* =========================
-     DATE / FACTURE
-  ========================= */
+  const phone = a.phone || billing.phone;
+  if (phone) {
+    page.drawText(`Tél : ${safeString(phone)}`, {
+      x: rightX + 12,
+      y: cy,
+      size: 9,
+      font: regular,
+      color: INK,
+    });
+    cy -= 13;
+  }
 
   const infoRowY = clientBoxY - 28;
   drawLine(page, leftX, infoRowY + 14, W - M, infoRowY + 14, BORDER);
-
   page.drawText(t.DATE, {
     x: leftX,
     y: infoRowY,
@@ -576,7 +531,6 @@ export async function generateInvoicePDF(
     font: bold,
     color: INK,
   });
-
   page.drawText(formatDate(issueDate), {
     x: leftX + 42,
     y: infoRowY,
@@ -584,7 +538,6 @@ export async function generateInvoicePDF(
     font: regular,
     color: INK,
   });
-
   const invW = bold.widthOfTextAtSize(t.INVOICE_NO, 9);
   page.drawText(t.INVOICE_NO, {
     x: rightX + rightW - invW - 120,
@@ -593,7 +546,6 @@ export async function generateInvoicePDF(
     font: bold,
     color: INK,
   });
-
   page.drawText(invoiceNumber, {
     x: rightX + rightW - 120,
     y: infoRowY,
@@ -602,15 +554,9 @@ export async function generateInvoicePDF(
     color: INK,
   });
 
-
-  /* =========================
-     META BOX COMMANDE
-  ========================= */
-
   const metaBoxYTop = infoRowY - 12;
   const metaH = 58;
   const metaY = metaBoxYTop - metaH;
-
   page.drawRectangle({
     x: leftX,
     y: metaY,
@@ -620,7 +566,6 @@ export async function generateInvoicePDF(
     borderColor: BORDER,
     borderWidth: 1,
   });
-
   page.drawText(t.YOUR_ORDER, {
     x: leftX + 12,
     y: metaY + 38,
@@ -628,7 +573,6 @@ export async function generateInvoicePDF(
     font: regular,
     color: MUTED,
   });
-
   page.drawText("www.ocularest.fr", {
     x: leftX + 12,
     y: metaY + 26,
@@ -636,7 +580,6 @@ export async function generateInvoicePDF(
     font: bold,
     color: BLUE_DARK,
   });
-
   page.drawText(orderId, {
     x: leftX + 180,
     y: metaY + 26,
@@ -644,7 +587,6 @@ export async function generateInvoicePDF(
     font: regular,
     color: INK,
   });
-
   const email = safeString(order.email || "");
   page.drawText(t.EMAIL, {
     x: leftX + 12,
@@ -653,7 +595,6 @@ export async function generateInvoicePDF(
     font: regular,
     color: MUTED,
   });
-
   page.drawText(email || "-", {
     x: leftX + 80,
     y: metaY + 10,
@@ -662,12 +603,7 @@ export async function generateInvoicePDF(
     color: INK,
   });
 
-  /* =========================
-     TABLE PRODUITS
-  ========================= */
-
   const tableTop = metaY - 22;
-
   const cols = [
     { label: t.REFERENCE, w: 76 },
     { label: t.DESIGNATION, w: 220 },
@@ -675,11 +611,8 @@ export async function generateInvoicePDF(
     { label: t.UNIT_PRICE, w: 95 },
     { label: t.TOTAL_PRICE, w: 92 },
   ];
-
   const tableX = leftX;
   const tableW = cols.reduce((s, c) => s + c.w, 0);
-
-  // Header table
   page.drawRectangle({
     x: tableX,
     y: tableTop - 18,
@@ -687,28 +620,22 @@ export async function generateInvoicePDF(
     height: 18,
     color: BLUE_DARK,
   });
-
-  let cx = tableX;
+  let cx2 = tableX;
   for (const c of cols) {
     page.drawText(c.label, {
-      x: cx + 6,
+      x: cx2 + 6,
       y: tableTop - 13,
       size: 8,
       font: bold,
       color: rgb(1, 1, 1),
     });
-    cx += c.w;
+    cx2 += c.w;
   }
-
-  /* =========================
-     LIGNES PRODUITS
-  ========================= */
 
   const rowH = 22;
   let y = tableTop - 18;
 
   const items = Array.isArray(order.items) ? order.items : [];
-
   const rows = items.map((it) => {
     const qty = Number(it.quantity || 1);
     const unit = getItemUnitPrice(it);
@@ -720,21 +647,19 @@ export async function generateInvoicePDF(
     };
   });
 
-  const shipping = getShippingPrice(order);
-  if (shipping > 0) {
+  const shippingHT = getShippingPrice(order);
+  if (shippingHT > 0) {
     rows.push({
       name: t.SHIPPING,
       qty: 1,
-      unit: shipping,
-      total: shipping,
+      unit: shippingHT,
+      total: shippingHT,
     });
   }
 
   const grid = rgb(0.82, 0.86, 0.93);
-
   for (const r of rows) {
     y -= rowH;
-
     page.drawRectangle({
       x: tableX,
       y,
@@ -744,46 +669,81 @@ export async function generateInvoicePDF(
       borderWidth: 1,
       color: rgb(1, 1, 1),
     });
-
     let x = tableX;
-
-    page.drawText("", { x: x + 6, y: y + 7, size: 8.5, font: regular, color: INK });
+    page.drawText("", {
+      x: x + 6,
+      y: y + 7,
+      size: 8.5,
+      font: regular,
+      color: INK,
+    });
     x += cols[0].w;
-
-    page.drawText(r.name, { x: x + 6, y: y + 7, size: 8.5, font: regular, color: INK });
+    page.drawText(r.name, {
+      x: x + 6,
+      y: y + 7,
+      size: 8.5,
+      font: regular,
+      color: INK,
+    });
     x += cols[1].w;
-
-    page.drawText(String(r.qty), { x: x + 6, y: y + 7, size: 8.5, font: regular, color: INK });
+    page.drawText(String(r.qty), {
+      x: x + 6,
+      y: y + 7,
+      size: 8.5,
+      font: regular,
+      color: INK,
+    });
     x += cols[2].w;
-
-    page.drawText(formatMoney(r.unit), { x: x + 6, y: y + 7, size: 8.5, font: regular, color: INK });
+    page.drawText(formatMoney(r.unit), {
+      x: x + 6,
+      y: y + 7,
+      size: 8.5,
+      font: regular,
+      color: INK,
+    });
     x += cols[3].w;
-
-    page.drawText(formatMoney(r.total), { x: x + 6, y: y + 7, size: 8.5, font: regular, color: INK });
+    page.drawText(formatMoney(r.total), {
+      x: x + 6,
+      y: y + 7,
+      size: 8.5,
+      font: regular,
+      color: INK,
+    });
   }
 
-  /* =========================
-     TOTAUX
-  ========================= */
-
-  const totalHT = rows.reduce((s, r) => s + r.total, 0);
-  const vatAmount = totalHT * VAT;
-  const totalTTC = totalHT + vatAmount;
+  const totalHT = order.totals?.totalHT ?? 0;
+  const vatAmount = order.totals?.totalVAT ?? 0;
+  const totalTTC = order.totals?.totalTTC ?? 0;
 
   const totalsX = tableX + tableW - 200;
   const totalsY = y - 20;
   const gap = 14;
 
-  page.drawText(t.TOTAL_HT, { x: totalsX + 70, y: totalsY, size: 8.5, font: regular, color: MUTED });
-  page.drawText(formatMoney(totalHT), { x: totalsX + 140, y: totalsY, size: 8.5, font: bold, color: INK });
-
-  page.drawText(`${t.VAT} ${Math.round(VAT * 100)}%`, {
+  page.drawText(t.TOTAL_HT, {
     x: totalsX + 70,
-    y: totalsY - gap,
+    y: totalsY,
     size: 8.5,
     font: regular,
     color: MUTED,
   });
+  page.drawText(formatMoney(totalHT), {
+    x: totalsX + 140,
+    y: totalsY,
+    size: 8.5,
+    font: bold,
+    color: INK,
+  });
+
+  page.drawText(
+    `${t.VAT} ${Math.round((order.totals?.vatRate ?? VAT) * 100)}%`,
+    {
+      x: totalsX + 70,
+      y: totalsY - gap,
+      size: 8.5,
+      font: regular,
+      color: MUTED,
+    }
+  );
   page.drawText(formatMoney(vatAmount), {
     x: totalsX + 140,
     y: totalsY - gap,
@@ -807,12 +767,7 @@ export async function generateInvoicePDF(
     color: INK,
   });
 
-  /* =========================
-     CONDITIONS DE PAIEMENT
-  ========================= */
-
   const payY = totalsY - 80;
-
   page.drawText(t.PAYMENT_TITLE, {
     x: leftX,
     y: payY,
@@ -820,7 +775,6 @@ export async function generateInvoicePDF(
     font: bold,
     color: INK,
   });
-
   const payLines = [
     t.PAYMENT_METHOD,
     `${t.PAYMENT_DATE} ${formatDate(issueDate)}`,
@@ -828,16 +782,17 @@ export async function generateInvoicePDF(
     t.LATE_PENALTY,
     t.RECOVERY,
   ];
-
   let py = payY - 14;
   for (const l of payLines) {
-    page.drawText(l, { x: leftX, y: py, size: 7.3, font: regular, color: MUTED });
+    page.drawText(l, {
+      x: leftX,
+      y: py,
+      size: 7.3,
+      font: regular,
+      color: MUTED,
+    });
     py -= 10;
   }
-
-  /* =========================
-     FACTURE PAYÉE
-  ========================= */
 
   if (opts.paidLabel !== false) {
     const pw = bold.widthOfTextAtSize(t.PAID, 9.5);
@@ -850,12 +805,7 @@ export async function generateInvoicePDF(
     });
   }
 
-  /* =========================
-     FOOTER
-  ========================= */
-
   const footerY = 70;
-
   page.drawRectangle({
     x: M,
     y: footerY,
@@ -863,7 +813,6 @@ export async function generateInvoicePDF(
     height: 8,
     color: BLUE_DARK,
   });
-
   page.drawText(t.FOOTER_TITLE, {
     x: W / 2 - bold.widthOfTextAtSize(t.FOOTER_TITLE, 8) / 2,
     y: footerY - 18,
@@ -871,7 +820,6 @@ export async function generateInvoicePDF(
     font: bold,
     color: INK,
   });
-
   page.drawText(t.FOOTER_TEXT, {
     x: M,
     y: footerY - 32,
@@ -879,8 +827,6 @@ export async function generateInvoicePDF(
     font: regular,
     color: MUTED,
   });
-
-
 
   const pdfBytes = await pdfDoc.save();
   return Buffer.from(pdfBytes);

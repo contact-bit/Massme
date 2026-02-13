@@ -48,10 +48,16 @@ const TRANSLATIONS: Record<Locale, any> = {
     firstName: "Prénom",
     lastName: "Nom",
     email: "Email",
+    phone: "Téléphone",
+    phoneHelp:
+      "Utilisé uniquement pour le suivi de livraison ou un problème avec votre commande.",
+    billingAddress: "Adresse de facturation",
+    shippingAddress: "Adresse de livraison",
     address: "Adresse",
     postalCode: "Code postal",
     city: "Ville",
     country: "Pays",
+    sameAsBilling: "Livrer à la même adresse que la facturation",
     loadingShipping: "Chargement livraison…",
     subtotalExclTax: "Sous-total HT",
     productVAT: "TVA produits",
@@ -63,6 +69,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     chooseShipping: "Choisissez une livraison",
     emailRequired: "Email requis",
     nameRequired: "Prénom et nom requis",
+    phoneRequired: "Numéro de téléphone requis",
     paymentError: "Erreur paiement",
     heardFromQuestion: "Comment avez-vous connu notre produit ?",
     heardFromInternet: "Internet (recherche Google, site, etc.)",
@@ -80,10 +87,15 @@ const TRANSLATIONS: Record<Locale, any> = {
     firstName: "First name",
     lastName: "Last name",
     email: "Email",
+    phone: "Phone number",
+    phoneHelp: "Used only for delivery updates or issues with your order.",
+    billingAddress: "Billing address",
+    shippingAddress: "Shipping address",
     address: "Address",
     postalCode: "Postal code",
     city: "City",
     country: "Country",
+    sameAsBilling: "Ship to the same address as billing",
     loadingShipping: "Loading shipping…",
     subtotalExclTax: "Subtotal excl. tax",
     productVAT: "Product VAT",
@@ -95,6 +107,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     chooseShipping: "Choose a shipping method",
     emailRequired: "Email required",
     nameRequired: "First and last name required",
+    phoneRequired: "Phone number required",
     paymentError: "Payment error",
     heardFromQuestion: "How did you hear about our product?",
     heardFromInternet: "Internet (Google search, website, etc.)",
@@ -112,10 +125,16 @@ const TRANSLATIONS: Record<Locale, any> = {
     firstName: "Nombre",
     lastName: "Apellido",
     email: "Email",
+    phone: "Teléfono",
+    phoneHelp:
+      "Solo se utilizará para el seguimiento del envío o incidencias del pedido.",
+    billingAddress: "Dirección de facturación",
+    shippingAddress: "Dirección de envío",
     address: "Dirección",
     postalCode: "Código postal",
     city: "Ciudad",
     country: "País",
+    sameAsBilling: "Enviar a la misma dirección de facturación",
     loadingShipping: "Cargando envío…",
     subtotalExclTax: "Subtotal sin IVA",
     productVAT: "IVA productos",
@@ -127,6 +146,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     chooseShipping: "Elija un método de envío",
     emailRequired: "Email requerido",
     nameRequired: "Nombre y apellido requeridos",
+    phoneRequired: "Número de teléfono requerido",
     paymentError: "Error de pago",
     heardFromQuestion: "¿Cómo conociste nuestro producto?",
     heardFromInternet: "Internet (búsqueda en Google, web, etc.)",
@@ -144,10 +164,17 @@ const TRANSLATIONS: Record<Locale, any> = {
     firstName: "Vorname",
     lastName: "Nachname",
     email: "E-Mail",
+    phone: "Telefonnummer",
+    phoneHelp:
+      "Wird nur für Lieferbenachrichtigungen oder Rückfragen zu Ihrer Bestellung verwendet.",
+    billingAddress: "Rechnungsadresse",
+    shippingAddress: "Lieferadresse",
     address: "Adresse",
     postalCode: "Postleitzahl",
     city: "Stadt",
     country: "Land",
+    sameAsBilling:
+      "An dieselbe Adresse wie die Rechnungsadresse liefern",
     loadingShipping: "Versand wird geladen…",
     subtotalExclTax: "Zwischensumme ohne MwSt",
     productVAT: "Produkt MwSt",
@@ -159,6 +186,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     chooseShipping: "Wählen Sie eine Versandart",
     emailRequired: "E-Mail erforderlich",
     nameRequired: "Vor- und Nachname erforderlich",
+    phoneRequired: "Telefonnummer erforderlich",
     paymentError: "Zahlungsfehler",
     heardFromQuestion:
       "Wie haben Sie von unserem Produkt erfahren?",
@@ -168,21 +196,28 @@ const TRANSLATIONS: Record<Locale, any> = {
     heardFromMedical: "Medizinische Empfehlung",
     heardFromOther: "Andere",
     heardFromOtherPlaceholder:
-      "Bitte genauer angeben (z. B. Name des Arztes, Medium, etc.)",
+      "Bitte genauer angeben (z.B. Name des Arztes, Medium, etc.)",
     heardFromRequired:
       "Bitte teilen Sie uns mit, wie Sie von uns gehört haben",
     heardFromOtherRequired:
-      "Bitte präzisieren, wenn Sie „Andere“ wählen",
+      'Bitte präzisieren, wenn Sie "Andere" wählen',
   },
   it: {
     title: "Ordine",
     firstName: "Nome",
     lastName: "Cognome",
     email: "Email",
+    phone: "Telefono",
+    phoneHelp:
+      "Utilizzato solo per aggiornamenti sulla consegna o problemi con l’ordine.",
+    billingAddress: "Indirizzo di fatturazione",
+    shippingAddress: "Indirizzo di spedizione",
     address: "Indirizzo",
     postalCode: "Codice postale",
     city: "Città",
     country: "Paese",
+    sameAsBilling:
+      "Spedire allo stesso indirizzo di fatturazione",
     loadingShipping: "Caricamento spedizione…",
     subtotalExclTax: "Subtotale IVA esclusa",
     productVAT: "IVA prodotti",
@@ -194,6 +229,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     chooseShipping: "Scegli un metodo di spedizione",
     emailRequired: "Email richiesta",
     nameRequired: "Nome e cognome richiesti",
+    phoneRequired: "Numero di telefono richiesto",
     paymentError: "Errore di pagamento",
     heardFromQuestion:
       "Come hai conosciuto il nostro prodotto?",
@@ -213,10 +249,17 @@ const TRANSLATIONS: Record<Locale, any> = {
     firstName: "Voornaam",
     lastName: "Achternaam",
     email: "E-mail",
+    phone: "Telefoonnummer",
+    phoneHelp:
+      "Wordt alleen gebruikt voor bezorgupdates of vragen over je bestelling.",
+    billingAddress: "Factuuradres",
+    shippingAddress: "Leveringsadres",
     address: "Adres",
     postalCode: "Postcode",
     city: "Stad",
     country: "Land",
+    sameAsBilling:
+      "Lever op hetzelfde adres als de factuur",
     loadingShipping: "Verzending laden…",
     subtotalExclTax: "Subtotaal excl. BTW",
     productVAT: "Product BTW",
@@ -228,6 +271,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     chooseShipping: "Kies een verzendmethode",
     emailRequired: "E-mail vereist",
     nameRequired: "Voor- en achternaam vereist",
+    phoneRequired: "Telefoonnummer vereist",
     paymentError: "Betalingsfout",
     heardFromQuestion:
       "Hoe heb je over ons product gehoord?",
@@ -377,16 +421,28 @@ export default function CheckoutPage() {
 
   const { items, totalHT, totalVAT, totalTTC, clearCart } = useCart();
 
-  /* ---------- CUSTOMER ---------- */
-  const [customer, setCustomer] = useState({
+  /* ---------- BILLING CUSTOMER ---------- */
+  const [billingCustomer, setBillingCustomer] = useState({
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     address: "",
     postalCode: "",
     city: "",
     country: "FR",
   });
+
+  /* ---------- SHIPPING CUSTOMER ---------- */
+  const [shippingCustomer, setShippingCustomer] = useState({
+    address: "",
+    postalCode: "",
+    city: "",
+    country: "FR",
+  });
+
+  /* ---------- SAME ADDRESS ---------- */
+  const [sameAsBilling, setSameAsBilling] = useState(true);
 
   /* ---------- HOW DID YOU HEAR ABOUT US ---------- */
   const [heardFrom, setHeardFrom] = useState<
@@ -397,8 +453,21 @@ export default function CheckoutPage() {
   /* ---------- FORCE COUNTRY FROM LOCALE ---------- */
   useEffect(() => {
     const country = LOCALE_TO_COUNTRY[locale] ?? "FR";
-    setCustomer((prev) => ({ ...prev, country }));
+    setBillingCustomer((prev) => ({ ...prev, country }));
+    setShippingCustomer((prev) => ({ ...prev, country }));
   }, [locale]);
+
+  /* ---------- SYNC SHIPPING WITH BILLING ---------- */
+  useEffect(() => {
+    if (sameAsBilling) {
+      setShippingCustomer({
+        address: billingCustomer.address,
+        postalCode: billingCustomer.postalCode,
+        city: billingCustomer.city,
+        country: billingCustomer.country,
+      });
+    }
+  }, [sameAsBilling, billingCustomer]);
 
   /* ---------- SHIPPING ---------- */
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
@@ -418,7 +487,7 @@ export default function CheckoutPage() {
 
       const qRef = query(
         collection(db, "shipping_methods"),
-        where("country", "==", customer.country),
+        where("country", "==", shippingCustomer.country),
         where("isActive", "==", true)
       );
 
@@ -458,7 +527,7 @@ export default function CheckoutPage() {
     }
 
     load();
-  }, [customer.country, locale]);
+  }, [shippingCustomer.country, locale]);
 
   /* ---------- TOTALS ---------- */
   const shippingTTC = shippingMethod?.priceTTC ?? 0;
@@ -474,14 +543,16 @@ export default function CheckoutPage() {
   async function pay() {
     if (!items.length) return alert(t.emptyCart);
     if (!shippingMethod) return alert(t.chooseShipping);
-    if (!customer.email) return alert(t.emailRequired);
-    if (!customer.firstName || !customer.lastName)
+    if (!billingCustomer.email) return alert(t.emailRequired);
+    if (!billingCustomer.firstName || !billingCustomer.lastName)
       return alert(t.nameRequired);
+    if (!billingCustomer.phone.trim())
+      return alert(t.phoneRequired);
     if (!heardFrom) return alert(t.heardFromRequired);
     if (heardFrom === "other" && !heardFromOther.trim())
       return alert(t.heardFromOtherRequired);
 
-    const fullName = `${customer.firstName.trim()} ${customer.lastName.trim()}`;
+    const fullName = `${billingCustomer.firstName.trim()} ${billingCustomer.lastName.trim()}`;
 
     // clamp final : max 2 pour le produit Firestore 3tuSUenbUVVF6cuSHwS9
     const safeItems = items.map((item) => {
@@ -498,18 +569,30 @@ export default function CheckoutPage() {
       body: JSON.stringify({
         items: safeItems,
         locale,
-        customerEmail: customer.email,
+        customerEmail: billingCustomer.email,
+        customerPhone: billingCustomer.phone.trim(),
         heardFrom,
         heardFromOther:
           heardFrom === "other" ? heardFromOther.trim() : null,
+        billingAddress: {
+          name: fullName,
+          firstName: billingCustomer.firstName,
+          lastName: billingCustomer.lastName,
+          phone: billingCustomer.phone.trim(),
+          address: billingCustomer.address,
+          postalCode: billingCustomer.postalCode,
+          city: billingCustomer.city,
+          country: billingCustomer.country,
+        },
         shippingAddress: {
           name: fullName,
-          firstName: customer.firstName,
-          lastName: customer.lastName,
-          address: customer.address,
-          postalCode: customer.postalCode,
-          city: customer.city,
-          country: customer.country,
+          firstName: billingCustomer.firstName,
+          lastName: billingCustomer.lastName,
+          phone: billingCustomer.phone.trim(),
+          address: shippingCustomer.address,
+          postalCode: shippingCustomer.postalCode,
+          city: shippingCustomer.city,
+          country: shippingCustomer.country,
         },
         shippingMethod,
         relayPoint,
@@ -530,26 +613,50 @@ export default function CheckoutPage() {
     <main className="checkout">
       <h1 className="checkout-title">{t.title}</h1>
 
-      {/* VOTRE PANIER AU-DESSUS DES INFOS DE LIVRAISON */}
+      {/* 1 : PANIER */}
       <CartSummaryInline />
 
-      {/* CLIENT */}
+      {/* 2 : CHOIX LIVRAISON SOUS LE PANIER */}
+      {loading ? (
+        <section className="checkout-section">
+          <p className="checkout-loading">{t.loadingShipping}</p>
+        </section>
+      ) : (
+<section className="checkout-section checkout-section-shipping">
+  <ChooseShipping
+    methods={methods}
+    locale={locale}
+    onMethodSelect={setShippingMethod}
+    onRelaySelect={setRelayPoint}
+  />
+</section>
+
+      )}
+
+      {/* 3 : CLIENT - FACTURATION */}
       <section className="checkout-section">
+        <h2 className="checkout-subtitle">{t.billingAddress}</h2>
         <div className="checkout-grid-2">
           <input
             className="checkout-input"
             placeholder={t.firstName}
-            value={customer.firstName}
+            value={billingCustomer.firstName}
             onChange={(e) =>
-              setCustomer({ ...customer, firstName: e.target.value })
+              setBillingCustomer({
+                ...billingCustomer,
+                firstName: e.target.value,
+              })
             }
           />
           <input
             className="checkout-input"
             placeholder={t.lastName}
-            value={customer.lastName}
+            value={billingCustomer.lastName}
             onChange={(e) =>
-              setCustomer({ ...customer, lastName: e.target.value })
+              setBillingCustomer({
+                ...billingCustomer,
+                lastName: e.target.value,
+              })
             }
           />
         </div>
@@ -558,18 +665,40 @@ export default function CheckoutPage() {
           className="checkout-input"
           type="email"
           placeholder={t.email}
-          value={customer.email}
+          value={billingCustomer.email}
           onChange={(e) =>
-            setCustomer({ ...customer, email: e.target.value })
+            setBillingCustomer({
+              ...billingCustomer,
+              email: e.target.value,
+            })
           }
         />
+
+        <div className="checkout-phone-wrapper">
+          <input
+            className="checkout-input"
+            type="tel"
+            placeholder={t.phone}
+            value={billingCustomer.phone}
+            onChange={(e) =>
+              setBillingCustomer({
+                ...billingCustomer,
+                phone: e.target.value,
+              })
+            }
+          />
+          <p className="checkout-help-text">{t.phoneHelp}</p>
+        </div>
 
         <input
           className="checkout-input"
           placeholder={t.address}
-          value={customer.address}
+          value={billingCustomer.address}
           onChange={(e) =>
-            setCustomer({ ...customer, address: e.target.value })
+            setBillingCustomer({
+              ...billingCustomer,
+              address: e.target.value,
+            })
           }
         />
 
@@ -577,10 +706,10 @@ export default function CheckoutPage() {
           <input
             className="checkout-input"
             placeholder={t.postalCode}
-            value={customer.postalCode}
+            value={billingCustomer.postalCode}
             onChange={(e) =>
-              setCustomer({
-                ...customer,
+              setBillingCustomer({
+                ...billingCustomer,
                 postalCode: e.target.value,
               })
             }
@@ -588,12 +717,71 @@ export default function CheckoutPage() {
           <input
             className="checkout-input"
             placeholder={t.city}
-            value={customer.city}
+            value={billingCustomer.city}
             onChange={(e) =>
-              setCustomer({ ...customer, city: e.target.value })
+              setBillingCustomer({
+                ...billingCustomer,
+                city: e.target.value,
+              })
             }
           />
         </div>
+      </section>
+
+      {/* ADRESSE LIVRAISON */}
+      <section className="checkout-section">
+        <label className="checkout-checkbox">
+          <input
+            type="checkbox"
+            checked={sameAsBilling}
+            onChange={(e) => setSameAsBilling(e.target.checked)}
+          />
+          <span>{t.sameAsBilling}</span>
+        </label>
+
+        {!sameAsBilling && (
+          <>
+            <h2 className="checkout-subtitle">
+              {t.shippingAddress}
+            </h2>
+            <input
+              className="checkout-input"
+              placeholder={t.address}
+              value={shippingCustomer.address}
+              onChange={(e) =>
+                setShippingCustomer({
+                  ...shippingCustomer,
+                  address: e.target.value,
+                })
+              }
+            />
+
+            <div className="checkout-grid-2">
+              <input
+                className="checkout-input"
+                placeholder={t.postalCode}
+                value={shippingCustomer.postalCode}
+                onChange={(e) =>
+                  setShippingCustomer({
+                    ...shippingCustomer,
+                    postalCode: e.target.value,
+                  })
+                }
+              />
+              <input
+                className="checkout-input"
+                placeholder={t.city}
+                value={shippingCustomer.city}
+                onChange={(e) =>
+                  setShippingCustomer({
+                    ...shippingCustomer,
+                    city: e.target.value,
+                  })
+                }
+              />
+            </div>
+          </>
+        )}
       </section>
 
       {/* HOW DID YOU HEAR ABOUT US */}
@@ -657,18 +845,6 @@ export default function CheckoutPage() {
           </div>
         )}
       </section>
-
-      {/* SHIPPING */}
-      {loading ? (
-        <p className="checkout-loading">{t.loadingShipping}</p>
-      ) : (
-        <ChooseShipping
-          methods={methods}
-          locale={locale}
-          onMethodSelect={setShippingMethod}
-          onRelaySelect={setRelayPoint}
-        />
-      )}
 
       {/* TOTALS */}
       <section className="checkout-totals">

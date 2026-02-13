@@ -8,25 +8,28 @@ import { Locale } from "@/lib/i18n";
 /* -------------------------------------
    TRANSLATIONS
 ------------------------------------- */
-const TRANSLATIONS: Record<Locale, {
-  paymentConfirmed: string;
-  thankYou: string;
-  orderConfirmed: string;
-  date: string;
-  emailSent: string;
-  customer: string;
-  address: string;
-  delivery: string;
-  relayPoint: string;
-  orderedItems: string;
-  totalExclTax: string;
-  vat: string;
-  totalInclTax: string;
-  backToHome: string;
-  loading: string;
-  orderNotFound: string;
-  errorLoading: string;
-}> = {
+const TRANSLATIONS: Record<
+  Locale,
+  {
+    paymentConfirmed: string;
+    thankYou: string;
+    orderConfirmed: string;
+    date: string;
+    emailSent: string;
+    customer: string;
+    address: string;
+    delivery: string;
+    relayPoint: string;
+    orderedItems: string;
+    totalExclTax: string;
+    vat: string;
+    totalInclTax: string;
+    backToHome: string;
+    loading: string;
+    orderNotFound: string;
+    errorLoading: string;
+  }
+> = {
   fr: {
     paymentConfirmed: "✓ Paiement confirmé",
     thankYou: "Merci",
@@ -141,7 +144,6 @@ const TRANSLATIONS: Record<Locale, {
     orderNotFound: "Bestelling niet gevonden",
     errorLoading: "Kan bestelling niet laden",
   },
-  
 };
 
 /* -------------------------------------
@@ -150,29 +152,6 @@ const TRANSLATIONS: Record<Locale, {
 function eur(n?: number) {
   if (typeof n !== "number" || Number.isNaN(n)) return "—";
   return `${n.toFixed(2)} €`;
-}
-
-function formatDate(value: any, locale: Locale) {
-  if (!value) return "—";
-
-  const localeMap: Record<Locale, string> = {
-    fr: "fr-FR",
-    en: "en-US",
-    es: "es-ES",
-    de: "de-DE",
-    it: "it-IT",
-    nl: "nl-NL",
-  };
-
-  // Firestore Timestamp
-  if (value?.seconds) {
-    return new Date(value.seconds * 1000).toLocaleDateString(localeMap[locale]);
-  }
-
-  const d = new Date(value);
-  if (isNaN(d.getTime())) return "—";
-
-  return d.toLocaleDateString(localeMap[locale]);
 }
 
 /* -------------------------------------
@@ -189,9 +168,6 @@ export default function SuccessPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* -------------------------------------
-     Load order (SAFE TS)
-  ------------------------------------- */
   useEffect(() => {
     if (!orderId) {
       setError(t.orderNotFound);
@@ -199,8 +175,7 @@ export default function SuccessPage() {
       return;
     }
 
-    const safeOrderId = orderId; // ✅ string garanti
-
+    const safeOrderId = orderId;
     let cancelled = false;
 
     async function load() {
@@ -239,9 +214,6 @@ export default function SuccessPage() {
     };
   }, [orderId, t.errorLoading, t.orderNotFound]);
 
-  /* -------------------------------------
-     States
-  ------------------------------------- */
   if (loading) {
     return (
       <main className="max-w-xl mx-auto mt-16 text-center">
@@ -263,9 +235,6 @@ export default function SuccessPage() {
 
   if (!order) return null;
 
-  /* -------------------------------------
-     Normalisation
-  ------------------------------------- */
   const customer = order.shippingAddress || {};
   const shipping = order.shippingMethod || {};
   const totals = order.totals || {};
@@ -276,9 +245,21 @@ export default function SuccessPage() {
     customer.name?.trim().split(/\s+/)[0] ||
     "";
 
-  /* -------------------------------------
-     Render
-  ------------------------------------- */
+  const dateLocale =
+    locale === "fr"
+      ? "fr-FR"
+      : locale === "en"
+      ? "en-US"
+      : locale === "es"
+      ? "es-ES"
+      : locale === "de"
+      ? "de-DE"
+      : locale === "it"
+      ? "it-IT"
+      : locale === "nl"
+      ? "nl-NL"
+      : undefined;
+
   return (
     <main className="max-w-3xl mx-auto px-4 py-12 space-y-10">
       {/* HEADER */}
@@ -288,7 +269,8 @@ export default function SuccessPage() {
         </div>
 
         <h1 className="text-3xl font-bold mt-2">
-          {t.thankYou}{firstName ? ` ${firstName}` : ""} 🎉
+          {t.thankYou}
+          {firstName ? ` ${firstName}` : ""} 🎉
         </h1>
 
         <p className="text-gray-600 mt-2">
@@ -296,7 +278,7 @@ export default function SuccessPage() {
         </p>
 
         <p className="text-sm text-gray-500 mt-1">
-          {t.date} {formatDate(order.paidAt || order.createdAt, locale)}
+          {t.date} {new Date().toLocaleDateString(dateLocale)}
         </p>
 
         <p className="text-sm text-gray-500 mt-1">
@@ -306,7 +288,9 @@ export default function SuccessPage() {
 
       {/* CLIENT */}
       <section className="border rounded-lg p-6">
-        <h2 className="font-semibold text-lg mb-2">{t.customer}</h2>
+        <h2 className="font-semibold text-lg mb-2">
+          {t.customer}
+        </h2>
         <p className="font-medium">{customer.name}</p>
         <p>{order.email}</p>
         {customer.phone && <p>{customer.phone}</p>}
@@ -353,14 +337,19 @@ export default function SuccessPage() {
           const qty = Number(it.quantity || 1);
 
           return (
-            <div key={i} className="flex justify-between text-sm mb-2">
+            <div
+              key={i}
+              className="flex justify-between text-sm mb-2"
+            >
               <div>
                 <p className="font-medium">{it.name}</p>
                 <p className="text-gray-500">
                   {qty} × {eur(unitHT)} HT
                 </p>
               </div>
-              <p className="font-medium">{eur(unitHT * qty)}</p>
+              <p className="font-medium">
+                {eur(unitHT * qty)}
+              </p>
             </div>
           );
         })}
@@ -374,7 +363,9 @@ export default function SuccessPage() {
         </div>
         <div className="flex justify-between">
           <span>{t.vat}</span>
-          <span>{eur(totals.vatAmount ?? totals.totalVAT)}</span>
+          <span>
+            {eur(totals.vatAmount ?? totals.totalVAT)}
+          </span>
         </div>
         <div className="flex justify-between font-semibold text-lg border-t pt-2 mt-2">
           <span>{t.totalInclTax}</span>
