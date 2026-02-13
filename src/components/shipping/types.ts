@@ -42,6 +42,9 @@ export type ShippingMethod = {
 
   /** Lien info (pickup, point relais, etc.) */
   moreInfoUrl?: string;
+
+  /** Ordre d'affichage (1, 2, 3…) */
+  sortOrder?: number | null;
 };
 
 /* --------------------------------------------------

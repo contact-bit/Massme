@@ -2,13 +2,6 @@
 
 import { useState } from "react";
 
-/* ----------------------------------
-   TYPES
----------------------------------- */
-type Lang = "fr" | "es" | "de" | "it" | "nl" | "pt";
-type Market = "FR";
-type Currency = "EUR";
-
 /* ==================================
    COMPONENT
 ================================== */
@@ -17,17 +10,18 @@ export default function ProductForm({
 }: {
   onSuccess: () => void;
 }) {
-  /* ---------------- BASE ---------------- */
   const [nameFr, setNameFr] = useState("");
   const [descFr, setDescFr] = useState("");
   const [priceHT, setPriceHT] = useState("");
   const [stock, setStock] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
+  // 🔥 nouveau : ce produit gère-t-il le stock ?
+  const [manageStock, setManageStock] = useState<boolean>(false); // par défaut : stock NON géré
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* ---------------- SUBMIT ---------------- */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -35,8 +29,11 @@ export default function ProductForm({
     if (!nameFr.trim()) {
       return setError("Le nom FR est obligatoire.");
     }
-    if (!priceHT || !stock) {
-      return setError("Prix et stock sont obligatoires.");
+    if (!priceHT) {
+      return setError("Le prix est obligatoire.");
+    }
+    if (manageStock && !stock) {
+      return setError("Le stock est obligatoire quand la gestion de stock est activée.");
     }
 
     setLoading(true);
@@ -61,8 +58,9 @@ export default function ProductForm({
           nameFr,
           descFr,
           priceHT,
-          stock,
+          stock: stock || "0",
           imageUrl,
+          manageStock, // 🔥 on envoie bien au backend
         }),
       });
 
@@ -78,6 +76,7 @@ export default function ProductForm({
       setPriceHT("");
       setStock("");
       setImageUrl("");
+      setManageStock(false);
 
       onSuccess();
     } catch (e: any) {
@@ -88,7 +87,6 @@ export default function ProductForm({
     }
   };
 
-  /* ---------------- RENDER ---------------- */
   return (
     <form onSubmit={handleSubmit} className="admin-card space-y-6">
       <h2 className="text-xl font-bold">➕ Ajouter un produit</h2>
@@ -131,29 +129,42 @@ export default function ProductForm({
       </section>
 
       {/* PRIX & STOCK */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input
-          type="number"
-          className="admin-input"
-          placeholder="Prix HT (FR)"
-          value={priceHT}
-          onChange={(e) => setPriceHT(e.target.value)}
-          required
-        />
+      <section className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            type="number"
+            className="admin-input"
+            placeholder="Prix HT (FR)"
+            value={priceHT}
+            onChange={(e) => setPriceHT(e.target.value)}
+            required
+          />
 
-        <input
-          type="number"
-          className="admin-input"
-          placeholder="Stock"
-          value={stock}
-          onChange={(e) => setStock(e.target.value)}
-          required
-        />
+          <input
+            type="number"
+            className="admin-input"
+            placeholder="Stock"
+            value={stock}
+            onChange={(e) => setStock(e.target.value)}
+            disabled={!manageStock}
+          />
+        </div>
+
+        <label className="admin-switch flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={manageStock}
+            onChange={(e) => setManageStock(e.target.checked)}
+          />
+          <span>
+            Gestion du stock pour ce produit{" "}
+            {!manageStock && "(le stock ne sera pas pris en compte)"}
+          </span>
+        </label>
       </section>
 
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
-      {/* ACTIONS */}
       <div className="flex justify-end">
         <button
           type="submit"

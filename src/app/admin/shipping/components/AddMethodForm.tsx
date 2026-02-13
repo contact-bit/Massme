@@ -29,6 +29,7 @@ export default function AddMethodForm({
     relayProvider: null as RelayProvider | null,
     priceHT: "",
     vatRate: country === "CH" ? "0" : "",
+    sortOrder: "", // 🔹 nouveau champ
   });
 
   /* -----------------------------
@@ -56,6 +57,10 @@ export default function AddMethodForm({
         priceHT: Number(form.priceHT),
         vatRate: Number(form.vatRate || 0),
         isActive: true,
+        sortOrder:
+          form.sortOrder !== ""
+            ? Number(form.sortOrder)
+            : undefined, // 🔹 envoyé à l’API
       }),
     });
 
@@ -71,6 +76,7 @@ export default function AddMethodForm({
       relayProvider: null,
       priceHT: "",
       vatRate: country === "CH" ? "0" : "",
+      sortOrder: "",
     });
 
     onCreated();
@@ -182,6 +188,17 @@ export default function AddMethodForm({
         disabled={country === "CH"}
         onChange={(e) =>
           setForm((f) => ({ ...f, vatRate: e.target.value }))
+        }
+      />
+
+      {/* ORDRE D’AFFICHAGE */}
+      <input
+        type="number"
+        className="admin-input"
+        placeholder="Ordre d'affichage (1, 2, 3...)"
+        value={form.sortOrder}
+        onChange={(e) =>
+          setForm((f) => ({ ...f, sortOrder: e.target.value }))
         }
       />
 

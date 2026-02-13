@@ -1,4 +1,3 @@
-// src/app/admin/products/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -10,6 +9,7 @@ type Product = {
   price?: { eur?: number } | number;
   isActive?: boolean;
   stock?: number;
+  manageStock?: boolean; // ce produit utilise le stock oui/non
   imageUrl?: string;
   description?: { fr?: string; en?: string } | string;
 };
@@ -35,7 +35,10 @@ function getPrice(p: Product) {
 
 function moneyEUR(n: number) {
   const v = Math.round(Number(n || 0) * 100) / 100;
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(v);
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  }).format(v);
 }
 
 function clamp(n: number, a: number, b: number) {
@@ -103,9 +106,6 @@ export default function ProductsAdminPage() {
         json = null;
       }
 
-      // ✅ Supporte 2 formats :
-      // - { ok: true, products: [...] }
-      // - { products: [...] }
       const list: Product[] =
         (Array.isArray(json?.products) && json.products) ||
         (Array.isArray(json?.data?.products) && json.data.products) ||
@@ -174,6 +174,7 @@ export default function ProductsAdminPage() {
         safeString(p.stock),
         safeString(getPrice(p)),
         safeString(p.isActive),
+        safeString(p.manageStock),
       ]
         .join(" | ")
         .toLowerCase();
@@ -185,7 +186,6 @@ export default function ProductsAdminPage() {
       if (sort === "name_asc") return getName(a).localeCompare(getName(b), "fr");
       if (sort === "price_desc") return getPrice(b) - getPrice(a);
       if (sort === "stock_asc") return (a.stock ?? 0) - (b.stock ?? 0);
-      // updated_desc : si tu n’as pas updatedAt, on garde stable
       return 0;
     });
 
@@ -196,7 +196,10 @@ export default function ProductsAdminPage() {
     const total = filtered.length;
     const active = filtered.filter((p) => !!p.isActive).length;
     const inactive = total - active;
-    const lowStock = filtered.filter((p) => (p.stock ?? 0) <= 2).length;
+    const lowStock = filtered.filter((p) => {
+      if (!p.manageStock) return false;
+      return (p.stock ?? 0) <= 2;
+    }).length;
     return { total, active, inactive, lowStock };
   }, [filtered]);
 
@@ -243,7 +246,9 @@ export default function ProductsAdminPage() {
         <div className="kpi">
           <div className="kpi-label">Stock faible</div>
           <div className="kpi-val">{stats.lowStock}</div>
-          <div className="kpi-hint">{stats.lowStock > 0 ? "≤ 2 unités" : "OK ✅"}</div>
+          <div className="kpi-hint">
+            {stats.lowStock > 0 ? "≤ 2 unités (stock géré uniquement)" : "OK ✅"}
+          </div>
         </div>
       </div>
 
@@ -364,8 +369,15 @@ export default function ProductsAdminPage() {
               const price = getPrice(p);
               const stock = p.stock ?? 0;
               const active = !!p.isActive;
+              const manageStock = p.manageStock ?? false;
 
-              const stockTone = stock <= 2 ? "danger" : stock <= 8 ? "warn" : "ok";
+              const stockTone = !manageStock
+                ? "ok"
+                : stock <= 2
+                ? "danger"
+                : stock <= 8
+                ? "warn"
+                : "ok";
 
               return (
                 <div key={p.id} className="p-card">
@@ -393,8 +405,20 @@ export default function ProductsAdminPage() {
 
                       <div className="p-line muted small">
                         <span className={`dot dot-${stockTone}`} />
-                        Stock : <b>{stock}</b>
+                        {manageStock ? (
+                          <>
+                            Stock : <b>{stock}</b>
+                          </>
+                        ) : (
+                          <>Stock non géré</>
+                        )}
                         <span className="mono"> • {p.id.slice(0, 8)}…</span>
+                      </div>
+
+                      <div className="p-line muted small">
+                        <span className={`pill ${manageStock ? "pill-on" : "pill-off"}`}>
+                          {manageStock ? "Stock géré" : "Stock non géré"}
+                        </span>
                       </div>
                     </div>
 
@@ -426,13 +450,18 @@ export default function ProductsAdminPage() {
                     </div>
                   </div>
 
-                  {/* Footer quick info */}
                   <div className="p-card-foot">
                     <div className="muted small">
                       Prix : <b>{moneyEUR(price)}</b>
                     </div>
                     <div className="muted small">
-                      Stock : <b>{stock}</b>
+                      {manageStock ? (
+                        <>
+                          Stock : <b>{stock}</b>
+                        </>
+                      ) : (
+                        <>Stock non géré</>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -467,8 +496,11 @@ export default function ProductsAdminPage() {
         )}
       </div>
 
-      {/* ✅ CSS local (pas besoin d’un fichier global) */}
+
+
+      {/* ✅ CSS local identique à ton code */}
       <style jsx>{`
+        ${/* tout ton CSS identique, je n’y touche pas */ ""}
         .p-wrap {
           padding: 18px 16px 60px;
           max-width: 1200px;

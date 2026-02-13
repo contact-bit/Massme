@@ -38,6 +38,7 @@ export async function PATCH(
       priceHT,
       vatRate,
       isActive,
+      sortOrder, // 🔹 nouveau
     } = body;
 
     const payload: any = {
@@ -116,6 +117,23 @@ export async function PATCH(
     /* ---------- isActive ---------- */
     if (typeof isActive === "boolean") {
       payload.isActive = isActive;
+    }
+
+    /* ---------- sortOrder ---------- 🔹 */
+    if (sortOrder !== undefined) {
+      if (
+        sortOrder !== null &&
+        (typeof sortOrder !== "number" ||
+          Number.isNaN(sortOrder))
+      ) {
+        return NextResponse.json(
+          { ok: false, error: "Invalid sortOrder" },
+          { status: 400 }
+        );
+      }
+      // on stocke soit un nombre, soit null
+      payload.sortOrder =
+        sortOrder === null ? null : sortOrder;
     }
 
     /* ---------- UPDATE ---------- */

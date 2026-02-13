@@ -36,13 +36,16 @@ export async function GET(req: Request) {
 
     const snap = await dbAdmin.collection("products").get();
 
-    let products = snap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as any[];
-
-    // (optionnel) si tu veux cacher les soft-deleted :
-    // products = products.filter((p) => p.isActive !== false);
+    let products = snap.docs.map((doc) => {
+      const data = doc.data() as any;
+      return {
+        id: doc.id,
+        ...data,
+        // 🔥 normalisation : si pas présent => false
+        manageStock:
+          typeof data.manageStock === "boolean" ? data.manageStock : false,
+      };
+    }) as any[];
 
     if (market) {
       products = products.filter((p) => {
@@ -96,17 +99,24 @@ export async function POST(req: Request) {
       );
     }
 
-    const { nameFr, descFr, priceHT, stock, imageUrl } = body as {
+    const { nameFr, descFr, priceHT, stock, imageUrl, manageStock } = body as {
       nameFr?: string;
       descFr?: string;
       priceHT?: string | number;
       stock?: string | number;
       imageUrl?: string;
+      manageStock?: boolean;
     };
 
-    if (!nameFr || !priceHT || !stock) {
+    if (!nameFr || !priceHT) {
       return NextResponse.json(
         { ok: false, error: "Champs obligatoires manquants" },
+        { status: 400 }
+      );
+    }
+    if (manageStock && !stock) {
+      return NextResponse.json(
+        { ok: false, error: "Stock obligatoire si gestion de stock activée" },
         { status: 400 }
       );
     }
@@ -117,7 +127,8 @@ export async function POST(req: Request) {
       name: { fr: String(nameFr) },
       description: { fr: String(descFr || "") },
       imageUrl: imageUrl || null,
-      stock: Number(stock),
+      stock: Number(stock ?? 0),
+      manageStock: manageStock ?? false, // 🔥 écrit en base
       isActive: true,
       applyVAT: true,
       markets: ["FR"],

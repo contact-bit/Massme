@@ -42,6 +42,10 @@ export default function EditMethodModal({
             priceHT: Number(form.priceHT),
             vatRate: Number(form.vatRate ?? 0),
             isActive: form.isActive,
+            sortOrder:
+              form.sortOrder == null
+                ? null
+                : Number(form.sortOrder),
           }),
         }
       );
@@ -149,6 +153,25 @@ export default function EditMethodModal({
             />
           </div>
         </div>
+
+        {/* ORDRE D’AFFICHAGE */}
+        <label className="admin-label mt-3">
+          Ordre d'affichage (1, 2, 3…)
+        </label>
+        <input
+          type="number"
+          className="admin-input"
+          value={form.sortOrder ?? ""} 
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              sortOrder:
+                e.target.value === ""
+                  ? null
+                  : Number(e.target.value),
+            }))
+          }
+        />
 
         <label className="admin-switch mt-3">
           <input

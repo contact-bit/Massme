@@ -43,6 +43,13 @@ type CartContextType = {
 };
 
 /* =====================================================
+   CONSTANTES PRODUITS
+===================================================== */
+
+// id Firestore réel du produit OculaRest / Vitrectromed
+const OCULAREST_ID = "3tuSUenbUVVF6cuSHwS9";
+
+/* =====================================================
    CONTEXT
 ===================================================== */
 
@@ -85,18 +92,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => {
       const existing = prev.find((p) => p.id === item.id);
 
+      const isOcularest = item.id === OCULAREST_ID;
+      const maxQty = isOcularest ? 2 : Infinity;
+
       if (existing) {
+        const safeQty = Math.min(
+          existing.quantity + item.quantity,
+          maxQty
+        );
+
         return prev.map((p) =>
-          p.id === item.id
-            ? {
-                ...p,
-                quantity: p.quantity + item.quantity,
-              }
-            : p
+          p.id === item.id ? { ...p, quantity: safeQty } : p
         );
       }
 
-      return [...prev, item];
+      const initialQty = Math.min(item.quantity, maxQty);
+      return [...prev, { ...item, quantity: initialQty }];
     });
 
     setIsOpen(true);
@@ -114,9 +125,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const updateQuantity = (id: string, quantity: number) => {
     setItems((prev) =>
       prev
-        .map((item) =>
-          item.id === id ? { ...item, quantity: Math.max(0, quantity) } : item
-        )
+        .map((item) => {
+          const isOcularest = item.id === OCULAREST_ID;
+          const maxQty = isOcularest ? 2 : Infinity;
+
+          const safeQty = Math.max(0, Math.min(quantity, maxQty));
+
+          return item.id === id ? { ...item, quantity: safeQty } : item;
+        })
         .filter((item) => item.quantity > 0)
     );
   };

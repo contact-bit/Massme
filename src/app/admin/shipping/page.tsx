@@ -15,7 +15,6 @@ export type ShippingMethod = {
   id: string;
   country: CountryCode;
 
-  // ✅ UNE SEULE LANGUE PAR PAYS
   name: Partial<Record<ShippingLocale, string>>;
   delay: Partial<Record<ShippingLocale, string>>;
 
@@ -25,6 +24,8 @@ export type ShippingMethod = {
   priceHT: number;
   vatRate: number;
   isActive: boolean;
+
+  sortOrder?: number | null;
 };
 
 /* =====================================================
@@ -44,8 +45,6 @@ const COUNTRIES: {
   { code: "CH", label: "Suisse", flag: "🇨🇭" },
 ];
 
-
-/* 🔑 LIEN PAYS → LOCALE (CRITIQUE) */
 const COUNTRY_TO_LOCALE: Record<CountryCode, ShippingLocale> = {
   FR: "fr",
   GB: "en",
@@ -55,7 +54,6 @@ const COUNTRY_TO_LOCALE: Record<CountryCode, ShippingLocale> = {
   NL: "nl",
   CH: "fr",
 };
-
 
 /* =====================================================
    PAGE
@@ -67,7 +65,6 @@ export default function ShippingAdminPage() {
   const [activeCountry, setActiveCountry] =
     useState<CountryCode>("FR");
 
-  /* ---------- LOAD ---------- */
   const reload = async () => {
     try {
       setLoading(true);
@@ -86,16 +83,17 @@ export default function ShippingAdminPage() {
         (m: any) => ({
           id: m.id,
           country: m.country,
-
           name: m.name ?? {},
           delay: m.delay ?? {},
-
           type: m.type || "home",
           relayProvider: m.relayProvider ?? null,
-
           priceHT: Number(m.priceHT ?? 0),
           vatRate: Number(m.vatRate ?? 0),
           isActive: m.isActive ?? true,
+          sortOrder:
+            m.sortOrder === null || m.sortOrder === undefined
+              ? null
+              : Number(m.sortOrder),
         })
       );
 
@@ -109,7 +107,6 @@ export default function ShippingAdminPage() {
     reload();
   }, []);
 
-  /* ---------- DELETE ---------- */
   async function handleDelete(id: string) {
     if (!confirm("Supprimer cette méthode ?")) return;
     await fetch(`/api/admin/shipping-methods/${id}`, {
@@ -118,13 +115,14 @@ export default function ShippingAdminPage() {
     reload();
   }
 
-  const filtered = methods.filter(
-    (m) => m.country === activeCountry
-  );
+  const filtered = methods
+    .filter((m) => m.country === activeCountry)
+    .sort((a, b) => {
+      const aOrder = a.sortOrder ?? 999;
+      const bOrder = b.sortOrder ?? 999;
+      return aOrder - bOrder;
+    });
 
-  /* =====================================================
-     RENDER
-  ===================================================== */
   return (
     <main className="admin-page">
       <h1 className="admin-title">🚚 Livraison</h1>
@@ -179,6 +177,11 @@ export default function ShippingAdminPage() {
 
                   <p className="text-sm text-gray-500">
                     {m.priceHT.toFixed(2)} € HT • TVA {m.vatRate}%
+                    {m.sortOrder != null && (
+                      <span className="ml-2 text-xs text-gray-400">
+                        Ordre : {m.sortOrder}
+                      </span>
+                    )}
                   </p>
                 </div>
 

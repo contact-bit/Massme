@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { ShippingMethod, RelayPoint } from "@/components/shipping/types";
 import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
 
@@ -60,13 +60,24 @@ export default function ChooseShippingMethod({
         : "Choose a Mondial Relay pickup point",
   };
 
+  // 🔹 TRI PAR ORDRE D’AFFICHAGE
+  const orderedMethods = useMemo(
+    () =>
+      [...methods].sort((a, b) => {
+        const aOrder = a.sortOrder ?? 999;
+        const bOrder = b.sortOrder ?? 999;
+        return aOrder - bOrder;
+      }),
+    [methods]
+  );
+
   return (
     <div className="space-y-4">
       <h2 className="font-semibold mb-2 text-lg">{t.title}</h2>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      {methods.map((m) => {
+      {orderedMethods.map((m) => {
         const isSelected = selected?.id === m.id;
 
         return (

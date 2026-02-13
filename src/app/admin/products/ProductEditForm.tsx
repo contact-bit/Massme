@@ -100,6 +100,7 @@ export default function ProductEditForm({
 
   const [imageUrl, setImageUrl] = useState("");
   const [stock, setStock] = useState(0);
+  const [manageStock, setManageStock] = useState<boolean>(true); // ✅ gestion du stock pour cet article
   const [isActive, setIsActive] = useState(true);
 
   const [name, setName] = useState<Record<Lang, string>>(emptyLangRecord);
@@ -122,6 +123,9 @@ export default function ProductEditForm({
 
     setImageUrl(product.imageUrl || "");
     setStock(product.stock ?? 0);
+    setManageStock(
+      typeof product.manageStock === "boolean" ? product.manageStock : true
+    );
     setIsActive(product.isActive ?? true);
 
     setName({ ...emptyLangRecord(), ...(product.name || {}) });
@@ -219,6 +223,7 @@ export default function ProductEditForm({
           description,
           imageUrl: imageUrl || null,
           stock,
+          manageStock, // ✅ envoyé au backend
           isActive,
           markets,
           pricesByMarket: Object.fromEntries(
@@ -297,8 +302,7 @@ export default function ProductEditForm({
         },
       };
 
-console.log("PAYLOAD SENT", JSON.stringify(payload, null, 2));
-
+      console.log("PAYLOAD SENT", JSON.stringify(payload, null, 2));
 
       const res = await fetch(`/api/admin/products/${product.id}`, {
         method: "PATCH",
@@ -367,12 +371,25 @@ console.log("PAYLOAD SENT", JSON.stringify(payload, null, 2));
         onChange={(e) => setImageUrl(e.target.value)}
       />
 
-      <label className="admin-label">Stock</label>
+      {/* Gestion du stock pour cet article */}
+      <label className="admin-switch">
+        <input
+          type="checkbox"
+          checked={manageStock}
+          onChange={(e) => setManageStock(e.target.checked)}
+        />
+        Gestion du stock pour cet article
+      </label>
+
+      <label className="admin-label">
+        Stock {manageStock ? "" : "(ignoré si gestion désactivée)"}
+      </label>
       <input
         type="number"
         className="admin-input"
         value={stock}
         onChange={(e) => setStock(Number(e.target.value))}
+        disabled={!manageStock}
       />
 
       {/* VARIANTES */}

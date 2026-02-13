@@ -12,8 +12,36 @@ import { Locale } from "@/lib/i18n";
 import "./checkout.css";
 
 /* =====================================================
-   TRANSLATIONS
+   CONSTANTES
 ===================================================== */
+
+// id Firestore de ton produit OculaRest / Vitrectromed
+const OCULAREST_ID = "3tuSUenbUVVF6cuSHwS9";
+
+const LOCALES = ["fr", "en", "es", "de", "it", "nl"] as const;
+
+const LOCALE_TO_COUNTRY: Record<Locale, string> = {
+  fr: "FR",
+  en: "GB",
+  es: "ES",
+  de: "DE",
+  it: "IT",
+  nl: "NL",
+};
+
+function getLocale(path: string | null): Locale {
+  const l = path?.split("/")?.[1];
+  return LOCALES.includes(l as Locale) ? (l as Locale) : "fr";
+}
+
+function round2(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
+/* =====================================================
+   TRADUCTIONS
+===================================================== */
+
 const TRANSLATIONS: Record<Locale, any> = {
   fr: {
     title: "Commande",
@@ -28,6 +56,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     subtotalExclTax: "Sous-total HT",
     productVAT: "TVA produits",
     shippingInclTax: "Livraison TTC",
+    shippingVAT: "TVA livraison",
     totalInclTax: "Total TTC",
     payWithStripe: "Payer avec Stripe 💳",
     emptyCart: "Panier vide",
@@ -40,9 +69,11 @@ const TRANSLATIONS: Record<Locale, any> = {
     heardFromSocial: "Réseaux sociaux",
     heardFromMedical: "Recommandation médicale",
     heardFromOther: "Autre",
-    heardFromOtherPlaceholder: "Précisez (ex : nom du médecin, nom du média, etc.)",
+    heardFromOtherPlaceholder:
+      "Précisez (ex : nom du médecin, nom du média, etc.)",
     heardFromRequired: "Merci d’indiquer comment vous nous avez connus",
-    heardFromOtherRequired: "Merci de préciser si vous choisissez « Autre »",
+    heardFromOtherRequired:
+      'Merci de préciser si vous choisissez « Autre »',
   },
   en: {
     title: "Order",
@@ -57,6 +88,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     subtotalExclTax: "Subtotal excl. tax",
     productVAT: "Product VAT",
     shippingInclTax: "Shipping incl. tax",
+    shippingVAT: "Shipping VAT",
     totalInclTax: "Total incl. tax",
     payWithStripe: "Pay with Stripe 💳",
     emptyCart: "Cart is empty",
@@ -69,9 +101,11 @@ const TRANSLATIONS: Record<Locale, any> = {
     heardFromSocial: "Social media",
     heardFromMedical: "Medical recommendation",
     heardFromOther: "Other",
-    heardFromOtherPlaceholder: "Please specify (e.g. doctor name, media, etc.)",
+    heardFromOtherPlaceholder:
+      "Please specify (e.g. doctor name, media, etc.)",
     heardFromRequired: "Please tell us how you heard about us",
-    heardFromOtherRequired: "Please specify if you select \"Other\"",
+    heardFromOtherRequired:
+      'Please specify if you select "Other"',
   },
   es: {
     title: "Pedido",
@@ -86,6 +120,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     subtotalExclTax: "Subtotal sin IVA",
     productVAT: "IVA productos",
     shippingInclTax: "Envío con IVA",
+    shippingVAT: "IVA envío",
     totalInclTax: "Total con IVA",
     payWithStripe: "Pagar con Stripe 💳",
     emptyCart: "Carrito vacío",
@@ -98,9 +133,11 @@ const TRANSLATIONS: Record<Locale, any> = {
     heardFromSocial: "Redes sociales",
     heardFromMedical: "Recomendación médica",
     heardFromOther: "Otro",
-    heardFromOtherPlaceholder: "Especifica (por ejemplo, nombre del médico, medio, etc.)",
+    heardFromOtherPlaceholder:
+      "Especifica (por ejemplo, nombre del médico, medio, etc.)",
     heardFromRequired: "Indícanos cómo nos conociste",
-    heardFromOtherRequired: "Especifica si eliges « Otro »",
+    heardFromOtherRequired:
+      "Especifica si eliges « Otro »",
   },
   de: {
     title: "Bestellung",
@@ -115,6 +152,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     subtotalExclTax: "Zwischensumme ohne MwSt",
     productVAT: "Produkt MwSt",
     shippingInclTax: "Versand inkl. MwSt",
+    shippingVAT: "Versand MwSt",
     totalInclTax: "Gesamt inkl. MwSt",
     payWithStripe: "Mit Stripe bezahlen 💳",
     emptyCart: "Warenkorb ist leer",
@@ -122,14 +160,19 @@ const TRANSLATIONS: Record<Locale, any> = {
     emailRequired: "E-Mail erforderlich",
     nameRequired: "Vor- und Nachname erforderlich",
     paymentError: "Zahlungsfehler",
-    heardFromQuestion: "Wie haben Sie von unserem Produkt erfahren?",
-    heardFromInternet: "Internet (Google-Suche, Website, etc.)",
+    heardFromQuestion:
+      "Wie haben Sie von unserem Produkt erfahren?",
+    heardFromInternet:
+      "Internet (Google-Suche, Website, etc.)",
     heardFromSocial: "Soziale Netzwerke",
     heardFromMedical: "Medizinische Empfehlung",
     heardFromOther: "Andere",
-    heardFromOtherPlaceholder: "Bitte genauer angeben (z. B. Name des Arztes, Medium, etc.)",
-    heardFromRequired: "Bitte teilen Sie uns mit, wie Sie von uns gehört haben",
-    heardFromOtherRequired: "Bitte präzisieren, wenn Sie „Andere“ wählen",
+    heardFromOtherPlaceholder:
+      "Bitte genauer angeben (z. B. Name des Arztes, Medium, etc.)",
+    heardFromRequired:
+      "Bitte teilen Sie uns mit, wie Sie von uns gehört haben",
+    heardFromOtherRequired:
+      "Bitte präzisieren, wenn Sie „Andere“ wählen",
   },
   it: {
     title: "Ordine",
@@ -144,6 +187,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     subtotalExclTax: "Subtotale IVA esclusa",
     productVAT: "IVA prodotti",
     shippingInclTax: "Spedizione IVA inclusa",
+    shippingVAT: "IVA spedizione",
     totalInclTax: "Totale IVA inclusa",
     payWithStripe: "Paga con Stripe 💳",
     emptyCart: "Carrello vuoto",
@@ -151,14 +195,18 @@ const TRANSLATIONS: Record<Locale, any> = {
     emailRequired: "Email richiesta",
     nameRequired: "Nome e cognome richiesti",
     paymentError: "Errore di pagamento",
-    heardFromQuestion: "Come hai conosciuto il nostro prodotto?",
-    heardFromInternet: "Internet (ricerca Google, sito, ecc.)",
+    heardFromQuestion:
+      "Come hai conosciuto il nostro prodotto?",
+    heardFromInternet:
+      "Internet (ricerca Google, sito, ecc.)",
     heardFromSocial: "Social network",
     heardFromMedical: "Raccomandazione medica",
     heardFromOther: "Altro",
-    heardFromOtherPlaceholder: "Specifica (es. nome del medico, media, ecc.)",
+    heardFromOtherPlaceholder:
+      "Specifica (es. nome del medico, media, ecc.)",
     heardFromRequired: "Indica come ci hai conosciuti",
-    heardFromOtherRequired: "Specifica se scegli « Altro »",
+    heardFromOtherRequired:
+      "Specifica se scegli « Altro »",
   },
   nl: {
     title: "Bestelling",
@@ -173,6 +221,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     subtotalExclTax: "Subtotaal excl. BTW",
     productVAT: "Product BTW",
     shippingInclTax: "Verzending incl. BTW",
+    shippingVAT: "Verzending BTW",
     totalInclTax: "Totaal incl. BTW",
     payWithStripe: "Betalen met Stripe 💳",
     emptyCart: "Winkelwagen is leeg",
@@ -180,43 +229,26 @@ const TRANSLATIONS: Record<Locale, any> = {
     emailRequired: "E-mail vereist",
     nameRequired: "Voor- en achternaam vereist",
     paymentError: "Betalingsfout",
-    heardFromQuestion: "Hoe heb je over ons product gehoord?",
-    heardFromInternet: "Internet (Google-zoekopdracht, website, enz.)",
+    heardFromQuestion:
+      "Hoe heb je over ons product gehoord?",
+    heardFromInternet:
+      "Internet (Google-zoekopdracht, website, enz.)",
     heardFromSocial: "Sociale media",
     heardFromMedical: "Medische aanbeveling",
     heardFromOther: "Andere",
-    heardFromOtherPlaceholder: "Specificeer (bijv. naam arts, medium, enz.)",
-    heardFromRequired: "Laat ons weten hoe je ons gevonden hebt",
-    heardFromOtherRequired: "Specificeer als je \"Andere\" kiest",
+    heardFromOtherPlaceholder:
+      "Specificeer (bijv. naam arts, medium, enz.)",
+    heardFromRequired:
+      "Laat ons weten hoe je ons gevonden hebt",
+    heardFromOtherRequired:
+      'Specificeer als je "Andere" kiest',
   },
 };
 
 /* =====================================================
-   HELPERS
-===================================================== */
-const LOCALES = ["fr", "en", "es", "de", "it", "nl"] as const;
-
-function getLocale(path: string | null): Locale {
-  const l = path?.split("/")?.[1];
-  return LOCALES.includes(l as Locale) ? (l as Locale) : "fr";
-}
-
-const LOCALE_TO_COUNTRY: Record<Locale, string> = {
-  fr: "FR",
-  en: "GB",
-  es: "ES",
-  de: "DE",
-  it: "IT",
-  nl: "NL",
-};
-
-function round2(n: number) {
-  return Math.round(n * 100) / 100;
-}
-
-/* =====================================================
    CART SUMMARY (EN HAUT DE LA PAGE)
 ===================================================== */
+
 function CartSummaryInline() {
   const {
     items,
@@ -245,62 +277,73 @@ function CartSummaryInline() {
       </div>
 
       <div className="checkout-cart-list">
-        {items.map((item, index) => (
-          <div key={`${item.id}-${index}`} className="checkout-cart-item">
-            <div className="checkout-cart-thumb-wrap">
-              {item.imageUrl ? (
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="checkout-cart-thumb"
-                />
-              ) : (
-                <div className="checkout-cart-thumb placeholder" />
-              )}
-            </div>
+        {items.map((item, index) => {
+          const isOcularest = item.id === OCULAREST_ID;
+          const isMaxForOcularest = isOcularest && item.quantity >= 2;
 
-            <div className="checkout-cart-main">
-              <p className="checkout-cart-name">{item.name}</p>
-              <p className="checkout-cart-unit">
-                {item.priceHT.toFixed(2)} € HT / unité
-              </p>
+          return (
+            <div
+              key={`${item.id}-${index}`}
+              className="checkout-cart-item"
+            >
+              <div className="checkout-cart-thumb-wrap">
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="checkout-cart-thumb"
+                  />
+                ) : (
+                  <div className="checkout-cart-thumb placeholder" />
+                )}
+              </div>
 
-              <div className="checkout-cart-bottom">
-                <div className="checkout-cart-qty">
+              <div className="checkout-cart-main">
+                <p className="checkout-cart-name">{item.name}</p>
+                <p className="checkout-cart-unit">
+                  {item.priceHT.toFixed(2)} € HT / unité
+                </p>
+
+                <div className="checkout-cart-bottom">
+                  <div className="checkout-cart-qty">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateQuantity(item.id, item.quantity - 1)
+                      }
+                    >
+                      −
+                    </button>
+
+                    <span>{item.quantity}</span>
+
+                    <button
+                      type="button"
+                      disabled={isMaxForOcularest}
+                      onClick={() =>
+                        updateQuantity(item.id, item.quantity + 1)
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
+
                   <button
                     type="button"
-                    onClick={() =>
-                      updateQuantity(item.id, item.quantity - 1)
-                    }
+                    className="checkout-cart-remove"
+                    onClick={() => removeItem(item.id)}
                   >
-                    −
-                  </button>
-                  <span>{item.quantity}</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateQuantity(item.id, item.quantity + 1)
-                    }
-                  >
-                    +
+                    Retirer
                   </button>
                 </div>
+              </div>
 
-                <button
-                  type="button"
-                  className="checkout-cart-remove"
-                  onClick={() => removeItem(item.id)}
-                >
-                  Retirer
-                </button>
+              <div className="checkout-cart-line-total">
+                {(item.priceHT * item.quantity).toFixed(2)} €
               </div>
             </div>
-
-            <div className="checkout-cart-line-total">
-              {(item.priceHT * item.quantity).toFixed(2)} €
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="checkout-cart-summary">
@@ -324,8 +367,9 @@ function CartSummaryInline() {
 }
 
 /* =====================================================
-   PAGE
+   PAGE CHECKOUT
 ===================================================== */
+
 export default function CheckoutPage() {
   const pathname = usePathname();
   const locale = getLocale(pathname);
@@ -360,7 +404,9 @@ export default function CheckoutPage() {
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod | null>(null);
-  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
+  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
 
   /* ---------- LOAD SHIPPING ---------- */
@@ -400,6 +446,10 @@ export default function CheckoutPage() {
           type: raw.type || "home",
           relayProvider: raw.relayProvider || null,
           isActive: true,
+          sortOrder:
+            raw.sortOrder === null || raw.sortOrder === undefined
+              ? null
+              : Number(raw.sortOrder),
         };
       });
 
@@ -412,6 +462,12 @@ export default function CheckoutPage() {
 
   /* ---------- TOTALS ---------- */
   const shippingTTC = shippingMethod?.priceTTC ?? 0;
+  const shippingVAT =
+    shippingMethod && shippingMethod.vatRate > 0
+      ? round2(
+          shippingMethod.priceHT * (shippingMethod.vatRate / 100)
+        )
+      : 0;
   const finalTTC = totalTTC + shippingTTC;
 
   /* ---------- PAY ---------- */
@@ -427,15 +483,25 @@ export default function CheckoutPage() {
 
     const fullName = `${customer.firstName.trim()} ${customer.lastName.trim()}`;
 
+    // clamp final : max 2 pour le produit Firestore 3tuSUenbUVVF6cuSHwS9
+    const safeItems = items.map((item) => {
+      if (item.id === OCULAREST_ID) {
+        const safeQty = Math.min(item.quantity, 2);
+        return { ...item, quantity: safeQty };
+      }
+      return item;
+    });
+
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        items,
+        items: safeItems,
         locale,
         customerEmail: customer.email,
         heardFrom,
-        heardFromOther: heardFrom === "other" ? heardFromOther.trim() : null,
+        heardFromOther:
+          heardFrom === "other" ? heardFromOther.trim() : null,
         shippingAddress: {
           name: fullName,
           firstName: customer.firstName,
@@ -513,7 +579,10 @@ export default function CheckoutPage() {
             placeholder={t.postalCode}
             value={customer.postalCode}
             onChange={(e) =>
-              setCustomer({ ...customer, postalCode: e.target.value })
+              setCustomer({
+                ...customer,
+                postalCode: e.target.value,
+              })
             }
           />
           <input
@@ -617,7 +686,13 @@ export default function CheckoutPage() {
 
         <div className="checkout-row">
           <span>{t.shippingInclTax}</span>
-          <span>{shippingTTC.toFixed(2)} €</span>
+
+          <div className="checkout-shipping-amount">
+            <span>{shippingTTC.toFixed(2)} €</span>
+            <span className="checkout-shipping-vat">
+              TVA : {shippingMethod?.vatRate ?? 0} %
+            </span>
+          </div>
         </div>
 
         <div className="checkout-row checkout-total">

@@ -99,17 +99,28 @@ export async function GET() {
     const lowStockSnap = await productsCol
       .where("stock", "<=", 3)
       .orderBy("stock", "asc")
-      .limit(5)
+      .limit(20)
       .get();
 
-    const lowStock = lowStockSnap.docs.map((d) => {
-      const p: any = d.data();
-      return {
-        id: d.id,
-        name: p?.name?.fr ?? p?.name ?? "Produit",
-        stock: Number(p?.stock ?? 0),
-      };
-    });
+    const lowStock = lowStockSnap.docs
+      .map((d) => {
+        const p: any = d.data();
+        const manageStock =
+          typeof p?.manageStock === "boolean" ? p.manageStock : false;
+
+        return {
+          id: d.id,
+          name: p?.name?.fr ?? p?.name ?? "Produit",
+          stock: Number(p?.stock ?? 0),
+          manageStock,
+        };
+      })
+      .filter((p) => p.manageStock)
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        stock: p.stock,
+      }));
 
     /* =========================
        LAST ORDERS

@@ -27,6 +27,7 @@ export async function POST(req: Request) {
       priceHT,
       vatRate,
       isActive,
+      sortOrder,        // 🔹 on récupère sortOrder
     } = await req.json();
 
     if (!country || typeof name !== "object") {
@@ -72,6 +73,10 @@ export async function POST(req: Request) {
       priceHT,
       vatRate,
       isActive: isActive ?? true,
+      sortOrder:
+        typeof sortOrder === "number" && !Number.isNaN(sortOrder)
+          ? sortOrder
+          : null,            // 🔹 stocké en base
       createdAt: new Date(),
     };
 

@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import { MouseGradient } from "./MouseGradient";
+import "@/styles/components.css";
 
 export const metadata = {
   title: "OculaRest",

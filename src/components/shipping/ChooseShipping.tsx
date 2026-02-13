@@ -1,10 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type {
-  ShippingMethod,
-  RelayPoint,
-} from "@/components/shipping/types";
+import type { ShippingMethod, RelayPoint } from "@/components/shipping/types";
 import { RELAY_PROVIDERS } from "@/components/shipping/relayProviders";
 import type { Locale } from "@/lib/i18n";
 import { computePrice } from "@/lib/pricing";
@@ -23,7 +20,7 @@ type ChooseShippingProps = {
 };
 
 /* =====================================================
-   UI TEXT (GÉNÉRIQUE, PAS RELAY)
+   UI TEXT
 ===================================================== */
 const UI: Record<
   Locale,
@@ -77,33 +74,33 @@ export default function ChooseShipping({
 }: ChooseShippingProps) {
   const [selectedMethod, setSelectedMethod] =
     useState<ShippingMethod | null>(null);
-  const [relayPoint, setRelayPoint] =
-    useState<RelayPoint | null>(null);
+  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
 
   const t = UI[locale] ?? UI.fr;
 
-  /* -------------------------------
-     Méthodes visibles
-  -------------------------------- */
+  /* Méthodes visibles (triées) */
   const visibleMethods = useMemo(
-    () => methods.filter((m) => m.isActive !== false),
+    () =>
+      methods
+        .filter((m) => m.isActive !== false)
+        .slice()
+        .sort((a, b) => {
+          const aOrder = a.sortOrder ?? 999;
+          const bOrder = b.sortOrder ?? 999;
+          return aOrder - bOrder;
+        }),
     [methods]
   );
 
-  /* -------------------------------
-     Provider relay sélectionné
-  -------------------------------- */
+  /* Provider relay sélectionné */
   const relayConfig =
-    selectedMethod?.type === "relay" &&
-    selectedMethod.relayProvider
+    selectedMethod?.type === "relay" && selectedMethod.relayProvider
       ? RELAY_PROVIDERS[selectedMethod.relayProvider]
       : null;
 
   const RelayComponent = relayConfig?.Component;
 
-  /* -------------------------------
-     Handlers
-  -------------------------------- */
+  /* Handlers */
   function selectMethod(method: ShippingMethod) {
     setSelectedMethod(method);
     onMethodSelect(method);
@@ -157,19 +154,12 @@ export default function ChooseShipping({
                   : "border-gray-300 bg-white hover:border-gray-400"
               }`}
             >
+              {/* Colonne gauche : nom, délai, badge relay */}
               <div className="flex-1">
                 <p className="font-semibold">{m.name}</p>
 
                 {m.delay && (
-                  <p className="text-sm text-gray-600">
-                    {m.delay}
-                  </p>
-                )}
-
-                {m.vatRate && m.vatRate > 0 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {t.vatIncluded} ({m.vatRate}%)
-                  </p>
+                  <p className="text-sm text-gray-600">{m.delay}</p>
                 )}
 
                 {providerConfig && (
@@ -179,8 +169,17 @@ export default function ChooseShipping({
                 )}
               </div>
 
-              <div className="font-semibold whitespace-nowrap">
-                {price.ttc.toFixed(2)} €
+              {/* Colonne droite : prix TTC + TVA dessous */}
+              <div className="shipping-price-col">
+                <span className="shipping-price-ttc">
+                  {price.ttc.toFixed(2)} €
+                </span>
+
+                {m.vatRate && m.vatRate > 0 && (
+                  <span className="shipping-price-vat">
+                    {t.vatIncluded} ({m.vatRate}%)
+                  </span>
+                )}
               </div>
             </button>
           );
@@ -208,9 +207,7 @@ export default function ChooseShipping({
                 <p>
                   {relayPoint.postalCode} {relayPoint.city}
                 </p>
-                {relayPoint.country && (
-                  <p>{relayPoint.country}</p>
-                )}
+                {relayPoint.country && <p>{relayPoint.country}</p>}
               </div>
             )}
           </div>
