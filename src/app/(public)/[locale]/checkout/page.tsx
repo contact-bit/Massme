@@ -531,12 +531,16 @@ export default function CheckoutPage() {
 
   /* ---------- TOTALS ---------- */
   const shippingTTC = shippingMethod?.priceTTC ?? 0;
+
   const shippingVAT =
-    shippingMethod && shippingMethod.vatRate > 0
+    shippingMethod?.priceHT != null &&
+    shippingMethod?.vatRate != null &&
+    shippingMethod.vatRate > 0
       ? round2(
           shippingMethod.priceHT * (shippingMethod.vatRate / 100)
         )
       : 0;
+
   const finalTTC = totalTTC + shippingTTC;
 
   /* ---------- PAY ---------- */
@@ -622,15 +626,14 @@ export default function CheckoutPage() {
           <p className="checkout-loading">{t.loadingShipping}</p>
         </section>
       ) : (
-<section className="checkout-section checkout-section-shipping">
-  <ChooseShipping
-    methods={methods}
-    locale={locale}
-    onMethodSelect={setShippingMethod}
-    onRelaySelect={setRelayPoint}
-  />
-</section>
-
+        <section className="checkout-section checkout-section-shipping">
+          <ChooseShipping
+            methods={methods}
+            locale={locale}
+            onMethodSelect={setShippingMethod}
+            onRelaySelect={setRelayPoint}
+          />
+        </section>
       )}
 
       {/* 3 : CLIENT - FACTURATION */}
