@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+/* ------------------ types ------------------ */
+
 type OrderItem = {
   name?: any;
   price?: number | { eur?: number };
@@ -10,6 +12,8 @@ type OrderItem = {
 };
 
 type LangCode = "fr" | "en" | "es" | "de" | "it" | "nl";
+
+type ShippingStatus = "pending" | "preparing" | "shipped" | "delivered" | "cancelled";
 
 type Order = {
   id: string;
@@ -26,6 +30,11 @@ type Order = {
   items?: OrderItem[];
   shippingAddress?: any;
 
+  // suivi livraison
+  shippingStatus?: ShippingStatus;
+  trackingNumber?: string | null;
+  carrier?: "mondialrelay" | "other" | null;
+
   // computed
   __created?: Date | null;
   __total?: number;
@@ -41,6 +50,7 @@ type StatusFilter =
   | "refunded"
   | "canceled"
   | "other";
+
 type SortKey = "date_desc" | "date_asc" | "total_desc" | "total_asc";
 
 /* ------------------ helpers ------------------ */
@@ -48,6 +58,7 @@ type SortKey = "date_desc" | "date_asc" | "total_desc" | "total_asc";
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
+
 function firstDayOfMonthISO() {
   const d = new Date();
   const first = new Date(d.getFullYear(), d.getMonth(), 1);
@@ -132,6 +143,7 @@ function getItemPrice(it: OrderItem): number {
     return (p as any).eur;
   return 0;
 }
+
 function getSubtotal(o: Order): number {
   const items = Array.isArray(o.items) ? o.items : [];
   return items.reduce(
@@ -139,6 +151,7 @@ function getSubtotal(o: Order): number {
     0
   );
 }
+
 function getShipping(o: Order): number {
   const m = o.shippingMethod?.price;
   if (typeof m === "number") return m;
@@ -147,6 +160,7 @@ function getShipping(o: Order): number {
   if (typeof o.shippingPrice === "number") return o.shippingPrice;
   return 0;
 }
+
 function getTotal(o: Order): number {
   if (typeof o.amount_total === "number") return o.amount_total / 100;
   if (typeof o.total === "number") return o.total;
@@ -221,6 +235,31 @@ function StatusPill({ status }: { status?: string }) {
   } else if (s && s !== "—") {
     cls = "pill pill--other";
     label = s;
+  }
+
+  return <span className={cls}>{label}</span>;
+}
+
+function ShippingStatusPill({ status }: { status?: ShippingStatus }) {
+  const s: ShippingStatus = status || "pending";
+  let cls = "pill";
+  let label = "";
+
+  if (s === "pending") {
+    cls = "pill pill--pending";
+    label = "En attente";
+  } else if (s === "preparing") {
+    cls = "pill pill--other";
+    label = "Préparation";
+  } else if (s === "shipped") {
+    cls = "pill pill--paid";
+    label = "Expédiée";
+  } else if (s === "delivered") {
+    cls = "pill pill--paid";
+    label = "Livrée";
+  } else if (s === "cancelled") {
+    cls = "pill pill--canceled";
+    label = "Annulée";
   }
 
   return <span className={cls}>{label}</span>;
@@ -466,6 +505,24 @@ function OrderDetails({
 
       <div className="box">
         <div className="boxTitle">Livraison</div>
+
+        <div className="kv">
+          <div className="kvKey">Statut</div>
+          <div className="kvVal">
+            <ShippingStatusPill status={order.shippingStatus} />
+          </div>
+        </div>
+
+        <div className="kv">
+          <div className="kvKey">Transporteur</div>
+          <div className="kvVal">{order.carrier || "—"}</div>
+        </div>
+
+        <div className="kv">
+          <div className="kvKey">Tracking</div>
+          <div className="kvVal mono">{order.trackingNumber || "—"}</div>
+        </div>
+
         <div className="addr">{formatAddress(order.shippingAddress) || "—"}</div>
         <div className="rowBtns">
           <button className="btn btn--soft" onClick={onCopyAddress}>
@@ -554,7 +611,6 @@ export default function AdminOrdersPage() {
         const total = getTotal(o);
         const email = o.email ?? o.shippingAddress?.email ?? "—";
 
-        // normalisation pays → code langue
         const rawCountry = safeLower((o as any).shippingAddress?.country);
         let lang: LangCode | undefined;
         if (rawCountry.startsWith("fr")) lang = "fr";
@@ -590,7 +646,6 @@ export default function AdminOrdersPage() {
     didFetchRef.current = true;
 
     fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filtered = useMemo(() => {
@@ -741,6 +796,107 @@ export default function AdminOrdersPage() {
         return n;
       });
     }
+  };
+
+  const [lastPrepId, setLastPrepId] = useState<string | null>(null);
+
+  const updateShippingStatus = async (
+    order: Order,
+    nextStatus: ShippingStatus
+  ) => {
+    const pass = localStorage.getItem("admin_password") || "";
+    if (!pass) {
+      window.location.href = "/admin/login";
+      return;
+    }
+
+    let tracking: string | null = order.trackingNumber ?? null;
+
+    if (nextStatus === "shipped") {
+      tracking = window.prompt(
+        "Numéro de suivi (laisse vide si pas encore dispo) :",
+        order.trackingNumber || ""
+      );
+      if (tracking === null) return;
+      if (tracking === "") tracking = null;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/admin/orders/${encodeURIComponent(order.id)}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-password": pass,
+          },
+          body: JSON.stringify({
+            shippingStatus: nextStatus,
+            trackingNumber: tracking,
+            carrier: order.carrier || "mondialrelay",
+          }),
+        }
+      );
+
+      const txt = await res.text();
+      if (!res.ok) throw new Error(txt || `HTTP ${res.status}`);
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === order.id
+            ? {
+                ...o,
+                shippingStatus: nextStatus,
+                trackingNumber: tracking,
+                carrier: order.carrier || "mondialrelay",
+              }
+            : o
+        )
+      );
+
+      if (nextStatus === "preparing") {
+        setLastPrepId(order.id);
+        setTimeout(() => setLastPrepId(null), 900);
+      }
+
+      toastIt(
+        nextStatus === "pending"
+          ? "Statut livraison: en attente"
+          : nextStatus === "preparing"
+          ? "Statut livraison: en préparation"
+          : nextStatus === "shipped"
+          ? "Colis marqué comme expédié ✅"
+          : nextStatus === "delivered"
+          ? "Colis marqué comme livré ✅"
+          : "Livraison annulée"
+      );
+    } catch (e: any) {
+      toastIt("Erreur mise à jour livraison ❌");
+      alert(e?.message ?? "Erreur mise à jour livraison");
+    }
+  };
+
+  const getShippingText = (status?: ShippingStatus) => {
+    if (status === "pending")
+      return "Commande bien reçue, à préparer dès que possible.";
+    if (status === "preparing")
+      return "Commande en cours de préparation, prête à être expédiée.";
+    if (status === "shipped") return "Colis expédié, en cours d’acheminement.";
+    if (status === "delivered") return "Colis livré au client.";
+    if (status === "cancelled") return "Commande / livraison annulée.";
+    return "Statut livraison non défini.";
+  };
+
+  const getNextActionHint = (status?: ShippingStatus) => {
+    if (status === "pending")
+      return "→ Cliquez sur “Mettre en préparation” dès que vous commencez à préparer la commande.";
+    if (status === "preparing")
+      return "→ Lorsque le colis part, marquez-le comme “Expédié”.";
+    if (status === "shipped")
+      return "→ Une fois le colis livré, marquez la commande comme “Livrée”.";
+    if (status === "delivered") return "Aucune action nécessaire.";
+    if (status === "cancelled") return "Commande clôturée.";
+    return "";
   };
 
   return (
@@ -920,6 +1076,33 @@ export default function AdminOrdersPage() {
           border-color: rgba(11, 18, 32, 0.1);
         }
 
+        .btn--chip {
+          border-radius: 999px;
+          transition: transform 0.14s ease, box-shadow 0.14s ease,
+            background 0.14s ease;
+        }
+        .btn--chip:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 18px rgba(15, 23, 42, 0.16);
+        }
+        .btn--pulse {
+          animation: pulsePrep 0.9s ease-out 1;
+        }
+        @keyframes pulsePrep {
+          0% {
+            box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.5);
+            transform: scale(1);
+          }
+          60% {
+            box-shadow: 0 0 0 8px rgba(249, 115, 22, 0);
+            transform: scale(1.04);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+            transform: scale(1);
+          }
+        }
+
         .listHead {
           padding: 12px 14px;
           display: flex;
@@ -1046,6 +1229,26 @@ export default function AdminOrdersPage() {
         .pill--other {
           background: rgba(148, 163, 184, 0.18);
           color: rgba(30, 41, 59, 0.95);
+        }
+
+        .statusBlock {
+          margin-top: 4px;
+          font-size: 11px;
+          line-height: 1.45;
+          max-width: 260px;
+        }
+        .statusMain {
+          color: #c05621;
+          font-weight: 700;
+        }
+        .statusHint {
+          color: rgba(15, 23, 42, 0.7);
+          font-weight: 500;
+          margin-top: 2px;
+          opacity: 0.92;
+        }
+        .statusBlock:hover .statusHint {
+          text-decoration: underline;
         }
 
         .footer {
@@ -1554,6 +1757,7 @@ export default function AdminOrdersPage() {
             </div>
           ) : (
             <>
+              {/* DESKTOP */}
               <div className="hideMobile">
                 <div className="tableWrap">
                   <table>
@@ -1576,11 +1780,11 @@ export default function AdminOrdersPage() {
                             <span>Sélect.</span>
                           </label>
                         </th>
-                        <th>ID</th>
+                        <th>ID / Statut</th>
                         <th>Date</th>
                         <th>Email</th>
                         <th>Langue</th>
-                        <th>Status</th>
+                        <th>Paiement</th>
                         <th>Produits</th>
                         <th>Total</th>
                         <th style={{ textAlign: "right" }}>Actions</th>
@@ -1596,7 +1800,17 @@ export default function AdminOrdersPage() {
                               onChange={() => toggleOne(o.id)}
                             />
                           </td>
-                          <td className="mono">{compactId(o.id)}</td>
+                          <td>
+                            <div className="mono">{compactId(o.id)}</div>
+                            <div className="statusBlock">
+                              <div className="statusMain">
+                                {getShippingText(o.shippingStatus)}
+                              </div>
+                              <div className="statusHint">
+                                {getNextActionHint(o.shippingStatus)}
+                              </div>
+                            </div>
+                          </td>
                           <td>{formatDateFR(o.__created ?? null)}</td>
                           <td>{o.__email || "—"}</td>
                           <td>{o.__lang || "—"}</td>
@@ -1606,27 +1820,132 @@ export default function AdminOrdersPage() {
                           <td>{o.__itemsLabel || "—"}</td>
                           <td>{moneyEUR(o.__total ?? 0)}</td>
                           <td>
-                            <div className="actions">
-                              <ActionIconButton
-                                title="Voir"
-                                onClick={() => setDrawerId(o.id)}
-                                icon={<IconEye />}
-                                variant="primary"
-                              />
-                              <ActionIconButton
-                                title="Copier ID"
-                                onClick={async () => {
-                                  await copyText(o.id);
-                                  toastIt("ID copié ✅");
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                flexWrap: "wrap",
+                                justifyContent: "flex-end",
+                              }}
+                            >
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <ActionIconButton
+                                  title="Détails"
+                                  onClick={() => setDrawerId(o.id)}
+                                  icon={<IconEye />}
+                                  variant="primary"
+                                />
+                                <ActionIconButton
+                                  title="Copier ID"
+                                  onClick={async () => {
+                                    await copyText(o.id);
+                                    toastIt("ID copié ✅");
+                                  }}
+                                  icon={<IconCopy />}
+                                />
+                              </div>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  padding: "4px 8px",
+                                  borderRadius: 999,
+                                  background: "rgba(148,163,184,0.08)",
                                 }}
-                                icon={<IconCopy />}
-                              />
-                              <ActionIconButton
-                                title="Marquer payé"
-                                onClick={() => markPaid(o.id)}
-                                icon={<IconCheck />}
-                                variant="success"
-                              />
+                              >
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    color: "rgba(15,23,42,0.7)",
+                                  }}
+                                >
+                                  Livraison:
+                                </span>
+
+                                <button
+                                  type="button"
+                                  className="btn btn--soft btn--chip"
+                                  style={{
+                                    height: 30,
+                                    padding: "0 10px",
+                                    fontSize: 11,
+                                    background:
+                                      o.shippingStatus === "pending" ||
+                                      !o.shippingStatus
+                                        ? "rgba(248,250,252,1)"
+                                        : "transparent",
+                                  }}
+                                  onClick={() =>
+                                    updateShippingStatus(o, "pending")
+                                  }
+                                >
+                                  ⏳ En attente
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className={
+                                    "btn btn--soft btn--chip" +
+                                    (o.id === lastPrepId ? " btn--pulse" : "")
+                                  }
+                                  style={{
+                                    height: 30,
+                                    padding: "0 10px",
+                                    fontSize: 11,
+                                    background:
+                                      o.shippingStatus === "preparing"
+                                        ? "rgba(248,250,252,1)"
+                                        : "transparent",
+                                  }}
+                                  onClick={() =>
+                                    updateShippingStatus(o, "preparing")
+                                  }
+                                >
+                                  🧺 Prépa
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="btn btn--soft btn--chip"
+                                  style={{
+                                    height: 30,
+                                    padding: "0 10px",
+                                    fontSize: 11,
+                                    background:
+                                      o.shippingStatus === "shipped"
+                                        ? "rgba(220,252,231,1)"
+                                        : "transparent",
+                                  }}
+                                  onClick={() =>
+                                    updateShippingStatus(o, "shipped")
+                                  }
+                                >
+                                  📦 Expédié
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="btn btn--soft btn--chip"
+                                  style={{
+                                    height: 30,
+                                    padding: "0 10px",
+                                    fontSize: 11,
+                                    background:
+                                      o.shippingStatus === "delivered"
+                                        ? "rgba(204,251,241,1)"
+                                        : "transparent",
+                                  }}
+                                  onClick={() =>
+                                    updateShippingStatus(o, "delivered")
+                                  }
+                                >
+                                  ✅ Livré
+                                </button>
+                              </div>
+
                               <ActionIconButton
                                 title="Supprimer"
                                 onClick={() => deleteOrder(o.id)}
@@ -1676,6 +1995,7 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
+              {/* MOBILE */}
               <div className="showMobile">
                 <div className="cards">
                   {paged.map((o) => (
@@ -1690,6 +2010,14 @@ export default function AdminOrdersPage() {
                           </div>
                           <div className="date">
                             Langue: {o.__lang || "—"}
+                          </div>
+                          <div className="statusBlock" style={{ marginTop: 6 }}>
+                            <div className="statusMain">
+                              {getShippingText(o.shippingStatus)}
+                            </div>
+                            <div className="statusHint">
+                              {getNextActionHint(o.shippingStatus)}
+                            </div>
                           </div>
                         </div>
                         <StatusPill status={o.status} />
@@ -1724,6 +2052,14 @@ export default function AdminOrdersPage() {
                           onClick={() => markPaid(o.id)}
                         >
                           Payé
+                        </button>
+                        <button
+                          className="btn btn--ghost"
+                          onClick={() =>
+                            updateShippingStatus(o, "preparing")
+                          }
+                        >
+                          Mettre en préparation
                         </button>
                         <button
                           className="btn btn--ghost"
