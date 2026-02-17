@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { RelayPoint } from "@/components/shipping/types";
 import type { Locale } from "@/lib/i18n";
 
-export type RelayComponentProps = {
+type Props = {
   onSelect: (relay: RelayPoint) => void;
   country: string;
   locale: Locale;
@@ -17,7 +17,7 @@ export default function RelayPointMondialRelay({
   onSelect,
   country,
   locale,
-}: RelayComponentProps) {
+}: Props) {
   const [selectedPoint, setSelectedPoint] = useState<RelayPoint | null>(null);
 
   const initialized = useRef(false);

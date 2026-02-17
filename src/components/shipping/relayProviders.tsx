@@ -1,31 +1,35 @@
-// src/components/shipping/relayProviders.tsx
-
 "use client";
 
 import React from "react";
-import type { RelayProvider } from "@/components/shipping/types";
+import type { RelayProvider, RelayPoint } from "@/components/shipping/types";
 import type { Locale } from "@/lib/i18n";
-import RelayPointMondialRelay, {
-  RelayComponentProps,
-} from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
+import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
 
 /* =====================================================
    TYPES
 ===================================================== */
 
+type RelayProviderComponent = React.FC<{
+  onSelect: (relay: RelayPoint) => void;
+  country: string;
+  locale: Locale;
+}>;
+
 type RelayProviderConfig = {
   label: Record<Locale, string>;
   choose: Record<Locale, string>;
   selected: Record<Locale, string>;
-  Component: React.FC<RelayComponentProps>;
+  Component: RelayProviderComponent;
 };
+
+
 
 /* =====================================================
    PLACEHOLDER
 ===================================================== */
 
 const ComingSoon =
-  (name: string): RelayProviderConfig["Component"] =>
+  (name: string): RelayProviderComponent =>
   () => (
     <div className="p-4 text-sm rounded bg-yellow-50 text-yellow-800">
       🚧 {name} bientôt disponible
