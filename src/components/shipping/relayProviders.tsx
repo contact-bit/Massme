@@ -1,39 +1,42 @@
 // src/components/shipping/relayProviders.tsx
 
+"use client";
+
+import React from "react";
 import type { RelayProvider } from "@/components/shipping/types";
 import type { Locale } from "@/lib/i18n";
-import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
-import React from "react";
+import RelayPointMondialRelay, {
+  RelayComponentProps,
+} from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
 
 /* =====================================================
    TYPES
 ===================================================== */
+
 type RelayProviderConfig = {
   label: Record<Locale, string>;
   choose: Record<Locale, string>;
   selected: Record<Locale, string>;
-  Component: React.FC<{ onSelect: (relay: any) => void }>;
+  Component: React.FC<RelayComponentProps>;
 };
 
 /* =====================================================
    PLACEHOLDER
 ===================================================== */
+
 const ComingSoon =
   (name: string): RelayProviderConfig["Component"] =>
-  () =>
-    (
-      <div className="p-4 text-sm rounded bg-yellow-50 text-yellow-800">
-        🚧 {name} bientôt disponible
-      </div>
-    );
+  () => (
+    <div className="p-4 text-sm rounded bg-yellow-50 text-yellow-800">
+      🚧 {name} bientôt disponible
+    </div>
+  );
 
 /* =====================================================
    REGISTRY — 🔑 DOIT MATCH RelayProvider
 ===================================================== */
-export const RELAY_PROVIDERS: Record<
-  RelayProvider,
-  RelayProviderConfig
-> = {
+
+export const RELAY_PROVIDERS: Record<RelayProvider, RelayProviderConfig> = {
   mondialrelay: {
     label: {
       fr: "Point relais Mondial Relay",

@@ -1,15 +1,19 @@
-"use client";
-
 import React from "react";
 import type { RelayProvider } from "@/components/shipping/types";
 import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
 
 type Locale = "fr" | "en";
 
+type RelayComponentProps = {
+  onSelect: (p: any) => void; // ou RelayPoint si tu as le type
+  country: string;
+  locale: string;
+};
+
 type RelayProviderConfig = {
   label: Record<Locale, string>;
   choose: Record<Locale, string>;
-  Component: React.FC<{ onSelect: (p: any) => void }>;
+  Component: React.FC<RelayComponentProps>;
 };
 
 const ComingSoon =
@@ -21,10 +25,7 @@ const ComingSoon =
       </div>
     );
 
-export const RELAY_PROVIDERS: Record<
-  RelayProvider,
-  RelayProviderConfig
-> = {
+export const RELAY_PROVIDERS: Record<RelayProvider, RelayProviderConfig> = {
   mondialrelay: {
     label: {
       fr: "Point relais Mondial Relay",

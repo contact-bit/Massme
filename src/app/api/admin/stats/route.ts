@@ -72,25 +72,61 @@ export async function GET() {
     const last7Start = addDays(todayStart, -6);
     const prev7Start = addDays(last7Start, -7);
 
-    /* =========================
-       STATS GLOBAL (LIVE)
-    ========================= */
+    // début de mois (période logique de la page /admin/orders)
+    const monthStart = parisStartOfDay(
+      new Date(now.getFullYear(), now.getMonth(), 1)
+    );
 
-    // Produits
+    /* =========================
+       PRODUITS
+    ========================= */
     const productsSnap = await productsCol.get();
     const products = productsSnap.docs.map((d) => d.data() as any);
 
     const productsCount = products.length;
     const activeProducts = products.filter((p) => p?.active === true).length;
 
-    // Toutes les commandes (pour les compteurs globaux)
+    /* =========================
+       COMMANDES (toutes)
+    ========================= */
     const allOrdersSnap = await ordersCol.get();
-    const allOrders = allOrdersSnap.docs.map((d) => d.data() as any);
+    const allOrdersRaw = allOrdersSnap.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as any),
+    }));
 
-    const ordersCount = allOrders.length;
-    const paidOrdersCount = allOrders.filter((o) => o?.status === "paid").length;
-    const pendingCount = allOrders.filter(
-      (o) => o?.status === "pending_payment"
+    // normalisation createdAt -> ms + status
+    const allOrders = allOrdersRaw.map((o) => {
+      const ms =
+        o?.createdAt?.toDate?.()?.getTime?.() ??
+        (typeof o?.createdAt === "string"
+          ? new Date(o.createdAt).getTime()
+          : 0);
+
+      const status = o?.status ?? "unknown";
+
+      return {
+        ...o,
+        _ms: ms,
+        _status: status,
+      };
+    });
+
+    const nowMs = now.getTime();
+    const monthStartMs = monthStart.getTime();
+
+    // Commandes "réelles" du mois = paid + pending_payment dans [monthStart, now]
+    const monthOrders = allOrders.filter((o) => {
+      if (!o._ms || o._ms < monthStartMs || o._ms > nowMs) return false;
+      return o._status === "paid" || o._status === "pending_payment";
+    });
+
+    const ordersCount = monthOrders.length;
+    const paidOrdersCount = monthOrders.filter(
+      (o) => o._status === "paid"
+    ).length;
+    const pendingCount = monthOrders.filter(
+      (o) => o._status === "pending_payment"
     ).length;
 
     /* =========================
@@ -123,7 +159,7 @@ export async function GET() {
       }));
 
     /* =========================
-       LAST ORDERS
+       LAST ORDERS (global)
     ========================= */
     const lastOrdersSnap = await ordersCol
       .orderBy("createdAt", "desc")
@@ -147,42 +183,34 @@ export async function GET() {
 
     /* =========================
        REVENUS (14 jours)
+       (uniquement commandes "paid")
     ========================= */
-    const paid14Snap = await ordersCol
-      .where("status", "==", "paid")
-      .where("createdAt", ">=", prev7Start)
-      .get();
-
-    const paidOrders = paid14Snap.docs.map((d) => {
-      const o: any = d.data();
-      return {
-        ...o,
-        _ms: o?.createdAt?.toDate?.()?.getTime?.() ?? 0,
-      };
-    });
+    const paid14 = allOrders.filter(
+      (o) => o._status === "paid" && o._ms >= prev7Start.getTime()
+    );
 
     const todayMs = todayStart.getTime();
     const yesterdayMs = yesterdayStart.getTime();
     const last7Ms = last7Start.getTime();
     const prev7Ms = prev7Start.getTime();
 
-    const revenueLast7 = paidOrders
+    const revenueLast7 = paid14
       .filter((o) => o._ms >= last7Ms)
       .reduce((s, o) => s + orderTotalEUR(o), 0);
 
-    const revenuePrev7 = paidOrders
+    const revenuePrev7 = paid14
       .filter((o) => o._ms >= prev7Ms && o._ms < last7Ms)
       .reduce((s, o) => s + orderTotalEUR(o), 0);
 
-    const revenueToday = paidOrders
+    const revenueToday = paid14
       .filter((o) => o._ms >= todayMs)
       .reduce((s, o) => s + orderTotalEUR(o), 0);
 
-    const revenueYesterday = paidOrders
+    const revenueYesterday = paid14
       .filter((o) => o._ms >= yesterdayMs && o._ms < todayMs)
       .reduce((s, o) => s + orderTotalEUR(o), 0);
 
-    const paidLast7Count = paidOrders.filter((o) => o._ms >= last7Ms).length;
+    const paidLast7Count = paid14.filter((o) => o._ms >= last7Ms).length;
     const aov = paidLast7Count > 0 ? revenueLast7 / paidLast7Count : 0;
 
     /* =========================
@@ -193,7 +221,7 @@ export async function GET() {
       const start = day.getTime();
       const end = addDays(day, 1).getTime();
 
-      const revenue = paidOrders
+      const revenue = paid14
         .filter((o) => o._ms >= start && o._ms < end)
         .reduce((s, o) => s + orderTotalEUR(o), 0);
 
@@ -231,9 +259,9 @@ export async function GET() {
       kpis: {
         productsCount,
         activeProducts,
-        ordersCount,
-        paidOrdersCount,
-        pendingCount,
+        ordersCount, // commandes du mois (paid + pending_payment)
+        paidOrdersCount, // payées du mois
+        pendingCount, // en attente du mois
         revenueLast7: Number(revenueLast7.toFixed(2)),
         revenuePrev7: Number(revenuePrev7.toFixed(2)),
         revenueToday: Number(revenueToday.toFixed(2)),

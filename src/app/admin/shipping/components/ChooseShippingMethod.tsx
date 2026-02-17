@@ -115,7 +115,11 @@ export default function ChooseShippingMethod({
         <div className="border p-4 rounded-lg mt-4 bg-white shadow-sm">
           <h3 className="font-semibold mb-2">{t.chooseRelay}</h3>
 
-          <RelayPointMondialRelay onSelect={handleRelayChosen} />
+          <RelayPointMondialRelay
+            onSelect={handleRelayChosen}
+            country={selected.country}
+            locale={locale}
+          />
 
           {relayPoint && (
             <div className="mt-3 text-sm bg-gray-100 p-2 rounded">

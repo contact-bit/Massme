@@ -45,6 +45,9 @@ export type ShippingMethod = {
 
   /** Ordre d'affichage (1, 2, 3…) */
   sortOrder?: number | null;
+
+  /** Pays de la méthode (FR, IT, ES, DE, NL, …) */
+  country: string;
 };
 
 /* --------------------------------------------------

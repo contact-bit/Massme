@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 
 type StatsResponse = {
   kpis: {
@@ -31,7 +31,7 @@ type StatsResponse = {
   alerts: { tone: "info" | "warn" | "danger"; title: string; desc: string }[];
 };
 
-function eur(n: number | null | undefined) {
+function eur(n: number | null | undefined): string {
   const v = typeof n === "number" && !isNaN(n) ? n : 0;
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
@@ -39,7 +39,7 @@ function eur(n: number | null | undefined) {
   }).format(v);
 }
 
-function shortDate(iso: string | null) {
+function shortDate(iso: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "—";
@@ -69,43 +69,46 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
+  const refresh = useCallback(async () => {
     let alive = true;
+    try {
+      setLoading(true);
+      setErr(null);
 
-    async function load() {
-      try {
-        setLoading(true);
-        setErr(null);
+      const res = await fetch("/api/admin/stats", { 
+        cache: "no-store",
+        headers: { "X-Refresh": Date.now().toString() }
+      });
+      const json = await res.json();
 
-        const res = await fetch("/api/admin/stats", { cache: "no-store" });
-        const json = await res.json();
+      console.log("📊 API Response:", { ok: res.ok, status: res.status, data: json });
 
-        if (!res.ok) {
-          throw new Error(json?.error ?? "Erreur stats");
-        }
-
-        if (!json || typeof json !== "object") {
-          throw new Error("Réponse stats invalide");
-        }
-
-        if (alive) setData(json as StatsResponse);
-      } catch (e: any) {
-        if (alive) setErr(e?.message ?? "Erreur inconnue");
-      } finally {
-        if (alive) setLoading(false);
+      if (!res.ok) {
+        throw new Error(json?.error ?? `Erreur HTTP ${res.status}`);
       }
-    }
 
-    load();
-    return () => {
-      alive = false;
-    };
+      if (!json || typeof json !== "object") {
+        throw new Error("Réponse invalide");
+      }
+
+      if (alive) setData(json as StatsResponse);
+    } catch (e: any) {
+      console.error("Dashboard error:", e);
+      if (alive) setErr(e?.message ?? "Erreur inconnue");
+    } finally {
+      if (alive) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   const maxRevenue = useMemo(() => {
     const series = Array.isArray(data?.series) ? data!.series : [];
-    const max = Math.max(...(series.map((s) => s.revenue || 0) || [0]));
-    return max <= 0 ? 1 : max;
+    const values = series.map((s) => s.revenue || 0);
+    const max = Math.max(...values, 1);
+    return max;
   }, [data]);
 
   if (loading) {
@@ -113,7 +116,7 @@ export default function AdminDashboardPage() {
       <div className="admin-page">
         <div className="dash-head">
           <h1 className="admin-title">📊 Dashboard</h1>
-          <p className="dash-sub">Chargement…</p>
+          <p className="dash-sub">Chargement des stats…</p>
         </div>
         <div className="dash-skeleton-grid">
           <div className="dash-skel" />
@@ -130,15 +133,21 @@ export default function AdminDashboardPage() {
       <div className="admin-page">
         <div className="dash-head">
           <h1 className="admin-title">📊 Dashboard</h1>
-          <p className="dash-sub">Impossible de charger les stats.</p>
+          <p className="dash-sub">Erreur de chargement</p>
         </div>
-
         <div className="dash-error">
-          <div className="dash-error-title">Erreur</div>
-          <div className="dash-error-msg">{err ?? "—"}</div>
-          <button className="btn-primary" onClick={() => location.reload()}>
-            Recharger
-          </button>
+          <div className="dash-error-title">❌ {err ?? "Données indisponibles"}</div>
+          <div className="dash-error-msg">
+            Vérifiez les logs console et Firestore.
+          </div>
+          <div className="dash-error-actions">
+            <button className="btn-secondary" onClick={refresh}>
+              🔄 Réessayer
+            </button>
+            <button className="btn-primary" onClick={() => location.reload()}>
+              Reload complet
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -150,29 +159,24 @@ export default function AdminDashboardPage() {
   const lastOrders = Array.isArray(data.lastOrders) ? data.lastOrders : [];
   const lowStock = Array.isArray(data.lowStock) ? data.lowStock : [];
 
-  const d7 = deltaLabel(
-    k.revenueLast7 ?? 0,
-    k.revenuePrev7 ?? 0,
-    deltas.revenue7dPct ?? 0
-  );
-  const dd = deltaLabel(
-    k.revenueToday ?? 0,
-    k.revenueYesterday ?? 0,
-    deltas.revenueDayPct ?? 0
-  );
+  const d7 = deltaLabel(k.revenueLast7 ?? 0, k.revenuePrev7 ?? 0, deltas.revenue7dPct ?? 0);
+  const dd = deltaLabel(k.revenueToday ?? 0, k.revenueYesterday ?? 0, deltas.revenueDayPct ?? 0);
 
   return (
     <div className="admin-page">
       <div className="dash-head">
         <div>
           <h1 className="admin-title">📊 Dashboard</h1>
+          <p className="dash-sub">
+            {k.ordersCount ?? 0} commandes • {eur(k.revenueLast7)} (7j)
+          </p>
         </div>
         <div className="dash-actions">
-          <button className="btn-secondary" onClick={() => location.reload()}>
-            Actualiser
+          <button className="btn-secondary" onClick={refresh}>
+            🔄 Actualiser
           </button>
           <a className="btn-primary" href="/admin/orders">
-            Voir commandes
+            Commandes →
           </a>
         </div>
       </div>
@@ -195,31 +199,29 @@ export default function AdminDashboardPage() {
           <div className="dash-card-top">
             <span className="dash-label">Produits</span>
             <span className="dash-chip">
-              {k.activeProducts ?? 0}/{k.productsCount ?? 0} actifs
+              {k.activeProducts}/{k.productsCount} actifs
             </span>
           </div>
-          <div className="dash-value">{k.productsCount ?? 0}</div>
-          <div className="dash-foot">Catalogue total</div>
+          <div className="dash-value">{k.productsCount}</div>
+          <div className="dash-foot">Total catalogue</div>
         </div>
 
         <div className="dash-card">
           <div className="dash-card-top">
             <span className="dash-label">Commandes</span>
-            {(k.pendingCount ?? 0) > 0 ? (
-              <span className="dash-chip warn">
-                {k.pendingCount} en attente
-              </span>
+            {k.pendingCount > 0 ? (
+              <span className="dash-chip warn">{k.pendingCount} attente</span>
             ) : (
-              <span className="dash-chip ok">Tout OK</span>
+              <span className="dash-chip ok">✅ Tout OK</span>
             )}
           </div>
-          <div className="dash-value">{k.ordersCount ?? 0}</div>
-          <div className="dash-foot">{k.paidOrdersCount ?? 0} payée(s)</div>
+          <div className="dash-value">{k.ordersCount}</div>
+          <div className="dash-foot">{k.paidOrdersCount} payée(s)</div>
         </div>
 
         <div className="dash-card highlight">
           <div className="dash-card-top">
-            <span className="dash-label">CA (7 jours)</span>
+            <span className="dash-label">CA 7 jours</span>
             <span className={`dash-badge ${d7.tone}`}>{d7.text}</span>
           </div>
           <div className="dash-value">{eur(k.revenueLast7)}</div>
@@ -228,27 +230,24 @@ export default function AdminDashboardPage() {
 
         <div className="dash-card">
           <div className="dash-card-top">
-            <span className="dash-label">CA (aujourd’hui)</span>
+            <span className="dash-label">CA aujourd'hui</span>
             <span className={`dash-badge ${dd.tone}`}>{dd.text}</span>
           </div>
           <div className="dash-value">{eur(k.revenueToday)}</div>
-          <div className="dash-foot">
-            Hier: {eur(k.revenueYesterday)}
-          </div>
+          <div className="dash-foot">Hier: {eur(k.revenueYesterday)}</div>
         </div>
       </div>
 
-      {/* Grid main */}
+      {/* Grid principal */}
       <div className="dash-grid">
-        {/* Chart */}
+        {/* Graphique revenus */}
         <div className="dash-panel">
           <div className="dash-panel-head">
-            <h2 className="dash-panel-title">Revenu — 7 derniers jours</h2>
+            <h2 className="dash-panel-title">Revenus — 7 jours</h2>
             <div className="dash-panel-meta">{eur(k.revenueLast7)}</div>
           </div>
-
           <div className="dash-chart">
-            {(Array.isArray(data.series) ? data.series : []).map((s) => {
+            {data.series.map((s) => {
               const h = Math.round(((s.revenue || 0) / maxRevenue) * 100);
               return (
                 <div key={s.day} className="dash-bar">
@@ -256,13 +255,12 @@ export default function AdminDashboardPage() {
                     <div
                       className="dash-bar-fill"
                       style={{ height: `${h}%` }}
+                      title={`${eur(s.revenue)}`}
                     />
                   </div>
-                  <div className="dash-bar-day">
-                    {s.day ? s.day.slice(5) : ""}
-                  </div>
+                  <div className="dash-bar-day">{s.day.slice(5)}</div>
                   <div className="dash-bar-val">
-                    {s.revenue > 0 ? eur(s.revenue) : ""}
+                    {s.revenue > 0 ? eur(s.revenue) : "0€"}
                   </div>
                 </div>
               );
@@ -270,15 +268,12 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Last orders */}
+        {/* Dernières commandes */}
         <div className="dash-panel">
           <div className="dash-panel-head">
             <h2 className="dash-panel-title">Dernières commandes</h2>
-            <a className="dash-link" href="/admin/orders">
-              Ouvrir →
-            </a>
+            <a className="dash-link" href="/admin/orders">Voir tout →</a>
           </div>
-
           <div className="dash-table">
             <div className="dash-row dash-row-head">
               <div>ID</div>
@@ -287,15 +282,12 @@ export default function AdminDashboardPage() {
               <div>Montant</div>
               <div>Date</div>
             </div>
-
             {lastOrders.length === 0 ? (
-              <div className="dash-empty">Aucune commande.</div>
+              <div className="dash-empty">Aucune commande récente</div>
             ) : (
-              lastOrders.map((o) => (
+              lastOrders.slice(0, 5).map((o) => (
                 <div key={o.id} className="dash-row">
-                  <div className="mono">
-                    {o.id ? `${o.id.slice(0, 6)}…` : "—"}
-                  </div>
+                  <div className="mono">{o.id.slice(0, 6)}…</div>
                   <div className="truncate">{o.email || "—"}</div>
                   <div>
                     <span
@@ -303,7 +295,7 @@ export default function AdminDashboardPage() {
                         o.status === "paid" ? "paid" : "pending"
                       }`}
                     >
-                      {o.status}
+                      {o.status === "paid" ? "✅ Payé" : "⏳ Attente"}
                     </span>
                   </div>
                   <div className="strong">{eur(o.total)}</div>
@@ -315,18 +307,15 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Low stock */}
+      {/* Stocks faibles */}
       {lowStock.length > 0 && (
         <div className="dash-panel">
           <div className="dash-panel-head">
-            <h2 className="dash-panel-title">Stock faible</h2>
-            <a className="dash-link" href="/admin/products">
-              Gérer →
-            </a>
+            <h2 className="dash-panel-title">⚠️ Stocks faibles</h2>
+            <a className="dash-link" href="/admin/products">Gérer →</a>
           </div>
-
           <div className="dash-lowstock">
-            {lowStock.map((p) => (
+            {lowStock.slice(0, 8).map((p) => (
               <div key={p.id} className="dash-lowstock-item">
                 <div className="truncate">{p.name}</div>
                 <div className="dash-chip warn">stock {p.stock}</div>

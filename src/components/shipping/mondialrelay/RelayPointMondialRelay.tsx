@@ -1,16 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { RelayPoint } from "@/components/shipping/types";
+import type { RelayPoint } from "@/components/shipping/types";
+import type { Locale } from "@/lib/i18n";
+
+export type RelayComponentProps = {
+  onSelect: (relay: RelayPoint) => void;
+  country: string;
+  locale: Locale;
+};
 
 /* ============================================================
    Composant Mondial Relay INLINE
 ============================================================ */
 export default function RelayPointMondialRelay({
   onSelect,
-}: {
-  onSelect: (relay: RelayPoint) => void;
-}) {
+  country,
+  locale,
+}: RelayComponentProps) {
   const [selectedPoint, setSelectedPoint] = useState<RelayPoint | null>(null);
 
   const initialized = useRef(false);
@@ -77,7 +84,7 @@ export default function RelayPointMondialRelay({
         // 2) Init Leaflet sur ta div carte
         if (mapRef.current && !mapInstance.current) {
           mapInstance.current = L.map(mapRef.current).setView(
-            [48.8566, 2.3522], // Paris par défaut
+            [48.8566, 2.3522], // centre par défaut
             10
           );
 
@@ -94,7 +101,7 @@ export default function RelayPointMondialRelay({
         $("#mr-list").MR_ParcelShopPicker({
           Target: "#mr-target",
           Brand: "CC23PDX2",
-          Country: "FR",
+          Country: country || "FR",
           ColLivMod: "24R",
 
           OnParcelShopSelected(data: any) {
@@ -144,7 +151,7 @@ export default function RelayPointMondialRelay({
       mapInstance.current = null;
       marker.current = null;
     };
-  }, []);
+  }, [country, locale]);
 
   /* ============================================================
      UI

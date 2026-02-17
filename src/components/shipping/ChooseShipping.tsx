@@ -85,12 +85,16 @@ export default function ChooseShipping({
         .filter((m) => m.isActive !== false)
         .slice()
         .sort((a, b) => {
-          const aOrder = a.sortOrder ?? 999;
-          const bOrder = b.sortOrder ?? 999;
+          const aOrder = mSort(a);
+          const bOrder = mSort(b);
           return aOrder - bOrder;
         }),
     [methods]
   );
+
+  function mSort(m: ShippingMethod) {
+    return m.sortOrder ?? 999;
+  }
 
   /* Provider relay sélectionné */
   const relayConfig =
@@ -195,7 +199,11 @@ export default function ChooseShipping({
               {relayConfig.choose[locale]}
             </h3>
 
-            <RelayComponent onSelect={handleRelaySelect} />
+            <RelayComponent
+              onSelect={handleRelaySelect}
+              country={selectedMethod.country}
+              locale={locale}
+            />
 
             {relayPoint && (
               <div className="mt-3 p-3 bg-gray-100 rounded text-sm">

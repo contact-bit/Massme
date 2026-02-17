@@ -1,3 +1,4 @@
+// src/app/checkout/page.tsx (ou équivalent)
 "use client";
 
 import { useEffect, useState } from "react";
@@ -290,7 +291,7 @@ const TRANSLATIONS: Record<Locale, any> = {
 };
 
 /* =====================================================
-   CART SUMMARY (EN HAUT DE LA PAGE)
+   CART SUMMARY
 ===================================================== */
 
 function CartSummaryInline() {
@@ -473,9 +474,7 @@ export default function CheckoutPage() {
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod | null>(null);
-  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(
-    null
-  );
+  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
   const [loading, setLoading] = useState(false);
 
   /* ---------- LOAD SHIPPING ---------- */
@@ -519,6 +518,7 @@ export default function CheckoutPage() {
             raw.sortOrder === null || raw.sortOrder === undefined
               ? null
               : Number(raw.sortOrder),
+          country: raw.country || shippingCustomer.country,
         };
       });
 
