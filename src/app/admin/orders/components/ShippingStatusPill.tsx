@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import type { ShippingStatus } from "../_domain/types";
+import type { ShippingStatus } from "../domain/types";
 
 export function ShippingStatusPill({ status }: { status?: ShippingStatus }) {
   const s: ShippingStatus = status || "pending";

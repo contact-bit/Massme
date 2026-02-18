@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
-import type { LangCode, Order, SortKey, StatusFilter } from "../_domain/types";
-import { safeLower, safeString } from "../_domain/utils";
+import type { LangCode, Order, SortKey, StatusFilter } from "../domain/types";
+import { safeLower, safeString } from "../domain/utils";
 import { useDebouncedValue } from "./useDebouncedValue";
 
 export function useOrderFilters(initialFrom: string, initialTo: string) {

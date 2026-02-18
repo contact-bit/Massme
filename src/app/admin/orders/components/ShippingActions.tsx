@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import type { Order, ShippingStatus } from "../_domain/types";
+import type { Order, ShippingStatus } from "../domain/types";
 
 export function ShippingActions({
   order,

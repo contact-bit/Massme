@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { firstDayOfMonthISO, todayISO, copyText, compactId, formatAddress } from "./_domain/utils";
+import { firstDayOfMonthISO, todayISO, copyText, compactId, formatAddress } from "./domain/utils";
 import type { Order } from "./domain/types";
 
 import { useToast } from "./hooks/useToast";

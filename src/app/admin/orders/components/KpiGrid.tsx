@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { moneyEUR } from "../_domain/utils";
+import { moneyEUR } from "../domain/utils";
 
 export function KpiGrid({
   stats,

@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import type { LangCode, SortKey, StatusFilter } from "../_domain/types";
+import type { LangCode, SortKey, StatusFilter } from "../domain/types";
 
 export function FiltersBar({
   filters,

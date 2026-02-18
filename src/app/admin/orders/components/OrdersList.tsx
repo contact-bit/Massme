@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import type { Order, ShippingStatus } from "../_domain/types";
+import type { Order, ShippingStatus } from "../domain/types";
 import { OrdersTable } from "./OrdersTable";
 import { OrdersCards } from "./OrdersCards";
 import { PaginationControls } from "./PaginationControls";

@@ -124,7 +124,9 @@ export default function CheckoutPage() {
   // items safe (ocularest max 2)
   const safeItems = useMemo(() => {
     return items.map((item) => {
-      if (item.id === OCULAREST_ID) return { ...item, quantity: Math.min(item.quantity, 2) };
+      if (item.id === OCULAREST_ID) {
+        return { ...item, quantity: Math.min(item.quantity, 2) };
+      }
       return item;
     });
   }, [items]);
@@ -134,13 +136,66 @@ export default function CheckoutPage() {
     if (!shippingMethod) return alert(t.chooseShipping);
     if (!paymentMethod) return alert("Choisissez une méthode de paiement");
     if (!billingCustomer.email) return alert(t.emailRequired);
-    if (!billingCustomer.firstName || !billingCustomer.lastName) return alert(t.nameRequired);
+    if (!billingCustomer.firstName || !billingCustomer.lastName)
+      return alert(t.nameRequired);
     if (!billingCustomer.phone.trim()) return alert(t.phoneRequired);
     if (!heardFrom) return alert(t.heardFromRequired);
-    if (heardFrom === "other" && !heardFromOther.trim()) return alert(t.heardFromOtherRequired);
+    if (heardFrom === "other" && !heardFromOther.trim())
+      return alert(t.heardFromOtherRequired);
 
     const fullName = `${billingCustomer.firstName.trim()} ${billingCustomer.lastName.trim()}`;
 
+    // ✅ VIREMENT BANCAIRE
+    if (paymentMethod.provider === "bank_transfer") {
+      const res = await fetch("/api/bank-transfer/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          locale,
+          items: safeItems,
+          shippingMethod,
+          relayPoint,
+          billingCustomer: {
+            ...billingCustomer,
+            name: fullName,
+            phone: billingCustomer.phone.trim(),
+          },
+          shippingCustomer: {
+            ...shippingCustomer,
+            name: fullName,
+            phone: billingCustomer.phone.trim(),
+          },
+          heardFrom,
+          heardFromOther: heardFrom === "other" ? heardFromOther.trim() : null,
+          totals: {
+            cartHTCents,
+            cartVatCents,
+            cartTTCCents,
+            shippingHTCents,
+            shippingVatCents,
+            shippingTTCCents,
+            finalTTCCents,
+          },
+        }),
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json?.ok || !json?.orderId) {
+        alert(t.paymentError);
+        return;
+      }
+
+      clearCart();
+
+      // Page instructions de virement (à créer)
+      window.location.href = `/${locale}/bank-transfer?order_id=${encodeURIComponent(
+        json.orderId
+      )}`;
+      return;
+    }
+
+    // ✅ STRIPE
     if (paymentMethod.provider === "stripe") {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -186,6 +241,7 @@ export default function CheckoutPage() {
       return;
     }
 
+    // ✅ PAYPAL : paiement via bouton, pas via ce bouton
     if (paymentMethod.provider === "paypal") {
       alert("Merci d’utiliser le bouton PayPal pour régler la commande.");
       return;
@@ -193,6 +249,13 @@ export default function CheckoutPage() {
 
     alert("Cette méthode de paiement n’est pas encore disponible.");
   }
+
+  const payButtonLabel =
+    paymentMethod?.provider === "paypal"
+      ? t.payWithPayPal
+      : paymentMethod?.provider === "bank_transfer"
+      ? "Continuer (virement bancaire)"
+      : t.payWithStripe;
 
   return (
     <main className="checkout">
@@ -282,7 +345,7 @@ export default function CheckoutPage() {
       )}
 
       <button onClick={pay} className="checkout-pay">
-        {paymentMethod?.provider === "paypal" ? t.payWithPayPal : t.payWithStripe}
+        {payButtonLabel}
       </button>
     </main>
   );

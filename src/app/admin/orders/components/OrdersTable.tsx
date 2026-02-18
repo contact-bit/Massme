@@ -1,8 +1,8 @@
 "use client";
 import React, { useMemo } from "react";
-import type { Order, ShippingStatus } from "../_domain/types";
-import { compactId, formatDateFR, moneyEUR } from "../_domain/utils";
-import { getNextActionHint, getShippingText } from "../_domain/shippingText";
+import type { Order, ShippingStatus } from "../domain/types";
+import { compactId, formatDateFR, moneyEUR } from "../domain/utils";
+import { getNextActionHint, getShippingText } from "../domain/shippingText";
 import { StatusPill } from "./StatusPill";
 import { ActionIconButton } from "./ActionIconButton";
 import { IconCopy, IconEye, IconTrash } from "./icons";

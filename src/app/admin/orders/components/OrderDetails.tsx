@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
-import type { Order } from "../_domain/types";
-import { formatDateFR, moneyEUR, formatAddress } from "../_domain/utils";
-import { getItemPrice, getShipping, getSubtotal, getTotal } from "../_domain/orderMath";
+import type { Order } from "../domain/types";
+import { formatDateFR, moneyEUR, formatAddress } from "../domain/utils";
+import { getItemPrice, getShipping, getSubtotal, getTotal } from "../domain/orderMath";
 import { StatusPill } from "./StatusPill";
 import { ShippingStatusPill } from "./ShippingStatusPill";
 

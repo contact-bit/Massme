@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useRef, useState } from "react";
-import type { Order, ShippingStatus } from "../_domain/types";
-import { normalizeOrders } from "../_domain/orderNormalize";
+import type { Order, ShippingStatus } from "../domain/types";
+import { normalizeOrders } from "../domain/orderNormalize";
 
 export function useOrders(toastIt: (m: string) => void) {
   const [orders, setOrders] = useState<Order[]>([]);
