@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 import { Locale } from "@/lib/i18n";
@@ -154,55 +154,98 @@ function eur(n?: number) {
   return `${n.toFixed(2)} €`;
 }
 
+function getDateLocale(locale: Locale) {
+  switch (locale) {
+    case "fr":
+      return "fr-FR";
+    case "en":
+      return "en-US";
+    case "es":
+      return "es-ES";
+    case "de":
+      return "de-DE";
+    case "it":
+      return "it-IT";
+    case "nl":
+      return "nl-NL";
+    default:
+      return undefined;
+  }
+}
+
 /* -------------------------------------
    Page
 ------------------------------------- */
 export default function SuccessPage() {
   const { locale } = useParams() as { locale: Locale };
   const search = useSearchParams();
-  const orderId = search.get("order_id");
-
   const t = TRANSLATIONS[locale];
+
+  // Nouveau format (recommandé)
+  const provider = (search.get("provider") || "").toLowerCase();
+  const ref = search.get("ref");
+
+  // Legacy
+  const legacyOrderId = search.get("order_id");
+  const legacySessionId = search.get("session_id");
+
+  /**
+   * Normalise vers un seul objet { kind, value }
+   */
+  const query = useMemo(() => {
+    if (provider && ref) {
+      if (provider === "stripe")
+        return { kind: "session_id" as const, value: ref };
+      return { kind: "order_id" as const, value: ref };
+    }
+
+    if (legacyOrderId)
+      return { kind: "order_id" as const, value: legacyOrderId };
+    if (legacySessionId)
+      return { kind: "session_id" as const, value: legacySessionId };
+
+    return null;
+  }, [provider, ref, legacyOrderId, legacySessionId]);
 
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!orderId) {
+    if (!query) {
       setError(t.orderNotFound);
       setLoading(false);
       return;
     }
 
-    const safeOrderId = orderId;
+    // ✅ on fige query pour TS (non-null)
+    const q = query;
     let cancelled = false;
 
     async function load() {
       try {
-        const res = await fetch(
-          `/api/get-order?order_id=${encodeURIComponent(safeOrderId)}`,
-          { cache: "no-store" }
-        );
+        setError(null);
+        setLoading(true);
 
-        if (!res.ok) {
-          throw new Error(`API ${res.status}`);
+        const url =
+          q.kind === "order_id"
+            ? `/api/get-order?order_id=${encodeURIComponent(q.value)}`
+            : `/api/get-order?session_id=${encodeURIComponent(q.value)}`;
+
+        const res = await fetch(url, { cache: "no-store" });
+        const data = await res.json().catch(() => null);
+
+        const hasOrder = !!data?.order;
+        const okFlag = data?.ok === true || data?.ok === undefined;
+
+        if (!res.ok || !okFlag || !hasOrder) {
+          throw new Error(data?.error || t.orderNotFound);
         }
 
-        const data = await res.json();
-
-        if (!data?.order) {
-          throw new Error(t.orderNotFound);
-        }
-
-        if (!cancelled) {
-          setOrder(data.order);
-        }
+        if (!cancelled) setOrder(data.order);
       } catch (err) {
         console.error("❌ Success error:", err);
-        if (!cancelled) {
-          setError(t.errorLoading);
-        }
+        if (!cancelled) setError(t.errorLoading);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -212,7 +255,7 @@ export default function SuccessPage() {
     return () => {
       cancelled = true;
     };
-  }, [orderId, t.errorLoading, t.orderNotFound]);
+  }, [query, t.errorLoading, t.orderNotFound]);
 
   if (loading) {
     return (
@@ -241,24 +284,9 @@ export default function SuccessPage() {
   const relay = order.relayPoint || null;
 
   const firstName =
-    order.customerFirstName ||
-    customer.name?.trim().split(/\s+/)[0] ||
-    "";
+    order.customerFirstName || customer.name?.trim().split(/\s+/)[0] || "";
 
-  const dateLocale =
-    locale === "fr"
-      ? "fr-FR"
-      : locale === "en"
-      ? "en-US"
-      : locale === "es"
-      ? "es-ES"
-      : locale === "de"
-      ? "de-DE"
-      : locale === "it"
-      ? "it-IT"
-      : locale === "nl"
-      ? "nl-NL"
-      : undefined;
+  const dateLocale = getDateLocale(locale);
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-12 space-y-10">
@@ -281,18 +309,14 @@ export default function SuccessPage() {
           {t.date} {new Date().toLocaleDateString(dateLocale)}
         </p>
 
-        <p className="text-sm text-gray-500 mt-1">
-          {t.emailSent}
-        </p>
+        <p className="text-sm text-gray-500 mt-1">{t.emailSent}</p>
       </section>
 
       {/* CLIENT */}
       <section className="border rounded-lg p-6">
-        <h2 className="font-semibold text-lg mb-2">
-          {t.customer}
-        </h2>
-        <p className="font-medium">{customer.name}</p>
-        <p>{order.email}</p>
+        <h2 className="font-semibold text-lg mb-2">{t.customer}</h2>
+        <p className="font-medium">{customer.name || "—"}</p>
+        <p>{order.email || "—"}</p>
         {customer.phone && <p>{customer.phone}</p>}
       </section>
 
@@ -300,26 +324,26 @@ export default function SuccessPage() {
       <section className="grid md:grid-cols-2 gap-6">
         <div className="border rounded-lg p-6">
           <h3 className="font-semibold mb-1">{t.address}</h3>
-          <p>{customer.address}</p>
+          <p>{customer.address || "—"}</p>
           <p>
-            {customer.postalCode} {customer.city}
+            {customer.postalCode || "—"} {customer.city || ""}
           </p>
-          <p>{customer.country}</p>
+          <p>{customer.country || "—"}</p>
         </div>
 
         <div className="border rounded-lg p-6">
           <h3 className="font-semibold mb-1">{t.delivery}</h3>
-          <p className="font-medium">{shipping.name}</p>
-          <p>{eur(shipping.priceTTC ?? shipping.price)}</p>
+          <p className="font-medium">{shipping.name || "—"}</p>
+          <p className="text-sm">{eur(shipping.priceTTC ?? shipping.price)}</p>
 
           {shipping.type === "relay" && relay && (
             <div className="mt-3 text-sm">
               <p className="font-medium">{t.relayPoint}</p>
-              <p>{relay.name || relay.Nom}</p>
-              <p>{relay.address || relay.Adresse1}</p>
+              <p>{relay.name || relay.Nom || "—"}</p>
+              <p>{relay.address || relay.Adresse1 || "—"}</p>
               <p>
-                {relay.postalCode || relay.CP}{" "}
-                {relay.city || relay.Ville}
+                {relay.postalCode || relay.CP || "—"}{" "}
+                {relay.city || relay.Ville || ""}
               </p>
             </div>
           )}
@@ -328,31 +352,28 @@ export default function SuccessPage() {
 
       {/* ARTICLES */}
       <section className="border rounded-lg p-6">
-        <h2 className="font-semibold text-lg mb-4">
-          {t.orderedItems}
-        </h2>
+        <h2 className="font-semibold text-lg mb-4">{t.orderedItems}</h2>
 
-        {order.items?.map((it: any, i: number) => {
-          const unitHT = Number(it.priceHT ?? it.price ?? 0);
-          const qty = Number(it.quantity || 1);
+        {Array.isArray(order.items) && order.items.length ? (
+          order.items.map((it: any, i: number) => {
+            const unitHT = Number(it.priceHT ?? it.price ?? 0);
+            const qty = Number(it.quantity || 1);
 
-          return (
-            <div
-              key={i}
-              className="flex justify-between text-sm mb-2"
-            >
-              <div>
-                <p className="font-medium">{it.name}</p>
-                <p className="text-gray-500">
-                  {qty} × {eur(unitHT)} HT
-                </p>
+            return (
+              <div key={i} className="flex justify-between text-sm mb-2">
+                <div>
+                  <p className="font-medium">{it.name || "Produit"}</p>
+                  <p className="text-gray-500">
+                    {qty} × {eur(unitHT)} HT
+                  </p>
+                </div>
+                <p className="font-medium">{eur(unitHT * qty)}</p>
               </div>
-              <p className="font-medium">
-                {eur(unitHT * qty)}
-              </p>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <p className="text-sm text-gray-500">—</p>
+        )}
       </section>
 
       {/* TOTAUX */}
@@ -363,9 +384,7 @@ export default function SuccessPage() {
         </div>
         <div className="flex justify-between">
           <span>{t.vat}</span>
-          <span>
-            {eur(totals.vatAmount ?? totals.totalVAT)}
-          </span>
+          <span>{eur(totals.vatAmount ?? totals.totalVAT)}</span>
         </div>
         <div className="flex justify-between font-semibold text-lg border-t pt-2 mt-2">
           <span>{t.totalInclTax}</span>

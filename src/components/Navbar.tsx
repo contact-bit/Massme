@@ -24,97 +24,72 @@ const TRANSLATIONS: Record<
   Locale,
   {
     notice: string;
-    nav: {
-      home: string;
-      about: string;
-      products: string;
-      blog: string;
-      contact: string;
-    };
+    nav: { home: string; about: string; products: string; blog: string; contact: string };
   }
 > = {
   fr: {
-    notice:
-      "🚧 Site en construction — certaines fonctionnalités peuvent être indisponibles.",
-    nav: {
-      home: "Accueil",
-      about: "Fonctionnement",
-      products: "Commander",
-      blog: "Blog",
-      contact: "Contact",
-    },
+    notice: "🚧 Site en construction — certaines fonctionnalités peuvent être indisponibles.",
+    nav: { home: "Accueil", about: "Fonctionnement", products: "Commander", blog: "Blog", contact: "Contact" },
   },
   en: {
-    notice:
-      "🚧 Website under construction — some features may be unavailable.",
-    nav: {
-      home: "Home",
-      about: "How it works",
-      products: "Order",
-      blog: "Blog",
-      contact: "Contact",
-    },
+    notice: "🚧 Website under construction — some features may be unavailable.",
+    nav: { home: "Home", about: "How it works", products: "Order", blog: "Blog", contact: "Contact" },
   },
   es: {
     notice: "🚧 Sitio en construcción.",
-    nav: {
-      home: "Inicio",
-      about: "Funcionamiento",
-      products: "Comprar",
-      blog: "Blog",
-      contact: "Contacto",
-    },
+    nav: { home: "Inicio", about: "Funcionamiento", products: "Comprar", blog: "Blog", contact: "Contacto" },
   },
   de: {
     notice: "🚧 Website im Aufbau.",
-    nav: {
-      home: "Start",
-      about: "Funktionsweise",
-      products: "Bestellen",
-      blog: "Blog",
-      contact: "Kontakt",
-    },
+    nav: { home: "Start", about: "Funktionsweise", products: "Bestellen", blog: "Blog", contact: "Kontakt" },
   },
   it: {
     notice: "🚧 Sito in costruzione.",
-    nav: {
-      home: "Home",
-      about: "Funzionamento",
-      products: "Ordina",
-      blog: "Blog",
-      contact: "Contatto",
-    },
+    nav: { home: "Home", about: "Funzionamento", products: "Ordina", blog: "Blog", contact: "Contatto" },
   },
   nl: {
     notice: "🚧 Website in aanbouw.",
-    nav: {
-      home: "Home",
-      about: "Werking",
-      products: "Bestellen",
-      blog: "Blog",
-      contact: "Contact",
-    },
+    nav: { home: "Home", about: "Werking", products: "Bestellen", blog: "Blog", contact: "Contact" },
   },
 };
 
 interface NavbarProps {
-  locale: Locale;
+  locale: Locale; // fallback si jamais l’URL n’a pas de locale
+}
+
+function isLocale(value: string): value is Locale {
+  return LANGUAGES.some((l) => l.code === value);
 }
 
 export default function Navbar({ locale }: NavbarProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() || "";
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
 
-  const t = TRANSLATIONS[locale];
-  const currentLang = LANGUAGES.find((l) => l.code === locale)!;
+  // ✅ Locale SOURCE OF TRUTH = URL, prop = fallback
+  const urlLocale = pathname.split("/")[1];
+  const activeLocale: Locale = isLocale(urlLocale) ? urlLocale : locale;
+
+  const t = TRANSLATIONS[activeLocale];
+  const currentLang = LANGUAGES.find((l) => l.code === activeLocale)!;
 
   const switchLocaleHref = (newLocale: Locale) => {
     if (!pathname) return `/${newLocale}`;
-    return pathname.replace(/^\/[a-z]{2}/, `/${newLocale}`);
+    // remplace /xx/... par /newLocale/...
+    if (isLocale(pathname.split("/")[1] || "")) {
+      return pathname.replace(/^\/[a-z]{2}(?=\/|$)/, `/${newLocale}`);
+    }
+    // si l’URL n’a pas de locale, on la préfixe
+    return `/${newLocale}${pathname.startsWith("/") ? "" : "/"}${pathname}`;
   };
+
+  // (optionnel mais propre) fermer menus au changement de route
+  useEffect(() => {
+    setMobileOpen(false);
+    setLangOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -133,7 +108,7 @@ export default function Navbar({ locale }: NavbarProps) {
       <nav className="navbar">
         <div className="navbar-container">
           {/* LOGO */}
-          <Link href={`/${locale}`} className="navbar-logo">
+          <Link href={`/${activeLocale}`} className="navbar-logo">
             <img
               src={LOGO_URL}
               alt="VitectroMed"
@@ -144,11 +119,11 @@ export default function Navbar({ locale }: NavbarProps) {
 
           {/* NAV DESKTOP */}
           <div className="nav-links nav-desktop">
-            <NavLink href={`/${locale}`}>{t.nav.home}</NavLink>
-            <NavLink href={`/${locale}/a-propos`}>{t.nav.about}</NavLink>
-            <NavLink href={`/${locale}/products`}>{t.nav.products}</NavLink>
-            <NavLink href={`/${locale}/blog`}>{t.nav.blog}</NavLink>
-            <NavLink href={`/${locale}/contact`}>{t.nav.contact}</NavLink>
+            <NavLink href={`/${activeLocale}`}>{t.nav.home}</NavLink>
+            <NavLink href={`/${activeLocale}/a-propos`}>{t.nav.about}</NavLink>
+            <NavLink href={`/${activeLocale}/products`}>{t.nav.products}</NavLink>
+            <NavLink href={`/${activeLocale}/blog`}>{t.nav.blog}</NavLink>
+            <NavLink href={`/${activeLocale}/contact`}>{t.nav.contact}</NavLink>
 
             <div className="nav-lang-wrapper" ref={langRef}>
               <button
@@ -191,31 +166,11 @@ export default function Navbar({ locale }: NavbarProps) {
         {/* MENU MOBILE */}
         {mobileOpen && (
           <div className="mobile-menu nav-mobile-only">
-            <MobileLink
-              href={`/${locale}`}
-              label={t.nav.home}
-              onClick={() => setMobileOpen(false)}
-            />
-            <MobileLink
-              href={`/${locale}/a-propos`}
-              label={t.nav.about}
-              onClick={() => setMobileOpen(false)}
-            />
-            <MobileLink
-              href={`/${locale}/products`}
-              label={t.nav.products}
-              onClick={() => setMobileOpen(false)}
-            />
-            <MobileLink
-              href={`/${locale}/blog`}
-              label={t.nav.blog}
-              onClick={() => setMobileOpen(false)}
-            />
-            <MobileLink
-              href={`/${locale}/contact`}
-              label={t.nav.contact}
-              onClick={() => setMobileOpen(false)}
-            />
+            <MobileLink href={`/${activeLocale}`} label={t.nav.home} onClick={() => setMobileOpen(false)} />
+            <MobileLink href={`/${activeLocale}/a-propos`} label={t.nav.about} onClick={() => setMobileOpen(false)} />
+            <MobileLink href={`/${activeLocale}/products`} label={t.nav.products} onClick={() => setMobileOpen(false)} />
+            <MobileLink href={`/${activeLocale}/blog`} label={t.nav.blog} onClick={() => setMobileOpen(false)} />
+            <MobileLink href={`/${activeLocale}/contact`} label={t.nav.contact} onClick={() => setMobileOpen(false)} />
 
             <div className="mobile-lang-list">
               {LANGUAGES.map((l) => (
@@ -236,13 +191,7 @@ export default function Navbar({ locale }: NavbarProps) {
   );
 }
 
-const NavLink = ({
-  href,
-  children,
-}: {
-  href: string;
-  children: ReactNode;
-}) => (
+const NavLink = ({ href, children }: { href: string; children: ReactNode }) => (
   <Link href={href} className="nav-link">
     {children}
   </Link>

@@ -1,7 +1,6 @@
-// src/app/checkout/page.tsx (ou équivalent)
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -9,14 +8,18 @@ import { db } from "@/lib/firebase";
 import { useCart } from "@/context/CartContext";
 import ChooseShipping from "@/components/shipping/ChooseShipping";
 import type { ShippingMethod, RelayPoint } from "@/components/shipping/types";
-import { Locale } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
+import ChoosePayment from "@/components/payment/ChoosePayment";
+import type { PaymentMethod } from "@/app/admin/payments/types";
+
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+
 import "./checkout.css";
 
 /* =====================================================
    CONSTANTES
 ===================================================== */
 
-// id Firestore de ton produit OculaRest / Vitrectromed
 const OCULAREST_ID = "3tuSUenbUVVF6cuSHwS9";
 
 const LOCALES = ["fr", "en", "es", "de", "it", "nl"] as const;
@@ -35,8 +38,33 @@ function getLocale(path: string | null): Locale {
   return LOCALES.includes(l as Locale) ? (l as Locale) : "fr";
 }
 
-function round2(n: number) {
-  return Math.round(n * 100) / 100;
+/** PayPal locale mapping (Smart Buttons UI) */
+function mapLocaleToPayPal(locale: Locale): string {
+  switch (locale) {
+    case "fr":
+      return "fr_FR";
+    case "en":
+      return "en_GB";
+    case "nl":
+      return "nl_NL";
+    case "de":
+      return "de_DE";
+    case "es":
+      return "es_ES";
+    case "it":
+      return "it_IT";
+    default:
+      return "en_US";
+  }
+}
+
+/** Money helpers (centimes, stable) */
+function moneyToCents(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(value * 100);
+}
+function centsToMoney(cents: number): string {
+  return (cents / 100).toFixed(2);
 }
 
 /* =====================================================
@@ -80,8 +108,8 @@ const TRANSLATIONS: Record<Locale, any> = {
     heardFromOtherPlaceholder:
       "Précisez (ex : nom du médecin, nom du média, etc.)",
     heardFromRequired: "Merci d’indiquer comment vous nous avez connus",
-    heardFromOtherRequired:
-      'Merci de préciser si vous choisissez « Autre »',
+    heardFromOtherRequired: 'Merci de préciser si vous choisissez « Autre »',
+    payWithPayPal: "Payer avec PayPal",
   },
   en: {
     title: "Order",
@@ -115,11 +143,10 @@ const TRANSLATIONS: Record<Locale, any> = {
     heardFromSocial: "Social media",
     heardFromMedical: "Medical recommendation",
     heardFromOther: "Other",
-    heardFromOtherPlaceholder:
-      "Please specify (e.g. doctor name, media, etc.)",
+    heardFromOtherPlaceholder: "Please specify (e.g. doctor name, media, etc.)",
     heardFromRequired: "Please tell us how you heard about us",
-    heardFromOtherRequired:
-      'Please specify if you select "Other"',
+    heardFromOtherRequired: 'Please specify if you select "Other"',
+    payWithPayPal: "Pay with PayPal",
   },
   es: {
     title: "Pedido",
@@ -157,8 +184,8 @@ const TRANSLATIONS: Record<Locale, any> = {
     heardFromOtherPlaceholder:
       "Especifica (por ejemplo, nombre del médico, medio, etc.)",
     heardFromRequired: "Indícanos cómo nos conociste",
-    heardFromOtherRequired:
-      "Especifica si eliges « Otro »",
+    heardFromOtherRequired: "Especifica si eliges « Otro »",
+    payWithPayPal: "Pagar con PayPal",
   },
   de: {
     title: "Bestellung",
@@ -174,8 +201,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     postalCode: "Postleitzahl",
     city: "Stadt",
     country: "Land",
-    sameAsBilling:
-      "An dieselbe Adresse wie die Rechnungsadresse liefern",
+    sameAsBilling: "An dieselbe Adresse wie die Rechnungsadresse liefern",
     loadingShipping: "Versand wird geladen…",
     subtotalExclTax: "Zwischensumme ohne MwSt",
     productVAT: "Produkt MwSt",
@@ -189,19 +215,16 @@ const TRANSLATIONS: Record<Locale, any> = {
     nameRequired: "Vor- und Nachname erforderlich",
     phoneRequired: "Telefonnummer erforderlich",
     paymentError: "Zahlungsfehler",
-    heardFromQuestion:
-      "Wie haben Sie von unserem Produkt erfahren?",
-    heardFromInternet:
-      "Internet (Google-Suche, Website, etc.)",
+    heardFromQuestion: "Wie haben Sie von unserem Produkt erfahren?",
+    heardFromInternet: "Internet (Google-Suche, Website, etc.)",
     heardFromSocial: "Soziale Netzwerke",
     heardFromMedical: "Medizinische Empfehlung",
     heardFromOther: "Andere",
     heardFromOtherPlaceholder:
       "Bitte genauer angeben (z.B. Name des Arztes, Medium, etc.)",
-    heardFromRequired:
-      "Bitte teilen Sie uns mit, wie Sie von uns gehört haben",
-    heardFromOtherRequired:
-      'Bitte präzisieren, wenn Sie "Andere" wählen',
+    heardFromRequired: "Bitte teilen Sie uns mit, wie Sie von uns gehört haben",
+    heardFromOtherRequired: 'Bitte präzisieren, wenn Sie "Andere" wählen',
+    payWithPayPal: "Mit PayPal bezahlen",
   },
   it: {
     title: "Ordine",
@@ -217,8 +240,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     postalCode: "Codice postale",
     city: "Città",
     country: "Paese",
-    sameAsBilling:
-      "Spedire allo stesso indirizzo di fatturazione",
+    sameAsBilling: "Spedire allo stesso indirizzo di fatturazione",
     loadingShipping: "Caricamento spedizione…",
     subtotalExclTax: "Subtotale IVA esclusa",
     productVAT: "IVA prodotti",
@@ -227,23 +249,20 @@ const TRANSLATIONS: Record<Locale, any> = {
     totalInclTax: "Totale IVA inclusa",
     payWithStripe: "Paga con Stripe 💳",
     emptyCart: "Carrello vuoto",
-    chooseShipping: "Scegli un metodo di spedizione",
+    chooseShipping: "Scegli un metodo de spedizione",
     emailRequired: "Email richiesta",
     nameRequired: "Nome e cognome richiesti",
     phoneRequired: "Numero di telefono richiesto",
     paymentError: "Errore di pagamento",
-    heardFromQuestion:
-      "Come hai conosciuto il nostro prodotto?",
-    heardFromInternet:
-      "Internet (ricerca Google, sito, ecc.)",
+    heardFromQuestion: "Come hai conosciuto il nostro prodotto?",
+    heardFromInternet: "Internet (ricerca Google, sito, ecc.)",
     heardFromSocial: "Social network",
     heardFromMedical: "Raccomandazione medica",
     heardFromOther: "Altro",
-    heardFromOtherPlaceholder:
-      "Specifica (es. nome del medico, media, ecc.)",
+    heardFromOtherPlaceholder: "Specifica (es. nome del medico, media, ecc.)",
     heardFromRequired: "Indica come ci hai conosciuti",
-    heardFromOtherRequired:
-      "Specifica se scegli « Altro »",
+    heardFromOtherRequired: "Specifica se scegli « Altro »",
+    payWithPayPal: "Paga con PayPal",
   },
   nl: {
     title: "Bestelling",
@@ -259,8 +278,7 @@ const TRANSLATIONS: Record<Locale, any> = {
     postalCode: "Postcode",
     city: "Stad",
     country: "Land",
-    sameAsBilling:
-      "Lever op hetzelfde adres als de factuur",
+    sameAsBilling: "Lever op hetzelfde adres als de factuur",
     loadingShipping: "Verzending laden…",
     subtotalExclTax: "Subtotaal excl. BTW",
     productVAT: "Product BTW",
@@ -274,19 +292,15 @@ const TRANSLATIONS: Record<Locale, any> = {
     nameRequired: "Voor- en achternaam vereist",
     phoneRequired: "Telefoonnummer vereist",
     paymentError: "Betalingsfout",
-    heardFromQuestion:
-      "Hoe heb je over ons product gehoord?",
-    heardFromInternet:
-      "Internet (Google-zoekopdracht, website, enz.)",
+    heardFromQuestion: "Hoe heb je over ons product gehoord?",
+    heardFromInternet: "Internet (Google-zoekopdracht, website, enz.)",
     heardFromSocial: "Sociale media",
     heardFromMedical: "Medische aanbeveling",
     heardFromOther: "Andere",
-    heardFromOtherPlaceholder:
-      "Specificeer (bijv. naam arts, medium, enz.)",
-    heardFromRequired:
-      "Laat ons weten hoe je ons gevonden hebt",
-    heardFromOtherRequired:
-      'Specificeer als je "Andere" kiest',
+    heardFromOtherPlaceholder: "Specificeer (bijv. naam arts, medium, enz.)",
+    heardFromRequired: "Laat ons weten hoe je ons gevonden hebt",
+    heardFromOtherRequired: 'Specificeer als je "Andere" kiest',
+    payWithPayPal: "Betalen met PayPal",
   },
 };
 
@@ -295,14 +309,8 @@ const TRANSLATIONS: Record<Locale, any> = {
 ===================================================== */
 
 function CartSummaryInline() {
-  const {
-    items,
-    totalHT,
-    totalVAT,
-    totalTTC,
-    updateQuantity,
-    removeItem,
-  } = useCart();
+  const { items, totalHT, totalVAT, totalTTC, updateQuantity, removeItem } =
+    useCart();
 
   if (!items.length) {
     return (
@@ -327,10 +335,7 @@ function CartSummaryInline() {
           const isMaxForOcularest = isOcularest && item.quantity >= 2;
 
           return (
-            <div
-              key={`${item.id}-${index}`}
-              className="checkout-cart-item"
-            >
+            <div key={`${item.id}-${index}`} className="checkout-cart-item">
               <div className="checkout-cart-thumb-wrap">
                 {item.imageUrl ? (
                   <img
@@ -353,9 +358,7 @@ function CartSummaryInline() {
                   <div className="checkout-cart-qty">
                     <button
                       type="button"
-                      onClick={() =>
-                        updateQuantity(item.id, item.quantity - 1)
-                      }
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     >
                       −
                     </button>
@@ -365,9 +368,7 @@ function CartSummaryInline() {
                     <button
                       type="button"
                       disabled={isMaxForOcularest}
-                      onClick={() =>
-                        updateQuantity(item.id, item.quantity + 1)
-                      }
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     >
                       +
                     </button>
@@ -422,7 +423,8 @@ export default function CheckoutPage() {
 
   const { items, totalHT, totalVAT, totalTTC, clearCart } = useCart();
 
-  /* ---------- BILLING CUSTOMER ---------- */
+  const paypalOrderDocIdRef = useRef<string | null>(null);
+
   const [billingCustomer, setBillingCustomer] = useState({
     firstName: "",
     lastName: "",
@@ -434,7 +436,6 @@ export default function CheckoutPage() {
     country: "FR",
   });
 
-  /* ---------- SHIPPING CUSTOMER ---------- */
   const [shippingCustomer, setShippingCustomer] = useState({
     address: "",
     postalCode: "",
@@ -442,23 +443,19 @@ export default function CheckoutPage() {
     country: "FR",
   });
 
-  /* ---------- SAME ADDRESS ---------- */
   const [sameAsBilling, setSameAsBilling] = useState(true);
 
-  /* ---------- HOW DID YOU HEAR ABOUT US ---------- */
   const [heardFrom, setHeardFrom] = useState<
     "internet" | "social" | "medical" | "other" | ""
   >("");
   const [heardFromOther, setHeardFromOther] = useState("");
 
-  /* ---------- FORCE COUNTRY FROM LOCALE ---------- */
   useEffect(() => {
     const country = LOCALE_TO_COUNTRY[locale] ?? "FR";
     setBillingCustomer((prev) => ({ ...prev, country }));
     setShippingCustomer((prev) => ({ ...prev, country }));
   }, [locale]);
 
-  /* ---------- SYNC SHIPPING WITH BILLING ---------- */
   useEffect(() => {
     if (sameAsBilling) {
       setShippingCustomer({
@@ -470,14 +467,19 @@ export default function CheckoutPage() {
     }
   }, [sameAsBilling, billingCustomer]);
 
-  /* ---------- SHIPPING ---------- */
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
-  const [shippingMethod, setShippingMethod] =
-    useState<ShippingMethod | null>(null);
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod | null>(
+    null
+  );
   const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
   const [loading, setLoading] = useState(false);
 
-  /* ---------- LOAD SHIPPING ---------- */
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
+    null
+  );
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
   useEffect(() => {
     async function load() {
       setLoading(true);
@@ -497,12 +499,13 @@ export default function CheckoutPage() {
 
         const priceHT = Number(raw.priceHT ?? 0);
         const vatRate =
-          typeof raw.vatRate === "number" && raw.vatRate > 0
-            ? raw.vatRate
-            : 0;
+          typeof raw.vatRate === "number" && raw.vatRate > 0 ? raw.vatRate : 0;
+
+        const priceHTCents = moneyToCents(priceHT);
+        const vatCents = vatRate > 0 ? Math.round((priceHTCents * vatRate) / 100) : 0;
 
         const priceTTC =
-          vatRate > 0 ? round2(priceHT * (1 + vatRate / 100)) : priceHT;
+          vatRate > 0 ? Number(centsToMoney(priceHTCents + vatCents)) : priceHT;
 
         return {
           id: doc.id,
@@ -529,36 +532,73 @@ export default function CheckoutPage() {
     load();
   }, [shippingCustomer.country, locale]);
 
-  /* ---------- TOTALS ---------- */
-  const shippingTTC = shippingMethod?.priceTTC ?? 0;
+  useEffect(() => {
+    async function loadPayments() {
+      setPaymentError(null);
+      setPaymentMethod(null);
 
-  const shippingVAT =
-    shippingMethod?.priceHT != null &&
-    shippingMethod?.vatRate != null &&
-    shippingMethod.vatRate > 0
-      ? round2(
-          shippingMethod.priceHT * (shippingMethod.vatRate / 100)
-        )
-      : 0;
+      try {
+        const res = await fetch(
+          `/api/payment-methods?country=${shippingCustomer.country}`,
+          { cache: "no-store" }
+        );
+        const json = await res.json();
 
-  const finalTTC = totalTTC + shippingTTC;
+        if (!res.ok || !json.ok) {
+          throw new Error(json?.error ?? "Erreur chargement paiements");
+        }
 
-  /* ---------- PAY ---------- */
+        setPaymentMethods(json.methods || []);
+      } catch (e: any) {
+        console.error("PAYMENT METHODS ERROR", e);
+        setPaymentError(e?.message ?? "Erreur chargement paiements");
+        setPaymentMethods([]);
+      }
+    }
+
+    loadPayments();
+  }, [shippingCustomer.country]);
+
+  const shippingHTEUR = shippingMethod?.priceHT ?? 0;
+  const shippingVatRate = shippingMethod?.vatRate ?? 0;
+
+  const cartHTCents = moneyToCents(totalHT);
+  const cartVatCents = moneyToCents(totalVAT);
+  const cartTTCCents = moneyToCents(totalTTC);
+
+  const shippingHTCents = moneyToCents(shippingHTEUR);
+  const shippingVatCents =
+    shippingVatRate > 0 ? Math.round((shippingHTCents * shippingVatRate) / 100) : 0;
+  const shippingTTCCents = shippingHTCents + shippingVatCents;
+
+  const finalTTCCents = cartTTCCents + shippingTTCCents;
+
+  /** ✅ PayPal options: memo + locale dynamique (corrige "Carte bancaire" en NL etc.) */
+  const paypalOptions = useMemo(
+    () => ({
+      clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
+      currency: "EUR",
+      intent: "capture",
+      components: "buttons",
+      locale: mapLocaleToPayPal(locale),
+    }),
+    [locale]
+  );
+
   async function pay() {
     if (!items.length) return alert(t.emptyCart);
     if (!shippingMethod) return alert(t.chooseShipping);
+    if (!paymentMethod) return alert("Choisissez une méthode de paiement");
     if (!billingCustomer.email) return alert(t.emailRequired);
     if (!billingCustomer.firstName || !billingCustomer.lastName)
       return alert(t.nameRequired);
-    if (!billingCustomer.phone.trim())
-      return alert(t.phoneRequired);
+    if (!billingCustomer.phone.trim()) return alert(t.phoneRequired);
     if (!heardFrom) return alert(t.heardFromRequired);
     if (heardFrom === "other" && !heardFromOther.trim())
       return alert(t.heardFromOtherRequired);
 
     const fullName = `${billingCustomer.firstName.trim()} ${billingCustomer.lastName.trim()}`;
 
-    // clamp final : max 2 pour le produit Firestore 3tuSUenbUVVF6cuSHwS9
     const safeItems = items.map((item) => {
       if (item.id === OCULAREST_ID) {
         const safeQty = Math.min(item.quantity, 2);
@@ -567,60 +607,65 @@ export default function CheckoutPage() {
       return item;
     });
 
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        items: safeItems,
-        locale,
-        customerEmail: billingCustomer.email,
-        customerPhone: billingCustomer.phone.trim(),
-        heardFrom,
-        heardFromOther:
-          heardFrom === "other" ? heardFromOther.trim() : null,
-        billingAddress: {
-          name: fullName,
-          firstName: billingCustomer.firstName,
-          lastName: billingCustomer.lastName,
-          phone: billingCustomer.phone.trim(),
-          address: billingCustomer.address,
-          postalCode: billingCustomer.postalCode,
-          city: billingCustomer.city,
-          country: billingCustomer.country,
-        },
-        shippingAddress: {
-          name: fullName,
-          firstName: billingCustomer.firstName,
-          lastName: billingCustomer.lastName,
-          phone: billingCustomer.phone.trim(),
-          address: shippingCustomer.address,
-          postalCode: shippingCustomer.postalCode,
-          city: shippingCustomer.city,
-          country: shippingCustomer.country,
-        },
-        shippingMethod,
-        relayPoint,
-      }),
-    });
+    if (paymentMethod.provider === "stripe") {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: safeItems,
+          locale,
+          customerEmail: billingCustomer.email,
+          customerPhone: billingCustomer.phone.trim(),
+          heardFrom,
+          heardFromOther: heardFrom === "other" ? heardFromOther.trim() : null,
+          billingAddress: {
+            name: fullName,
+            firstName: billingCustomer.firstName,
+            lastName: billingCustomer.lastName,
+            phone: billingCustomer.phone.trim(),
+            address: billingCustomer.address,
+            postalCode: billingCustomer.postalCode,
+            city: billingCustomer.city,
+            country: billingCustomer.country,
+          },
+          shippingAddress: {
+            name: fullName,
+            firstName: billingCustomer.firstName,
+            lastName: billingCustomer.lastName,
+            phone: billingCustomer.phone.trim(),
+            address: shippingCustomer.address,
+            postalCode: shippingCustomer.postalCode,
+            city: shippingCustomer.city,
+            country: shippingCustomer.country,
+          },
+          shippingMethod,
+          relayPoint,
+          paymentMethod,
+        }),
+      });
 
-    const json = await res.json();
-    if (!res.ok || !json.url) return alert(t.paymentError);
+      const json = await res.json();
+      if (!res.ok || !json.url) return alert(t.paymentError);
 
-    clearCart();
-    window.location.href = json.url;
+      clearCart();
+      window.location.href = json.url;
+      return;
+    }
+
+    if (paymentMethod.provider === "paypal") {
+      alert("Merci d’utiliser le bouton PayPal pour régler la commande.");
+      return;
+    }
+
+    alert("Cette méthode de paiement n’est pas encore disponible.");
   }
 
-  /* =====================================================
-     RENDER
-  ===================================================== */
   return (
     <main className="checkout">
       <h1 className="checkout-title">{t.title}</h1>
 
-      {/* 1 : PANIER */}
       <CartSummaryInline />
 
-      {/* 2 : CHOIX LIVRAISON SOUS LE PANIER */}
       {loading ? (
         <section className="checkout-section">
           <p className="checkout-loading">{t.loadingShipping}</p>
@@ -636,7 +681,6 @@ export default function CheckoutPage() {
         </section>
       )}
 
-      {/* 3 : CLIENT - FACTURATION */}
       <section className="checkout-section">
         <h2 className="checkout-subtitle">{t.billingAddress}</h2>
         <div className="checkout-grid-2">
@@ -645,10 +689,7 @@ export default function CheckoutPage() {
             placeholder={t.firstName}
             value={billingCustomer.firstName}
             onChange={(e) =>
-              setBillingCustomer({
-                ...billingCustomer,
-                firstName: e.target.value,
-              })
+              setBillingCustomer({ ...billingCustomer, firstName: e.target.value })
             }
           />
           <input
@@ -656,10 +697,7 @@ export default function CheckoutPage() {
             placeholder={t.lastName}
             value={billingCustomer.lastName}
             onChange={(e) =>
-              setBillingCustomer({
-                ...billingCustomer,
-                lastName: e.target.value,
-              })
+              setBillingCustomer({ ...billingCustomer, lastName: e.target.value })
             }
           />
         </div>
@@ -670,10 +708,7 @@ export default function CheckoutPage() {
           placeholder={t.email}
           value={billingCustomer.email}
           onChange={(e) =>
-            setBillingCustomer({
-              ...billingCustomer,
-              email: e.target.value,
-            })
+            setBillingCustomer({ ...billingCustomer, email: e.target.value })
           }
         />
 
@@ -684,10 +719,7 @@ export default function CheckoutPage() {
             placeholder={t.phone}
             value={billingCustomer.phone}
             onChange={(e) =>
-              setBillingCustomer({
-                ...billingCustomer,
-                phone: e.target.value,
-              })
+              setBillingCustomer({ ...billingCustomer, phone: e.target.value })
             }
           />
           <p className="checkout-help-text">{t.phoneHelp}</p>
@@ -698,10 +730,7 @@ export default function CheckoutPage() {
           placeholder={t.address}
           value={billingCustomer.address}
           onChange={(e) =>
-            setBillingCustomer({
-              ...billingCustomer,
-              address: e.target.value,
-            })
+            setBillingCustomer({ ...billingCustomer, address: e.target.value })
           }
         />
 
@@ -722,16 +751,12 @@ export default function CheckoutPage() {
             placeholder={t.city}
             value={billingCustomer.city}
             onChange={(e) =>
-              setBillingCustomer({
-                ...billingCustomer,
-                city: e.target.value,
-              })
+              setBillingCustomer({ ...billingCustomer, city: e.target.value })
             }
           />
         </div>
       </section>
 
-      {/* ADRESSE LIVRAISON */}
       <section className="checkout-section">
         <label className="checkout-checkbox">
           <input
@@ -744,18 +769,14 @@ export default function CheckoutPage() {
 
         {!sameAsBilling && (
           <>
-            <h2 className="checkout-subtitle">
-              {t.shippingAddress}
-            </h2>
+            <h2 className="checkout-subtitle">{t.shippingAddress}</h2>
+
             <input
               className="checkout-input"
               placeholder={t.address}
               value={shippingCustomer.address}
               onChange={(e) =>
-                setShippingCustomer({
-                  ...shippingCustomer,
-                  address: e.target.value,
-                })
+                setShippingCustomer({ ...shippingCustomer, address: e.target.value })
               }
             />
 
@@ -776,10 +797,7 @@ export default function CheckoutPage() {
                 placeholder={t.city}
                 value={shippingCustomer.city}
                 onChange={(e) =>
-                  setShippingCustomer({
-                    ...shippingCustomer,
-                    city: e.target.value,
-                  })
+                  setShippingCustomer({ ...shippingCustomer, city: e.target.value })
                 }
               />
             </div>
@@ -787,7 +805,6 @@ export default function CheckoutPage() {
         )}
       </section>
 
-      {/* HOW DID YOU HEAR ABOUT US */}
       <section className="checkout-section">
         <h2 className="checkout-subtitle">{t.heardFromQuestion}</h2>
 
@@ -849,39 +866,175 @@ export default function CheckoutPage() {
         )}
       </section>
 
-      {/* TOTALS */}
+      <section className="checkout-section">
+        <ChoosePayment
+          methods={paymentMethods}
+          locale={locale}
+          onMethodSelect={setPaymentMethod}
+          error={paymentError}
+        />
+      </section>
+
       <section className="checkout-totals">
         <div className="checkout-row">
           <span>{t.subtotalExclTax}</span>
-          <span>{totalHT.toFixed(2)} €</span>
+          <span>{centsToMoney(cartHTCents)} €</span>
         </div>
 
-        {totalVAT > 0 && (
+        {cartVatCents > 0 && (
           <div className="checkout-row">
             <span>{t.productVAT}</span>
-            <span>{totalVAT.toFixed(2)} €</span>
+            <span>{centsToMoney(cartVatCents)} €</span>
           </div>
         )}
 
         <div className="checkout-row">
           <span>{t.shippingInclTax}</span>
-
           <div className="checkout-shipping-amount">
-            <span>{shippingTTC.toFixed(2)} €</span>
-            <span className="checkout-shipping-vat">
-              TVA : {shippingMethod?.vatRate ?? 0} %
-            </span>
+            <span>{centsToMoney(shippingTTCCents)} €</span>
+            <span className="checkout-shipping-vat">TVA : {shippingVatRate} %</span>
           </div>
         </div>
 
         <div className="checkout-row checkout-total">
           <span>{t.totalInclTax}</span>
-          <span>{finalTTC.toFixed(2)} €</span>
+          <span>{centsToMoney(finalTTCCents)} €</span>
         </div>
       </section>
 
+      {paymentMethod?.provider === "paypal" && (
+        <section className="checkout-section">
+          <PayPalScriptProvider options={paypalOptions}>
+            <PayPalButtons
+              style={{ layout: "vertical" }}
+              createOrder={async () => {
+                if (!items.length) throw new Error(t.emptyCart);
+                if (!shippingMethod) throw new Error(t.chooseShipping);
+                if (!billingCustomer.email) throw new Error(t.emailRequired);
+                if (!billingCustomer.firstName || !billingCustomer.lastName)
+                  throw new Error(t.nameRequired);
+                if (!billingCustomer.phone.trim()) throw new Error(t.phoneRequired);
+                if (!heardFrom) throw new Error(t.heardFromRequired);
+                if (heardFrom === "other" && !heardFromOther.trim())
+                  throw new Error(t.heardFromOtherRequired);
+
+                if (finalTTCCents <= 0) throw new Error("Montant invalide pour PayPal.");
+
+                const fullName = `${billingCustomer.firstName.trim()} ${billingCustomer.lastName.trim()}`;
+
+                const safeItems = items.map((item) => {
+                  if (item.id === OCULAREST_ID) {
+                    const safeQty = Math.min(item.quantity, 2);
+                    return { ...item, quantity: safeQty };
+                  }
+                  return item;
+                });
+
+                const payload = {
+                  locale,
+                  email: billingCustomer.email,
+                  phone: billingCustomer.phone.trim(),
+
+                  items: safeItems,
+                  heardFrom,
+                  heardFromOther: heardFrom === "other" ? heardFromOther.trim() : null,
+
+                  billingAddress: {
+                    name: fullName,
+                    firstName: billingCustomer.firstName,
+                    lastName: billingCustomer.lastName,
+                    phone: billingCustomer.phone.trim(),
+                    address: billingCustomer.address,
+                    postalCode: billingCustomer.postalCode,
+                    city: billingCustomer.city,
+                    country: billingCustomer.country,
+                  },
+                  shippingAddress: {
+                    name: fullName,
+                    firstName: billingCustomer.firstName,
+                    lastName: billingCustomer.lastName,
+                    phone: billingCustomer.phone.trim(),
+                    address: shippingCustomer.address,
+                    postalCode: shippingCustomer.postalCode,
+                    city: shippingCustomer.city,
+                    country: shippingCustomer.country,
+                  },
+
+                  shippingMethod,
+                  relayPoint,
+
+                  totals: {
+                    cartHT: centsToMoney(cartHTCents),
+                    cartVAT: centsToMoney(cartVatCents),
+                    cartTTC: centsToMoney(cartTTCCents),
+                    shippingHT: centsToMoney(shippingHTCents),
+                    shippingVAT: centsToMoney(shippingVatCents),
+                    shippingTTC: centsToMoney(shippingTTCCents),
+                    finalTTC: centsToMoney(finalTTCCents),
+
+                    cartHTCents,
+                    cartVatCents,
+                    cartTTCCents,
+                    shippingHTCents,
+                    shippingVatCents,
+                    shippingTTCCents,
+                    finalTTCCents,
+                  },
+                };
+
+                const res = await fetch("/api/paypal/create-order", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                });
+
+                const json = await res.json().catch(() => null);
+
+                if (!res.ok || !json?.ok || !json?.orderId) {
+                  throw new Error(json?.error ?? "Erreur PayPal (createOrder)");
+                }
+
+                paypalOrderDocIdRef.current = json?.orderDocId ?? null;
+
+                return String(json.orderId);
+              }}
+              onApprove={async (data) => {
+                const res = await fetch("/api/paypal/capture-order", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    orderId: data.orderID,
+                    orderDocId: paypalOrderDocIdRef.current, // ✅ fallback béton
+                  }),
+                });
+
+                const json = await res.json().catch(() => null);
+
+                if (!res.ok || !json?.ok) {
+                  console.error("PAYPAL CAPTURE ERROR", json);
+                  alert(t.paymentError);
+                  return;
+                }
+
+                clearCart();
+
+                const orderDocId = json?.orderDocId || paypalOrderDocIdRef.current;
+
+                window.location.href = orderDocId
+                  ? `/${locale}/success?order_id=${encodeURIComponent(orderDocId)}`
+                  : `/${locale}`;
+              }}
+              onError={(err) => {
+                console.error("PAYPAL BUTTON ERROR", err);
+                alert(t.paymentError);
+              }}
+            />
+          </PayPalScriptProvider>
+        </section>
+      )}
+
       <button onClick={pay} className="checkout-pay">
-        {t.payWithStripe}
+        {paymentMethod?.provider === "paypal" ? t.payWithPayPal : t.payWithStripe}
       </button>
     </main>
   );

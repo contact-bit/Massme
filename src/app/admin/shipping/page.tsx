@@ -42,7 +42,6 @@ const COUNTRIES: {
   { code: "DE", label: "Allemagne", flag: "🇩🇪" },
   { code: "IT", label: "Italie", flag: "🇮🇹" },
   { code: "NL", label: "Pays-Bas", flag: "🇳🇱" },
-  { code: "CH", label: "Suisse", flag: "🇨🇭" },
 ];
 
 const COUNTRY_TO_LOCALE: Record<CountryCode, ShippingLocale> = {

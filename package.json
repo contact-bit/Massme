@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@paypal/checkout-server-sdk": "^1.0.3",
+    "@paypal/react-paypal-js": "^8.9.2",
     "clsx": "^2.1.1",
     "firebase": "^12.5.0",
     "firebase-admin": "^13.6.0",

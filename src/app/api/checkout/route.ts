@@ -1,3 +1,4 @@
+// src/app/api/checkout/route.ts
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { dbAdmin as db } from "@/lib/firebase.admin";
@@ -29,6 +30,66 @@ type AddressPayload = {
 };
 
 /* =====================================================
+   STRIPE LOCALE (SAFE)
+===================================================== */
+// Stripe Checkout locale (liste stricte) + "auto"
+type StripeCheckoutLocale =
+  | "auto"
+  | "bg"
+  | "cs"
+  | "da"
+  | "de"
+  | "el"
+  | "en"
+  | "en-GB"
+  | "es"
+  | "es-419"
+  | "et"
+  | "fi"
+  | "fr"
+  | "fr-CA"
+  | "hr"
+  | "hu"
+  | "id"
+  | "it"
+  | "ja"
+  | "ko"
+  | "lt"
+  | "lv"
+  | "ms"
+  | "mt"
+  | "nb"
+  | "nl"
+  | "pl"
+  | "pt"
+  | "pt-BR"
+  | "ro"
+  | "ru"
+  | "sk"
+  | "sl"
+  | "sv"
+  | "th"
+  | "tr"
+  | "vi"
+  | "zh"
+  | "zh-HK"
+  | "zh-TW";
+
+const STRIPE_LOCALE_BY_APP_LOCALE: Record<string, StripeCheckoutLocale> = {
+  fr: "fr",
+  en: "en",
+  es: "es",
+  de: "de",
+  it: "it",
+  nl: "nl",
+};
+
+function getStripeLocale(appLocale: unknown): StripeCheckoutLocale {
+  const l = String(appLocale || "").trim();
+  return STRIPE_LOCALE_BY_APP_LOCALE[l] ?? "auto";
+}
+
+/* =====================================================
    API
 ===================================================== */
 export async function POST(req: Request) {
@@ -46,6 +107,7 @@ export async function POST(req: Request) {
       disableVAT = false,
       heardFrom,
       heardFromOther,
+      paymentMethod,
     } = body;
 
     /* ------------------ VALIDATION ------------------ */
@@ -78,6 +140,20 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!paymentMethod || !paymentMethod.provider) {
+      return NextResponse.json(
+        { error: "Missing payment method" },
+        { status: 400 }
+      );
+    }
+
+    if (paymentMethod.provider !== "stripe") {
+      return NextResponse.json(
+        { error: "Payment provider not supported yet" },
+        { status: 400 }
+      );
+    }
+
     const country = shippingAddress?.country || "FR";
 
     /* ------------------ PANIER (HT) ------------------ */
@@ -93,7 +169,7 @@ export async function POST(req: Request) {
       0
     );
 
-    // Livraison HT prise depuis Firestore (shipping_methods.priceHT)
+    // Livraison HT
     const shippingHT = Number(shippingMethod.priceHT ?? 0);
 
     /* ------------------ TVA (SOURCE DE VÉRITÉ) ------------------ */
@@ -123,49 +199,50 @@ export async function POST(req: Request) {
           vatRate: shippingMethod.vatRate,
         });
 
-    // HT global = produits HT + livraison HT
     const totalHT = taxItems.ht + taxShipping.ht;
-
-    // TVA globale = TVA PRODUITS + TVA LIVRAISON
     const totalVAT = taxItems.vatAmount + taxShipping.vatAmount;
-
-    // TTC global = HT global + TVA globale
     const totalTTC = totalHT + totalVAT;
 
-/* ------------------ FIRESTORE (SOURCE DE VÉRITÉ) ------------------ */
-const orderRef = db.collection("orders").doc();
+    /* ------------------ FIRESTORE (SOURCE DE VÉRITÉ) ------------------ */
+    const orderRef = db.collection("orders").doc();
 
-await orderRef.set({
-  id: orderRef.id,
-  email: customerEmail,
+    await orderRef.set({
+      id: orderRef.id,
+      email: customerEmail,
+      items: cleanItems,
 
-  items: cleanItems,
+      billingAddress,
+      shippingAddress,
+      shippingMethod,
+      relayPoint: relayPoint || null,
 
-  billingAddress,
-  shippingAddress,
-  shippingMethod,
-  relayPoint: relayPoint || null,
+      shippingPrice: shippingHT,
 
-  // ✅ AJOUT : on stocke la livraison en HT pour la facture
-  shippingPrice: shippingHT,
+      totals: {
+        country,
+        vatRate: taxItems.vatRate,
+        totalHT,
+        totalVAT,
+        totalTTC,
+        vatDisabled: disableVAT,
+      },
 
-  totals: {
-    country,
-    vatRate: taxItems.vatRate,
-    totalHT,
-    totalVAT,
-    totalTTC,
-    vatDisabled: disableVAT,
-  },
+      heardFrom: heardFrom || null,
+      heardFromOther: heardFromOther || null,
 
-  heardFrom: heardFrom || null,
-  heardFromOther: heardFromOther || null,
+      locale,
+      status: "pending_payment",
+      createdAt: Timestamp.now(),
 
-  locale,
-  status: "pending_payment",
-  createdAt: Timestamp.now(),
-});
-
+      paymentMethod: {
+        id: paymentMethod.id,
+        provider: paymentMethod.provider,
+        country: paymentMethod.country,
+        name: paymentMethod.name || {},
+        description: paymentMethod.description || {},
+        config: paymentMethod.config || {},
+      },
+    });
 
     /* ------------------ STRIPE CUSTOMER ------------------ */
     const stripeCustomer = await stripe.customers.create({
@@ -208,7 +285,7 @@ await orderRef.set({
       });
     }
 
-    // Livraison : Stripe prend le TTC EXACT affiché côté front
+    // Livraison TTC
     const shippingTTC = disableVAT
       ? shippingHT
       : Number(shippingMethod.priceTTC ?? taxShipping.ttc);
@@ -224,30 +301,25 @@ await orderRef.set({
       line_items.push({
         price_data: {
           currency: "eur",
-          product_data: {
-            name: shippingName,
-          },
+          product_data: { name: shippingName },
           unit_amount: Math.round(shippingTTC * 100),
         },
         quantity: 1,
       });
     }
 
-    // TVA : uniquement TVA des produits (Stripe ne voit pas la TVA livraison séparément)
+    // TVA produits uniquement
     if (!disableVAT && taxItems.vatAmount > 0) {
       line_items.push({
         price_data: {
           currency: "eur",
-          product_data: {
-            name: `TVA ${taxItems.vatRate}%`,
-          },
+          product_data: { name: `TVA ${taxItems.vatRate}%` },
           unit_amount: Math.round(taxItems.vatAmount * 100),
         },
         quantity: 1,
       });
     }
 
-    // Debug : vérifier que Stripe facture bien ce que tu veux
     const stripeTotalCents = line_items.reduce((sum, li) => {
       const amount = li.price_data?.unit_amount ?? 0;
       const qty = li.quantity ?? 1;
@@ -262,20 +334,22 @@ await orderRef.set({
       itemsHT,
       shippingHT,
       shippingTTC,
+      locale,
+      stripeLocale: getStripeLocale(locale),
     });
 
     /* ------------------ STRIPE SESSION ------------------ */
     const baseUrl = process.env.NEXT_PUBLIC_URL;
-    if (!baseUrl) {
-      throw new Error("NEXT_PUBLIC_URL missing");
-    }
+    if (!baseUrl) throw new Error("NEXT_PUBLIC_URL missing");
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer: stripeCustomer.id,
       line_items,
+      locale: getStripeLocale(locale), // ✅ ICI : Stripe dans la bonne langue
       metadata: {
         order_id: orderRef.id,
+        payment_provider: paymentMethod.provider,
       },
       success_url: `${baseUrl}/${locale}/success?order_id=${orderRef.id}`,
       cancel_url: `${baseUrl}/${locale}/checkout`,

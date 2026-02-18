@@ -13,7 +13,27 @@ export default function AdminTopbar() {
     if (pathname?.startsWith("/admin/products")) return "Produits";
     if (pathname?.startsWith("/admin/orders")) return "Commandes";
     if (pathname?.startsWith("/admin/shipping")) return "Livraison";
+    if (pathname?.startsWith("/admin/payment-methods")) return "Méthodes de paiement";
     return "Admin";
+  }, [pathname]);
+
+  const pageHint = useMemo(() => {
+    if (pathname === "/admin") {
+      return "Gérez la performance globale de votre boutique.";
+    }
+    if (pathname?.startsWith("/admin/products")) {
+      return "Gérez votre catalogue produits.";
+    }
+    if (pathname?.startsWith("/admin/orders")) {
+      return "Suivez et gérez les commandes clients.";
+    }
+    if (pathname?.startsWith("/admin/shipping")) {
+      return "Configurez les méthodes de livraison par pays.";
+    }
+    if (pathname?.startsWith("/admin/payment-methods")) {
+      return "Configurez les méthodes de paiement disponibles par pays.";
+    }
+    return "Gérez produits, commandes, livraisons et paiements.";
   }, [pathname]);
 
   function logout() {
@@ -34,7 +54,7 @@ export default function AdminTopbar() {
 
         <div className="admin-title-zone">
           <h1 className="admin-h1">{pageTitle}</h1>
-          <p className="admin-hint">Gérez produits, commandes et livraisons.</p>
+          <p className="admin-hint">{pageHint}</p>
         </div>
 
         <div className="admin-actions">
@@ -53,7 +73,11 @@ export default function AdminTopbar() {
             <span className="admin-pill">3</span>
           </button>
 
-          <button className="admin-btn admin-btn-danger" onClick={logout} type="button">
+          <button
+            className="admin-btn admin-btn-danger"
+            onClick={logout}
+            type="button"
+          >
             Déconnexion
           </button>
         </div>

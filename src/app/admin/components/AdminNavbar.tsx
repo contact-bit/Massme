@@ -28,6 +28,7 @@ export default function AdminNavbar() {
     { href: "/admin/orders", label: "Commandes" },
     { href: "/admin/products", label: "Produits" },
     { href: "/admin/shipping", label: "Livraison" },
+    { href: "/admin/payment-methods", label: "Méthodes de paiement" },
   ];
 
   function isActive(href: string) {
@@ -36,7 +37,7 @@ export default function AdminNavbar() {
   }
 
   /* =========================
-     FETCH NOTIFS (simple)
+      FETCH NOTIFS (simple)
   ========================= */
   useEffect(() => {
     fetch("/api/admin/stats", { cache: "no-store" })
@@ -62,7 +63,7 @@ export default function AdminNavbar() {
   }, []);
 
   /* =========================
-     CLICK OUTSIDE
+      CLICK OUTSIDE
   ========================= */
   useEffect(() => {
     if (!open) return;
@@ -78,8 +79,7 @@ export default function AdminNavbar() {
     }
 
     window.addEventListener("mousedown", onClick);
-    return () =>
-      window.removeEventListener("mousedown", onClick);
+    return () => window.removeEventListener("mousedown", onClick);
   }, [open]);
 
   function logout() {
