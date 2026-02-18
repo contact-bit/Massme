@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createOrUpdateOrder } from "@/server/shipstation/client";
-import { dbAdmin } from "@/lib/firebase.admin.ts"; // adapte à ton projet
+import { dbAdmin } from "@/lib/firebase.admin";
 
 export async function POST(req: Request) {
   try {
