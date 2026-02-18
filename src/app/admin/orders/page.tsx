@@ -2,22 +2,22 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { firstDayOfMonthISO, todayISO, copyText, compactId, formatAddress } from "./_domain/utils";
-import type { Order } from "./_domain/types";
+import type { Order } from "./domain/types";
 
-import { useToast } from "./_hooks/useToast";
-import { useOrders } from "./_hooks/useOrders";
-import { useSelection } from "./_hooks/useSelection";
-import { usePagination } from "./_hooks/usePagination";
-import { useOrderFilters } from "./_hooks/useOrderFilters";
+import { useToast } from "./hooks/useToast";
+import { useOrders } from "./hooks/useOrders";
+import { useSelection } from "./hooks/useSelection";
+import { usePagination } from "./hooks/usePagination";
+import { useOrderFilters } from "./hooks/useOrderFilters";
 
-import { AdminOrdersStyles } from "./_components/AdminOrdersStyles";
-import { Toast } from "./_components/Toast";
-import { TopBar } from "./_components/TopBar";
-import { KpiGrid } from "./_components/KpiGrid";
-import { FiltersBar } from "./_components/FiltersBar";
-import { OrdersList } from "./_components/OrdersList";
-import { Drawer } from "./_components/Drawer";
-import { OrderDetails } from "./_components/OrderDetails";
+import { AdminOrdersStyles } from "./components/AdminOrdersStyles";
+import { Toast } from "./components/Toast";
+import { TopBar } from "./components/TopBar";
+import { KpiGrid } from "./components/KpiGrid";
+import { FiltersBar } from "./components/FiltersBar";
+import { OrdersList } from "./components/OrdersList";
+import { Drawer } from "./components/Drawer";
+import { OrderDetails } from "./components/OrderDetails";
 
 export default function AdminOrdersPage() {
   const { toast, toastIt } = useToast();
