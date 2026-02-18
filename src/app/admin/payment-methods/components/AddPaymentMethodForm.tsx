@@ -22,12 +22,23 @@ const EMPTY_I18N: Record<LocaleKey, string> = {
   nl: "",
 };
 
-function isProvider(v: string): v is PaymentMethodProvider {
+// Les providers "réellement" typés côté TS (selon ton PaymentMethodProvider)
+function isTypedProvider(v: string): v is PaymentMethodProvider {
+  return v === "stripe" || v === "paypal" || v === "manual";
+}
+
+// Les valeurs possibles dans l'UI (inclut bank_transfer même si TS ne l'accepte pas dans PaymentMethodProvider)
+type ProviderUI = PaymentMethodProvider | "bank_transfer";
+function isProviderUI(v: string): v is ProviderUI {
   return v === "stripe" || v === "paypal" || v === "manual" || v === "bank_transfer";
 }
 
 export default function AddPaymentMethodForm({ country, onCreated }: Props) {
   const [provider, setProvider] = useState<PaymentMethodProvider>("stripe");
+
+  // Flag UI pour le virement, sans dépendre de PaymentMethodProvider
+  const [isBankTransferUI, setIsBankTransferUI] = useState(false);
+
   const [isActive, setIsActive] = useState(true);
   const [sortOrder, setSortOrder] = useState<number | "">("");
   const [activeLocale, setActiveLocale] = useState<LocaleKey>("fr");
@@ -72,7 +83,7 @@ export default function AddPaymentMethodForm({ country, onCreated }: Props) {
     }
 
     // Validation minimale pour le virement (optionnelle mais utile)
-    if (provider === "bank_transfer") {
+    if (isBankTransferUI) {
       if (!bank.iban.trim()) {
         setError("Pour le virement bancaire, renseigne au moins l’IBAN.");
         return;
@@ -84,12 +95,13 @@ export default function AddPaymentMethodForm({ country, onCreated }: Props) {
 
       const payload = {
         country,
-        provider,
+        // Si virement, on envoie la string attendue par l'API
+        provider: (isBankTransferUI ? "bank_transfer" : provider) as ProviderUI,
         isActive,
         sortOrder: sortOrder === "" ? null : Number(sortOrder),
         name,
         description,
-        config: provider === "bank_transfer" ? bank : {},
+        config: isBankTransferUI ? bank : {},
       };
 
       const res = await fetch("/api/admin/payment-methods", {
@@ -108,6 +120,7 @@ export default function AddPaymentMethodForm({ country, onCreated }: Props) {
       setName({ ...EMPTY_I18N });
       setDescription({ ...EMPTY_I18N });
       setProvider("stripe");
+      setIsBankTransferUI(false);
       setIsActive(true);
       setSortOrder("");
       setActiveLocale("fr");
@@ -153,10 +166,22 @@ export default function AddPaymentMethodForm({ country, onCreated }: Props) {
         <div>
           <label className="block text-sm font-medium mb-1">Provider</label>
           <select
-            value={provider}
+            value={(isBankTransferUI ? "bank_transfer" : provider) as ProviderUI}
             onChange={(e) => {
               const v = e.target.value;
-              if (isProvider(v)) setProvider(v);
+              if (!isProviderUI(v)) return;
+
+              if (v === "bank_transfer") {
+                setIsBankTransferUI(true);
+                // on garde provider tel quel (stripe/paypal/manual) en mémoire
+                return;
+              }
+
+              // sinon provider typé normal
+              if (isTypedProvider(v)) {
+                setIsBankTransferUI(false);
+                setProvider(v);
+              }
             }}
             className="border rounded px-2 py-1 text-sm"
           >
@@ -184,7 +209,7 @@ export default function AddPaymentMethodForm({ country, onCreated }: Props) {
       </div>
 
       {/* Champs virement bancaire */}
-      {provider === "bank_transfer" && (
+      {isBankTransferUI && (
         <div className="border rounded-md p-3 bg-gray-50 space-y-3">
           <p className="font-medium text-sm">Informations de virement</p>
 
