@@ -109,16 +109,29 @@ export default function CheckoutPage() {
 
   const finalTTCCents = cartTTCCents + shippingTTCCents;
 
-  // PayPal options
+  // -----------------------
+  // PayPal options (prod-safe)
+  // -----------------------
+  const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+
+  useEffect(() => {
+    // Logs utiles en prod (sans exposer tout le secret)
+    console.log("[PayPal] NEXT_PUBLIC_PAYPAL_CLIENT_ID present =", !!paypalClientId);
+    if (paypalClientId) {
+      console.log("[PayPal] clientId prefix =", paypalClientId.slice(0, 6) + "...");
+    }
+  }, [paypalClientId]);
+
   const paypalOptions = useMemo(
     () => ({
-      clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
+      // Si jamais quelqu’un a un clientId vide en prod, on évite le crash en le voyant tout de suite
+      clientId: paypalClientId || "MISSING_CLIENT_ID",
       currency: "EUR",
       intent: "capture",
       components: "buttons",
       locale: mapLocaleToPayPal(locale),
     }),
-    [locale]
+    [locale, paypalClientId]
   );
 
   // items safe (ocularest max 2)
@@ -188,7 +201,6 @@ export default function CheckoutPage() {
 
       clearCart();
 
-      // Page instructions de virement (à créer)
       window.location.href = `/${locale}/bank-transfer?order_id=${encodeURIComponent(
         json.orderId
       )}`;
@@ -318,31 +330,44 @@ export default function CheckoutPage() {
         finalTTCCents={finalTTCCents}
       />
 
-      {paymentMethod?.provider === "paypal" && (
-        <PayPalSection
-          t={t}
-          locale={locale}
-          paypalOptions={paypalOptions}
-          items={safeItems}
-          shippingMethod={shippingMethod}
-          relayPoint={relayPoint}
-          billingCustomer={billingCustomer}
-          shippingCustomer={shippingCustomer}
-          heardFrom={heardFrom}
-          heardFromOther={heardFromOther}
-          totals={{
-            cartHTCents,
-            cartVatCents,
-            cartTTCCents,
-            shippingHTCents,
-            shippingVatCents,
-            shippingTTCCents,
-            finalTTCCents,
-          }}
-          paypalOrderDocIdRef={paypalOrderDocIdRef}
-          clearCart={clearCart}
-        />
-      )}
+      {/* PayPal: on n'affiche PAS le composant si le clientId manque en prod */}
+      {paymentMethod?.provider === "paypal" &&
+        (!paypalClientId ? (
+          <section className="checkout-section">
+            <p style={{ color: "crimson", fontWeight: 600 }}>
+              PayPal est indisponible en production : variable manquante{" "}
+              <code>NEXT_PUBLIC_PAYPAL_CLIENT_ID</code>.
+            </p>
+            <p style={{ opacity: 0.8 }}>
+              Ajoute-la dans les variables d’environnement de prod (Vercel / hébergeur),
+              puis redeploy.
+            </p>
+          </section>
+        ) : (
+          <PayPalSection
+            t={t}
+            locale={locale}
+            paypalOptions={paypalOptions}
+            items={safeItems}
+            shippingMethod={shippingMethod}
+            relayPoint={relayPoint}
+            billingCustomer={billingCustomer}
+            shippingCustomer={shippingCustomer}
+            heardFrom={heardFrom}
+            heardFromOther={heardFromOther}
+            totals={{
+              cartHTCents,
+              cartVatCents,
+              cartTTCCents,
+              shippingHTCents,
+              shippingVatCents,
+              shippingTTCCents,
+              finalTTCCents,
+            }}
+            paypalOrderDocIdRef={paypalOrderDocIdRef}
+            clearCart={clearCart}
+          />
+        ))}
 
       <button onClick={pay} className="checkout-pay">
         {payButtonLabel}
