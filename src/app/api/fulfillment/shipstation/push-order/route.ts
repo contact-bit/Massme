@@ -52,28 +52,53 @@ function normalizeItems(items: unknown) {
 
 // --- Route ---
 export async function POST(req: Request) {
+  const reqId =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `req_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
   try {
+    console.log(`[push-order][${reqId}] HIT`, new Date().toISOString());
+
     const payload = await req.json();
 
-    // On accepte soit { orderId, ... } soit { order: { ... } } selon tes appels
+    console.log(`[push-order][${reqId}] payload keys:`, Object.keys(payload || {}));
+
+    // On accepte soit { orderId, ... } soit { order: { ... } }
     const data = payload?.order ?? payload;
+
+    console.log(`[push-order][${reqId}] data keys:`, Object.keys(data || {}));
+    console.log(`[push-order][${reqId}] summary:`, {
+      orderId: data?.orderId ?? data?.id ?? data?.orderKey,
+      orderNumber: data?.orderNumber,
+      hasBillTo: !!data?.billTo,
+      hasShipTo: !!data?.shipTo,
+      itemsType: Array.isArray(data?.items) ? "array" : typeof data?.items,
+      itemsLen: Array.isArray(data?.items) ? data.items.length : null,
+      env: {
+        hasShipstationKey: !!process.env.SHIPSTATION_API_KEY,
+        hasShipstationSecret: !!process.env.SHIPSTATION_API_SECRET,
+      },
+    });
 
     const orderId = data?.orderId ?? data?.id ?? data?.orderKey;
     if (!isNonEmptyString(orderId)) {
+      console.log(`[push-order][${reqId}] ERROR missing orderId`, { orderId });
       return NextResponse.json(
-        { ok: false, error: "Missing orderId (orderId/id/orderKey)." },
+        { ok: false, reqId, step: "validate", error: "Missing orderId (orderId/id/orderKey)." },
         { status: 400 }
       );
     }
 
-    // Champs “métier” (tu peux adapter à ton modèle)
+    // Champs “métier”
     const orderNumber = asString(data?.orderNumber ?? orderId, orderId);
     const customerEmail = isNonEmptyString(data?.customerEmail)
       ? data.customerEmail
       : undefined;
 
-    const orderDate =
-      isNonEmptyString(data?.orderDate) ? data.orderDate : new Date().toISOString();
+    const orderDate = isNonEmptyString(data?.orderDate)
+      ? data.orderDate
+      : new Date().toISOString();
 
     const orderStatus = toShipStationStatus(data?.orderStatus);
 
@@ -90,26 +115,33 @@ export async function POST(req: Request) {
       name: asString(data?.shipTo?.name, "").trim() || billTo.name || "Customer",
       street1: asString(data?.shipTo?.street1, "").trim() || billTo.street1,
       city: asString(data?.shipTo?.city, "").trim() || billTo.city,
-      postalCode:
-        asString(data?.shipTo?.postalCode, "").trim() || billTo.postalCode,
+      postalCode: asString(data?.shipTo?.postalCode, "").trim() || billTo.postalCode,
       country: asString(data?.shipTo?.country, "").trim() || billTo.country || "FR",
       phone: asString(data?.shipTo?.phone, "").trim() || billTo.phone,
     };
 
     const items = normalizeItems(data?.items);
     if (items.length === 0) {
+      console.log(`[push-order][${reqId}] ERROR items invalid`, {
+        rawItemsType: Array.isArray(data?.items) ? "array" : typeof data?.items,
+        rawItems: data?.items,
+      });
       return NextResponse.json(
-        { ok: false, error: "Missing/invalid items (needs at least 1 item with a name)." },
+        {
+          ok: false,
+          reqId,
+          step: "validate",
+          error: "Missing/invalid items (needs at least 1 item with a name).",
+        },
         { status: 400 }
       );
     }
 
-    // Montants (optionnels côté ShipStation, mais je les garde si tu les utilises)
+    // Montants (optionnels)
     const amountPaid = data?.amountPaid ?? data?.total ?? data?.amount_total;
-    const amountPaidNumber =
-      typeof amountPaid === "number" ? amountPaid : undefined;
+    const amountPaidNumber = typeof amountPaid === "number" ? amountPaid : undefined;
 
-    // Payload ShipStation (conforme au type ShipStationOrderInput de ton client)
+    // Payload ShipStation
     const body = {
       orderNumber,
       orderDate,
@@ -119,13 +151,23 @@ export async function POST(req: Request) {
       shipTo,
       items,
       ...(typeof amountPaidNumber === "number" ? { amountPaid: amountPaidNumber } : {}),
-      // Tu peux rajouter d'autres champs ShipStation ici si besoin
     };
+
+    console.log(`[push-order][${reqId}] calling ShipStation`, {
+      orderNumber,
+      orderStatus,
+      items: items.length,
+    });
 
     // 1) Push ShipStation
     const ssOrder = await createOrUpdateOrder(body);
 
-    // 2) Sauvegarde Firestore (admin)
+    console.log(`[push-order][${reqId}] ShipStation OK`, {
+      orderId: (ssOrder as any)?.orderId,
+      orderKey: (ssOrder as any)?.orderKey,
+    });
+
+    // 2) Sauvegarde Firestore
     await dbAdmin.collection("orders").doc(orderId).set(
       {
         shipstation: {
@@ -138,9 +180,12 @@ export async function POST(req: Request) {
       { merge: true }
     );
 
-    return NextResponse.json({ ok: true, shipstation: ssOrder });
+    console.log(`[push-order][${reqId}] Firestore OK`, { orderId });
+
+    return NextResponse.json({ ok: true, reqId, shipstation: ssOrder });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    console.log(`[push-order][${reqId}] ERROR`, message, err);
+    return NextResponse.json({ ok: false, reqId, step: "exception", error: message }, { status: 500 });
   }
 }

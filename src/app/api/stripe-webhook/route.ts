@@ -5,6 +5,7 @@ import { dbAdmin } from "@/lib/firebase.admin";
 import { Resend } from "resend";
 import { generateInvoicePDF } from "@/lib/generateInvoice";
 import { computePrice } from "@/lib/pricing";
+import { createOrUpdateOrder } from "@/server/shipstation/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -82,6 +83,141 @@ async function buffer(stream: ReadableStream<Uint8Array>) {
 }
 
 /* =====================================================
+   HELPERS (ShipStation)
+===================================================== */
+
+function asString(v: unknown, fallback = ""): string {
+  return typeof v === "string" ? v : fallback;
+}
+
+function isNonEmptyString(v: unknown): v is string {
+  return typeof v === "string" && v.trim().length > 0;
+}
+
+function pickFirst<T>(...values: T[]): T | undefined {
+  for (const v of values) if (v !== undefined && v !== null) return v;
+  return undefined;
+}
+
+function buildShipStationBody(orderData: any, orderId: string) {
+  // orderNumber lisible
+  const orderNumber =
+    asString(pickFirst(orderData?.orderNumber, orderData?.number, orderData?.id), orderId) || orderId;
+
+  const orderDate = (() => {
+    const d = pickFirst(orderData?.createdAt, orderData?.created_at, orderData?.created);
+    if (d?.toDate) return d.toDate().toISOString(); // Firestore Timestamp
+    if (typeof d === "string") return d;
+    if (d instanceof Date) return d.toISOString();
+    return new Date().toISOString();
+  })();
+
+  const customerEmail = isNonEmptyString(orderData?.email)
+    ? orderData.email
+    : isNonEmptyString(orderData?.customer_email)
+    ? orderData.customer_email
+    : undefined;
+
+  const ship = orderData?.shippingAddress || orderData?.shipTo || {};
+  const bill = orderData?.billingAddress || orderData?.billTo || ship || {};
+
+  const billTo = {
+    name:
+      asString(
+        pickFirst(
+          bill?.name,
+          bill?.fullName,
+          bill?.firstName && bill?.lastName ? `${bill.firstName} ${bill.lastName}` : undefined
+        ),
+        ""
+      ).trim() || "Customer",
+    street1: asString(pickFirst(bill?.street1, bill?.address1, bill?.line1, bill?.address), "").trim(),
+    city: asString(pickFirst(bill?.city, bill?.town), "").trim(),
+    postalCode: asString(pickFirst(bill?.postalCode, bill?.zip, bill?.postcode), "").trim(),
+    country: asString(pickFirst(bill?.country, bill?.countryCode), "FR").trim(),
+    phone: asString(pickFirst(bill?.phone, bill?.phoneNumber), "").trim(),
+  };
+
+  const shipTo = {
+    name:
+      asString(
+        pickFirst(
+          ship?.name,
+          ship?.fullName,
+          ship?.firstName && ship?.lastName ? `${ship.firstName} ${ship.lastName}` : undefined
+        ),
+        ""
+      ).trim() || billTo.name || "Customer",
+    street1: asString(pickFirst(ship?.street1, ship?.address1, ship?.line1, ship?.address), "").trim() || billTo.street1,
+    city: asString(pickFirst(ship?.city, ship?.town), "").trim() || billTo.city,
+    postalCode: asString(pickFirst(ship?.postalCode, ship?.zip, ship?.postcode), "").trim() || billTo.postalCode,
+    country: asString(pickFirst(ship?.country, ship?.countryCode), billTo.country || "FR").trim(),
+    phone: asString(pickFirst(ship?.phone, ship?.phoneNumber), "").trim() || billTo.phone,
+  };
+
+  // garde-fou sinon ShipStation 400
+  if (!shipTo.street1 || !shipTo.city || !shipTo.postalCode || !shipTo.country) {
+    throw new Error(
+      `ShipTo incomplete: street1=${!!shipTo.street1}, city=${!!shipTo.city}, postalCode=${!!shipTo.postalCode}, country=${!!shipTo.country}`
+    );
+  }
+
+  // Items
+  const rawItems = Array.isArray(orderData?.items) ? orderData.items : [];
+  const items = rawItems
+    .map((it: any) => {
+      const q = Math.max(1, Math.floor(Number(it?.quantity ?? 1) || 1));
+
+      // ✅ chez toi: priceHT est souvent la bonne source (HT)
+      const candidate =
+        it?.unitPrice ??
+        it?.unit_price ??
+        it?.priceHT ??
+        it?.price_ht ??
+        it?.price ??
+        it?.amount ??
+        it?.total ??
+        0;
+
+      let unit = Number(candidate ?? 0) || 0;
+      // si centimes (ex: 8250)
+      if (Number.isInteger(unit) && unit >= 1000) unit = unit / 100;
+
+      return {
+        sku: isNonEmptyString(it?.sku) ? it.sku : isNonEmptyString(it?.id) ? String(it.id) : undefined,
+        name: asString(pickFirst(it?.name, it?.title, it?.productName), "Produit").trim(),
+        quantity: q,
+        unitPrice: Math.max(0, unit),
+      };
+    })
+    .filter((x: any) => x.name && x.quantity > 0);
+
+  if (items.length === 0) {
+    throw new Error("ShipStation payload has no items (check orderData.items mapping).");
+  }
+
+  // Montants (si dispo)
+  const amountPaidTTC = Number(orderData?.totals?.totalTTC ?? orderData?.totalTTC ?? orderData?.amount_total ?? 0);
+  const shippingAmount = Number(orderData?.totals?.shipping ?? orderData?.shippingMethod?.priceTTC ?? 0);
+  const taxAmount = Number(orderData?.totals?.tax ?? orderData?.totals?.vat ?? 0);
+
+  const orderStatus: "awaiting_shipment" = "awaiting_shipment";
+
+  return {
+    orderNumber,
+    orderDate,
+    orderStatus,
+    customerEmail,
+    billTo,
+    shipTo,
+    items,
+    ...(Number.isFinite(amountPaidTTC) && amountPaidTTC > 0 ? { amountPaid: amountPaidTTC } : {}),
+    ...(Number.isFinite(shippingAmount) && shippingAmount > 0 ? { shippingAmount } : {}),
+    ...(Number.isFinite(taxAmount) && taxAmount > 0 ? { taxAmount } : {}),
+  };
+}
+
+/* =====================================================
    STRIPE WEBHOOK
 ===================================================== */
 
@@ -89,10 +225,7 @@ export async function POST(req: Request) {
   const signature = req.headers.get("stripe-signature");
 
   if (!signature) {
-    return NextResponse.json(
-      { error: "Missing stripe-signature" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -109,10 +242,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
-  /* =====================================================
-     CHECKOUT SESSION COMPLETED
-  ===================================================== */
-
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
@@ -125,7 +254,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true });
     }
 
-    /* ---------------- SOURCE DE VÉRITÉ ---------------- */
     const ref = dbAdmin.collection("orders").doc(orderId);
     const snap = await ref.get();
 
@@ -134,17 +262,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true });
     }
 
-    const savedOrder = snap.data()!;
+    const savedOrder = snap.data() as any;
 
-    /* ---------------- LANGUE CLIENT ---------------- */
+    // Langue client
     const locale: EmailLocale =
-      EMAIL_I18N[savedOrder.locale as EmailLocale]
-        ? savedOrder.locale
-        : "fr";
-
+      EMAIL_I18N[savedOrder.locale as EmailLocale] ? savedOrder.locale : "fr";
     const mail = EMAIL_I18N[locale];
 
-    /* ---------------- CLIENT ---------------- */
+    // Client
     const firstName =
       savedOrder.shippingAddress?.firstName ||
       savedOrder.customerFirstName ||
@@ -156,7 +281,7 @@ export async function POST(req: Request) {
       savedOrder.customerLastName ||
       "";
 
-    /* ---------------- ITEMS ---------------- */
+    // Items pour facture
     const items = (savedOrder.items || []).map((it: any) => {
       const priceHT = Number(it.priceHT ?? it.price ?? 0);
       return {
@@ -168,7 +293,7 @@ export async function POST(req: Request) {
       };
     });
 
-    /* ---------------- SHIPPING (HT / TTC) ---------------- */
+    // Shipping (HT/TTC) pour facture
     const sm = savedOrder.shippingMethod || {};
     const shippingHT = Number(sm.priceHT ?? sm.price ?? 0);
     const vatRate = Number(sm.vatRate ?? 0);
@@ -192,15 +317,12 @@ export async function POST(req: Request) {
       ...savedOrder,
       items,
       shippingMethod,
-
-      // ✅ Prix HT de la livraison utilisé par generateInvoicePDF
       shippingPrice: shippingHT,
-
       customerFirstName: firstName,
       customerLastName: lastName,
     };
 
-    /* ---------------- UPDATE ORDER ---------------- */
+    // Update paid
     await ref.update({
       status: "paid",
       paidAt: new Date(),
@@ -209,11 +331,51 @@ export async function POST(req: Request) {
       customerLastName: lastName,
     });
 
-    /* ---------------- PDF + EMAIL ---------------- */
+    // --- ShipStation push (non bloquant)
     try {
-      const pdfBuffer = await generateInvoicePDF(normalizedOrder, orderId, {
-        locale,
-      });
+      const snapAfter = await ref.get();
+      const orderDataAfter = snapAfter.exists ? (snapAfter.data() as any) : savedOrder;
+
+      const alreadyPushed = Boolean(orderDataAfter?.shipstation?.pushedAt);
+      if (!alreadyPushed) {
+        const ssBody = buildShipStationBody(orderDataAfter, orderId);
+
+        const ssOrder = await createOrUpdateOrder(ssBody);
+
+        await ref.set(
+          {
+            shipstation: {
+              pushedAt: new Date(),
+              orderNumber: ssBody.orderNumber,
+              response: ssOrder ?? null,
+            },
+          },
+          { merge: true }
+        );
+
+        console.log("[stripe/webhook] shipstation push OK", { orderId, ssOrderId: (ssOrder as any)?.orderId });
+      } else {
+        console.log("[stripe/webhook] shipstation already pushed, skip", { orderId });
+      }
+    } catch (err: any) {
+      const msg = String(err?.message || err);
+      console.error("[stripe/webhook] shipstation push ERROR (non bloquant):", msg);
+
+      await ref.set(
+        {
+          shipstation: {
+            pushedAt: null,
+            lastErrorAt: new Date(),
+            lastError: msg,
+          },
+        },
+        { merge: true }
+      );
+    }
+
+    // --- PDF + EMAIL (non bloquant)
+    try {
+      const pdfBuffer = await generateInvoicePDF(normalizedOrder, orderId, { locale });
 
       await resend.emails.send({
         from: "Massme • Support <contact@hdconnects.com>",
