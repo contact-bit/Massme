@@ -60,7 +60,7 @@ const EMAIL_I18N: Record<
   nl: {
     subject: "🎉 Bedankt voor je bestelling — Factuur bijgevoegd",
     title: (name) => `Bedankt ${name} voor je bestelling 🎉`,
-    intro: "Je factuur is bijgevoegd bij deze e-mail.",
+    intro: "Je factuur est bijgevoegd bij deze e-mail.",
     orderLabel: "Bestelling",
   },
 };
@@ -102,7 +102,10 @@ function pickFirst<T>(...values: T[]): T | undefined {
 function buildShipStationBody(orderData: any, orderId: string) {
   // orderNumber lisible
   const orderNumber =
-    asString(pickFirst(orderData?.orderNumber, orderData?.number, orderData?.id), orderId) || orderId;
+    asString(
+      pickFirst(orderData?.orderNumber, orderData?.number, orderData?.id),
+      orderId
+    ) || orderId;
 
   const orderDate = (() => {
     const d = pickFirst(orderData?.createdAt, orderData?.created_at, orderData?.created);
@@ -148,7 +151,9 @@ function buildShipStationBody(orderData: any, orderId: string) {
         ),
         ""
       ).trim() || billTo.name || "Customer",
-    street1: asString(pickFirst(ship?.street1, ship?.address1, ship?.line1, ship?.address), "").trim() || billTo.street1,
+    street1:
+      asString(pickFirst(ship?.street1, ship?.address1, ship?.line1, ship?.address), "").trim() ||
+      billTo.street1,
     city: asString(pickFirst(ship?.city, ship?.town), "").trim() || billTo.city,
     postalCode: asString(pickFirst(ship?.postalCode, ship?.zip, ship?.postcode), "").trim() || billTo.postalCode,
     country: asString(pickFirst(ship?.country, ship?.countryCode), billTo.country || "FR").trim(),
@@ -242,15 +247,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
+  console.log("[stripe/webhook] event", event.type);
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    const orderId = session.metadata?.order_id;
-    const customerEmail =
+    // ✅ Fallback orderId : metadata OU client_reference_id
+    const orderId =
+      session.metadata?.order_id ||
+      session.client_reference_id ||
+      null;
+
+    // Email Stripe (parfois vide selon config Checkout)
+    const stripeEmail =
       session.customer_details?.email || session.customer_email || null;
 
-    if (!orderId || !customerEmail) {
-      console.error("⚠️ order_id ou email manquant");
+    if (!orderId) {
+      console.error("⚠️ order_id manquant (metadata/client_reference_id)", {
+        stripeSessionId: session.id,
+        client_reference_id: session.client_reference_id,
+        metadata: session.metadata,
+      });
       return NextResponse.json({ received: true });
     }
 
@@ -263,6 +280,22 @@ export async function POST(req: Request) {
     }
 
     const savedOrder = snap.data() as any;
+
+    // ✅ Fallback email depuis Firestore si Stripe ne l'a pas
+    const customerEmail =
+      stripeEmail ||
+      savedOrder?.email ||
+      savedOrder?.customer_email ||
+      null;
+
+    if (!customerEmail) {
+      console.error("⚠️ email manquant (Stripe + Firestore)", {
+        orderId,
+        stripeSessionId: session.id,
+        stripeEmail,
+      });
+      return NextResponse.json({ received: true });
+    }
 
     // Langue client
     const locale: EmailLocale =
@@ -353,7 +386,10 @@ export async function POST(req: Request) {
           { merge: true }
         );
 
-        console.log("[stripe/webhook] shipstation push OK", { orderId, ssOrderId: (ssOrder as any)?.orderId });
+        console.log("[stripe/webhook] shipstation push OK", {
+          orderId,
+          ssOrderId: (ssOrder as any)?.orderId,
+        });
       } else {
         console.log("[stripe/webhook] shipstation already pushed, skip", { orderId });
       }
