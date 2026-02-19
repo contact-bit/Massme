@@ -1,12 +1,11 @@
 "use client";
 import React, { useMemo } from "react";
-import type { Order, ShippingStatus } from "../domain/types";
+import type { Order } from "../domain/types";
 import { compactId, formatDateFR, moneyEUR } from "../domain/utils";
-import { getNextActionHint, getShippingText } from "../domain/shippingText";
 import { StatusPill } from "./StatusPill";
 import { ActionIconButton } from "./ActionIconButton";
 import { IconCopy, IconEye, IconTrash } from "./icons";
-import { ShippingActions } from "./ShippingActions";
+import { ShipStationStatus } from "./ShipStationStatus";
 
 export function OrdersTable({
   orders,
@@ -17,7 +16,6 @@ export function OrdersTable({
   onCopyId,
   onDelete,
   deleting,
-  onUpdateShippingStatus,
 }: {
   orders: Order[];
   selected: Record<string, boolean>;
@@ -27,7 +25,6 @@ export function OrdersTable({
   onCopyId: (id: string) => void;
   onDelete: (id: string) => void;
   deleting: Record<string, boolean>;
-  onUpdateShippingStatus: (order: Order, next: ShippingStatus) => void;
 }) {
   const allPageSelected = useMemo(() => {
     if (orders.length === 0) return false;
@@ -41,12 +38,23 @@ export function OrdersTable({
           <thead>
             <tr>
               <th>
-                <label style={{ display: "inline-flex", gap: 6, alignItems: "center", cursor: "pointer" }}>
-                  <input type="checkbox" checked={allPageSelected} onChange={onToggleAll} />
+                <label
+                  style={{
+                    display: "inline-flex",
+                    gap: 6,
+                    alignItems: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={allPageSelected}
+                    onChange={onToggleAll}
+                  />
                   <span>Sélect.</span>
                 </label>
               </th>
-              <th>ID / Statut</th>
+              <th>ID / Livraison (ShipStation)</th>
               <th>Date</th>
               <th>Email</th>
               <th>Langue</th>
@@ -70,23 +78,35 @@ export function OrdersTable({
 
                 <td>
                   <div className="mono">{compactId(o.id)}</div>
+
                   <div className="statusBlock">
-                    <div className="statusMain">{getShippingText(o.shippingStatus)}</div>
-                    <div className="statusHint">{getNextActionHint(o.shippingStatus)}</div>
+                    <div className="statusMain">
+                      <ShipStationStatus orderId={o.id} />
+                    </div>
                   </div>
                 </td>
 
                 <td>{formatDateFR(o.__created ?? null)}</td>
                 <td>{o.__email || "—"}</td>
                 <td>{o.__lang || "—"}</td>
+
                 <td>
                   <StatusPill status={o.status} />
                 </td>
+
                 <td>{o.__itemsLabel || "—"}</td>
                 <td>{moneyEUR(o.__total ?? 0)}</td>
 
                 <td>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      flexWrap: "wrap",
+                      justifyContent: "flex-end",
+                    }}
+                  >
                     <div style={{ display: "flex", gap: 6 }}>
                       <ActionIconButton
                         title="Détails"
@@ -94,14 +114,13 @@ export function OrdersTable({
                         icon={<IconEye />}
                         variant="primary"
                       />
+
                       <ActionIconButton
                         title="Copier ID"
                         onClick={() => onCopyId(o.id)}
                         icon={<IconCopy />}
                       />
                     </div>
-
-                    <ShippingActions order={o} onUpdate={onUpdateShippingStatus} />
 
                     <ActionIconButton
                       title="Supprimer"

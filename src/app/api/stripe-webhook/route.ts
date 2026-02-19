@@ -41,7 +41,7 @@ const EMAIL_I18N: Record<
   },
   it: {
     subject: "🎉 Grazie per il tuo ordine — Fattura allegata",
-    title: (name) => `Grazie ${name} per il tuo ordine 🎉`,
+    title: (name) => `Grazie ${name} pour il tuo ordine 🎉`,
     intro: "La tua fattura è allegata a questa email.",
     orderLabel: "Ordine",
   },
@@ -192,9 +192,7 @@ function buildShipStationBody(orderData: any, orderId: string) {
         (isNonEmptyString(it?.image) && it.image) ||
         (isNonEmptyString(it?.thumbnail) && it.thumbnail) ||
         (isNonEmptyString(it?.photoUrl) && it.photoUrl) ||
-        // formats fréquents: images: string[]
         (Array.isArray(it?.images) && isNonEmptyString(it.images?.[0]) ? it.images[0] : undefined) ||
-        // formats fréquents: images: [{url: string}]
         (Array.isArray(it?.images) && isNonEmptyString(it.images?.[0]?.url) ? it.images[0].url : undefined) ||
         undefined;
 
@@ -361,21 +359,45 @@ export async function POST(req: Request) {
       customerLastName: lastName,
     });
 
-    // --- ShipStation push (non bloquant)
+    // --- ShipStation push (non bloquant) + repush si images arrivent après
     try {
       const snapAfter = await ref.get();
       const orderDataAfter = snapAfter.exists ? (snapAfter.data() as any) : savedOrder;
 
-      const alreadyPushed = Boolean(orderDataAfter?.shipstation?.pushedAt);
-      if (!alreadyPushed) {
+      const pushedAt = Boolean(orderDataAfter?.shipstation?.pushedAt);
+      const pushedWithImages = Boolean(orderDataAfter?.shipstation?.pushedWithImages);
+
+      const hasAnyImage =
+        Array.isArray(orderDataAfter?.items) &&
+        orderDataAfter.items.some((it: any) => {
+          const url =
+            it?.imageUrl ||
+            it?.image_url ||
+            it?.image ||
+            it?.thumbnail ||
+            it?.photoUrl ||
+            (Array.isArray(it?.images) ? it.images?.[0] : null) ||
+            (Array.isArray(it?.images) ? it.images?.[0]?.url : null);
+          return typeof url === "string" && url.trim().length > 0;
+        });
+
+      // ✅ push si jamais poussé, ou si déjà poussé mais pas "avec images" et on a des images maintenant
+      const shouldPush = !pushedAt || (!pushedWithImages && hasAnyImage);
+
+      if (shouldPush) {
         const ssBody = buildShipStationBody(orderDataAfter, orderId);
 
         const ssOrder = await createOrUpdateOrder(ssBody);
+
+        const bodyHasImages =
+          Array.isArray((ssBody as any)?.items) &&
+          (ssBody as any).items.some((x: any) => typeof x?.imageUrl === "string" && x.imageUrl.trim().length > 0);
 
         await ref.set(
           {
             shipstation: {
               pushedAt: new Date(),
+              pushedWithImages: bodyHasImages,
               orderNumber: ssBody.orderNumber,
               response: ssOrder ?? null,
             },
@@ -386,9 +408,16 @@ export async function POST(req: Request) {
         console.log("[stripe/webhook] shipstation push OK", {
           orderId,
           ssOrderId: (ssOrder as any)?.orderId,
+          bodyHasImages,
+          repush: pushedAt && !pushedWithImages,
         });
       } else {
-        console.log("[stripe/webhook] shipstation already pushed, skip", { orderId });
+        console.log("[stripe/webhook] shipstation already pushed (no update needed), skip", {
+          orderId,
+          pushedAt,
+          pushedWithImages,
+          hasAnyImage,
+        });
       }
     } catch (err: any) {
       const msg = String(err?.message || err);

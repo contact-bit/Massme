@@ -1,27 +1,23 @@
 "use client";
 import React from "react";
+import { paymentStatusLabelFR } from "../domain/statusLabels";
 
 export function StatusPill({ status }: { status?: string }) {
-  const s = status || "—";
+  const s = (status || "unknown").toLowerCase();
+
   let cls = "pill";
-  let label = s;
 
   if (s === "paid") {
     cls = "pill pill--paid";
-    label = "paid";
-  } else if (s === "pending_payment") {
+  } else if (s === "pending_payment" || s === "pending") {
     cls = "pill pill--pending";
-    label = "pending";
-  } else if (s === "canceled") {
+  } else if (s === "canceled" || s === "cancelled") {
     cls = "pill pill--canceled";
-    label = "canceled";
   } else if (s === "refunded") {
     cls = "pill pill--refunded";
-    label = "refunded";
-  } else if (s && s !== "—") {
+  } else {
     cls = "pill pill--other";
-    label = s;
   }
 
-  return <span className={cls}>{label}</span>;
+  return <span className={cls}>{paymentStatusLabelFR(s)}</span>;
 }

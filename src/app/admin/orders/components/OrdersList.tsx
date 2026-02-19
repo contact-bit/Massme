@@ -102,7 +102,6 @@ export function OrdersList({
             onCopyId={onCopyId}
             onDelete={onDelete}
             deleting={deleting}
-            onUpdateShippingStatus={onUpdateShippingStatus}
           />
 
           <OrdersCards

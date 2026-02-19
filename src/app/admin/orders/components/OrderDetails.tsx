@@ -5,6 +5,7 @@ import { formatDateFR, moneyEUR, formatAddress } from "../domain/utils";
 import { getItemPrice, getShipping, getSubtotal, getTotal } from "../domain/orderMath";
 import { StatusPill } from "./StatusPill";
 import { ShippingStatusPill } from "./ShippingStatusPill";
+import { ShipStationStatus } from "./ShipStationStatus";
 
 export function OrderDetails({
   order,
@@ -107,10 +108,19 @@ export function OrderDetails({
       <div className="box">
         <div className="boxTitle">Livraison</div>
 
+        {/* ✅ Interne */}
         <div className="kv">
-          <div className="kvKey">Statut</div>
+          <div className="kvKey">Statut (interne)</div>
           <div className="kvVal">
             <ShippingStatusPill status={order.shippingStatus} />
+          </div>
+        </div>
+
+        {/* ✅ ShipStation LIVE */}
+        <div className="kv">
+          <div className="kvKey">ShipStation</div>
+          <div className="kvVal">
+            <ShipStationStatus orderId={order.id} />
           </div>
         </div>
 
