@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 function safeJsonParse(text: string): any {
   try {
     return JSON.parse(text);
@@ -12,7 +15,7 @@ function safeJsonParse(text: string): any {
 function getAuthHeader() {
   const key = process.env.SHIPSTATION_API_KEY;
   const secret = process.env.SHIPSTATION_API_SECRET;
-  if (!key || !secret) throw new Error("Missing ShipStation env vars");
+  if (!key || !secret) throw new Error("Missing SHIPSTATION_API_KEY or SHIPSTATION_API_SECRET");
   const token = Buffer.from(`${key}:${secret}`).toString("base64");
   return `Basic ${token}`;
 }
@@ -23,10 +26,14 @@ function getAuthHeader() {
  */
 function checkToken(req: Request) {
   const expected = process.env.SHIPSTATION_WEBHOOK_TOKEN;
-  if (!expected) return true; // si tu ne l'as pas mis, on laisse passer (dev)
+  if (!expected) return true; // dev: si non défini, on laisse passer
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
   return token === expected;
+}
+
+function asString(v: unknown): string | null {
+  return typeof v === "string" && v.trim().length > 0 ? v.trim() : null;
 }
 
 export async function POST(req: Request) {
@@ -55,7 +62,10 @@ export async function POST(req: Request) {
 
     const res = await fetch(resourceUrl, {
       method: "GET",
-      headers: { Authorization: getAuthHeader() },
+      headers: {
+        Authorization: getAuthHeader(),
+        "Content-Type": "application/json",
+      },
       cache: "no-store",
     });
 
@@ -65,7 +75,13 @@ export async function POST(req: Request) {
 
     if (!res.ok) {
       return NextResponse.json(
-        { ok: false, error: "ShipStation resource fetch failed", status: res.status, body: text.slice(0, 2000), requestId },
+        {
+          ok: false,
+          error: "ShipStation resource fetch failed",
+          status: res.status,
+          body: text.slice(0, 2000),
+          requestId,
+        },
         { status: 502 }
       );
     }
@@ -75,26 +91,26 @@ export async function POST(req: Request) {
     // Selon le webhook, ça peut renvoyer un "shipment" ou des infos order/label.
     // On tente de retrouver orderNumber/orderKey + tracking.
     const orderNumber =
-      resource?.orderNumber ||
-      resource?.order?.orderNumber ||
-      resource?.order?.orderKey ||
-      resource?.orderKey;
+      asString(resource?.orderNumber) ||
+      asString(resource?.order?.orderNumber) ||
+      asString(resource?.order?.orderKey) ||
+      asString(resource?.orderKey);
 
     const trackingNumber =
-      resource?.trackingNumber ||
-      resource?.shipment?.trackingNumber ||
-      resource?.tracking_number ||
-      resource?.shipment?.tracking_number;
+      asString(resource?.trackingNumber) ||
+      asString(resource?.shipment?.trackingNumber) ||
+      asString(resource?.tracking_number) ||
+      asString(resource?.shipment?.tracking_number);
 
     const carrier =
-      resource?.carrierCode ||
-      resource?.shipment?.carrierCode ||
-      resource?.carrier ||
-      resource?.shipment?.carrier;
+      asString(resource?.carrierCode) ||
+      asString(resource?.shipment?.carrierCode) ||
+      asString(resource?.carrier) ||
+      asString(resource?.shipment?.carrier);
 
     const shipDate =
-      resource?.shipDate ||
-      resource?.shipment?.shipDate ||
+      asString(resource?.shipDate) ||
+      asString(resource?.shipment?.shipDate) ||
       new Date().toISOString();
 
     console.log(`🔎 [${requestId}] extracted:`, {
@@ -104,7 +120,7 @@ export async function POST(req: Request) {
       shipDate,
     });
 
-    if (!orderNumber || typeof orderNumber !== "string") {
+    if (!orderNumber) {
       console.warn(`🟨 [${requestId}] Could not extract orderNumber/orderKey`);
       return NextResponse.json({ ok: true, ignored: true, requestId });
     }
@@ -116,6 +132,18 @@ export async function POST(req: Request) {
 
     await dbAdmin.collection("orders").doc(firestoreOrderId).set(
       {
+        // ✅ champ utilisé par ton admin (ShippingActions / ShippingStatusPill)
+        shippingStatus: "shipped",
+        shippedAt: shipDate,
+
+        // (optionnel) tracking au même niveau
+        shippingTracking: {
+          trackingNumber: trackingNumber ?? null,
+          carrier: carrier ?? null,
+          shipDate: shipDate ?? null,
+        },
+
+        // ✅ compat: on garde ton ancien champ "fulfillment"
         fulfillment: {
           status: "shipped",
           tracking: {
@@ -124,6 +152,14 @@ export async function POST(req: Request) {
             shipDate: shipDate ?? null,
           },
           updatedAt: new Date().toISOString(),
+        },
+
+        // ✅ audit/debug
+        shipstation: {
+          lastWebhookAt: new Date().toISOString(),
+          lastWebhookOrderNumber: firestoreOrderId,
+          lastWebhookTracking: trackingNumber ?? null,
+          lastWebhookCarrier: carrier ?? null,
         },
       },
       { merge: true }

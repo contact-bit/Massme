@@ -54,7 +54,7 @@ const EMAIL_I18N: Record<
   de: {
     subject: "🎉 Vielen Dank für Ihre Bestellung — Rechnung beigefügt",
     title: (name) => `Vielen Dank ${name} für Ihre Bestellung 🎉`,
-    intro: "Ihre Rechnung ist dieser E-Mail beigefügt.",
+    intro: "Ihre Rechnung est dieser E-Mail beigefügt.",
     orderLabel: "Bestellung",
   },
   nl: {
@@ -102,10 +102,7 @@ function pickFirst<T>(...values: T[]): T | undefined {
 function buildShipStationBody(orderData: any, orderId: string) {
   // orderNumber lisible
   const orderNumber =
-    asString(
-      pickFirst(orderData?.orderNumber, orderData?.number, orderData?.id),
-      orderId
-    ) || orderId;
+    asString(pickFirst(orderData?.orderNumber, orderData?.number, orderData?.id), orderId) || orderId;
 
   const orderDate = (() => {
     const d = pickFirst(orderData?.createdAt, orderData?.created_at, orderData?.created);
@@ -152,10 +149,10 @@ function buildShipStationBody(orderData: any, orderId: string) {
         ""
       ).trim() || billTo.name || "Customer",
     street1:
-      asString(pickFirst(ship?.street1, ship?.address1, ship?.line1, ship?.address), "").trim() ||
-      billTo.street1,
+      asString(pickFirst(ship?.street1, ship?.address1, ship?.line1, ship?.address), "").trim() || billTo.street1,
     city: asString(pickFirst(ship?.city, ship?.town), "").trim() || billTo.city,
-    postalCode: asString(pickFirst(ship?.postalCode, ship?.zip, ship?.postcode), "").trim() || billTo.postalCode,
+    postalCode:
+      asString(pickFirst(ship?.postalCode, ship?.zip, ship?.postcode), "").trim() || billTo.postalCode,
     country: asString(pickFirst(ship?.country, ship?.countryCode), billTo.country || "FR").trim(),
     phone: asString(pickFirst(ship?.phone, ship?.phoneNumber), "").trim() || billTo.phone,
   };
@@ -188,11 +185,27 @@ function buildShipStationBody(orderData: any, orderId: string) {
       // si centimes (ex: 8250)
       if (Number.isInteger(unit) && unit >= 1000) unit = unit / 100;
 
+      // ✅ image: ShipStation attend une URL publique https
+      const imageUrl =
+        (isNonEmptyString(it?.imageUrl) && it.imageUrl) ||
+        (isNonEmptyString(it?.image_url) && it.image_url) ||
+        (isNonEmptyString(it?.image) && it.image) ||
+        (isNonEmptyString(it?.thumbnail) && it.thumbnail) ||
+        (isNonEmptyString(it?.photoUrl) && it.photoUrl) ||
+        // formats fréquents: images: string[]
+        (Array.isArray(it?.images) && isNonEmptyString(it.images?.[0]) ? it.images[0] : undefined) ||
+        // formats fréquents: images: [{url: string}]
+        (Array.isArray(it?.images) && isNonEmptyString(it.images?.[0]?.url) ? it.images[0].url : undefined) ||
+        undefined;
+
       return {
         sku: isNonEmptyString(it?.sku) ? it.sku : isNonEmptyString(it?.id) ? String(it.id) : undefined,
         name: asString(pickFirst(it?.name, it?.title, it?.productName), "Produit").trim(),
         quantity: q,
         unitPrice: Math.max(0, unit),
+
+        // ✅ ShipStation item image
+        ...(imageUrl ? { imageUrl } : {}),
       };
     })
     .filter((x: any) => x.name && x.quantity > 0);
@@ -237,11 +250,7 @@ export async function POST(req: Request) {
 
   try {
     const rawBody = await buffer(req.body!);
-    event = stripe.webhooks.constructEvent(
-      rawBody,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: any) {
     console.error("❌ Stripe signature error:", err.message);
     return NextResponse.json({ error: err.message }, { status: 400 });
@@ -253,14 +262,10 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
 
     // ✅ Fallback orderId : metadata OU client_reference_id
-    const orderId =
-      session.metadata?.order_id ||
-      session.client_reference_id ||
-      null;
+    const orderId = session.metadata?.order_id || session.client_reference_id || null;
 
     // Email Stripe (parfois vide selon config Checkout)
-    const stripeEmail =
-      session.customer_details?.email || session.customer_email || null;
+    const stripeEmail = session.customer_details?.email || session.customer_email || null;
 
     if (!orderId) {
       console.error("⚠️ order_id manquant (metadata/client_reference_id)", {
@@ -282,11 +287,7 @@ export async function POST(req: Request) {
     const savedOrder = snap.data() as any;
 
     // ✅ Fallback email depuis Firestore si Stripe ne l'a pas
-    const customerEmail =
-      stripeEmail ||
-      savedOrder?.email ||
-      savedOrder?.customer_email ||
-      null;
+    const customerEmail = stripeEmail || savedOrder?.email || savedOrder?.customer_email || null;
 
     if (!customerEmail) {
       console.error("⚠️ email manquant (Stripe + Firestore)", {
@@ -298,8 +299,7 @@ export async function POST(req: Request) {
     }
 
     // Langue client
-    const locale: EmailLocale =
-      EMAIL_I18N[savedOrder.locale as EmailLocale] ? savedOrder.locale : "fr";
+    const locale: EmailLocale = EMAIL_I18N[savedOrder.locale as EmailLocale] ? savedOrder.locale : "fr";
     const mail = EMAIL_I18N[locale];
 
     // Client
@@ -309,10 +309,7 @@ export async function POST(req: Request) {
       savedOrder.shippingAddress?.name?.split(" ")[0] ||
       "";
 
-    const lastName =
-      savedOrder.shippingAddress?.lastName ||
-      savedOrder.customerLastName ||
-      "";
+    const lastName = savedOrder.shippingAddress?.lastName || savedOrder.customerLastName || "";
 
     // Items pour facture
     const items = (savedOrder.items || []).map((it: any) => {
