@@ -5,6 +5,7 @@ import { getPayPalClient } from "@/lib/paypal-client";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { sendOrderEmails } from "@/lib/mailer";
 import { createOrUpdateOrder } from "@/server/shipstation/client";
+import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,8 +25,16 @@ function isNonEmptyString(v: unknown): v is string {
 }
 
 function pickFirst<T>(...values: T[]): T | undefined {
-  for (const v of values) if (v !== undefined && v !== null) return v;
+  for (const v of values) {
+    if (v !== undefined && v !== null) return v;
+  }
   return undefined;
+}
+
+function normalizeEmail(v: unknown): string | null {
+  const e = typeof v === "string" ? v.trim().toLowerCase() : "";
+  if (!e || !e.includes("@")) return null;
+  return e;
 }
 
 // Build ShipStation payload from your Firestore order shape (best-effort)
@@ -36,7 +45,7 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
 
   const orderDate = (() => {
     const d = pickFirst(orderData?.createdAt, orderData?.created_at, orderData?.created);
-    if (d?.toDate) return d.toDate().toISOString(); // Firestore Timestamp
+    if (d?.toDate) return d.toDate().toISOString();
     if (typeof d === "string") return d;
     if (d instanceof Date) return d.toISOString();
     return new Date().toISOString();
@@ -48,9 +57,7 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
     ? orderData.customer_email
     : undefined;
 
-  const totalTTC = Number(
-    orderData?.totals?.totalTTC ?? orderData?.total ?? orderData?.amount_total ?? 0
-  );
+  const totalTTC = Number(orderData?.totals?.totalTTC ?? orderData?.total ?? orderData?.amount_total ?? 0);
 
   const ship =
     pickFirst(
@@ -89,7 +96,7 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
         bill?.line1,
         bill?.addressLine1,
         bill?.address_line_1,
-        bill?.address, // ✅ ton format
+        bill?.address,
         bill?.street,
         bill?.streetAddress,
         bill?.street_address
@@ -147,7 +154,7 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
           ship?.line1,
           ship?.addressLine1,
           ship?.address_line_1,
-          ship?.address, // ✅ ton format
+          ship?.address,
           ship?.street,
           ship?.streetAddress,
           ship?.street_address
@@ -179,25 +186,19 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
         ""
       ).trim() || billTo.postalCode,
 
-    country: asString(
-      pickFirst(ship?.country, ship?.countryCode, ship?.country_code),
-      billTo.country || "FR"
-    ).trim(),
+    country: asString(pickFirst(ship?.country, ship?.countryCode, ship?.country_code), billTo.country || "FR").trim(),
 
     phone: asString(pickFirst(ship?.phone, ship?.phoneNumber, ship?.mobile), "").trim() || billTo.phone,
   };
 
-  // ✅ Validation explicite (sinon ShipStation 400 opaque)
   if (!shipTo.street1 || !shipTo.city || !shipTo.postalCode || !shipTo.country) {
     throw new Error(
       `ShipTo incomplete: street1=${!!shipTo.street1}, city=${!!shipTo.city}, postalCode=${!!shipTo.postalCode}, country=${!!shipTo.country}`
     );
   }
 
-  // Items
   const rawItems =
-    pickFirst(orderData?.items, orderData?.line_items, orderData?.cart?.items, orderData?.products) ??
-    [];
+    pickFirst(orderData?.items, orderData?.line_items, orderData?.cart?.items, orderData?.products) ?? [];
 
   const items = Array.isArray(rawItems)
     ? rawItems
@@ -217,16 +218,10 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
             it?.totals?.totalTTC;
 
           let unit = Number(candidate ?? 0) || 0;
-
-          // si c'est un int "grand" (ex: 11100) on suppose centimes
           if (Number.isInteger(unit) && unit >= 1000) unit = unit / 100;
 
           return {
-            sku: isNonEmptyString(it?.sku)
-              ? it.sku
-              : isNonEmptyString(it?.id)
-              ? String(it.id)
-              : undefined,
+            sku: isNonEmptyString(it?.sku) ? it.sku : isNonEmptyString(it?.id) ? String(it.id) : undefined,
             name: asString(pickFirst(it?.name, it?.title, it?.productName), "").trim(),
             quantity: q,
             unitPrice: Math.max(0, unit),
@@ -323,33 +318,66 @@ export async function POST(req: Request) {
 
     const orderRef = dbAdmin.collection("orders").doc(orderDocId);
 
-    // 1) Lire la commande
     const snapBefore = await orderRef.get();
     const existing = snapBefore.exists ? (snapBefore.data() as any) : null;
 
     const alreadySent = Boolean(existing?.emails?.sent);
     const alreadyPushedToShipstation = Boolean(existing?.shipstation?.pushedAt);
 
-    // 2) Update Firestore paid
+    const existingEmail =
+      normalizeEmail(existing?.email) ||
+      normalizeEmail(existing?.customerEmail) ||
+      normalizeEmail(existing?.customer_email);
+
     await orderRef.set(
       {
-        status: "paid",
+        "debug.paypalCaptureHitAt": new Date(),
+        "debug.paypalCaptureOrderId": orderId,
+        "debug.paypalCaptureId": captureId,
+        "debug.paypalCaptureStatus": captureStatus,
+      },
+      { merge: true }
+    );
+
+    try {
+      const finalizeResult = await finalizePaidOrder({
+        orderId: orderDocId,
+        provider: "paypal",
+        email: existingEmail,
+        locale: existing?.locale || "fr",
         payment: {
-          provider: "paypal",
           providerOrderId: orderId,
           captureId,
-          status: captureStatus,
           capturedAmount: {
             value: capturedValue ?? null,
             currency: capturedCurrency ?? null,
           },
         },
-        updatedAt: new Date(),
-      },
-      { merge: true }
-    );
+      });
 
-    // 3) Relire après update
+      await orderRef.set(
+        {
+          "debug.paypalFinalizeAt": new Date(),
+          "debug.paypalFinalizeResult": finalizeResult ?? null,
+          "reviewEmail.debugLastScheduleAt": new Date(),
+          "reviewEmail.debugLastScheduleResult": finalizeResult?.reviewResult ?? null,
+        },
+        { merge: true }
+      );
+    } catch (err: any) {
+      console.error("[paypal/capture-order] finalize paid order failed:", err?.message || err);
+
+      await orderRef.set(
+        {
+          "debug.paypalFinalizeErrorAt": new Date(),
+          "debug.paypalFinalizeError": String(err?.message || err),
+          "reviewEmail.lastError": String(err?.message || err),
+          "reviewEmail.lastErrorAt": new Date(),
+        },
+        { merge: true }
+      );
+    }
+
     const snapAfter = await orderRef.get();
     const orderData = snapAfter.exists ? (snapAfter.data() as any) : null;
 
@@ -361,13 +389,11 @@ export async function POST(req: Request) {
       alreadyPushedToShipstation,
     });
 
-    // 4) Push ShipStation (non bloquant)
     let shipstationPushed = false;
     let shipstationError: string | null = null;
 
     if (!alreadyPushedToShipstation) {
       try {
-        // ⚠️ Tu peux enlever ce log plus tard (il contient des infos perso)
         console.log("[shipstation] shippingAddress sample", {
           shippingAddress: orderData?.shippingAddress,
           billingAddress: orderData?.billingAddress,
@@ -425,7 +451,6 @@ export async function POST(req: Request) {
       shipstationPushed = true;
     }
 
-    // 5) Envoi email (non bloquant)
     let emailSent = false;
 
     if (!alreadySent && orderData?.email) {
@@ -451,7 +476,13 @@ export async function POST(req: Request) {
         emailSent = true;
 
         await orderRef.set(
-          { emails: { sent: true, sentAt: new Date(), provider: "paypal" } },
+          {
+            emails: {
+              sent: true,
+              sentAt: new Date(),
+              provider: "paypal",
+            },
+          },
           { merge: true }
         );
       } catch (mailErr: any) {

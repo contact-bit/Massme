@@ -1,10 +1,9 @@
-// app/(public)/[locale]/page.tsx
 import { notFound } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n";
 
 import Navbar from "@/components/Navbar";
-
+import ReviewsSection from "@/components/home/ReviewsSection";
 import HeroSection from "@/components/home/HeroSection";
 import PostureSection from "@/components/home/PostureSection";
 import CredibilityStrip from "@/components/home/CredibilityStrip";
@@ -33,16 +32,10 @@ export default async function HomePage({
 
   return (
     <main className="home snap-container">
-      {/* halo global */}
       <div className="home__halo-right" aria-hidden />
 
-      {/* 1er écran = navbar + hero dans la même snap-section */}
       <section id="hero" className="snap-section">
         <HeroSection locale={locale} />
-      </section>
-
-      <section id="final" className="snap-section">
-        <FinalCtaSection locale={locale} />
       </section>
 
       <section id="posture" className="snap-section">
@@ -63,6 +56,10 @@ export default async function HomePage({
 
       <section id="why" className="snap-section">
         <WhyDifferentSection locale={locale} />
+      </section>
+
+      <section id="reviews" className="snap-section">
+        <ReviewsSection />
       </section>
 
       <section id="device" className="snap-section">

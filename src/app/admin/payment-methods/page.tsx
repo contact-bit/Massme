@@ -7,18 +7,11 @@ import AddPaymentMethodForm from "./components/AddPaymentMethodForm";
 import EditPaymentMethodModal from "./components/EditPaymentMethodModal";
 import type { PaymentMethod } from "./types";
 
-/**
- * Vérifie si une string est bien un CountryCode valide
- * (càd une clé de COUNTRY_TO_LOCALE).
- */
+
 function isCountryCode(value: unknown): value is CountryCode {
   return typeof value === "string" && value in COUNTRY_TO_LOCALE;
 }
 
-/**
- * Normalise une valeur country venant d'une source externe.
- * Fallback sur "FR" si invalide.
- */
 function normalizeCountryCode(value: unknown, fallback: CountryCode = "FR") {
   return isCountryCode(value) ? value : fallback;
 }
@@ -64,7 +57,6 @@ export default function PaymentsAdminPage() {
 
   useEffect(() => {
     reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleDelete(id: string) {
@@ -109,7 +101,6 @@ export default function PaymentsAdminPage() {
           <p>Aucune méthode pour ce pays.</p>
         ) : (
           filtered.map((m) => {
-            // ✅ m.country est CountryCode -> indexation OK
             const locale = COUNTRY_TO_LOCALE[m.country];
 
             return (

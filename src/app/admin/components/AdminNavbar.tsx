@@ -12,6 +12,7 @@ export default function AdminNavbar() {
     { href: "/admin", label: "Dashboard" },
     { href: "/admin/orders", label: "Commandes" },
     { href: "/admin/products", label: "Produits" },
+    { href: "/admin/reviews", label: "Avis" },
     { href: "/admin/shipping", label: "Livraison" },
     { href: "/admin/payment-methods", label: "Méthodes de paiement" },
   ];
@@ -29,20 +30,23 @@ export default function AdminNavbar() {
   return (
     <header className="admin-topbar">
       <div className="admin-topbar-inner">
+        
         {/* BRAND */}
         <Link href="/admin" className="admin-logo">
           OculaRest <span>Admin</span>
         </Link>
 
-        {/* NAV */}
+        {/* NAVIGATION */}
         <nav className="admin-nav">
-          {tabs.map((t) => (
+          {tabs.map((tab) => (
             <Link
-              key={t.href}
-              href={t.href}
-              className={`admin-nav-link ${isActive(t.href) ? "active" : ""}`}
+              key={tab.href}
+              href={tab.href}
+              className={`admin-nav-link ${
+                isActive(tab.href) ? "active" : ""
+              }`}
             >
-              {t.label}
+              {tab.label}
               <span className="nav-underline" />
             </Link>
           ))}
@@ -54,6 +58,7 @@ export default function AdminNavbar() {
             Déconnexion
           </button>
         </div>
+
       </div>
     </header>
   );
