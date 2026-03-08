@@ -10,12 +10,14 @@ export async function GET() {
     const snap = await db.doc(DOC_PATH).get();
     const data = snap.exists ? snap.data() : null;
 
+    const parsedDelayDays = Number(data?.delayDays);
+
     return NextResponse.json({
       ok: true,
       settings: {
         enabled: data?.enabled ?? true,
         mode: data?.mode === "immediate" ? "immediate" : "delay",
-        delayDays: Number.isFinite(Number(data?.delayDays)) ? Number(data.delayDays) : 5,
+        delayDays: Number.isFinite(parsedDelayDays) ? parsedDelayDays : 5,
       },
     });
   } catch (e: any) {
@@ -33,6 +35,7 @@ export async function POST(req: Request) {
 
     const enabled = Boolean(body.enabled);
     const mode = body.mode === "immediate" ? "immediate" : "delay";
+
     const delayDaysNum = Number(body.delayDays);
     const delayDays = Number.isFinite(delayDaysNum)
       ? Math.max(0, Math.min(365, Math.floor(delayDaysNum)))
