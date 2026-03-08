@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/send-review-emails?secret=8f1d0b1c6a5e4d3c2b1a0f9e8d7c6b5a",
-      "schedule": "0 * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
