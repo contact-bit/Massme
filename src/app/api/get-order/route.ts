@@ -1,7 +1,7 @@
 // src/app/api/get-order/route.ts
 import { NextResponse } from "next/server";
-import { getStripe } from "@/lib/stripe";import { dbAdmin } from "@/lib/firebase.admin";
-import { FieldPath } from "firebase-admin/firestore";
+import { getStripe } from "@/lib/stripe";
+import { dbAdmin } from "@/lib/firebase.admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,8 +11,8 @@ function normalizeCreatedAt(data: any) {
     data?.createdAt?.toDate
       ? data.createdAt.toDate().toISOString()
       : data?.createdAt?._seconds
-      ? new Date(data.createdAt._seconds * 1000).toISOString()
-      : null;
+        ? new Date(data.createdAt._seconds * 1000).toISOString()
+        : null;
 
   return createdAt;
 }
@@ -33,7 +33,6 @@ async function getOrderDocById(orderId: string) {
 async function findOrderByProviderRef(refValue: string) {
   const ordersCol = dbAdmin.collection("orders");
 
-  // On tente plusieurs emplacements possibles (tu peux adapter selon ton schéma)
   const candidates: Array<{ field: string; value: string }> = [
     { field: "paypal.orderId", value: refValue },
     { field: "payment.paypalOrderId", value: refValue },
@@ -54,22 +53,20 @@ async function findOrderByProviderRef(refValue: string) {
         };
       }
     } catch {
-      // si le champ n'existe pas / index manquant / typo -> on tente le suivant
+      // on tente le champ suivant
     }
   }
 
-  // Fallback ultime: si tu stockes l'ID provider dans un champ "payment"
-  // on essaye un scan léger via FieldPath si tu as un champ map (optionnel)
-  // (on évite un vrai scan complet, donc pas de list() ici)
   return null;
 }
 
 export async function GET(req: Request) {
   try {
+    const stripe = getStripe();
     const { searchParams } = new URL(req.url);
 
-    const order_id = searchParams.get("order_id"); // peut être internal OU PayPal orderId selon ton flow actuel
-    const session_id = searchParams.get("session_id"); // Stripe fallback
+    const order_id = searchParams.get("order_id");
+    const session_id = searchParams.get("session_id");
 
     if (!order_id && !session_id) {
       return NextResponse.json(
@@ -78,7 +75,6 @@ export async function GET(req: Request) {
       );
     }
 
-    // 1) Si on a un order_id -> on essaie d'abord comme ID interne Firestore
     if (order_id) {
       const byId = await getOrderDocById(order_id);
       if (byId) {
@@ -87,7 +83,6 @@ export async function GET(req: Request) {
         return res;
       }
 
-      // 2) Sinon, on tente de le résoudre comme "provider ref" (ex: PayPal orderID)
       const byRef = await findOrderByProviderRef(order_id);
       if (byRef) {
         const res = NextResponse.json({ ok: true, order: byRef });
@@ -101,7 +96,6 @@ export async function GET(req: Request) {
       );
     }
 
-    // 3) Fallback Stripe: session_id -> metadata.order_id (ID interne)
     const session = await stripe.checkout.sessions.retrieve(session_id!);
     const internalOrderId = session.metadata?.order_id || "";
 
