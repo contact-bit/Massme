@@ -55,6 +55,7 @@ export async function scheduleReviewEmailForOrder(orderId: string) {
       },
       { merge: true }
     );
+
     throw new Error(`Order not found: ${orderId}`);
   }
 
@@ -90,6 +91,7 @@ export async function scheduleReviewEmailForOrder(orderId: string) {
       },
       { merge: true }
     );
+
     return { ok: true, skipped: true, reason: "missing_email" };
   }
 
@@ -105,6 +107,7 @@ export async function scheduleReviewEmailForOrder(orderId: string) {
       },
       { merge: true }
     );
+
     return { ok: true, skipped: true, reason: "settings_disabled" };
   }
 
@@ -159,10 +162,10 @@ export async function scheduleReviewEmailForOrder(orderId: string) {
       );
 
       return {
+        ...(sent ?? {}),
         ok: true,
         immediate: true,
         delayDays: 0,
-        ...(sent ?? {}),
       };
     } catch (err: any) {
       const msg = String(err?.message || err);
@@ -177,7 +180,11 @@ export async function scheduleReviewEmailForOrder(orderId: string) {
         { merge: true }
       );
 
-      return { ok: false, immediate: true, error: msg };
+      return {
+        ok: false,
+        immediate: true,
+        error: msg,
+      };
     }
   }
 
