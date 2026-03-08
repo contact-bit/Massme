@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { dbAdmin as db } from "@/lib/firebase.admin";
 import { Timestamp } from "firebase-admin/firestore";
 import { computeTax } from "@/lib/tax";
 import Stripe from "stripe";
-
-/* =====================================================
-   TYPES
-===================================================== */
 
 type CartItem = {
   priceHT: number;
@@ -18,10 +14,6 @@ type CleanItem = CartItem & {
   id: string;
   name: string;
 };
-
-/* =====================================================
-   STRIPE LOCALE SAFE
-===================================================== */
 
 type StripeCheckoutLocale =
   | "auto"
@@ -51,12 +43,9 @@ function getStripeLocale(appLocale: unknown): StripeCheckoutLocale {
   return STRIPE_LOCALE_BY_APP_LOCALE[l] ?? "auto";
 }
 
-/* =====================================================
-   API
-===================================================== */
-
 export async function POST(req: Request) {
   try {
+    const stripe = getStripe();
     const body = await req.json();
 
     const {
@@ -72,8 +61,6 @@ export async function POST(req: Request) {
       heardFromOther,
       paymentMethod,
     } = body;
-
-    /* ---------------- VALIDATION ---------------- */
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Missing items" }, { status: 400 });
@@ -101,8 +88,6 @@ export async function POST(req: Request) {
 
     const country = shippingAddress.country || "FR";
 
-    /* ---------------- CLEAN ITEMS ---------------- */
-
     const cleanItems: CleanItem[] = items.map((i: any) => ({
       id: String(i.id),
       name: String(i.name),
@@ -116,8 +101,6 @@ export async function POST(req: Request) {
     );
 
     const shippingHT = Number(shippingMethod.priceHT ?? 0);
-
-    /* ---------------- TAX CALCULATION ---------------- */
 
     const taxItems = disableVAT
       ? { ht: itemsHT, vatAmount: 0, vatRate: 0, ttc: itemsHT }
@@ -134,8 +117,6 @@ export async function POST(req: Request) {
     const totalHT = taxItems.ht + taxShipping.ht;
     const totalVAT = taxItems.vatAmount + taxShipping.vatAmount;
     const totalTTC = totalHT + totalVAT;
-
-    /* ---------------- FIRESTORE ORDER ---------------- */
 
     const orderRef = db.collection("orders").doc();
 
@@ -166,8 +147,6 @@ export async function POST(req: Request) {
 
     console.log("[checkout] order created:", orderRef.id);
 
-    /* ---------------- STRIPE CUSTOMER ---------------- */
-
     const stripeCustomer = await stripe.customers.create({
       email: customerEmail,
       name: billingAddress.name,
@@ -181,8 +160,6 @@ export async function POST(req: Request) {
         order_id: orderRef.id,
       },
     });
-
-    /* ---------------- STRIPE LINE ITEMS ---------------- */
 
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
@@ -223,8 +200,6 @@ export async function POST(req: Request) {
       });
     }
 
-    /* ---------------- STRIPE SESSION ---------------- */
-
     const baseUrl =
       process.env.NEXT_PUBLIC_URL ||
       process.env.APP_BASE_URL;
@@ -238,15 +213,11 @@ export async function POST(req: Request) {
       customer: stripeCustomer.id,
       line_items,
       locale: getStripeLocale(locale),
-
-      // 🔥 CRITIQUE POUR WEBHOOK
       client_reference_id: orderRef.id,
-
       metadata: {
         order_id: orderRef.id,
         payment_provider: "stripe",
       },
-
       success_url: `${baseUrl}/${locale}/success?order_id=${orderRef.id}`,
       cancel_url: `${baseUrl}/${locale}/checkout`,
     });

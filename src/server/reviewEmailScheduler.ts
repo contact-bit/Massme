@@ -159,10 +159,10 @@ export async function scheduleReviewEmailForOrder(orderId: string) {
       );
 
       return {
-        ...(sent ?? {}),
         ok: true,
         immediate: true,
         delayDays: 0,
+        ...(sent ?? {}),
       };
     } catch (err: any) {
       const msg = String(err?.message || err);
