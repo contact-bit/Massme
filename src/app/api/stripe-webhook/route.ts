@@ -1,7 +1,8 @@
 // src/app/api/stripe-webhook/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { getStripe } from "@/lib/stripe";import { dbAdmin } from "@/lib/firebase.admin";
+import { getStripe } from "@/lib/stripe";
+import { dbAdmin } from "@/lib/firebase.admin";
 import { Resend } from "resend";
 import { generateInvoicePDF } from "@/lib/generateInvoice";
 import { computePrice } from "@/lib/pricing";
@@ -232,6 +233,8 @@ function buildShipStationBody(orderData: any, orderId: string) {
    STRIPE WEBHOOK
 ===================================================== */
 export async function POST(req: Request) {
+  const stripe = getStripe();
+
   const signature = req.headers.get("stripe-signature");
   if (!signature) {
     return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
