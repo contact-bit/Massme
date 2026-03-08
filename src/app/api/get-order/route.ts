@@ -1,7 +1,6 @@
 // src/app/api/get-order/route.ts
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
-import { dbAdmin } from "@/lib/firebase.admin";
+import { getStripe } from "@/lib/stripe";import { dbAdmin } from "@/lib/firebase.admin";
 import { FieldPath } from "firebase-admin/firestore";
 
 export const runtime = "nodejs";

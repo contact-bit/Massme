@@ -1,8 +1,7 @@
 // src/app/api/stripe-webhook/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { stripe } from "@/lib/stripe";
-import { dbAdmin } from "@/lib/firebase.admin";
+import { getStripe } from "@/lib/stripe";import { dbAdmin } from "@/lib/firebase.admin";
 import { Resend } from "resend";
 import { generateInvoicePDF } from "@/lib/generateInvoice";
 import { computePrice } from "@/lib/pricing";
