@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { isShipStationEnabled } from "@/server/logistics/settings";
+import { buildShipStationShippedUpdate } from "@/server/logistics/updates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +17,9 @@ function safeJsonParse(text: string): any {
 function getAuthHeader() {
   const key = process.env.SHIPSTATION_API_KEY;
   const secret = process.env.SHIPSTATION_API_SECRET;
-  if (!key || !secret) throw new Error("Missing SHIPSTATION_API_KEY or SHIPSTATION_API_SECRET");
+  if (!key || !secret) {
+    throw new Error("Missing SHIPSTATION_API_KEY or SHIPSTATION_API_SECRET");
+  }
   const token = Buffer.from(`${key}:${secret}`).toString("base64");
   return `Basic ${token}`;
 }
@@ -46,10 +50,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    const enabled = await isShipStationEnabled();
+
+    if (!enabled) {
+      console.warn(`🟨 [${requestId}] ShipStation disabled by logistics provider setting`);
+      return NextResponse.json({
+        ok: true,
+        ignored: true,
+        reason: "shipstation_disabled",
+        requestId,
+      });
+    }
+
     const event = await req.json();
     console.log(`📩 [${requestId}] webhook event:`, event);
 
-    // ShipStation webhook contient généralement resource_url
     const resourceUrl =
       event?.resource_url || event?.resourceUrl || event?.resource_url?.href;
 
@@ -71,7 +86,9 @@ export async function POST(req: Request) {
 
     const text = await res.text();
     console.log(`🌐 [${requestId}] resource status=${res.status}`);
-    if (text) console.log(`🌐 [${requestId}] resource body (trunc):`, text.slice(0, 1200));
+    if (text) {
+      console.log(`🌐 [${requestId}] resource body (trunc):`, text.slice(0, 1200));
+    }
 
     if (!res.ok) {
       return NextResponse.json(
@@ -88,8 +105,6 @@ export async function POST(req: Request) {
 
     const resource = safeJsonParse(text);
 
-    // Selon le webhook, ça peut renvoyer un "shipment" ou des infos order/label.
-    // On tente de retrouver orderNumber/orderKey + tracking.
     const orderNumber =
       asString(resource?.orderNumber) ||
       asString(resource?.order?.orderNumber) ||
@@ -125,45 +140,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, ignored: true, requestId });
     }
 
-    // Chez toi orderNumber = orderId Firestore
     const firestoreOrderId = orderNumber;
 
     console.log(`📝 [${requestId}] updating Firestore orders/${firestoreOrderId}`);
 
-    await dbAdmin.collection("orders").doc(firestoreOrderId).set(
-      {
-        // ✅ champ utilisé par ton admin (ShippingActions / ShippingStatusPill)
-        shippingStatus: "shipped",
-        shippedAt: shipDate,
+    const updates = buildShipStationShippedUpdate({
+      orderNumber: firestoreOrderId,
+      trackingNumber: trackingNumber ?? null,
+      carrier: carrier ?? null,
+      shipDate: shipDate ?? null,
+    });
 
-        // (optionnel) tracking au même niveau
-        shippingTracking: {
-          trackingNumber: trackingNumber ?? null,
-          carrier: carrier ?? null,
-          shipDate: shipDate ?? null,
-        },
-
-        // ✅ compat: on garde ton ancien champ "fulfillment"
-        fulfillment: {
-          status: "shipped",
-          tracking: {
-            trackingNumber: trackingNumber ?? null,
-            carrier: carrier ?? null,
-            shipDate: shipDate ?? null,
-          },
-          updatedAt: new Date().toISOString(),
-        },
-
-        // ✅ audit/debug
-        shipstation: {
-          lastWebhookAt: new Date().toISOString(),
-          lastWebhookOrderNumber: firestoreOrderId,
-          lastWebhookTracking: trackingNumber ?? null,
-          lastWebhookCarrier: carrier ?? null,
-        },
-      },
-      { merge: true }
-    );
+    await dbAdmin.collection("orders").doc(firestoreOrderId).set(updates, {
+      merge: true,
+    });
 
     console.log(`🟩 [shipstation:webhook] DONE requestId=${requestId}`);
     return NextResponse.json({ ok: true, requestId });

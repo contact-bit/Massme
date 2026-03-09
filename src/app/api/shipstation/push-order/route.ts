@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { isShipStationEnabled } from "@/server/logistics/settings";
+import { buildShipStationPreparingUpdate } from "@/server/logistics/updates";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function assertAdmin(req: Request) {
+  const pass = req.headers.get("x-admin-password") || "";
+  const expected = process.env.ADMIN_PASSWORD || "";
+
+  if (!expected || pass !== expected) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return null;
+}
 
 function money(n: any): number {
   const v = typeof n === "number" ? n : typeof n === "string" ? Number(n) : 0;
@@ -22,11 +36,29 @@ function mask(s?: string) {
 }
 
 export async function POST(req: Request) {
+  const authError = assertAdmin(req);
+  if (authError) return authError;
+
   const requestId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
   console.log(`\n🟦 [shipstation:push-order] START requestId=${requestId}`);
 
   try {
+    const enabled = await isShipStationEnabled();
+
+    if (!enabled) {
+      console.warn(`🟨 [${requestId}] ShipStation disabled by logistics provider setting`);
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "shipstation_disabled",
+          message: "ShipStation is disabled. Current logistics provider is internal.",
+          requestId,
+        },
+        { status: 409 }
+      );
+    }
+
     // --- 1) ENV CHECK ---
     const apiKey = process.env.SHIPSTATION_API_KEY;
     const apiSecret = process.env.SHIPSTATION_API_SECRET;
@@ -279,7 +311,12 @@ export async function POST(req: Request) {
     const text = await res.text();
 
     console.log(`🌐 [${requestId}] ShipStation response status=${res.status}`);
-    if (text) console.log(`🌐 [${requestId}] ShipStation response body (trunc):`, text.slice(0, 800));
+    if (text) {
+      console.log(
+        `🌐 [${requestId}] ShipStation response body (trunc):`,
+        text.slice(0, 800)
+      );
+    }
 
     if (!res.ok) {
       console.error(`🟥 [${requestId}] ShipStation not ok`);
@@ -305,19 +342,14 @@ export async function POST(req: Request) {
     // --- 6) UPDATE FIRESTORE ---
     console.log(`📝 [${requestId}] updating Firestore fulfillment...`);
 
-    await dbAdmin.collection("orders").doc(orderId).set(
-      {
-        fulfillment: {
-          status: "preparing",
-          shipstation: {
-            orderKey: orderId,
-            orderId: ss?.orderId ?? null,
-          },
-          updatedAt: new Date().toISOString(),
-        },
-      },
-      { merge: true }
-    );
+    const updates = buildShipStationPreparingUpdate({
+      shipstationOrderId: ss?.orderId ?? null,
+      shipstationOrderKey: orderId,
+    });
+
+    await dbAdmin.collection("orders").doc(orderId).set(updates, {
+      merge: true,
+    });
 
     console.log(`🟩 [shipstation:push-order] DONE requestId=${requestId}`);
 
@@ -325,12 +357,10 @@ export async function POST(req: Request) {
   } catch (e: any) {
     console.error(`🟥 [shipstation:push-order] UNCAUGHT requestId=${requestId}`, e);
 
-    // On renvoie TOUJOURS un body, même si ça pète
     return NextResponse.json(
       {
         error: e?.message ?? "Server error",
         requestId,
-        // petit hint utile
         hint: "Check server console for stacktrace (dbAdmin import / env / ShipStation response).",
       },
       { status: 500 }

@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
+import {
+  buildManualShippingUpdate,
+} from "@/server/logistics/updates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,10 +34,8 @@ export async function DELETE(
 
     console.log("[DELETE ORDER]", id);
 
-    // pending_orders
     await dbAdmin.collection("pending_orders").doc(id).delete();
 
-    // orders (si existe)
     try {
       await dbAdmin.collection("orders").doc(id).delete();
     } catch {}
@@ -65,38 +66,50 @@ export async function PATCH(
 
     const body = await req.json().catch(() => ({} as any));
     const { shippingStatus, trackingNumber, carrier } = body as {
-      shippingStatus?: string;
+      shippingStatus?: "pending" | "preparing" | "shipped" | "delivered" | "cancelled";
       trackingNumber?: string | null;
       carrier?: string | null;
     };
 
-    const updates: Record<string, any> = {};
-    if (shippingStatus) updates.shippingStatus = shippingStatus;
-    if (trackingNumber !== undefined) updates.trackingNumber = trackingNumber;
-    if (carrier !== undefined) updates.carrier = carrier;
-
-    if (Object.keys(updates).length === 0) {
+    if (!shippingStatus) {
       return NextResponse.json(
-        { error: "No updates provided" },
+        { error: "Missing shippingStatus" },
         { status: 400 }
       );
     }
 
+    const updates = buildManualShippingUpdate({
+      shippingStatus,
+      trackingNumber,
+      carrier,
+      actor: "admin_manual",
+    });
+
     console.log("[PATCH ORDER SHIPPING]", id, updates);
 
-    // pending_orders
     await dbAdmin.collection("pending_orders").doc(id).set(updates, {
       merge: true,
     });
 
-    // orders (si déjà copiée)
     try {
       await dbAdmin.collection("orders").doc(id).set(updates, { merge: true });
     } catch {}
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      shippingMode: "manual",
+      shippingStatus,
+    });
   } catch (err: any) {
     console.error("[PATCH ORDER SHIPPING ERROR]", err);
+
+    if (err?.message === "invalid_shipping_status") {
+      return NextResponse.json(
+        { error: "Invalid shippingStatus" },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: err?.message || "Update failed" },
       { status: 500 }
