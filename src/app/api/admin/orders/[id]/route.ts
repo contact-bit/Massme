@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
-import {
-  buildManualShippingUpdate,
-} from "@/server/logistics/updates";
+import { buildManualShippingUpdate } from "@/server/logistics/updates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -78,11 +76,37 @@ export async function PATCH(
       );
     }
 
+    const orderSnap = await dbAdmin.collection("orders").doc(id).get();
+    const order = orderSnap.exists ? (orderSnap.data() as any) : null;
+
+    const existingShipDate =
+      order?.shippingTracking?.shipDate ||
+      order?.fulfillment?.tracking?.shipDate ||
+      order?.shippedAt ||
+      null;
+
+    const effectiveTrackingNumber =
+      trackingNumber !== undefined
+        ? trackingNumber
+        : order?.trackingNumber ||
+          order?.shippingTracking?.trackingNumber ||
+          order?.fulfillment?.tracking?.trackingNumber ||
+          null;
+
+    const effectiveCarrier =
+      carrier !== undefined
+        ? carrier
+        : order?.carrier ||
+          order?.shippingTracking?.carrier ||
+          order?.fulfillment?.tracking?.carrier ||
+          null;
+
     const updates = buildManualShippingUpdate({
       shippingStatus,
-      trackingNumber,
-      carrier,
+      trackingNumber: effectiveTrackingNumber,
+      carrier: effectiveCarrier,
       actor: "admin_manual",
+      existingShipDate,
     });
 
     console.log("[PATCH ORDER SHIPPING]", id, updates);

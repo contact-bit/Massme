@@ -4,8 +4,35 @@ import type { Order } from "../domain/types";
 import { formatDateFR, moneyEUR, formatAddress } from "../domain/utils";
 import { getItemPrice, getShipping, getSubtotal, getTotal } from "../domain/orderMath";
 import { StatusPill } from "./StatusPill";
-import { ShippingStatusPill } from "./ShippingStatusPill";
-import { ShipStationStatus } from "./ShipStationStatus";
+import {
+  getCarrier,
+  getEffectiveShippingStatus,
+  getShipDate,
+  getTrackingNumber,
+} from "../domain/logistics";
+import { LogisticsStatusBadge } from "./LogisticsStatusBadge";
+
+function formatDateTime(value: unknown) {
+  if (!value) return "—";
+
+  try {
+    const d =
+      value instanceof Date
+        ? value
+        : typeof value === "string" || typeof value === "number"
+        ? new Date(value)
+        : null;
+
+    if (!d || Number.isNaN(d.getTime())) return "—";
+
+    return new Intl.DateTimeFormat("fr-FR", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(d);
+  } catch {
+    return "—";
+  }
+}
 
 export function OrderDetails({
   order,
@@ -25,6 +52,10 @@ export function OrderDetails({
   const subtotal = getSubtotal(order);
 
   const email = order.__email || order.email || "—";
+  const shippingStatus = getEffectiveShippingStatus(order);
+  const tracking = getTrackingNumber(order);
+  const carrier = getCarrier(order);
+  const shipDate = getShipDate(order);
 
   return (
     <div className="detailGrid">
@@ -38,18 +69,22 @@ export function OrderDetails({
 
       <div className="box">
         <div className="boxTitle">Infos</div>
+
         <div className="kv">
           <div className="kvKey">ID</div>
           <div className="kvVal mono">{order.id}</div>
         </div>
+
         <div className="kv">
           <div className="kvKey">Email</div>
           <div className="kvVal">{email}</div>
         </div>
+
         <div className="kv">
           <div className="kvKey">Langue</div>
           <div className="kvVal">{order.__lang || "—"}</div>
         </div>
+
         <div className="rowBtns">
           <button className="btn btn--soft" onClick={onCopyId}>
             Copier ID
@@ -75,6 +110,7 @@ export function OrderDetails({
               const qty = it?.quantity ?? 1;
               const price = getItemPrice(it);
               const desc = it?.description || "";
+
               return (
                 <div key={idx} className="itemCard">
                   <div className="itemLeft">
@@ -106,35 +142,42 @@ export function OrderDetails({
       </div>
 
       <div className="box">
-        <div className="boxTitle">Livraison</div>
+        <div className="boxTitle">Logistique</div>
 
-        {/* ✅ Interne */}
         <div className="kv">
-          <div className="kvKey">Statut (interne)</div>
+          <div className="kvKey">Statut logistique</div>
           <div className="kvVal">
-            <ShippingStatusPill status={order.shippingStatus} />
+            <LogisticsStatusBadge status={shippingStatus} />
           </div>
         </div>
 
-        {/* ✅ ShipStation LIVE */}
         <div className="kv">
-          <div className="kvKey">ShipStation</div>
-          <div className="kvVal">
-            <ShipStationStatus orderId={order.id} />
-          </div>
+          <div className="kvKey">Méthode de livraison</div>
+          <div className="kvVal">{order.shippingMethod?.name || "—"}</div>
         </div>
 
         <div className="kv">
           <div className="kvKey">Transporteur</div>
-          <div className="kvVal">{order.carrier || "—"}</div>
+          <div className="kvVal">{carrier || "—"}</div>
         </div>
 
         <div className="kv">
           <div className="kvKey">Tracking</div>
-          <div className="kvVal mono">{order.trackingNumber || "—"}</div>
+          <div className="kvVal mono">{tracking || "—"}</div>
+        </div>
+
+        <div className="kv">
+          <div className="kvKey">Date d’expédition</div>
+          <div className="kvVal">{formatDateTime(shipDate)}</div>
+        </div>
+
+        <div className="kv">
+          <div className="kvKey">Mode logistique</div>
+          <div className="kvVal">{(order as any)?.shippingMode || "—"}</div>
         </div>
 
         <div className="addr">{formatAddress(order.shippingAddress) || "—"}</div>
+
         <div className="rowBtns">
           <button className="btn btn--soft" onClick={onCopyAddress}>
             Copier adresse

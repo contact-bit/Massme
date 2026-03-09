@@ -7,103 +7,19 @@ import { useToast } from "../orders/hooks/useToast";
 import { useOrders } from "../orders/hooks/useOrders";
 import type { Order, ShippingStatus } from "../orders/domain/types";
 import { compactId, copyText, formatAddress } from "../orders/domain/utils";
+import {
+  getCarrier,
+  getEffectiveShippingStatus,
+  getLogisticsSource,
+  getTrackingNumber,
+} from "../orders/domain/logistics";
 import { Toast } from "../orders/components/Toast";
+import { LogisticsStatusBadge } from "../orders/components/LogisticsStatusBadge";
+import { LogisticsSourceBadge } from "../orders/components/LogisticsSourceBadge";
 
 type LogisticsFilter = "all" | ShippingStatus;
 type SourceFilter = "all" | "shipstation" | "manual";
 type LogisticsProvider = "internal" | "shipstation";
-
-function getEffectiveShippingStatus(order: Order): ShippingStatus {
-  const raw = String(order.shippingStatus || "").toLowerCase();
-
-  if (
-    raw === "pending" ||
-    raw === "preparing" ||
-    raw === "shipped" ||
-    raw === "delivered" ||
-    raw === "cancelled"
-  ) {
-    return raw;
-  }
-
-  const fulfillmentStatus = String((order as any)?.fulfillment?.status || "").toLowerCase();
-  if (fulfillmentStatus === "preparing") return "preparing";
-  if (fulfillmentStatus === "shipped") return "shipped";
-
-  return "pending";
-}
-
-function getTrackingNumber(order: Order): string | null {
-  const direct = order.trackingNumber;
-  const shippingTracking = (order as any)?.shippingTracking?.trackingNumber;
-  const fulfillmentTracking = (order as any)?.fulfillment?.tracking?.trackingNumber;
-
-  return direct || shippingTracking || fulfillmentTracking || null;
-}
-
-function getCarrier(order: Order): string | null {
-  const direct = order.carrier;
-  const shippingTracking = (order as any)?.shippingTracking?.carrier;
-  const fulfillmentTracking = (order as any)?.fulfillment?.tracking?.carrier;
-
-  return direct || shippingTracking || fulfillmentTracking || null;
-}
-
-function hasShipStationLink(order: Order): boolean {
-  return !!(
-    (order as any)?.fulfillment?.shipstation?.orderId ||
-    (order as any)?.fulfillment?.shipstation?.orderKey ||
-    (order as any)?.shipstation?.lastWebhookAt
-  );
-}
-
-function getShippingSource(order: Order): "shipstation" | "manual" {
-  return hasShipStationLink(order) ? "shipstation" : "manual";
-}
-
-function statusLabel(status: ShippingStatus) {
-  switch (status) {
-    case "pending":
-      return "En attente";
-    case "preparing":
-      return "Préparation";
-    case "shipped":
-      return "Expédiée";
-    case "delivered":
-      return "Livrée";
-    case "cancelled":
-      return "Annulée";
-    default:
-      return status;
-  }
-}
-
-function statusColor(status: ShippingStatus) {
-  switch (status) {
-    case "pending":
-      return { bg: "#F3F4F6", color: "#374151", border: "#E5E7EB" };
-    case "preparing":
-      return { bg: "#FFF7ED", color: "#9A3412", border: "#FED7AA" };
-    case "shipped":
-      return { bg: "#EFF6FF", color: "#1D4ED8", border: "#BFDBFE" };
-    case "delivered":
-      return { bg: "#ECFDF5", color: "#047857", border: "#A7F3D0" };
-    case "cancelled":
-      return { bg: "#FEF2F2", color: "#B91C1C", border: "#FECACA" };
-    default:
-      return { bg: "#F9FAFB", color: "#374151", border: "#E5E7EB" };
-  }
-}
-
-function sourceLabel(source: "shipstation" | "manual") {
-  return source === "shipstation" ? "ShipStation" : "Interne";
-}
-
-function sourceColor(source: "shipstation" | "manual") {
-  return source === "shipstation"
-    ? { bg: "#EEF2FF", color: "#4338CA", border: "#C7D2FE" }
-    : { bg: "#F9FAFB", color: "#374151", border: "#E5E7EB" };
-}
 
 function formatDate(value: unknown) {
   try {
@@ -111,8 +27,8 @@ function formatDate(value: unknown) {
       value instanceof Date
         ? value
         : typeof value === "string" || typeof value === "number"
-        ? new Date(value)
-        : null;
+          ? new Date(value)
+          : null;
 
     if (!d || Number.isNaN(d.getTime())) return "—";
 
@@ -313,7 +229,7 @@ export default function AdminLogisticsPage() {
     return orders
       .filter((order) => {
         const status = getEffectiveShippingStatus(order);
-        const source = getShippingSource(order);
+        const source = getLogisticsSource(order);
 
         if (statusFilter !== "all" && status !== statusFilter) return false;
         if (showShipStationUi && sourceFilter !== "all" && source !== sourceFilter) return false;
@@ -495,8 +411,8 @@ export default function AdminLogisticsPage() {
                   {providerLoading
                     ? "Chargement de la configuration…"
                     : provider === "shipstation"
-                    ? "ShipStation pilote les envois quand tu l’utilises."
-                    : "Le système logistique interne est actif. ShipStation est masqué et inactif."}
+                      ? "ShipStation pilote les envois quand tu l’utilises."
+                      : "Le système logistique interne est actif. ShipStation est masqué et inactif."}
                 </div>
               </div>
 
@@ -529,8 +445,8 @@ export default function AdminLogisticsPage() {
                   {providerLoading
                     ? "Chargement"
                     : provider === "shipstation"
-                    ? "ShipStation actif"
-                    : "Mode interne actif"}
+                      ? "ShipStation actif"
+                      : "Mode interne actif"}
                 </span>
               </div>
             </div>
@@ -676,12 +592,8 @@ export default function AdminLogisticsPage() {
                 <div style={{ padding: 18, color: "#6B7280" }}>Aucune commande trouvée.</div>
               ) : (
                 rows.map((order) => {
-                  const status = getEffectiveShippingStatus(order);
                   const tracking = getTrackingNumber(order);
                   const carrier = getCarrier(order);
-                  const source = getShippingSource(order);
-                  const statusUi = statusColor(status);
-                  const sourceUi = sourceColor(source);
                   const isSelected = selectedId === order.id;
 
                   return (
@@ -733,16 +645,12 @@ export default function AdminLogisticsPage() {
                       </div>
 
                       <div>
-                        <span style={pillStyle(statusUi.bg, statusUi.color, statusUi.border)}>
-                          {statusLabel(status)}
-                        </span>
+                        <LogisticsStatusBadge order={order} />
                       </div>
 
                       {showShipStationUi ? (
                         <div>
-                          <span style={pillStyle(sourceUi.bg, sourceUi.color, sourceUi.border)}>
-                            {sourceLabel(source)}
-                          </span>
+                          <LogisticsSourceBadge order={order} />
                         </div>
                       ) : null}
 
@@ -770,12 +678,8 @@ export default function AdminLogisticsPage() {
                 }}
               >
                 {(() => {
-                  const status = getEffectiveShippingStatus(selectedOrder);
                   const tracking = getTrackingNumber(selectedOrder);
                   const carrier = getCarrier(selectedOrder);
-                  const source = getShippingSource(selectedOrder);
-                  const statusUi = statusColor(status);
-                  const sourceUi = sourceColor(source);
 
                   return (
                     <div style={{ display: "grid", gap: 18 }}>
@@ -787,14 +691,8 @@ export default function AdminLogisticsPage() {
                           {compactId(selectedOrder.id)}
                         </div>
                         <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                          <span style={pillStyle(statusUi.bg, statusUi.color, statusUi.border)}>
-                            {statusLabel(status)}
-                          </span>
-                          {showShipStationUi ? (
-                            <span style={pillStyle(sourceUi.bg, sourceUi.color, sourceUi.border)}>
-                              {sourceLabel(source)}
-                            </span>
-                          ) : null}
+                          <LogisticsStatusBadge order={selectedOrder} />
+                          {showShipStationUi ? <LogisticsSourceBadge order={selectedOrder} /> : null}
                         </div>
                       </div>
 

@@ -1,5 +1,3 @@
-import { FieldValue } from "firebase-admin/firestore";
-
 export type ShippingMode = "manual" | "shipstation";
 
 export type ShippingStatus =
@@ -16,6 +14,7 @@ type BuildManualUpdateParams = {
   trackingNumber?: string | null;
   carrier?: ShippingCarrier;
   actor?: string | null;
+  existingShipDate?: string | null;
 };
 
 type BuildShipStationPreparingParams = {
@@ -86,26 +85,27 @@ export function buildManualShippingUpdate(params: BuildManualUpdateParams) {
     throw new Error("invalid_shipping_status");
   }
 
+  const existingShipDate = cleanString(params.existingShipDate);
+  const effectiveShipDate = status === "shipped" ? nowIso : existingShipDate;
+
+  const tracking = buildTrackingBlock({
+    trackingNumber,
+    carrier,
+    shipDate: effectiveShipDate,
+  });
+
   const updates: Record<string, any> = {
     shippingMode: "manual",
     shippingStatus: status,
-    trackingNumber: trackingNumber ?? null,
-    carrier: carrier ?? null,
+    trackingNumber: tracking.trackingNumber,
+    carrier: tracking.carrier,
 
-    shippingTracking: {
-      trackingNumber: trackingNumber ?? null,
-      carrier: carrier ?? null,
-      shipDate: status === "shipped" ? nowIso : null,
-    },
+    shippingTracking: tracking,
 
     fulfillment: {
       status,
       updatedAt: nowIso,
-      tracking: {
-        trackingNumber: trackingNumber ?? null,
-        carrier: carrier ?? null,
-        shipDate: status === "shipped" ? nowIso : null,
-      },
+      tracking,
     },
 
     logisticsAudit: {
@@ -118,10 +118,8 @@ export function buildManualShippingUpdate(params: BuildManualUpdateParams) {
 
   if (status === "shipped") {
     updates.shippedAt = nowIso;
-  }
-
-  if (status === "pending" || status === "preparing" || status === "cancelled") {
-    updates.shippedAt = null;
+  } else if (existingShipDate) {
+    updates.shippedAt = existingShipDate;
   }
 
   return updates;
@@ -160,6 +158,7 @@ export function buildShipStationShippedUpdate(
   params: BuildShipStationShippedParams
 ) {
   const shipDate = cleanString(params.shipDate) || new Date().toISOString();
+
   const tracking = buildTrackingBlock({
     trackingNumber: params.trackingNumber,
     carrier: params.carrier,
