@@ -1,25 +1,16 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { assertAdmin, assertAdminOrLogistics } from "@/server/adminAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function assertAdmin(req: Request) {
-  const pass = req.headers.get("x-admin-password") || "";
-  const expected = process.env.ADMIN_PASSWORD || "";
-
-  if (!expected || pass !== expected) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  return null;
-}
 
 function normalizeProvider(value: unknown): "internal" | "shipstation" {
   return value === "shipstation" ? "shipstation" : "internal";
 }
 
 export async function GET(req: Request) {
-  const auth = assertAdmin(req);
+  const auth = assertAdminOrLogistics(req);
   if (auth) return auth;
 
   try {

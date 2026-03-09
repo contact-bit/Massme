@@ -1,18 +1,26 @@
 import { NextResponse } from "next/server";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const LOGISTICS_PASSWORD = process.env.LOGISTICS_PASSWORD;
 
 // Limites
 const MAX_ATTEMPTS = 5;
 const BLOCK_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 
-// petit store en mémoire pour limiter les tentatives par IP
 type IpState = {
   count: number;
-  blockedUntil: number; // timestamp ms
+  blockedUntil: number;
 };
 
 const attemptsByIp = new Map<string, IpState>();
+
+type AdminRole = "admin" | "logistics";
+
+function getRoleFromPassword(password: string): AdminRole | null {
+  if (ADMIN_PASSWORD && password === ADMIN_PASSWORD) return "admin";
+  if (LOGISTICS_PASSWORD && password === LOGISTICS_PASSWORD) return "logistics";
+  return null;
+}
 
 export async function POST(req: Request) {
   if (!ADMIN_PASSWORD) {
@@ -23,7 +31,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { password } = await req.json();
+  const { password } = await req.json().catch(() => ({ password: "" }));
 
   const ipHeader = req.headers.get("x-forwarded-for") || "";
   const ip = ipHeader.split(",")[0].trim() || "unknown";
@@ -31,7 +39,6 @@ export async function POST(req: Request) {
   const now = Date.now();
   const state = attemptsByIp.get(ip) || { count: 0, blockedUntil: 0 };
 
-  // 🔒 IP bloquée temporairement
   if (state.blockedUntil && now < state.blockedUntil) {
     const remainingMs = state.blockedUntil - now;
     const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
@@ -46,12 +53,12 @@ export async function POST(req: Request) {
     );
   }
 
-  // ❌ Mauvais mot de passe
-  if (password !== ADMIN_PASSWORD) {
+  const role = getRoleFromPassword(String(password || ""));
+
+  if (!role) {
     const newCount = state.count + 1;
 
     if (newCount >= MAX_ATTEMPTS) {
-      // blocage 10 minutes
       attemptsByIp.set(ip, {
         count: 0,
         blockedUntil: now + BLOCK_DURATION_MS,
@@ -59,8 +66,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json(
         {
-          error:
-            "Trop de tentatives. Connexion bloquée pendant 10 minutes.",
+          error: "Trop de tentatives. Connexion bloquée pendant 10 minutes.",
           blocked: true,
           retryAfterMinutes: Math.ceil(BLOCK_DURATION_MS / (60 * 1000)),
         },
@@ -83,8 +89,13 @@ export async function POST(req: Request) {
     }
   }
 
-  // ✅ OK → reset compteur
   attemptsByIp.set(ip, { count: 0, blockedUntil: 0 });
 
-  return NextResponse.json({ ok: true }, { status: 200 });
+  return NextResponse.json(
+    {
+      ok: true,
+      role,
+    },
+    { status: 200 }
+  );
 }

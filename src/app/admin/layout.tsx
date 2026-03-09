@@ -11,6 +11,23 @@ import "./styles/admin-login.css";
 
 import AdminShell from "./components/AdminShell";
 
+type AdminRole = "admin" | "logistics";
+
+function isAllowedForRole(pathname: string, role: AdminRole) {
+  if (role === "admin") return true;
+
+  // logistics: accès très limité
+  if (role === "logistics") {
+    return (
+      pathname === "/admin/logistics" ||
+      pathname.startsWith("/admin/logistics/") ||
+      pathname === "/admin/login"
+    );
+  }
+
+  return false;
+}
+
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -22,31 +39,32 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return;
 
     const token = localStorage.getItem("admin_token");
+    const role = (localStorage.getItem("admin_role") || "admin") as AdminRole;
 
-    // 🔐 Pas connecté => tout sauf /admin/login redirige vers login
     if (!token && !isLogin) {
       router.replace("/admin/login");
       return;
     }
 
-    // ✅ Déjà connecté => si on est sur login, on renvoie vers /admin
     if (token && isLogin) {
-      router.replace("/admin");
+      router.replace(role === "logistics" ? "/admin/logistics" : "/admin");
+      return;
+    }
+
+    if (token && !isLogin && !isAllowedForRole(pathname, role)) {
+      router.replace(role === "logistics" ? "/admin/logistics" : "/admin");
       return;
     }
 
     setAuthChecked(true);
-  }, [router, isLogin]);
+  }, [router, pathname, isLogin]);
 
-  // ⏳ Évite le flash des pages protégées
   if (!authChecked && !isLogin) return null;
 
-  // 🧾 Page login = pas de shell, MAIS provider OK
   if (isLogin) {
     return <CartProvider>{children}</CartProvider>;
   }
 
-  // ✅ Pages admin = shell + provider
   return (
     <CartProvider>
       <AdminShell>{children}</AdminShell>

@@ -1,21 +1,11 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { buildManualShippingUpdate } from "@/server/logistics/updates";
+import { assertAdmin, assertAdminOrLogistics, getRoleFromRequest } from "@/server/adminAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function assertAdmin(req: Request) {
-  const pass = req.headers.get("x-admin-password") || "";
-  const expected = process.env.ADMIN_PASSWORD || "";
-
-  if (!expected || pass !== expected) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  return null;
-}
-
-// SUPPRESSION COMMANDE
 export async function DELETE(
   req: Request,
   context: { params: Promise<{ id: string }> }
@@ -48,12 +38,11 @@ export async function DELETE(
   }
 }
 
-// MISE À JOUR STATUT LIVRAISON / TRACKING
 export async function PATCH(
   req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = assertAdmin(req);
+  const auth = assertAdminOrLogistics(req);
   if (auth) return auth;
 
   try {
@@ -61,6 +50,8 @@ export async function PATCH(
     if (!id) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
+
+    const role = getRoleFromRequest(req);
 
     const body = await req.json().catch(() => ({} as any));
     const { shippingStatus, trackingNumber, carrier } = body as {
@@ -105,7 +96,7 @@ export async function PATCH(
       shippingStatus,
       trackingNumber: effectiveTrackingNumber,
       carrier: effectiveCarrier,
-      actor: "admin_manual",
+      actor: role === "logistics" ? "logistics_manual" : "admin_manual",
       existingShipDate,
     });
 

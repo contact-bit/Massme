@@ -55,11 +55,12 @@ export default function AdminLoginPage() {
       }
 
       // ✅ Login OK
-      localStorage.setItem("admin_token", "true");
-      localStorage.setItem("admin_password", password);
+localStorage.setItem("admin_token", "true");
+localStorage.setItem("admin_password", password);
+localStorage.setItem("admin_role", data?.role === "logistics" ? "logistics" : "admin");
 
-      setInfo("Connexion réussie, redirection…");
-      router.replace("/admin");
+setInfo("Connexion réussie, redirection…");
+router.replace(data?.role === "logistics" ? "/admin/logistics" : "/admin");
     } catch (err) {
       console.error("Erreur login admin :", err);
       setError("Erreur de connexion. Réessaie plus tard.");
