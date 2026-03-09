@@ -43,6 +43,167 @@ function getStripeLocale(appLocale: unknown): StripeCheckoutLocale {
   return STRIPE_LOCALE_BY_APP_LOCALE[l] ?? "auto";
 }
 
+function normalizeEmail(value: unknown): string {
+  return String(value || "").trim().toLowerCase();
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value !== "object") return JSON.stringify(value);
+
+  if (Array.isArray(value)) {
+    return `[${value.map((v) => stableStringify(v)).join(",")}]`;
+  }
+
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj).sort();
+
+  return `{${keys
+    .map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`)
+    .join(",")}}`;
+}
+
+function buildOrderFingerprint(input: {
+  email: string;
+  locale: string;
+  items: CleanItem[];
+  billingAddress: any;
+  shippingAddress: any;
+  shippingMethod: any;
+  relayPoint: any;
+  disableVAT: boolean;
+  heardFrom: any;
+  heardFromOther: any;
+  paymentMethod: any;
+}) {
+  const normalizedItems = [...input.items]
+    .map((item) => ({
+      id: String(item.id),
+      name: String(item.name),
+      priceHT: Number(item.priceHT) || 0,
+      quantity: Math.max(1, Number(item.quantity || 1)),
+    }))
+    .sort((a, b) => {
+      const ak = `${a.id}__${a.name}`;
+      const bk = `${b.id}__${b.name}`;
+      return ak.localeCompare(bk);
+    });
+
+  const payload = {
+    email: normalizeEmail(input.email),
+    locale: String(input.locale || "fr"),
+    items: normalizedItems,
+    billingAddress: input.billingAddress || null,
+    shippingAddress: input.shippingAddress || null,
+    shippingMethod: input.shippingMethod || null,
+    relayPoint: input.relayPoint || null,
+    disableVAT: !!input.disableVAT,
+    heardFrom: input.heardFrom || null,
+    heardFromOther: input.heardFromOther || null,
+    paymentProvider: input.paymentMethod?.provider || null,
+    paymentMethodId: input.paymentMethod?.id || null,
+  };
+
+  return stableStringify(payload);
+}
+
+function isRecentEnough(createdAt: any, maxAgeMs: number): boolean {
+  try {
+    const date =
+      createdAt?.toDate?.() instanceof Date
+        ? createdAt.toDate()
+        : typeof createdAt === "string" || typeof createdAt === "number"
+          ? new Date(createdAt)
+          : null;
+
+    if (!date || Number.isNaN(date.getTime())) return false;
+    return Date.now() - date.getTime() <= maxAgeMs;
+  } catch {
+    return false;
+  }
+}
+
+async function findReusablePendingOrder(params: {
+  email: string;
+  fingerprint: string;
+}) {
+  const email = normalizeEmail(params.email);
+
+  const snap = await db
+    .collection("orders")
+    .where("email", "==", email)
+    .where("status", "==", "pending_payment")
+    .limit(10)
+    .get();
+
+  if (snap.empty) return null;
+
+  const candidates = snap.docs
+    .map((doc) => ({ id: doc.id, ref: doc.ref, data: doc.data() as any }))
+    .filter((entry) => {
+      const sameFingerprint = entry.data?.checkoutFingerprint === params.fingerprint;
+      const recent = isRecentEnough(entry.data?.createdAt, 30 * 60 * 1000);
+      return sameFingerprint && recent;
+    })
+    .sort((a, b) => {
+      const da = a.data?.createdAt?.toMillis?.() ?? 0;
+      const db = b.data?.createdAt?.toMillis?.() ?? 0;
+      return db - da;
+    });
+
+  return candidates[0] || null;
+}
+
+function buildLineItems(params: {
+  items: CleanItem[];
+  disableVAT: boolean;
+  shippingMethod: any;
+  taxItems: { vatRate: number; vatAmount: number };
+  taxShipping: { ttc: number };
+  shippingHT: number;
+}) {
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+
+  for (const item of params.items) {
+    lineItems.push({
+      price_data: {
+        currency: "eur",
+        product_data: { name: item.name },
+        unit_amount: Math.round(item.priceHT * 100),
+      },
+      quantity: item.quantity,
+    });
+  }
+
+  const shippingTTC = params.disableVAT
+    ? params.shippingHT
+    : Number(params.shippingMethod.priceTTC ?? params.taxShipping.ttc);
+
+  if (shippingTTC > 0) {
+    lineItems.push({
+      price_data: {
+        currency: "eur",
+        product_data: { name: "Livraison" },
+        unit_amount: Math.round(shippingTTC * 100),
+      },
+      quantity: 1,
+    });
+  }
+
+  if (!params.disableVAT && params.taxItems.vatAmount > 0) {
+    lineItems.push({
+      price_data: {
+        currency: "eur",
+        product_data: { name: `TVA ${params.taxItems.vatRate}%` },
+        unit_amount: Math.round(params.taxItems.vatAmount * 100),
+      },
+      quantity: 1,
+    });
+  }
+
+  return lineItems;
+}
+
 export async function POST(req: Request) {
   try {
     const stripe = getStripe();
@@ -86,6 +247,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Stripe required" }, { status: 400 });
     }
 
+    const email = normalizeEmail(customerEmail);
     const country = shippingAddress.country || "FR";
 
     const cleanItems: CleanItem[] = items.map((i: any) => ({
@@ -118,37 +280,84 @@ export async function POST(req: Request) {
     const totalVAT = taxItems.vatAmount + taxShipping.vatAmount;
     const totalTTC = totalHT + totalVAT;
 
-    const orderRef = db.collection("orders").doc();
-
-    await orderRef.set({
-      id: orderRef.id,
-      email: customerEmail,
+    const checkoutFingerprint = buildOrderFingerprint({
+      email,
+      locale,
       items: cleanItems,
       billingAddress,
       shippingAddress,
       shippingMethod,
-      relayPoint: relayPoint || null,
-      shippingPrice: shippingHT,
-      totals: {
-        country,
-        vatRate: taxItems.vatRate,
-        totalHT,
-        totalVAT,
-        totalTTC,
-        vatDisabled: disableVAT,
-      },
-      heardFrom: heardFrom || null,
-      heardFromOther: heardFromOther || null,
-      locale,
-      status: "pending_payment",
-      createdAt: Timestamp.now(),
+      relayPoint,
+      disableVAT,
+      heardFrom,
+      heardFromOther,
       paymentMethod,
     });
 
-    console.log("[checkout] order created:", orderRef.id);
+    const reusable = await findReusablePendingOrder({
+      email,
+      fingerprint: checkoutFingerprint,
+    });
+
+    let orderRef = reusable?.ref ?? db.collection("orders").doc();
+    let orderId = reusable?.id ?? orderRef.id;
+
+    if (reusable) {
+      console.log("[checkout] reusing pending order:", orderId);
+    } else {
+      await orderRef.set({
+        id: orderId,
+        email,
+        items: cleanItems,
+        billingAddress,
+        shippingAddress,
+        shippingMethod,
+        relayPoint: relayPoint || null,
+        shippingPrice: shippingHT,
+        totals: {
+          country,
+          vatRate: taxItems.vatRate,
+          totalHT,
+          totalVAT,
+          totalTTC,
+          vatDisabled: disableVAT,
+        },
+        heardFrom: heardFrom || null,
+        heardFromOther: heardFromOther || null,
+        locale,
+        status: "pending_payment",
+        payment: {
+          provider: "stripe",
+          status: "pending",
+        },
+        paymentMethod,
+        checkoutFingerprint,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+
+      console.log("[checkout] order created:", orderId);
+    }
+
+    const existingSessionId =
+      (reusable?.data?.payment?.checkoutSessionId as string | undefined) ||
+      (reusable?.data?.stripeSessionId as string | undefined);
+
+    if (existingSessionId) {
+      try {
+        const existingSession = await stripe.checkout.sessions.retrieve(existingSessionId);
+
+        if (existingSession?.url && existingSession.status === "open") {
+          console.log("[checkout] reusing stripe session:", existingSession.id);
+          return NextResponse.json({ url: existingSession.url });
+        }
+      } catch (e) {
+        console.warn("[checkout] existing session reuse failed:", e);
+      }
+    }
 
     const stripeCustomer = await stripe.customers.create({
-      email: customerEmail,
+      email,
       name: billingAddress.name,
       address: {
         line1: billingAddress.address,
@@ -157,52 +366,25 @@ export async function POST(req: Request) {
         country: billingAddress.country,
       },
       metadata: {
-        order_id: orderRef.id,
+        order_id: orderId,
       },
     });
 
-    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    const line_items = buildLineItems({
+      items: cleanItems,
+      disableVAT,
+      shippingMethod,
+      taxItems: {
+        vatRate: taxItems.vatRate,
+        vatAmount: taxItems.vatAmount,
+      },
+      taxShipping: {
+        ttc: taxShipping.ttc,
+      },
+      shippingHT,
+    });
 
-    for (const item of cleanItems) {
-      line_items.push({
-        price_data: {
-          currency: "eur",
-          product_data: { name: item.name },
-          unit_amount: Math.round(item.priceHT * 100),
-        },
-        quantity: item.quantity,
-      });
-    }
-
-    const shippingTTC = disableVAT
-      ? shippingHT
-      : Number(shippingMethod.priceTTC ?? taxShipping.ttc);
-
-    if (shippingTTC > 0) {
-      line_items.push({
-        price_data: {
-          currency: "eur",
-          product_data: { name: "Livraison" },
-          unit_amount: Math.round(shippingTTC * 100),
-        },
-        quantity: 1,
-      });
-    }
-
-    if (!disableVAT && taxItems.vatAmount > 0) {
-      line_items.push({
-        price_data: {
-          currency: "eur",
-          product_data: { name: `TVA ${taxItems.vatRate}%` },
-          unit_amount: Math.round(taxItems.vatAmount * 100),
-        },
-        quantity: 1,
-      });
-    }
-
-    const baseUrl =
-      process.env.NEXT_PUBLIC_URL ||
-      process.env.APP_BASE_URL;
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.APP_BASE_URL;
 
     if (!baseUrl) {
       throw new Error("Missing NEXT_PUBLIC_URL or APP_BASE_URL");
@@ -213,14 +395,27 @@ export async function POST(req: Request) {
       customer: stripeCustomer.id,
       line_items,
       locale: getStripeLocale(locale),
-      client_reference_id: orderRef.id,
+      client_reference_id: orderId,
       metadata: {
-        order_id: orderRef.id,
+        order_id: orderId,
         payment_provider: "stripe",
       },
-      success_url: `${baseUrl}/${locale}/success?order_id=${orderRef.id}`,
+      success_url: `${baseUrl}/${locale}/success?order_id=${orderId}`,
       cancel_url: `${baseUrl}/${locale}/checkout`,
     });
+
+    await orderRef.set(
+      {
+        updatedAt: Timestamp.now(),
+        stripeSessionId: session.id,
+        payment: {
+          provider: "stripe",
+          status: "pending",
+          checkoutSessionId: session.id,
+        },
+      },
+      { merge: true }
+    );
 
     console.log("[checkout] stripe session created:", session.id);
 

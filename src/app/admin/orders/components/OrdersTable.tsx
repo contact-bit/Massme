@@ -69,6 +69,7 @@ export function OrdersTable({
           <tbody>
             {orders.map((o) => {
               const tracking = getTrackingNumber(o);
+              const paymentStatus = (o as any)?.payment?.status || o.status;
 
               return (
                 <tr key={o.id}>
@@ -104,7 +105,7 @@ export function OrdersTable({
                   <td>{o.__lang || "—"}</td>
 
                   <td>
-                    <StatusPill status={o.status} />
+                    <StatusPill status={paymentStatus} />
                   </td>
 
                   <td>{o.__itemsLabel || "—"}</td>
