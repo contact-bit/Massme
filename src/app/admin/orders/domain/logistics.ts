@@ -28,7 +28,7 @@ export function getEffectiveShippingStatus(order: Order): ShippingStatus {
 export function getShippingStatusLabel(status: ShippingStatus) {
   switch (status) {
     case "pending":
-      return "En attente";
+      return "En attente d’expédition";
     case "preparing":
       return "Préparation";
     case "shipped":
@@ -45,7 +45,7 @@ export function getShippingStatusLabel(status: ShippingStatus) {
 export function getShippingStatusHint(status: ShippingStatus) {
   switch (status) {
     case "pending":
-      return "Commande prête à entrer en préparation.";
+      return "Commande payée, en attente de prise en charge logistique.";
     case "preparing":
       return "Commande en cours de préparation logistique.";
     case "shipped":
