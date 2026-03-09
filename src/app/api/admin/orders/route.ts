@@ -27,13 +27,13 @@ export async function GET(req: Request) {
 
   try {
     const snap = await dbAdmin
-      .collection("orders") // ✅ FIX ICI
+      .collection("orders")
       .orderBy("createdAt", "desc")
       .limit(300)
       .get();
 
     const orders = snap.docs.map((d) => {
-      const o = d.data();
+      const o = d.data() as any;
 
       return {
         id: d.id,
@@ -44,10 +44,19 @@ export async function GET(req: Request) {
         shippingAddress: o.shippingAddress ?? null,
         totals: o.totals ?? null,
 
-        // 👇 champs attendus par ton admin UI
         total: o.totals?.totalTTC ?? 0,
         createdAt: o.createdAt ?? null,
         paidAt: o.paidAt ?? null,
+
+        // ✅ champs logistiques nécessaires au front
+        shippingStatus: o.shippingStatus ?? null,
+        trackingNumber: o.trackingNumber ?? null,
+        carrier: o.carrier ?? null,
+        shippingMode: o.shippingMode ?? null,
+        shippingTracking: o.shippingTracking ?? null,
+        fulfillment: o.fulfillment ?? null,
+        shippedAt: o.shippedAt ?? null,
+        shipstation: o.shipstation ?? null,
       };
     });
 
@@ -79,7 +88,7 @@ export async function DELETE(req: Request) {
   }
 
   try {
-    await dbAdmin.collection("orders").doc(id).delete(); // ✅ FIX ICI
+    await dbAdmin.collection("orders").doc(id).delete();
 
     return NextResponse.json(
       { success: true, id },
