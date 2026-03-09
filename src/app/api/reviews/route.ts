@@ -13,6 +13,12 @@ function normalizeEmail(v: unknown): string {
   return String(v ?? "").trim().toLowerCase();
 }
 
+function normalizeLocale(v: unknown): string {
+  const value = String(v ?? "").trim().toLowerCase();
+  if (value === "fr" || value === "en") return value;
+  return "fr";
+}
+
 function parseStatus(v: unknown): ReviewStatus | null {
   const value = String(v ?? "").trim().toLowerCase();
   if (value === "pending" || value === "approved" || value === "rejected") {
@@ -25,6 +31,14 @@ function parseLimit(v: unknown, fallback = 4, max = 20) {
   const n = Number(v);
   if (!Number.isFinite(n)) return fallback;
   return Math.max(1, Math.min(max, Math.floor(n)));
+}
+
+function parseRating(v: unknown): number | null {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  const rounded = Math.round(n);
+  if (rounded < 1 || rounded > 5) return null;
+  return rounded;
 }
 
 function toIsoDate(value: any): string | null {
@@ -50,6 +64,11 @@ function toIsoDate(value: any): string | null {
   }
 }
 
+function safeItems(items: unknown) {
+  if (!Array.isArray(items)) return [];
+  return items.slice(0, 50);
+}
+
 export async function GET(req: Request) {
   try {
     const db = getAdminDb();
@@ -72,7 +91,7 @@ export async function GET(req: Request) {
         id: doc.id,
         rating: Number.isFinite(Number(data?.rating)) ? Number(data.rating) : 0,
         comment: s(data?.comment, 2000),
-        locale: s(data?.locale || "fr", 20),
+        locale: normalizeLocale(data?.locale),
         createdAt: toIsoDate(data?.createdAt),
       };
     });
@@ -104,12 +123,8 @@ export async function POST(req: Request) {
     const token = s(body.token, 2000);
     const email = normalizeEmail(body.email);
     const comment = s(body.comment, 2000);
-    const locale = s(body.locale || "fr", 20);
-
-    const ratingNum = Number(body.rating);
-    const rating = Number.isFinite(ratingNum)
-      ? Math.max(1, Math.min(5, Math.round(ratingNum)))
-      : NaN;
+    const locale = normalizeLocale(body.locale);
+    const rating = parseRating(body.rating);
 
     if (!orderId) {
       return NextResponse.json({ ok: false, error: "order_id_missing" }, { status: 400 });
@@ -123,7 +138,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "email_invalid" }, { status: 400 });
     }
 
-    if (!Number.isFinite(rating)) {
+    if (rating === null) {
       return NextResponse.json({ ok: false, error: "rating_invalid" }, { status: 400 });
     }
 
@@ -170,9 +185,42 @@ export async function POST(req: Request) {
 
     const reviewId = `${orderId}__${expectedEmail}`;
     const reviewRef = db.collection("reviews").doc(reviewId);
-    const existingReviewSnap = await reviewRef.get();
 
-    if (existingReviewSnap.exists) {
+    await db.runTransaction(async (tx) => {
+      const existingReviewSnap = await tx.get(reviewRef);
+
+      if (existingReviewSnap.exists) {
+        throw new Error("review_already_exists");
+      }
+
+      tx.set(reviewRef, {
+        orderId,
+        email: expectedEmail,
+        rating,
+        comment,
+        locale,
+        items: safeItems(order?.items),
+        status: "pending",
+        createdAt: FieldValue.serverTimestamp(),
+        moderatedAt: null,
+        moderatedBy: null,
+      });
+
+      tx.set(
+        orderRef,
+        {
+          reviewSubmittedAt: FieldValue.serverTimestamp(),
+          "reviewEmail.submittedAt": FieldValue.serverTimestamp(),
+          "reviewEmail.status": "submitted",
+          "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    });
+
+    return NextResponse.json({ ok: true, id: reviewId });
+  } catch (e: any) {
+    if (e?.message === "review_already_exists") {
       return NextResponse.json(
         {
           ok: false,
@@ -182,34 +230,6 @@ export async function POST(req: Request) {
       );
     }
 
-    await reviewRef.set(
-      {
-        orderId,
-        email: expectedEmail,
-        rating,
-        comment,
-        locale,
-        items: Array.isArray(order?.items) ? order.items : [],
-        status: "pending",
-        createdAt: FieldValue.serverTimestamp(),
-        moderatedAt: null,
-        moderatedBy: null,
-      },
-      { merge: false }
-    );
-
-    await orderRef.set(
-      {
-        reviewSubmittedAt: FieldValue.serverTimestamp(),
-        "reviewEmail.submittedAt": FieldValue.serverTimestamp(),
-        "reviewEmail.status": "submitted",
-        "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-
-    return NextResponse.json({ ok: true, id: reviewId });
-  } catch (e: any) {
     console.error("POST /api/reviews error:", e);
 
     return NextResponse.json(
