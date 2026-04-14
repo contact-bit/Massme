@@ -4,8 +4,8 @@ import { MouseGradient } from "./MouseGradient";
 import "@/styles/components.css";
 
 export const metadata = {
-  title: "OculaRest",
-  description: "Boutique OculaRest",
+  title: "Vitectromed",
+  description: "Boutique Vitectromed",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
