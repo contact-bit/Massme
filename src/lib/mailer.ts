@@ -35,7 +35,8 @@ function safeEmailList(raw: string | undefined) {
 
 function resolveOrderNumber(order: OrderEmailPayload): string {
   const fromOrderData =
-    typeof order?.orderData?.orderNumber === "string" && order.orderData.orderNumber.trim().length > 0
+    typeof order?.orderData?.orderNumber === "string" &&
+    order.orderData.orderNumber.trim().length > 0
       ? order.orderData.orderNumber.trim()
       : typeof order?.orderData?.invoiceNumber === "string" &&
         order.orderData.invoiceNumber.trim().length > 0
@@ -43,7 +44,8 @@ function resolveOrderNumber(order: OrderEmailPayload): string {
       : null;
 
   const fromRoot =
-    typeof (order as any)?.orderNumber === "string" && (order as any).orderNumber.trim().length > 0
+    typeof (order as any)?.orderNumber === "string" &&
+    (order as any).orderNumber.trim().length > 0
       ? (order as any).orderNumber.trim()
       : null;
 
@@ -110,7 +112,6 @@ async function buildInvoiceAttachment(order: OrderEmailPayload) {
             : undefined,
       },
       orderNumber,
-      invoiceNumber: orderNumber,
     },
     orderNumber,
     {
