@@ -2,6 +2,19 @@
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/server/firebaseAdmin";
 
+type ReviewDoc = {
+  orderId?: string;
+  email?: string;
+  rating?: number | null;
+  comment?: string;
+  locale?: string;
+  status?: string;
+  createdAt?: any;
+  items?: any[];
+  moderatedAt?: any;
+  moderatedBy?: string;
+};
+
 function getStatusParam(req: Request) {
   const { searchParams } = new URL(req.url);
   const s = String(searchParams.get("status") || "pending").trim();
@@ -29,28 +42,75 @@ export async function GET(req: Request) {
       .limit(limit)
       .get();
 
-    const rows = snap.docs.map((d) => {
-      const r = d.data() || {};
+    // ✅ typé correctement
+    const reviews = snap.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as ReviewDoc),
+    }));
+
+    // 🔥 récupérer tous les orderId valides
+    const orderIds = [
+      ...new Set(
+        reviews
+          .map((r) => r.orderId)
+          .filter((id): id is string => typeof id === "string" && id.length > 0)
+      ),
+    ];
+
+    // 🔥 récupérer les commandes associées
+    const ordersSnap = await Promise.all(
+      orderIds.map((id) => db.collection("orders").doc(id).get())
+    );
+
+    const ordersMap = new Map<string, any>();
+
+    for (const doc of ordersSnap) {
+      if (doc.exists) {
+        ordersMap.set(doc.id, doc.data());
+      }
+    }
+
+    // 🔥 construire les rows
+    const rows = reviews.map((r) => {
+      const orderId = r.orderId || r.id;
+      const order = ordersMap.get(orderId);
+
       return {
-        id: d.id,
-        orderId: r.orderId || d.id,
+        id: r.id,
+        orderId,
+
+        // ✅ numéro client propre
+        orderNumber: order?.orderNumber || orderId,
+
         email: r.email || "",
         rating: r.rating ?? null,
         comment: r.comment || "",
         locale: r.locale || "fr",
         status: r.status || status,
+
         createdAt: r.createdAt?.toDate?.()?.toISOString?.() || null,
         items: Array.isArray(r.items) ? r.items : [],
+
         moderatedAt: r.moderatedAt?.toDate?.()?.toISOString?.() || null,
         moderatedBy: r.moderatedBy || null,
       };
     });
 
-    return NextResponse.json({ ok: true, status, count: rows.length, rows });
+    return NextResponse.json({
+      ok: true,
+      status,
+      count: rows.length,
+      rows,
+    });
   } catch (e: any) {
-    console.error(e);
+    console.error("[admin/reviews] error:", e);
+
     return NextResponse.json(
-      { ok: false, error: "server_error", message: e?.message || String(e) },
+      {
+        ok: false,
+        error: "server_error",
+        message: e?.message || "Unknown error",
+      },
       { status: 500 }
     );
   }

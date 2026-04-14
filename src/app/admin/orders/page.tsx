@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { firstDayOfMonthISO, todayISO, copyText, compactId, formatAddress } from "./domain/utils";
+import {
+  firstDayOfMonthISO,
+  todayISO,
+  copyText,
+  compactId,
+  formatAddress,
+} from "./domain/utils";
 import type { Order } from "./domain/types";
 
 import { useToast } from "./hooks/useToast";
@@ -30,7 +36,6 @@ export default function AdminOrdersPage() {
     fetchOrders,
     initOnce,
     deleteOrder,
-    updateShippingStatus,
   } = useOrders(toastIt);
 
   const filters = useOrderFilters(firstDayOfMonthISO(), todayISO());
@@ -39,12 +44,19 @@ export default function AdminOrdersPage() {
   const stats = useMemo(() => {
     const count = filtered.length;
     const paidCount = filtered.filter((o) => o.status === "paid").length;
-    const pendingCount = filtered.filter((o) => o.status === "pending_payment").length;
+    const pendingCount = filtered.filter(
+      (o) => o.status === "pending_payment"
+    ).length;
 
-    const totalEUR = filtered.reduce((sum, o) => sum + (o.__total ?? 0), 0);
+    const totalEUR = filtered.reduce(
+      (sum, o) => sum + (o.__total ?? 0),
+      0
+    );
+
     const paidEUR = filtered
       .filter((o) => o.status === "paid")
       .reduce((sum, o) => sum + (o.__total ?? 0), 0);
+
     const avg = count > 0 ? totalEUR / count : 0;
 
     return { count, paidCount, pendingCount, totalEUR, paidEUR, avg };
@@ -54,6 +66,7 @@ export default function AdminOrdersPage() {
   const selection = useSelection();
 
   const [drawerId, setDrawerId] = useState<string | null>(null);
+
   const activeOrder = useMemo(
     () => orders.find((o) => o.id === drawerId) || null,
     [orders, drawerId]
@@ -73,6 +86,12 @@ export default function AdminOrdersPage() {
       setDrawerId((curr) => (curr === id ? null : curr));
     });
   };
+
+  /**
+   * 🔥 Helper global → numéro client prioritaire
+   */
+  const getOrderLabel = (o?: Order | null) =>
+    o?.orderNumber || (o?.id ? compactId(o.id) : "—");
 
   return (
     <>
@@ -116,34 +135,51 @@ export default function AdminOrdersPage() {
           selection={selection}
           deleting={deleting}
           onOpen={(id) => setDrawerId(id)}
+
+          /** ✅ COPY NUMERO CLIENT */
           onCopyId={async (id) => {
-            await copyText(id);
-            toastIt("ID copié ✅");
+            const order = orders.find((o) => o.id === id);
+            await copyText(getOrderLabel(order));
+            toastIt("Numéro de commande copié ✅");
           }}
+
           onDelete={handleDelete}
-          onUpdateShippingStatus={updateShippingStatus}
         />
 
         <Drawer
           open={!!drawerId}
           onClose={() => setDrawerId(null)}
-          title={activeOrder ? `Commande ${compactId(activeOrder.id)}` : "Commande"}
+
+          /** ✅ TITRE PRO */
+          title={
+            activeOrder
+              ? `Commande ${getOrderLabel(activeOrder)}`
+              : "Commande"
+          }
         >
           {!activeOrder ? (
             <div className="muted">Chargement…</div>
           ) : (
             <OrderDetails
               order={activeOrder}
+
+              /** ✅ COPY NUMERO */
               onCopyId={async () => {
-                await copyText(activeOrder.id);
-                toastIt("ID copié ✅");
+                await copyText(getOrderLabel(activeOrder));
+                toastIt("Numéro de commande copié ✅");
               }}
+
               onCopyEmail={async () => {
-                await copyText(activeOrder.__email || activeOrder.email || "");
+                await copyText(
+                  activeOrder.__email || activeOrder.email || ""
+                );
                 toastIt("Email copié ✅");
               }}
+
               onCopyAddress={async () => {
-                await copyText(formatAddress(activeOrder.shippingAddress));
+                await copyText(
+                  formatAddress(activeOrder.shippingAddress)
+                );
                 toastIt("Adresse copiée ✅");
               }}
             />

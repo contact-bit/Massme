@@ -14,20 +14,47 @@ export type ShippingStatus =
   | "delivered"
   | "cancelled";
 
+// 🔥 NEW TYPE RELAY
+export type RelayPoint = {
+  id?: string;
+  name?: string;
+  address?: string;
+  address2?: string | null;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  raw?: any;
+};
+
 export type Order = {
   id: string;
+
   email?: string;
   status?: string;
   createdAt?: any;
 
-  amount_total?: number; // stripe cents
-  total?: number; // eur
+  // ✅ NUMÉRO
+  orderNumber?: string;
+  __orderNumber?: string;
 
-  shippingMethod?: { name?: string; price?: number | { eur?: number } };
+  amount_total?: number;
+  total?: number;
+
+  // 🔥 FIX SHIPPING METHOD COMPLET
+  shippingMethod?: {
+    name?: string;
+    type?: string; // 🔥 IMPORTANT
+    relayProvider?: string; // 🔥 IMPORTANT
+    price?: number | { eur?: number };
+  };
+
   shippingPrice?: number;
 
   items?: OrderItem[];
   shippingAddress?: any;
+
+  // 🔥 AJOUT RELAY (CRITIQUE)
+  relayPoint?: RelayPoint | null;
 
   shippingStatus?: ShippingStatus;
   trackingNumber?: string | null;
@@ -48,4 +75,8 @@ export type StatusFilter =
   | "canceled"
   | "other";
 
-export type SortKey = "date_desc" | "date_asc" | "total_desc" | "total_asc";
+export type SortKey =
+  | "date_desc"
+  | "date_asc"
+  | "total_desc"
+  | "total_asc";

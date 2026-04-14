@@ -263,8 +263,9 @@ type Order = {
   shippingAddress?: ShippingAddress;
   billingAddress?: ShippingAddress;
   shippingMethod?: { price?: number | { eur?: number } };
-  shippingPrice?: number; // HT
+  shippingPrice?: number;
   totals?: OrderTotals;
+  orderNumber?: string;
 };
 
 type GenOpts = {
@@ -373,12 +374,12 @@ export async function generateInvoicePDF(
   const issueDate = opts.issueDate ?? new Date();
   const VAT = order.totals?.vatRate ?? opts.vatRate ?? 0.2;
 
+  // 🔥 Source unique de vérité : numéro métier
   const invoiceNumber =
-    opts.invoiceNumber ??
-    `F${issueDate.getFullYear()}${String(issueDate.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}${String(issueDate.getDate()).padStart(2, "0")}`;
+    order.orderNumber ?? opts.invoiceNumber ?? orderId;
+
+  // Ce qui s'affiche comme "Votre commande"
+  const displayId = invoiceNumber;
 
   /* HEADER TOP */
   let yTop = H - M;
@@ -436,14 +437,14 @@ export async function generateInvoicePDF(
     height: 9,
     color: BLUE,
   });
-  page.drawText("OculaRest", {
+  page.drawText(t.BRAND, {
     x: rightX + 14,
     y: headerY + 18,
     size: 13,
     font: bold,
     color: INK,
   });
-  page.drawText("par Lazurco", {
+  page.drawText(t.BRAND_BY, {
     x: rightX + 14,
     y: headerY + 6,
     size: 8.5,
@@ -573,14 +574,14 @@ export async function generateInvoicePDF(
     font: regular,
     color: MUTED,
   });
-  page.drawText("www.ocularest.fr", {
+  page.drawText(t.WEBSITE, {
     x: leftX + 12,
     y: metaY + 26,
     size: 8.5,
     font: bold,
     color: BLUE_DARK,
   });
-  page.drawText(orderId, {
+  page.drawText(displayId, {
     x: leftX + 180,
     y: metaY + 26,
     size: 8.5,

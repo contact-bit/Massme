@@ -1,14 +1,27 @@
 "use client";
-import React from "react";
-import type { Order, ShippingStatus } from "../domain/types";
-import { compactId, formatDateFR, moneyEUR } from "../domain/utils";
+
+import type { Order } from "../domain/types";
+import {
+  formatDateFR,
+  moneyEUR,
+  getOrderLabel,
+} from "../domain/utils";
+
 import { StatusPill } from "./StatusPill";
 import {
-  getEffectiveShippingStatus,
-  getShippingStatusHint,
-  getTrackingNumber,
-} from "../domain/logistics";
-import { LogisticsStatusBadge } from "./LogisticsStatusBadge";
+  getLogisticStatus,
+  getShipDate,
+} from "../domain/logistics"; // 🔥 AJOUT
+
+type Props = {
+  orders: Order[];
+  selected: Record<string, boolean>;
+  onToggleOne: (id: string) => void;
+  onOpen: (id: string) => void;
+  onCopyId: (value: string) => void;
+  onDelete: (id: string) => void;
+  deleting: Record<string, boolean>;
+};
 
 export function OrdersCards({
   orders,
@@ -18,79 +31,96 @@ export function OrdersCards({
   onCopyId,
   onDelete,
   deleting,
-  onUpdateShippingStatus,
-}: {
-  orders: Order[];
-  selected: Record<string, boolean>;
-  onToggleOne: (id: string) => void;
-  onOpen: (id: string) => void;
-  onCopyId: (id: string) => void;
-  onDelete: (id: string) => void;
-  deleting: Record<string, boolean>;
-  onUpdateShippingStatus: (order: Order, next: ShippingStatus) => void;
-}) {
+}: Props) {
+  if (!orders?.length) return null;
+
   return (
     <div className="showMobile">
       <div className="cards">
         {orders.map((o) => {
-          const shippingStatus = getEffectiveShippingStatus(o);
-          const tracking = getTrackingNumber(o);
+          const orderLabel = getOrderLabel(o);
+
+          const paymentStatus =
+            (o as unknown as { payment?: { status?: string } }).payment?.status ??
+            o.status;
+
+          // 🔥 LOGISTIQUE
+          const logisticStatus = getLogisticStatus(o);
+          const shipDate = getShipDate(o);
 
           return (
             <div key={o.id} className="orderCard">
+              {/* TOP */}
               <div className="cardTop">
                 <div>
-                  <div className="amount">{moneyEUR(o.__total ?? 0)}</div>
-                  <div className="date">{formatDateFR(o.__created ?? null)}</div>
-                  <div className="date">Langue: {o.__lang || "—"}</div>
+                  <div className="amount">
+                    {moneyEUR(o.__total ?? 0)}
+                  </div>
 
-                  <div className="statusBlock" style={{ marginTop: 8 }}>
-                    <div className="statusMain">
-                      <LogisticsStatusBadge status={shippingStatus} />
-                    </div>
+                  <div className="date">
+                    {formatDateFR(o.__created ?? null)}
+                  </div>
 
-                    <div className="statusHint" style={{ marginTop: 6 }}>
-                      {getShippingStatusHint(shippingStatus)}
-                    </div>
-
-                    {tracking ? (
-                      <div className="statusHint" style={{ marginTop: 4 }}>
-                        Tracking : {tracking}
-                      </div>
-                    ) : null}
+                  <div className="date">
+                    Langue: {o.__lang || "—"}
                   </div>
                 </div>
 
-                <StatusPill status={o.status} />
+                <StatusPill status={paymentStatus} />
               </div>
 
+              {/* BODY */}
               <div className="cardBody">
-                <div className="mono">{compactId(o.id)}</div>
-                <div className="cardEmail">{o.__email || "—"}</div>
-                <div className="cardItems">{o.__itemsLabel || "—"}</div>
+                <div
+                  className="mono"
+                  style={{ fontWeight: 700, fontSize: 13 }}
+                >
+                  #{orderLabel}
+                </div>
+
+                <div className="cardEmail">
+                  {o.__email || "—"}
+                </div>
+
+                <div className="cardItems">
+                  {o.__itemsLabel || "—"}
+                </div>
+
+                {/* 🔥 LOGISTIQUE */}
+                <div style={{ marginTop: 8 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color:
+                        logisticStatus === "shipped"
+                          ? "#047857"
+                          : "#92400E",
+                    }}
+                  >
+                    {logisticStatus === "shipped"
+                      ? "Expédiée"
+                      : "À préparer"}
+                  </div>
+
+                  <div style={{ fontSize: 12, color: "#6B7280" }}>
+                    {logisticStatus === "shipped" && shipDate
+                      ? new Intl.DateTimeFormat("fr-FR", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        }).format(new Date(shipDate))
+                      : "—"}
+                  </div>
+                </div>
               </div>
 
+              {/* ACTIONS */}
               <div className="cardBtns">
-                <button className="btn btn--primary" onClick={() => onOpen(o.id)}>
+                <button
+                  className="btn btn--primary"
+                  onClick={() => onOpen(o.id)}
+                >
                   Voir
-                </button>
-
-                <button className="btn btn--ghost" onClick={() => onCopyId(o.id)}>
-                  Copier ID
-                </button>
-
-                <button
-                  className="btn btn--ghost"
-                  onClick={() => onUpdateShippingStatus(o, "preparing")}
-                >
-                  Préparer
-                </button>
-
-                <button
-                  className="btn btn--ghost"
-                  onClick={() => onUpdateShippingStatus(o, "shipped")}
-                >
-                  Expédier
                 </button>
 
                 <button
@@ -98,12 +128,19 @@ export function OrdersCards({
                   onClick={() => onDelete(o.id)}
                   disabled={!!deleting[o.id]}
                 >
-                  Suppr
+                  {deleting[o.id] ? "Suppression..." : "Suppr"}
                 </button>
               </div>
 
+              {/* SELECT */}
               <div className="selectLine">
-                <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={!!selected[o.id]}

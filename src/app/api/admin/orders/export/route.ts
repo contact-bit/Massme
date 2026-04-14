@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { Timestamp } from "firebase-admin/firestore";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import ExcelJS from "exceljs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,11 +37,13 @@ type OrderItem = {
   id?: string;
   name?: string;
   priceHT?: number;
+  priceTTC?: number;
   quantity?: number;
 };
 
 type Order = {
   id: string;
+  orderNumber?: string | number;
 
   email?: string;
   status?: string;
@@ -60,8 +63,8 @@ type Order = {
   paymentMethod?: PaymentMethodLike;
 
   relayPoint?: any;
-
   shippingPrice?: number;
+  carrier?: string;
 
   totals?: {
     country?: string;
@@ -70,6 +73,13 @@ type Order = {
     totalVAT?: number;
     totalTTC?: number;
     vatDisabled?: boolean;
+    // dans tes données réelles :
+    countryCode?: string;
+    defaultVatRate?: number;
+    itemsHT?: number;
+    itemsVAT?: number;
+    shipHT?: number;
+    shipVAT?: number;
   };
 
   heardFrom?: string | null;
@@ -78,24 +88,29 @@ type Order = {
   customerName?: string;
   phone?: string;
   paymentStatus?: string;
+
+  payment?: {
+    captureId?: string;
+    providerOrderId?: string;
+    provider?: string;
+    status?: string;
+    finalizedProvider?: string;
+    capturedAmount?: {
+      currency?: string;
+      value?: string | number;
+    };
+  };
+
+  debug?: any;
 };
 
 /* ---------------- Réglages compta ---------------- */
 
-/**
- * Coût de fabrication par produit.
- * Modifie ici selon tes vrais coûts.
- */
 const FAB_COST_BY_PRODUCT: Record<string, number> = {
   Vitrectromed: 0,
   Housse: 0,
 };
 
-/**
- * Commission Stripe estimative.
- * Exemple: 1.5% + 0.25€
- * Ajuste si besoin.
- */
 function estimateStripeCommission(ttc: number) {
   return round2(ttc * 0.015 + 0.25);
 }
@@ -114,26 +129,6 @@ function assertAdmin(req: Request) {
 }
 
 /* ---------------- Date helpers ---------------- */
-
-function startOfDay(d: Date) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
-}
-
-function endOfDay(d: Date) {
-  const x = new Date(d);
-  x.setHours(23, 59, 59, 999);
-  return x;
-}
-
-function startOfMonth(year: number, month1to12: number) {
-  return new Date(year, month1to12 - 1, 1, 0, 0, 0, 0);
-}
-
-function endOfMonth(year: number, month1to12: number) {
-  return new Date(year, month1to12, 0, 23, 59, 59, 999);
-}
 
 function parseCreatedAt(value: any): Date | null {
   if (!value) return null;
@@ -167,6 +162,9 @@ function parseOrderDate(order: Order): Date | null {
     parseCreatedAt(order.date) ||
     parseCreatedAt(order.timestamp) ||
     parseCreatedAt(order.paidAt) ||
+    parseCreatedAt(order.debug?.finalizePaidOrderAt) ||
+    parseCreatedAt(order.debug?.paypalFinalizeAt) ||
+    parseCreatedAt(order.debug?.paypalCaptureHitAt) ||
     null
   );
 }
@@ -223,6 +221,11 @@ function yesNo(v: boolean | undefined) {
   return "-";
 }
 
+function clean(v: any) {
+  if (v === null || v === undefined || v === "") return "-";
+  return String(v);
+}
+
 /* ---------------- Order data helpers ---------------- */
 
 function getOrderItems(order: Order): OrderItem[] {
@@ -239,53 +242,103 @@ function getItemName(item: OrderItem): string {
 }
 
 function getItemUnitPriceHT(item: OrderItem): number {
-  return num(item?.priceHT);
+  const ht = num(item?.priceHT);
+  if (ht > 0) return ht;
+  const ttc = num(item?.priceTTC);
+  return ttc > 0 ? ttc : 0;
 }
 
 function getItemLineTotalHT(item: OrderItem): number {
   return round2(getItemUnitPriceHT(item) * getItemQty(item));
 }
 
+/* ----- Montants basés sur tes vrais champs Firestore ----- */
+
 function getProductsHT(order: Order): number {
-  return round2(
+  const fromTotals = num(order.totals?.itemsHT);
+  if (fromTotals > 0) return round2(fromTotals);
+
+  const fromItems = round2(
     getOrderItems(order).reduce((sum, item) => sum + getItemLineTotalHT(item), 0)
   );
+  if (fromItems > 0) return fromItems;
+
+  return 0;
 }
 
 function getShippingHT(order: Order): number {
-  return round2(num(order.shippingPrice ?? order.shippingMethod?.priceHT ?? 0));
+  const fromTotals = num(order.totals?.shipHT);
+  if (fromTotals > 0) return round2(fromTotals);
+
+  return round2(
+    num(order.shippingPrice ?? order.shippingMethod?.priceHT ?? 0)
+  );
 }
 
 function getVAT(order: Order): number {
-  return round2(num(order.totals?.totalVAT ?? 0));
+  const totalVAT = num(order.totals?.totalVAT);
+  if (totalVAT > 0) return round2(totalVAT);
+
+  const itemsVAT = num(order.totals?.itemsVAT);
+  const shipVAT = num(order.totals?.shipVAT);
+  const sum = itemsVAT + shipVAT;
+  if (sum > 0) return round2(sum);
+
+  const totalTTC = num(order.totals?.totalTTC);
+  const totalHT = num(order.totals?.totalHT);
+  if (totalTTC > 0 && totalHT > 0) {
+    return round2(totalTTC - totalHT);
+  }
+
+  return 0;
 }
 
 function getTotalHT(order: Order): number {
-  const totalHT = round2(num(order.totals?.totalHT));
-  if (totalHT > 0) return totalHT;
+  const totalHT = num(order.totals?.totalHT);
+  if (totalHT > 0) return round2(totalHT);
 
-  return round2(getProductsHT(order) + getShippingHT(order));
+  const rebuilt = round2(getProductsHT(order) + getShippingHT(order));
+  return rebuilt > 0 ? rebuilt : 0;
 }
 
 function getTotalTTC(order: Order): number {
-  const totalTTC = round2(num(order.totals?.totalTTC));
-  if (totalTTC > 0) return totalTTC;
+  const totalTTC = num(order.totals?.totalTTC);
+  if (totalTTC > 0) return round2(totalTTC);
+
+  const captured = num(order.payment?.capturedAmount?.value);
+  if (captured > 0) return round2(captured);
+
+  const debugTtc = num(order.debug?.paypalFinalizeResult?.amount?.value);
+  if (debugTtc > 0) return round2(debugTtc);
 
   return round2(getTotalHT(order) + getVAT(order));
 }
 
 function getVATRate(order: Order): number {
-  return round2(num(order.totals?.vatRate ?? order.shippingMethod?.vatRate ?? 0));
+  const fromTotals =
+    num(order.totals?.defaultVatRate) || num(order.totals?.vatRate);
+  if (fromTotals > 0) return fromTotals;
+
+  const fromShip = num(order.shippingMethod?.vatRate);
+  if (fromShip > 0) return fromShip;
+
+  return 0;
 }
 
 function getShippingName(order: Order): string {
-  return String(order.shippingMethod?.name || "Livraison");
+  return String(order.shippingMethod?.name || order.carrier || "Livraison");
 }
 
 function getCustomerName(order: Order): string {
   return String(
     order.billingAddress?.name ||
+      [order.billingAddress?.firstName, order.billingAddress?.lastName]
+        .filter(Boolean)
+        .join(" ") ||
       order.shippingAddress?.name ||
+      [order.shippingAddress?.firstName, order.shippingAddress?.lastName]
+        .filter(Boolean)
+        .join(" ") ||
       order.customerName ||
       "-"
   );
@@ -307,11 +360,19 @@ function splitFullName(fullName?: string) {
 }
 
 function getFirstName(order: Order) {
-  return splitFullName(getCustomerName(order)).firstName;
+  return (
+    order.billingAddress?.firstName ||
+    order.shippingAddress?.firstName ||
+    splitFullName(getCustomerName(order)).firstName
+  );
 }
 
 function getLastName(order: Order) {
-  return splitFullName(getCustomerName(order)).lastName;
+  return (
+    order.billingAddress?.lastName ||
+    order.shippingAddress?.lastName ||
+    splitFullName(getCustomerName(order)).lastName
+  );
 }
 
 function getPhone(order: Order): string {
@@ -328,25 +389,54 @@ function getPaymentLabel(order: Order): string {
     order.paymentMethod?.label ||
       order.paymentMethod?.type ||
       order.paymentMethod?.provider ||
+      order.payment?.provider ||
+      order.debug?.paypalFinalizeResult?.provider ||
+      order.debug?.finalizePaidOrderProvider ||
       "-"
   );
 }
 
 function getPaymentProvider(order: Order): string {
-  return String(order.paymentMethod?.provider || "-");
+  return String(
+    order.payment?.provider ||
+      order.paymentMethod?.provider ||
+      order.debug?.paypalFinalizeResult?.provider ||
+      order.debug?.finalizePaidOrderProvider ||
+      "-"
+  );
 }
 
 function getPaymentStatus(order: Order): string {
+  if (order.payment?.status) return String(order.payment.status);
   if (order.status === "paid") return "Payé";
   if (order.status === "pending_payment") return "En attente";
+  if (order.debug?.paypalCaptureStatus)
+    return String(order.debug.paypalCaptureStatus);
   return String(order.paymentStatus || order.status || "-");
+}
+
+function getPaypalCaptureId(order: Order): string {
+  return String(order.payment?.captureId || order.debug?.paypalCaptureId || "-");
+}
+
+function getPaypalOrderId(order: Order): string {
+  return String(
+    order.payment?.providerOrderId || order.debug?.paypalCaptureOrderId || "-"
+  );
+}
+
+function getPaypalCaptureStatus(order: Order): string {
+  return String(order.payment?.status || order.debug?.paypalCaptureStatus || "-");
 }
 
 function formatAddress(a?: AddressLike | null) {
   if (!a) return "-";
 
+  const fullName =
+    a.name || [a.firstName, a.lastName].filter(Boolean).join(" ").trim();
+
   const parts = [
-    a.name,
+    fullName,
     a.address,
     a.address2,
     [a.postalCode, a.city].filter(Boolean).join(" ").trim(),
@@ -391,6 +481,7 @@ function getHeardFromLabel(order: Order) {
 function getCountry(order: Order) {
   return String(
     order.totals?.country ||
+      (order.totals as any)?.countryCode ||
       order.shippingAddress?.country ||
       order.billingAddress?.country ||
       "-"
@@ -407,22 +498,11 @@ function getItemsLabel(order: Order) {
       const qty = getItemQty(item);
       const unitHT = getItemUnitPriceHT(item);
       const lineHT = getItemLineTotalHT(item);
-      return `${name} x${qty} (${euro(unitHT)} € HT u. / ${euro(lineHT)} € HT ligne)`;
+      return `${name} x${qty} (${euro(unitHT)} € HT u. / ${euro(
+        lineHT
+      )} € HT ligne)`;
     })
     .join(" | ");
-}
-
-function getItemsDetailedLines(order: Order): string[] {
-  const items = getOrderItems(order);
-  if (!items.length) return ["Aucun article"];
-
-  return items.map((item, index) => {
-    const name = getItemName(item);
-    const qty = getItemQty(item);
-    const unitHT = getItemUnitPriceHT(item);
-    const lineHT = getItemLineTotalHT(item);
-    return `${index + 1}. ${name} - Qté: ${qty} - PU HT: ${euro(unitHT)} € - Ligne HT: ${euro(lineHT)} €`;
-  });
 }
 
 function getTotalQty(order: Order) {
@@ -458,8 +538,17 @@ function getFabricationCost(order: Order) {
   );
 }
 
+function getOrderNumber(order: Order): string {
+  if (order.orderNumber) {
+    return `#${order.orderNumber}`;
+  }
+  return `#${order.id}`;
+}
+
 function getGain(order: Order) {
-  return round2(getTotalHT(order) - getPaymentCommission(order) - getFabricationCost(order));
+  return round2(
+    getTotalHT(order) - getPaymentCommission(order) - getFabricationCost(order)
+  );
 }
 
 /* ---------------- Debug helpers ---------------- */
@@ -506,29 +595,39 @@ function toCSV(headers: string[], rows: string[][]) {
     return s;
   };
 
-  return [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\n");
+  return [
+    headers.map(esc).join(","),
+    ...rows.map((r) => r.map(esc).join(",")),
+  ].join("\n");
 }
 
 function buildAccountingCsvRows(order: Order): string[] {
   return [
-    formatFrenchDate(order),            // Date
-    order.id || "-",                    // ID
-    order.status || "-",                // Statut
-    getFirstName(order),                // Prénom
-    getLastName(order),                 // Nom
-    getCountry(order),                  // Pays
-    getHeardFromLabel(order),           // Média
-    String(getTotalQty(order)),         // Quantité
-    String(getQtyHousse(order)),        // Quantité Housse
-    getShippingName(order),             // Mode livraison
-    euro(getShippingHT(order)),         // Coût livraison HT Mode
-    getPaymentProvider(order),          // Paiement Mode
-    euro(getPaymentCommission(order)),  // Paiement Com
-    euro(getFabricationCost(order)),    // Cout Fabrication
-    euro(getTotalHT(order)),            // CA HT
-    euro(getVAT(order)),                // TVA
-    euro(getTotalTTC(order)),           // CA TTC
-    euro(getGain(order)),               // Gain
+    formatFrenchDate(order),
+    order.id || "-",
+    getOrderNumber(order),
+    order.status || "-",
+    clean(getFirstName(order)),
+    clean(getLastName(order)),
+    clean(getCountry(order)),
+    clean(getHeardFromLabel(order)),
+    String(getTotalQty(order)),
+    String(getQtyHousse(order)),
+    clean(getShippingName(order)),
+    euro(getShippingHT(order)),
+    clean(getPaymentProvider(order)),
+    euro(getPaymentCommission(order)),
+    euro(getFabricationCost(order)),
+    euro(getTotalHT(order)),
+    euro(getVAT(order)),
+    euro(getTotalTTC(order)),
+    euro(getGain(order)),
+    clean(order.email),
+    clean(getPhone(order)),
+    clean(getBillingAddressLabel(order)),
+    clean(getPaypalCaptureId(order)),
+    clean(getPaypalOrderId(order)),
+    clean(getPaypalCaptureStatus(order)),
   ];
 }
 
@@ -567,6 +666,219 @@ async function loadOrders(): Promise<Order[]> {
   });
 
   return merged;
+}
+
+/* ---------------- XLSX compta ---------------- */
+
+async function buildAccountingXlsx(opts: {
+  title: string;
+  periodLabel: string;
+  orders: Order[];
+}) {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "Admin Export";
+  workbook.created = new Date();
+
+  const sheet = workbook.addWorksheet("Compta", {
+    views: [{ state: "frozen", ySplit: 4 }],
+  });
+
+  const columns = [
+    { header: "Date", key: "date", width: 14 },
+    { header: "ID", key: "id", width: 28 },
+    { header: "Numéro commande", key: "orderNumber", width: 22 },
+    { header: "Statut", key: "status", width: 18 },
+    { header: "Paiement", key: "paymentStatus", width: 18 },
+    { header: "Prénom", key: "firstName", width: 18 },
+    { header: "Nom", key: "lastName", width: 18 },
+    { header: "Email", key: "email", width: 28 },
+    { header: "Téléphone", key: "phone", width: 18 },
+    { header: "Pays", key: "country", width: 10 },
+    { header: "Média", key: "media", width: 20 },
+    { header: "Adresse facturation", key: "billingAddress", width: 44 },
+    { header: "Adresse livraison", key: "shippingAddress", width: 44 },
+    { header: "Point relais", key: "relayPoint", width: 34 },
+    { header: "Mode livraison", key: "shippingName", width: 18 },
+    { header: "Quantité", key: "qty", width: 10 },
+    { header: "Quantité Housse", key: "qtyHousse", width: 16 },
+    { header: "Coût livraison HT", key: "shippingHT", width: 16 },
+    { header: "Paiement Mode", key: "paymentProvider", width: 16 },
+    { header: "Paiement Com", key: "paymentCommission", width: 16 },
+    { header: "Cout Fabrication", key: "fabricationCost", width: 18 },
+    { header: "CA HT", key: "totalHT", width: 14 },
+    { header: "TVA", key: "vat", width: 14 },
+    { header: "CA TTC", key: "totalTTC", width: 14 },
+    { header: "Gain", key: "gain", width: 14 },
+    { header: "PayPal Capture ID", key: "paypalCaptureId", width: 22 },
+    { header: "PayPal Order ID", key: "paypalCaptureOrderId", width: 22 },
+    { header: "PayPal Capture Status", key: "paypalCaptureStatus", width: 22 },
+    { header: "Finalize Provider", key: "finalizeProvider", width: 18 },
+    { header: "Locale", key: "locale", width: 12 },
+    { header: "Articles", key: "items", width: 60 },
+  ];
+
+  const rows = opts.orders.map((order) => ({
+    date: formatFrenchDate(order),
+    id: order.id || "-",
+    orderNumber: getOrderNumber(order),
+    status: clean(order.status),
+    paymentStatus: clean(getPaymentStatus(order)),
+    firstName: clean(getFirstName(order)),
+    lastName: clean(getLastName(order)),
+    email: clean(order.email || order.debug?.paypalFinalizeResult?.email),
+    phone: clean(getPhone(order)),
+    country: clean(getCountry(order)),
+    media: clean(getHeardFromLabel(order)),
+    billingAddress: clean(getBillingAddressLabel(order)),
+    shippingAddress: clean(getShippingAddressLabel(order)),
+    relayPoint: clean(getRelayPointLabel(order)),
+    shippingName: clean(getShippingName(order)),
+    qty: getTotalQty(order),
+    qtyHousse: getQtyHousse(order),
+    shippingHT: getShippingHT(order),
+    paymentProvider: clean(getPaymentProvider(order)),
+    paymentCommission: getPaymentCommission(order),
+    fabricationCost: getFabricationCost(order),
+    totalHT: getTotalHT(order),
+    vat: getVAT(order),
+    totalTTC: getTotalTTC(order),
+    gain: getGain(order),
+    paypalCaptureId: clean(getPaypalCaptureId(order)),
+    paypalCaptureOrderId: clean(getPaypalOrderId(order)),
+    paypalCaptureStatus: clean(getPaypalCaptureStatus(order)),
+    finalizeProvider: clean(
+      order.payment?.finalizedProvider || order.debug?.finalizePaidOrderProvider
+    ),
+    locale: clean(order.locale || order.debug?.paypalFinalizeResult?.locale),
+    items: clean(getItemsLabel(order)),
+  }));
+
+  sheet.columns = columns;
+
+  sheet.mergeCells(1, 1, 1, columns.length);
+  sheet.getCell("A1").value = opts.title;
+  sheet.getCell("A1").font = { bold: true, size: 15 };
+  sheet.getCell("A1").alignment = { vertical: "middle", horizontal: "left" };
+
+  sheet.mergeCells(2, 1, 2, columns.length);
+  sheet.getCell("A2").value = opts.periodLabel;
+  sheet.getCell("A2").font = {
+    italic: true,
+    size: 11,
+    color: { argb: "FF64748B" },
+  };
+  sheet.getCell("A2").alignment = { vertical: "middle", horizontal: "left" };
+
+  const headerRowIndex = 4;
+  const dataStartRow = 5;
+
+  const headerRow = sheet.getRow(headerRowIndex);
+  columns.forEach((col, i) => {
+    const cell = headerRow.getCell(i + 1);
+    cell.value = col.header;
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF0F172A" },
+    };
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: "center",
+      wrapText: true,
+    };
+    cell.border = {
+      top: { style: "thin", color: { argb: "FFE2E8F0" } },
+      left: { style: "thin", color: { argb: "FFE2E8F0" } },
+      bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+      right: { style: "thin", color: { argb: "FFE2E8F0" } },
+    };
+  });
+  headerRow.height = 28;
+
+  rows.forEach((row) => {
+    sheet.addRow(row);
+  });
+
+  const moneyKeys = new Set([
+    "shippingHT",
+    "paymentCommission",
+    "fabricationCost",
+    "totalHT",
+    "vat",
+    "totalTTC",
+    "gain",
+  ]);
+
+  for (let rowNumber = dataStartRow; rowNumber <= sheet.rowCount; rowNumber++) {
+    const row = sheet.getRow(rowNumber);
+    row.eachCell((cell, colNumber) => {
+      const key = String(columns[colNumber - 1]?.key || "");
+      if (moneyKeys.has(key)) {
+        cell.numFmt = '#,##0.00 "€"';
+      }
+      cell.alignment = {
+        vertical: "middle",
+        horizontal:
+          moneyKeys.has(key) || ["qty", "qtyHousse"].includes(key)
+            ? "right"
+            : "left",
+        wrapText: true,
+      };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFF1F5F9" } },
+        left: { style: "thin", color: { argb: "FFF1F5F9" } },
+        bottom: { style: "thin", color: { argb: "FFF1F5F9" } },
+        right: { style: "thin", color: { argb: "FFF1F5F9" } },
+      };
+    });
+  }
+
+  const lastCol = String.fromCharCode(64 + columns.length);
+  const lastDataRow = sheet.rowCount;
+
+  sheet.addTable({
+    name: "AccountingExport",
+    ref: "A4",
+    headerRow: true,
+    style: {
+      theme: "TableStyleMedium2",
+      showRowStripes: true,
+    },
+    columns: columns.map((c) => ({ name: c.header as string })),
+    rows: rows.map((r) => columns.map((c) => (r as any)[c.key])),
+  });
+
+  const totalRowIndex = lastDataRow + 2;
+  const totalLabelCol = 21;
+  const totalStartCol = 22;
+  const totalKeys = ["totalHT", "vat", "totalTTC", "gain"];
+
+  sheet.getCell(totalRowIndex, totalLabelCol).value = "Totaux";
+  sheet.getCell(totalRowIndex, totalLabelCol).font = { bold: true };
+
+  totalKeys.forEach((key, idx) => {
+    const colIndex = totalStartCol + idx;
+    const excelCol = sheet.getColumn(colIndex).letter;
+    const cell = sheet.getCell(`${excelCol}${totalRowIndex}`);
+    cell.value = {
+      formula: `SUM(${excelCol}${dataStartRow}:${excelCol}${lastDataRow})`,
+    };
+    cell.numFmt = '#,##0.00 "€"';
+    cell.font = { bold: true };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE2E8F0" },
+    };
+  });
+
+  sheet.autoFilter = {
+    from: "A4",
+    to: `${lastCol}${lastDataRow}`,
+  };
+
+  return workbook.xlsx.writeBuffer();
 }
 
 /* ---------------- PDF ---------------- */
@@ -633,10 +945,16 @@ async function buildOrdersPdf(opts: {
     y -= 15;
 
     drawText(
-      `Commandes: ${opts.orders.length}   |   Produits HT: ${euro(opts.totals.productsHT)} €   |   Livraison HT: ${euro(opts.totals.shippingHT)} €   |   TVA: ${euro(opts.totals.vat)} €   |   Total HT: ${euro(opts.totals.totalHT)} €   |   Total TTC: ${euro(opts.totals.totalTTC)} €`,
+      `Commandes: ${opts.orders.length} | Produits HT: ${euro(
+        opts.totals.productsHT
+      )} € | Livraison HT: ${euro(opts.totals.shippingHT)} € | TVA: ${euro(
+        opts.totals.vat
+      )} € | Total HT: ${euro(opts.totals.totalHT)} € | Total TTC: ${euro(
+        opts.totals.totalTTC
+      )} €`,
       margin,
       y,
-      { size: 9.5, bold: true }
+           { size: 9.5, bold: true }
     );
     y -= 18;
 
@@ -674,42 +992,48 @@ async function buildOrdersPdf(opts: {
     const totalTTC = getTotalTTC(o);
 
     const line1 = truncateText(
-      `Date: ${formatOrderDate(o)}   |   ID: ${o.id}   |   Statut: ${o.status || "-"}   |   Paiement: ${getPaymentStatus(o)}   |   Email: ${o.email || "-"}`,
+      `Date: ${formatOrderDate(o)} | ID: ${o.id} | Statut: ${
+        o.status || "-"
+      } | Paiement: ${getPaymentStatus(o)} | Email: ${o.email || "-"}`,
       150
     );
 
     const line2 = truncateText(
-      `Client: ${getCustomerName(o)}   |   Téléphone: ${getPhone(o)}   |   Méthode paiement: ${getPaymentLabel(o)}   |   Provider: ${getPaymentProvider(o)}`,
+      `Client: ${getCustomerName(o)} | Téléphone: ${getPhone(
+        o
+      )} | Méthode paiement: ${getPaymentLabel(o)} | Provider: ${getPaymentProvider(
+        o
+      )}`,
       150
     );
 
-    const line3 = truncateText(
-      `Facturation: ${getBillingAddressLabel(o)}`,
-      150
-    );
-
-    const line4 = truncateText(
-      `Livraison: ${getShippingAddressLabel(o)}`,
-      150
-    );
+    const line3 = truncateText(`Facturation: ${getBillingAddressLabel(o)}`, 150);
+    const line4 = truncateText(`Livraison: ${getShippingAddressLabel(o)}`, 150);
 
     const line5 = truncateText(
-      `Transport: ${getShippingName(o)}   |   Pays: ${getCountry(o)}   |   TVA désactivée: ${yesNo(Boolean(o.totals?.vatDisabled))}   |   Taux TVA: ${euro(getVATRate(o))}%`,
+      `Transport: ${getShippingName(o)} | Pays: ${getCountry(
+        o
+      )} | TVA désactivée: ${yesNo(
+        Boolean(o.totals?.vatDisabled)
+      )} | Taux TVA: ${euro(getVATRate(o))}%`,
       150
     );
 
     const line6 = truncateText(
-      `Origine client: ${getHeardFromLabel(o)}   |   Relais: ${getRelayPointLabel(o)}   |   Locale: ${o.locale || "-"}`,
+      `Origine client: ${getHeardFromLabel(o)} | Relais: ${getRelayPointLabel(
+        o
+      )} | Locale: ${o.locale || "-"}`,
       150
     );
 
-    const line7 = truncateText(
-      `Articles: ${getItemsLabel(o)}`,
-      150
-    );
+    const line7 = truncateText(`Articles: ${getItemsLabel(o)}`, 150);
 
     const line8 = truncateText(
-      `Produits HT: ${euro(productsHT)} €   |   Livraison HT: ${euro(shippingHT)} €   |   TVA: ${euro(vat)} €   |   Total HT: ${euro(totalHT)} €   |   Total TTC: ${euro(totalTTC)} €`,
+      `Produits HT: ${euro(productsHT)} € | Livraison HT: ${euro(
+        shippingHT
+      )} € | TVA: ${euro(vat)} € | Total HT: ${euro(
+        totalHT
+      )} € | Total TTC: ${euro(totalTTC)} €`,
       150
     );
 
@@ -760,11 +1084,27 @@ async function buildOrdersPdf(opts: {
   });
 
   drawText("Résumé global", margin + 10, y - 20, { bold: true, size: 11 });
-  drawText(`Nb commandes: ${opts.orders.length}`, margin + 120, y - 20, { size: 10 });
-  drawText(`Produits HT: ${euro(opts.totals.productsHT)} €`, margin + 250, y - 20, { size: 10 });
-  drawText(`Livraison HT: ${euro(opts.totals.shippingHT)} €`, margin + 410, y - 20, { size: 10 });
-  drawText(`TVA: ${euro(opts.totals.vat)} €`, margin + 560, y - 20, { size: 10 });
-  drawText(`HT: ${euro(opts.totals.totalHT)} €`, margin + 650, y - 20, { size: 10 });
+  drawText(`Nb commandes: ${opts.orders.length}`, margin + 120, y - 20, {
+    size: 10,
+  });
+  drawText(
+    `Produits HT: ${euro(opts.totals.productsHT)} €`,
+    margin + 250,
+    y - 20,
+    { size: 10 }
+  );
+  drawText(
+    `Livraison HT: ${euro(opts.totals.shippingHT)} €`,
+    margin + 410,
+    y - 20,
+    { size: 10 }
+  );
+  drawText(`TVA: ${euro(opts.totals.vat)} €`, margin + 560, y - 20, {
+    size: 10,
+  });
+  drawText(`HT: ${euro(opts.totals.totalHT)} €`, margin + 650, y - 20, {
+    size: 10,
+  });
   drawText(`TTC: ${euro(opts.totals.totalTTC)} €`, margin + 735, y - 20, {
     size: 10,
     bold: true,
@@ -784,46 +1124,36 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
 
     const format = (searchParams.get("format") || "pdf").toLowerCase();
-    const day = searchParams.get("day");
-    const month = searchParams.get("month");
-    const from = searchParams.get("from");
-    const to = searchParams.get("to");
+    const day = searchParams.get("day") || "";
+    const month = searchParams.get("month") || "";
+    const from = searchParams.get("from") || "";
+    const to = searchParams.get("to") || "";
     const debugId = searchParams.get("debugId");
 
     let fromDate: Date;
     let toDate: Date;
 
     if (day) {
-      const d = new Date(day);
-      if (isNaN(d.getTime())) {
-        return NextResponse.json({ error: "Invalid day" }, { status: 400 });
-      }
-      fromDate = startOfDay(d);
-      toDate = endOfDay(d);
+      fromDate = new Date(`${day}T00:00:00`);
+      toDate = new Date(`${day}T23:59:59.999`);
     } else if (month) {
       const [y, m] = month.split("-").map(Number);
-      if (!y || !m || m < 1 || m > 12) {
-        return NextResponse.json({ error: "Invalid month" }, { status: 400 });
-      }
-      fromDate = startOfMonth(y, m);
-      toDate = endOfMonth(y, m);
+      fromDate = new Date(y, m - 1, 1, 0, 0, 0, 0);
+      toDate = new Date(y, m, 0, 23, 59, 59, 999);
     } else if (from && to) {
-      const a = new Date(from);
-      const b = new Date(to);
-
-      if (isNaN(a.getTime()) || isNaN(b.getTime()) || a > b) {
-        return NextResponse.json({ error: "Invalid range" }, { status: 400 });
-      }
-
-      fromDate = startOfDay(a);
-      toDate = endOfDay(b);
+      fromDate = new Date(`${from}T00:00:00`);
+      toDate = new Date(`${to}T23:59:59.999`);
     } else {
       const now = new Date();
-      toDate = endOfDay(now);
-
-      const past = new Date(now);
-      past.setDate(now.getDate() - 6);
-      fromDate = startOfDay(past);
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const d = now.getDate();
+      const dayStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(
+        2,
+        "0"
+      )}`;
+      fromDate = new Date(`${dayStr}T00:00:00`);
+      toDate = new Date(`${dayStr}T23:59:59.999`);
     }
 
     const all = await loadOrders();
@@ -834,11 +1164,14 @@ export async function GET(req: Request) {
       else console.log("DEBUG ORDER NOT FOUND:", debugId);
     }
 
+    const fromTime = fromDate.getTime();
+    const toTime = toDate.getTime();
+
     const filtered = all.filter((o) => {
       const d = parseOrderDate(o);
-      if (!d) return false;
+      if (!d) return true;
       const t = d.getTime();
-      return t >= fromDate.getTime() && t <= toDate.getTime();
+      return t >= fromTime && t <= toTime;
     });
 
     let sumProductsHT = 0;
@@ -855,10 +1188,35 @@ export async function GET(req: Request) {
       sumTotalTTC += getTotalTTC(o);
     }
 
+    if (format === "accounting_xlsx") {
+      const buffer = await buildAccountingXlsx({
+        title: "Export comptable",
+        periodLabel: `Période : ${fromDate
+          .toISOString()
+          .slice(0, 10)} -> ${toDate.toISOString().slice(0, 10)}`,
+        orders: filtered,
+      });
+
+      return new Response(buffer as ArrayBuffer, {
+        status: 200,
+        headers: {
+          "Content-Type":
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": `attachment; filename="accounting_${fromDate
+            .toISOString()
+            .slice(0, 10)}_${toDate
+            .toISOString()
+            .slice(0, 10)}.xlsx"`,
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
     if (format === "accounting_csv") {
       const headers = [
         "Date",
         "ID",
+        "Numéro commande",
         "Statut",
         "Prénom",
         "Nom",
@@ -867,7 +1225,7 @@ export async function GET(req: Request) {
         "Quantité",
         "Quantité Housse",
         "Mode livraison",
-        "Coût livraison HT Mode",
+        "Coût livraison HT",
         "Paiement Mode",
         "Paiement Com",
         "Cout Fabrication",
@@ -875,6 +1233,12 @@ export async function GET(req: Request) {
         "TVA",
         "CA TTC",
         "Gain",
+        "Email",
+        "Téléphone",
+        "Adresse facturation",
+        "PayPal Capture ID",
+        "PayPal Order ID",
+        "PayPal Capture Status",
       ];
 
       const rows = filtered.map((o) => buildAccountingCsvRows(o));
@@ -884,7 +1248,9 @@ export async function GET(req: Request) {
         status: 200,
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": `attachment; filename="accounting_${fromDate.toISOString().slice(0, 10)}_${toDate.toISOString().slice(0, 10)}.csv"`,
+          "Content-Disposition": `attachment; filename="accounting_${fromDate
+            .toISOString()
+            .slice(0, 10)}_${toDate.toISOString().slice(0, 10)}.csv"`,
           "Cache-Control": "no-store",
         },
       });
@@ -922,7 +1288,7 @@ export async function GET(req: Request) {
       o.id,
       o.status || "-",
       getPaymentStatus(o),
-      o.email || "-",
+      o.email || clean(o.debug?.paypalFinalizeResult?.email),
       getCustomerName(o),
       getPhone(o),
       getPaymentProvider(o),
@@ -932,7 +1298,7 @@ export async function GET(req: Request) {
       getRelayPointLabel(o),
       getShippingName(o),
       getCountry(o),
-      o.locale || "-",
+      o.locale || clean(o.debug?.paypalFinalizeResult?.locale),
       getHeardFromLabel(o),
       yesNo(Boolean(o.totals?.vatDisabled)),
       euro(getVATRate(o)),
@@ -944,7 +1310,9 @@ export async function GET(req: Request) {
       euro(getTotalTTC(o)),
     ]);
 
-    const filenameBase = `orders_${fromDate.toISOString().slice(0, 10)}_${toDate.toISOString().slice(0, 10)}`;
+    const filenameBase = `orders_${fromDate
+      .toISOString()
+      .slice(0, 10)}_${toDate.toISOString().slice(0, 10)}`;
 
     if (format === "csv") {
       const csv = toCSV(headers, rows);
@@ -960,7 +1328,9 @@ export async function GET(req: Request) {
 
     const pdfBuffer = await buildOrdersPdf({
       title: "Export commandes",
-      periodLabel: `Période : ${fromDate.toISOString().slice(0, 10)} -> ${toDate.toISOString().slice(0, 10)}`,
+      periodLabel: `Période : ${fromDate
+        .toISOString()
+        .slice(0, 10)} -> ${toDate.toISOString().slice(0, 10)}`,
       orders: filtered,
       totals: {
         productsHT: sumProductsHT,

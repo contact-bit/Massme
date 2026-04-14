@@ -2,11 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+
+
 type ReviewStatus = "pending" | "approved" | "rejected";
 
 type ReviewRow = {
   id: string;
   orderId: string;
+    orderNumber?: string;
   email: string;
   rating: number | null;
   comment: string;
@@ -492,8 +495,7 @@ export default function AdminReviewsPage() {
               </div>
 
               <div style={{ marginTop: 8, fontSize: 12, color: "#666" }}>
-                Order: <b>{r.orderId}</b> — locale: {r.locale}
-                {r.items?.length ? (
+Commande: <b>{r.orderNumber || r.orderId}</b>                {r.items?.length ? (
                   <>
                     {" "}
                     — items:{" "}

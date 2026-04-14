@@ -6,6 +6,7 @@ import { dbAdmin } from "@/lib/firebase.admin";
 import { sendOrderEmails } from "@/lib/mailer";
 import { createOrUpdateOrder } from "@/server/shipstation/client";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
+import { generateOrderNumber } from "@/server/orders/generateOrderNumber";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -380,6 +381,24 @@ export async function POST(req: Request) {
 
     const snapAfter = await orderRef.get();
     const orderData = snapAfter.exists ? (snapAfter.data() as any) : null;
+
+// ✅ FIX ORDER NUMBER
+let orderNumber = orderData?.orderNumber;
+
+if (!orderNumber) {
+  orderNumber = await generateOrderNumber();
+
+  await orderRef.set(
+    { orderNumber },
+    { merge: true }
+  );
+
+  // recharge pour avoir la bonne valeur partout
+  const updatedSnap = await orderRef.get();
+  Object.assign(orderData, updatedSnap.data());
+}
+
+console.log("[orderNumber] final =", orderNumber);
 
     console.log("[paypal/capture-order] finalized", {
       reqId,

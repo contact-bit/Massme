@@ -1,16 +1,23 @@
 "use client";
 import React from "react";
 import type { Order } from "../domain/types";
-import { formatDateFR, moneyEUR, formatAddress } from "../domain/utils";
-import { getItemPrice, getShipping, getSubtotal, getTotal } from "../domain/orderMath";
+import {
+  formatDateFR,
+  moneyEUR,
+  formatAddress,
+  compactId,
+} from "../domain/utils";
+import {
+  getItemPrice,
+  getShipping,
+  getSubtotal,
+  getTotal,
+} from "../domain/orderMath";
 import { StatusPill } from "./StatusPill";
 import {
-  getCarrier,
-  getEffectiveShippingStatus,
   getShipDate,
-  getTrackingNumber,
+  getLogisticStatus,
 } from "../domain/logistics";
-import { LogisticsStatusBadge } from "./LogisticsStatusBadge";
 
 function formatDateTime(value: unknown) {
   if (!value) return "—";
@@ -51,14 +58,24 @@ export function OrderDetails({
   const shipping = getShipping(order);
   const subtotal = getSubtotal(order);
 
-  const email = order.__email || order.email || "—";
-  const shippingStatus = getEffectiveShippingStatus(order);
-  const tracking = getTrackingNumber(order);
-  const carrier = getCarrier(order);
+  const email = (order as any)?.__email || order.email || "—";
+
+  const displayId =
+    (order as any)?.orderNumber ||
+    (order as any)?.number ||
+    compactId(order.id);
+
+  const logisticStatus = getLogisticStatus(order);
   const shipDate = getShipDate(order);
+
+  const relay = (order as any)?.relayPoint ?? null;
+  const billing = (order as any)?.billingAddress ?? null;
+
+  const paymentProvider = (order as any)?.payment?.provider;
 
   return (
     <div className="detailGrid">
+      {/* HEADER */}
       <div className="detailTop">
         <div>
           <div className="detailAmount">{moneyEUR(total)}</div>
@@ -67,17 +84,29 @@ export function OrderDetails({
         <StatusPill status={order.status} />
       </div>
 
+      {/* INFOS */}
       <div className="box">
         <div className="boxTitle">Infos</div>
 
         <div className="kv">
-          <div className="kvKey">ID</div>
-          <div className="kvVal mono">{order.id}</div>
+          <div className="kvKey">Commande</div>
+          <div className="kvVal mono">#{displayId}</div>
         </div>
 
         <div className="kv">
           <div className="kvKey">Email</div>
           <div className="kvVal">{email}</div>
+        </div>
+
+        <div className="kv">
+          <div className="kvKey">Paiement</div>
+          <div className="kvVal">
+            {paymentProvider === "stripe"
+              ? "💳 Carte bancaire"
+              : paymentProvider === "paypal"
+              ? "🅿️ PayPal"
+              : "—"}
+          </div>
         </div>
 
         <div className="kv">
@@ -95,6 +124,7 @@ export function OrderDetails({
         </div>
       </div>
 
+      {/* PRODUITS */}
       <div className="box">
         <div className="boxTitle">Produits</div>
 
@@ -107,18 +137,19 @@ export function OrderDetails({
                 typeof it?.name === "string"
                   ? it.name
                   : it?.name?.fr || it?.name?.en || "Produit";
+
               const qty = it?.quantity ?? 1;
               const price = getItemPrice(it);
-              const desc = it?.description || "";
 
               return (
                 <div key={idx} className="itemCard">
                   <div className="itemLeft">
                     <div className="itemName">{name}</div>
-                    {desc ? <div className="itemDesc">{desc}</div> : null}
                     <div className="itemMeta">Qté: {qty}</div>
                   </div>
-                  <div className="itemPrice">{moneyEUR(price * qty)}</div>
+                  <div className="itemPrice">
+                    {moneyEUR(price * qty)}
+                  </div>
                 </div>
               );
             })}
@@ -127,61 +158,87 @@ export function OrderDetails({
 
         <div className="sum">
           <div className="sumRow">
-            <span className="sumKey">Sous-total</span>
-            <span className="sumVal">{moneyEUR(subtotal)}</span>
+            <span>Sous-total</span>
+            <span>{moneyEUR(subtotal)}</span>
           </div>
           <div className="sumRow">
-            <span className="sumKey">Livraison</span>
-            <span className="sumVal">{moneyEUR(shipping)}</span>
+            <span>Livraison</span>
+            <span>{moneyEUR(shipping)}</span>
           </div>
           <div className="sumRow sumRow--total">
-            <span className="sumKey sumKey--total">Total</span>
-            <span className="sumVal sumVal--total">{moneyEUR(total)}</span>
+            <span>Total</span>
+            <span>{moneyEUR(total)}</span>
           </div>
         </div>
       </div>
 
-      <div className="box">
-        <div className="boxTitle">Logistique</div>
+      {/* 📦 + 🧾 */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 16,
+        }}
+      >
+        {/* LIVRAISON */}
+        <div className="box">
+          <div className="boxTitle">📦 Livraison</div>
 
-        <div className="kv">
-          <div className="kvKey">Statut logistique</div>
-          <div className="kvVal">
-            <LogisticsStatusBadge status={shippingStatus} />
+          <div className="kv">
+            <div className="kvKey">Statut</div>
+            <div className="kvVal">
+              {logisticStatus === "shipped"
+                ? "Expédiée"
+                : "À préparer"}
+            </div>
+          </div>
+
+          {shipDate && (
+            <div className="kv">
+              <div className="kvKey">Expédiée le</div>
+              <div className="kvVal">
+                {formatDateTime(shipDate)}
+              </div>
+            </div>
+          )}
+
+          {relay ? (
+            <div className="addr">
+              <div style={{ fontWeight: 700 }}>
+                📦 Point relais
+              </div>
+              <div>{relay.name}</div>
+              <div>{relay.address}</div>
+              <div>
+                {relay.postalCode} {relay.city}
+              </div>
+            </div>
+          ) : (
+            <div className="addr">
+              {formatAddress(order.shippingAddress) || "—"}
+            </div>
+          )}
+
+          <div className="rowBtns">
+            <button className="btn btn--soft" onClick={onCopyAddress}>
+              Copier adresse livraison
+            </button>
           </div>
         </div>
 
-        <div className="kv">
-          <div className="kvKey">Méthode de livraison</div>
-          <div className="kvVal">{order.shippingMethod?.name || "—"}</div>
-        </div>
+        {/* FACTURATION */}
+        <div className="box">
+          <div className="boxTitle">🧾 Facturation</div>
 
-        <div className="kv">
-          <div className="kvKey">Transporteur</div>
-          <div className="kvVal">{carrier || "—"}</div>
-        </div>
-
-        <div className="kv">
-          <div className="kvKey">Tracking</div>
-          <div className="kvVal mono">{tracking || "—"}</div>
-        </div>
-
-        <div className="kv">
-          <div className="kvKey">Date d’expédition</div>
-          <div className="kvVal">{formatDateTime(shipDate)}</div>
-        </div>
-
-        <div className="kv">
-          <div className="kvKey">Mode logistique</div>
-          <div className="kvVal">{(order as any)?.shippingMode || "—"}</div>
-        </div>
-
-        <div className="addr">{formatAddress(order.shippingAddress) || "—"}</div>
-
-        <div className="rowBtns">
-          <button className="btn btn--soft" onClick={onCopyAddress}>
-            Copier adresse
-          </button>
+          <div className="addr">
+            <div>{billing?.name || "—"}</div>
+            <div>{billing?.address || "—"}</div>
+            <div>
+              {billing?.postalCode || ""} {billing?.city || ""}
+            </div>
+            <div>{billing?.country || ""}</div>
+            {billing?.phone && <div>{billing.phone}</div>}
+          </div>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { dbAdmin as db } from "@/lib/firebase.admin";
 import { Timestamp } from "firebase-admin/firestore";
 import { computeTax } from "@/lib/tax";
 import Stripe from "stripe";
+import { generateOrderNumber } from "@/server/orders/generateOrderNumber";
 
 type CartItem = {
   priceHT: number;
@@ -17,17 +18,45 @@ type CleanItem = CartItem & {
 
 type StripeCheckoutLocale =
   | "auto"
-  | "bg" | "cs" | "da" | "de" | "el"
-  | "en" | "en-GB"
-  | "es" | "es-419"
-  | "et" | "fi" | "fr" | "fr-CA"
-  | "hr" | "hu" | "id" | "it"
-  | "ja" | "ko" | "lt" | "lv"
-  | "ms" | "mt" | "nb" | "nl"
-  | "pl" | "pt" | "pt-BR"
-  | "ro" | "ru" | "sk" | "sl"
-  | "sv" | "th" | "tr"
-  | "vi" | "zh" | "zh-HK" | "zh-TW";
+  | "bg"
+  | "cs"
+  | "da"
+  | "de"
+  | "el"
+  | "en"
+  | "en-GB"
+  | "es"
+  | "es-419"
+  | "et"
+  | "fi"
+  | "fr"
+  | "fr-CA"
+  | "hr"
+  | "hu"
+  | "id"
+  | "it"
+  | "ja"
+  | "ko"
+  | "lt"
+  | "lv"
+  | "ms"
+  | "mt"
+  | "nb"
+  | "nl"
+  | "pl"
+  | "pt"
+  | "pt-BR"
+  | "ro"
+  | "ru"
+  | "sk"
+  | "sl"
+  | "sv"
+  | "th"
+  | "tr"
+  | "vi"
+  | "zh"
+  | "zh-HK"
+  | "zh-TW";
 
 const STRIPE_LOCALE_BY_APP_LOCALE: Record<string, StripeCheckoutLocale> = {
   fr: "fr",
@@ -46,6 +75,10 @@ function getStripeLocale(appLocale: unknown): StripeCheckoutLocale {
 function normalizeEmail(value: unknown): string {
   return String(value || "").trim().toLowerCase();
 }
+
+/* =========================================================
+   FINGERPRINT
+========================================================= */
 
 function stableStringify(value: unknown): string {
   if (value === null || value === undefined) return "";
@@ -107,14 +140,18 @@ function buildOrderFingerprint(input: {
   return stableStringify(payload);
 }
 
+/* =========================================================
+   REUSE
+========================================================= */
+
 function isRecentEnough(createdAt: any, maxAgeMs: number): boolean {
   try {
     const date =
       createdAt?.toDate?.() instanceof Date
         ? createdAt.toDate()
         : typeof createdAt === "string" || typeof createdAt === "number"
-          ? new Date(createdAt)
-          : null;
+        ? new Date(createdAt)
+        : null;
 
     if (!date || Number.isNaN(date.getTime())) return false;
     return Date.now() - date.getTime() <= maxAgeMs;
@@ -141,7 +178,8 @@ async function findReusablePendingOrder(params: {
   const candidates = snap.docs
     .map((doc) => ({ id: doc.id, ref: doc.ref, data: doc.data() as any }))
     .filter((entry) => {
-      const sameFingerprint = entry.data?.checkoutFingerprint === params.fingerprint;
+      const sameFingerprint =
+        entry.data?.checkoutFingerprint === params.fingerprint;
       const recent = isRecentEnough(entry.data?.createdAt, 30 * 60 * 1000);
       return sameFingerprint && recent;
     })
@@ -153,6 +191,10 @@ async function findReusablePendingOrder(params: {
 
   return candidates[0] || null;
 }
+
+/* =========================================================
+   STRIPE ITEMS
+========================================================= */
 
 function buildLineItems(params: {
   items: CleanItem[];
@@ -168,7 +210,9 @@ function buildLineItems(params: {
     lineItems.push({
       price_data: {
         currency: "eur",
-        product_data: { name: item.name },
+        product_data: {
+          name: item.name,
+        },
         unit_amount: Math.round(item.priceHT * 100),
       },
       quantity: item.quantity,
@@ -177,13 +221,15 @@ function buildLineItems(params: {
 
   const shippingTTC = params.disableVAT
     ? params.shippingHT
-    : Number(params.shippingMethod.priceTTC ?? params.taxShipping.ttc);
+    : Number(params.shippingMethod?.priceTTC ?? params.taxShipping.ttc);
 
   if (shippingTTC > 0) {
     lineItems.push({
       price_data: {
         currency: "eur",
-        product_data: { name: "Livraison" },
+        product_data: {
+          name: "Livraison",
+        },
         unit_amount: Math.round(shippingTTC * 100),
       },
       quantity: 1,
@@ -194,7 +240,9 @@ function buildLineItems(params: {
     lineItems.push({
       price_data: {
         currency: "eur",
-        product_data: { name: `TVA ${params.taxItems.vatRate}%` },
+        product_data: {
+          name: `TVA ${params.taxItems.vatRate}%`,
+        },
         unit_amount: Math.round(params.taxItems.vatAmount * 100),
       },
       quantity: 1,
@@ -203,6 +251,10 @@ function buildLineItems(params: {
 
   return lineItems;
 }
+
+/* =========================================================
+   MAIN
+========================================================= */
 
 export async function POST(req: Request) {
   try {
@@ -232,15 +284,24 @@ export async function POST(req: Request) {
     }
 
     if (!billingAddress?.address) {
-      return NextResponse.json({ error: "Missing billing address" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing billing address" },
+        { status: 400 }
+      );
     }
 
     if (!shippingAddress?.address) {
-      return NextResponse.json({ error: "Missing shipping address" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing shipping address" },
+        { status: 400 }
+      );
     }
 
     if (!shippingMethod) {
-      return NextResponse.json({ error: "Missing shipping method" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing shipping method" },
+        { status: 400 }
+      );
     }
 
     if (paymentMethod?.provider !== "stripe") {
@@ -299,14 +360,20 @@ export async function POST(req: Request) {
       fingerprint: checkoutFingerprint,
     });
 
-    let orderRef = reusable?.ref ?? db.collection("orders").doc();
-    let orderId = reusable?.id ?? orderRef.id;
+    const orderRef = reusable?.ref ?? db.collection("orders").doc();
+    const orderId = reusable?.id ?? orderRef.id;
+
+    let orderNumber: string =
+      reusable?.data?.orderNumber || reusable?.data?.invoiceNumber || "";
 
     if (reusable) {
-      console.log("[checkout] reusing pending order:", orderId);
+      console.log("[checkout] reusing pending order:", orderId, orderNumber);
     } else {
+      orderNumber = await generateOrderNumber();
+
       await orderRef.set({
         id: orderId,
+        orderNumber,
         email,
         items: cleanItems,
         billingAddress,
@@ -336,7 +403,7 @@ export async function POST(req: Request) {
         updatedAt: Timestamp.now(),
       });
 
-      console.log("[checkout] order created:", orderId);
+      console.log("[checkout] order created:", orderId, orderNumber);
     }
 
     const existingSessionId =
@@ -345,11 +412,16 @@ export async function POST(req: Request) {
 
     if (existingSessionId) {
       try {
-        const existingSession = await stripe.checkout.sessions.retrieve(existingSessionId);
+        const existingSession =
+          await stripe.checkout.sessions.retrieve(existingSessionId);
 
         if (existingSession?.url && existingSession.status === "open") {
           console.log("[checkout] reusing stripe session:", existingSession.id);
-          return NextResponse.json({ url: existingSession.url });
+          return NextResponse.json({
+            url: existingSession.url,
+            orderId,
+            orderNumber,
+          });
         }
       } catch (e) {
         console.warn("[checkout] existing session reuse failed:", e);
@@ -367,6 +439,8 @@ export async function POST(req: Request) {
       },
       metadata: {
         order_id: orderId,
+        order_number: orderNumber,
+        customer_email: email,
       },
     });
 
@@ -398,7 +472,15 @@ export async function POST(req: Request) {
       client_reference_id: orderId,
       metadata: {
         order_id: orderId,
+        order_number: orderNumber,
         payment_provider: "stripe",
+      },
+      payment_intent_data: {
+        metadata: {
+          order_id: orderId,
+          order_number: orderNumber,
+          payment_provider: "stripe",
+        },
       },
       success_url: `${baseUrl}/${locale}/success?order_id=${orderId}`,
       cancel_url: `${baseUrl}/${locale}/checkout`,
@@ -407,6 +489,7 @@ export async function POST(req: Request) {
     await orderRef.set(
       {
         updatedAt: Timestamp.now(),
+        stripeCustomerId: stripeCustomer.id,
         stripeSessionId: session.id,
         payment: {
           provider: "stripe",
@@ -417,9 +500,13 @@ export async function POST(req: Request) {
       { merge: true }
     );
 
-    console.log("[checkout] stripe session created:", session.id);
+    console.log("[checkout] stripe session created:", session.id, orderNumber);
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({
+      url: session.url,
+      orderId,
+      orderNumber,
+    });
   } catch (err: any) {
     console.error("💥 /api/checkout error:", err);
     return NextResponse.json(

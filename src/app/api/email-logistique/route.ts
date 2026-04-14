@@ -7,6 +7,18 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const runtime = "nodejs";
 
+function resolveOrderNumber(rawOrder: any, orderId: string) {
+  if (typeof rawOrder?.orderNumber === "string" && rawOrder.orderNumber.trim().length > 0) {
+    return rawOrder.orderNumber.trim();
+  }
+
+  if (typeof rawOrder?.invoiceNumber === "string" && rawOrder.invoiceNumber.trim().length > 0) {
+    return rawOrder.invoiceNumber.trim();
+  }
+
+  return orderId;
+}
+
 export async function POST(req: Request) {
   try {
     const { orderId, customerEmail } = await req.json();
@@ -15,7 +27,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing payload" }, { status: 400 });
     }
 
-    // 🔍 Récupération commande
     const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
     const rawOrder = snap.data();
 
@@ -23,41 +34,47 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // ---------------------------------------------------------
-    // 🧹 NORMALISATION (identique webhook & admin)
-    // ---------------------------------------------------------
+    const orderNumber = resolveOrderNumber(rawOrder, orderId);
+
+    console.log("LOGISTICS ORDER DEBUG", {
+      orderId,
+      orderNumber,
+      rawOrderOrderNumber: rawOrder?.orderNumber ?? null,
+      rawOrderInvoiceNumber: rawOrder?.invoiceNumber ?? null,
+    });
+
     const order = {
       ...rawOrder,
-      items: rawOrder.items.map((item: any) => ({
-        name: item.name || "Produit",
-        price: Number(item.price) || 0,
-        quantity: Number(item.quantity) || 1,
-        description: item.description || "",
-      })),
+      orderNumber,
+      invoiceNumber: orderNumber,
+      items: Array.isArray(rawOrder.items)
+        ? rawOrder.items.map((item: any) => ({
+            name: item.name || "Produit",
+            price: Number(item.price ?? item.priceHT ?? 0) || 0,
+            quantity: Number(item.quantity) || 1,
+            description: item.description || "",
+          }))
+        : [],
       shippingMethod: {
+        ...rawOrder.shippingMethod,
         price:
           typeof rawOrder.shippingMethod?.price === "number"
             ? rawOrder.shippingMethod.price
             : Number(rawOrder.shippingMethod?.price?.fr) ||
               Number(rawOrder.shippingMethod?.price?.en) ||
+              Number(rawOrder.shippingMethod?.priceHT) ||
               0,
       },
     };
 
-    // ---------------------------------------------------------
-    // 📄 Génération PDF
-    // ---------------------------------------------------------
     let pdfBase64 = "";
     try {
-      const pdfBuffer = await generateInvoicePDF(order, orderId);
+      const pdfBuffer = await generateInvoicePDF(order, orderNumber);
       pdfBase64 = pdfBuffer.toString("base64");
     } catch (err) {
       console.error("❌ Erreur génération facture PDF (logistique) :", err);
     }
 
-    // ---------------------------------------------------------
-    // 🧾 Tableau Produits
-    // ---------------------------------------------------------
     const itemsTable = order.items
       .map(
         (item: any) => `
@@ -71,26 +88,20 @@ export async function POST(req: Request) {
       )
       .join("");
 
-    // ---------------------------------------------------------
-    // 🚚 Adresse (avec pays)
-    // ---------------------------------------------------------
-    const a = rawOrder.shippingAddress;
+    const a = rawOrder.shippingAddress || {};
 
     const addressBlock = `
       <div style="padding:15px; background:#eef3f7; border-radius:8px; border:1px solid #d0dae3;">
-        <p><b>Nom :</b> ${a.name}</p>
-        <p><b>Email :</b> ${a.email}</p>
-        <p><b>Adresse :</b> ${a.address}</p>
-        <p><b>Ville :</b> ${a.city}</p>
-        <p><b>Code postal :</b> ${a.postalCode}</p>
+        <p><b>Nom :</b> ${a.name || "-"}</p>
+        <p><b>Email :</b> ${a.email || customerEmail}</p>
+        <p><b>Adresse :</b> ${a.address || "-"}</p>
+        <p><b>Ville :</b> ${a.city || "-"}</p>
+        <p><b>Code postal :</b> ${a.postalCode || "-"}</p>
         ${a.country ? `<p><b>Pays :</b> ${a.country}</p>` : ""}
-        <p><b>Téléphone :</b> ${a.phone}</p>
+        <p><b>Téléphone :</b> ${a.phone || "-"}</p>
       </div>
     `;
 
-    // ---------------------------------------------------------
-    // ✉️ TEMPLATE HTML
-    // ---------------------------------------------------------
     const htmlTemplate = `
 <div style="font-family:Arial;background:#f0f4f7;padding:25px;">
   <div style="max-width:700px;margin:auto;background:white;border-radius:10px;padding:30px;border:1px solid #e5e8eb;">
@@ -104,7 +115,8 @@ export async function POST(req: Request) {
     </p>
 
     <div style="margin-top:15px;background:#f7fafc;padding:15px;border-radius:8px;border:1px solid #d9e2ec;">
-      <p><b>ID Commande :</b> ${orderId}</p>
+      <p><b>Commande :</b> ${orderNumber}</p>
+      <p><b>ID interne :</b> ${orderId}</p>
       <p><b>Client :</b> ${customerEmail}</p>
     </div>
 
@@ -135,18 +147,15 @@ export async function POST(req: Request) {
 </div>
 `;
 
-    // ---------------------------------------------------------
-    // 📤 Envoi Email Logistique
-    // ---------------------------------------------------------
     await resend.emails.send({
       from: "Massme • Logistique <contact@hdconnects.com>",
       to: process.env.LOGISTICS_EMAIL!,
-      subject: `📦 Préparer la commande #${orderId}`,
+      subject: `📦 Préparer la commande #${orderNumber}`,
       html: htmlTemplate,
       attachments: pdfBase64
         ? [
             {
-              filename: `facture-${orderId}.pdf`,
+              filename: `facture-${orderNumber}.pdf`,
               content: pdfBase64,
               contentType: "application/pdf",
             },
@@ -155,9 +164,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ status: "logistics email sent" });
-
   } catch (err) {
     console.error("❌ Erreur email logistique :", err);
-    return NextResponse.json({ error: err }, { status: 500 });
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }

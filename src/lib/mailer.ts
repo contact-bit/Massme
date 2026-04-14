@@ -6,23 +6,13 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export type OrderEmailPayload = {
   id: string;
-
-  // Toujours en centimes (minor units)
   amount_total: number;
-
   currency: string;
   customer_email: string;
-
   payment_status: string;
   provider?: "stripe" | "paypal";
-
   created_at?: any;
-
-  // ✅ IMPORTANT : on passe aussi la commande Firestore complète
-  // pour générer la facture (items, totals, addresses, shippingPrice…)
   orderData?: any;
-
-  // optionnel
   locale?: "fr" | "en" | "es" | "de" | "it" | "nl";
 };
 
@@ -43,43 +33,68 @@ function safeEmailList(raw: string | undefined) {
   return raw.split(",").map((e) => e.trim()).filter(Boolean);
 }
 
-function safeString(v: any) {
-  return typeof v === "string" ? v : v == null ? "" : String(v);
+function resolveOrderNumber(order: OrderEmailPayload): string {
+  const fromOrderData =
+    typeof order?.orderData?.orderNumber === "string" && order.orderData.orderNumber.trim().length > 0
+      ? order.orderData.orderNumber.trim()
+      : typeof order?.orderData?.invoiceNumber === "string" &&
+        order.orderData.invoiceNumber.trim().length > 0
+      ? order.orderData.invoiceNumber.trim()
+      : null;
+
+  const fromRoot =
+    typeof (order as any)?.orderNumber === "string" && (order as any).orderNumber.trim().length > 0
+      ? (order as any).orderNumber.trim()
+      : null;
+
+  const fallbackId =
+    typeof order?.id === "string" && order.id.trim().length > 0
+      ? order.id.trim()
+      : "UNKNOWN_ORDER";
+
+  const resolved = fromOrderData || fromRoot || fallbackId;
+
+  console.log("MAILER ORDER DEBUG", {
+    orderId: order?.id,
+    orderDataOrderNumber: order?.orderData?.orderNumber ?? null,
+    orderDataInvoiceNumber: order?.orderData?.invoiceNumber ?? null,
+    rootOrderNumber: (order as any)?.orderNumber ?? null,
+    resolvedOrderNumber: resolved,
+  });
+
+  return resolved;
 }
 
-function buildInvoiceFilename(orderId: string) {
-  return `facture-${orderId}.pdf`;
+/* =========================================================
+   FACTURE PDF
+========================================================= */
+function buildInvoiceFilename(orderNumber: string) {
+  return `facture-${orderNumber}.pdf`;
 }
 
-/**
- * ✅ Prépare la facture PDF (base64) pour Resend attachments
- * Resend accepte: attachments: [{ filename, content }]
- * content = base64 string
- */
 async function buildInvoiceAttachment(order: OrderEmailPayload) {
   const orderData = order.orderData;
   if (!orderData) return null;
 
-  // On essaie de récupérer un locale
-  const locale = (order.locale ||
-    orderData?.locale ||
-    "fr") as "fr" | "en" | "es" | "de" | "it" | "nl";
+  const locale = (order.locale || orderData?.locale || "fr") as
+    | "fr"
+    | "en"
+    | "es"
+    | "de"
+    | "it"
+    | "nl";
 
-  // generateInvoicePDF attend:
-  // order: { email, items, shippingAddress, billingAddress, shippingPrice, totals }
-  // orderId: string
+  const orderNumber = resolveOrderNumber(order);
+
   const pdfBuffer = await generateInvoicePDF(
     {
       email: orderData?.email || order.customer_email,
       items: orderData?.items || [],
       shippingAddress: orderData?.shippingAddress || {},
       billingAddress: orderData?.billingAddress || {},
-      // ✅ Dans ton PDF tu lis shippingPrice (HT)
       shippingPrice:
         typeof orderData?.totals?.shipHT === "number"
           ? orderData.totals.shipHT
-          : typeof orderData?.shippingPrice === "number"
-          ? orderData.shippingPrice
           : typeof orderData?.shippingMethod?.priceHT === "number"
           ? orderData.shippingMethod.priceHT
           : 0,
@@ -87,7 +102,6 @@ async function buildInvoiceAttachment(order: OrderEmailPayload) {
         totalHT: Number(orderData?.totals?.totalHT || 0),
         totalVAT: Number(orderData?.totals?.totalVAT || 0),
         totalTTC: Number(orderData?.totals?.totalTTC || 0),
-        // ⚠️ ton PDF utilise vatRate au format 0.2 (et pas 20)
         vatRate:
           typeof orderData?.totals?.vatRate === "number"
             ? orderData.totals.vatRate > 1
@@ -95,22 +109,25 @@ async function buildInvoiceAttachment(order: OrderEmailPayload) {
               : orderData.totals.vatRate
             : undefined,
       },
+      orderNumber,
+      invoiceNumber: orderNumber,
     },
-    orderData?.id || order.id,
+    orderNumber,
     {
       locale,
       paidLabel: true,
     }
   );
 
-  const base64 = pdfBuffer.toString("base64");
-
   return {
-    filename: buildInvoiceFilename(orderData?.id || order.id),
-    content: base64,
+    filename: buildInvoiceFilename(orderNumber),
+    content: pdfBuffer.toString("base64"),
   };
 }
 
+/* =========================================================
+   MAIN
+========================================================= */
 export async function sendOrderEmails({
   order,
   clientEmail,
@@ -119,50 +136,40 @@ export async function sendOrderEmails({
   clientEmail: string;
 }) {
   const sender =
-    process.env.RESEND_FROM?.trim() || "Massme <contact@hdconnects.com>";
+    process.env.RESEND_FROM?.trim() || "Vitectromed <contact@hdconnects.com>";
 
   const created = toDate(order.created_at);
-
   const amountText = formatMoney(order.amount_total, order.currency);
   const providerLabel = String(order.provider || "paypal").toUpperCase();
 
   const adminEmail = (process.env.ADMIN_EMAIL || "contact@hdconnects.com").trim();
   const logisticsEmails = safeEmailList(process.env.LOGISTICS_EMAILS);
 
-  console.log("🔑 Resend key loaded:", !!process.env.RESEND_API_KEY);
-  console.log("📧 Email debug", {
-    from: sender,
-    clientEmail,
-    order_customer_email: order.customer_email,
-    adminEmail,
-    logisticsCount: logisticsEmails.length,
-    provider: order.provider,
-    hasOrderDataForInvoice: !!order.orderData,
-  });
+  const orderNumber = resolveOrderNumber(order);
 
-  const subjectClient = "🧘 Votre commande Massme est confirmée";
-  const subjectAdmin = "🛍️ Nouvelle commande reçue";
-  const subjectLogistics = "📦 Commande à préparer";
+  const subjectClient = `🧘 Commande #${orderNumber} confirmée`;
+  const subjectAdmin = `🛍️ Nouvelle commande #${orderNumber}`;
+  const subjectLogistics = `📦 Préparer commande #${orderNumber}`;
 
   const textClient = `
 Bonjour,
 
-Merci pour votre commande chez Massme 💆‍♀️
+Merci pour votre commande chez Vitectromed 💆‍♀️
 Votre paiement de ${amountText} a bien été reçu.
 
 Moyen de paiement : ${providerLabel}
-ID commande : ${order.id}
+Commande : ${orderNumber}
 
 Vous trouverez votre facture en pièce jointe.
 
 À bientôt,
-L’équipe Massme
+L’équipe Vitectromed
 `;
 
   const textAdmin = `
 Nouvelle commande reçue !
 
-- ID: ${order.id}
+- Commande: ${orderNumber}
 - Email client: ${order.customer_email}
 - Montant: ${amountText}
 - Statut: ${order.payment_status}
@@ -173,68 +180,48 @@ Nouvelle commande reçue !
   const textLogistics = `
 Une nouvelle commande doit être traitée :
 
+Commande : ${orderNumber}
 Client : ${order.customer_email}
 Montant : ${amountText}
 Date : ${created.toLocaleString("fr-FR")}
 Provider : ${providerLabel}
-ID : ${order.id}
 `;
 
   try {
     console.log("📎 Génération facture PDF…");
     const invoiceAttachment = await buildInvoiceAttachment(order);
-
     const attachments = invoiceAttachment ? [invoiceAttachment] : undefined;
 
-    if (!invoiceAttachment) {
-      console.warn("⚠️ Pas de facture jointe: order.orderData manquant");
-    } else {
-      console.log("✅ Facture prête:", invoiceAttachment.filename);
-    }
+    console.log("📮 Envoi emails…");
 
-    console.log("📮 Envoi des e-mails (Resend)…");
-
-    // Client
-    const rClient = await resend.emails.send({
+    await resend.emails.send({
       from: sender,
       to: clientEmail,
       subject: subjectClient,
       text: textClient,
-      attachments, // ✅ facture
+      attachments,
     });
 
-    if ((rClient as any)?.error) console.error("❌ Resend error (Client)", (rClient as any).error);
-    else console.log("✅ Resend ok (Client) id=", (rClient as any)?.data?.id || rClient);
-
-    // Admin
-    const rAdmin = await resend.emails.send({
+    await resend.emails.send({
       from: sender,
       to: adminEmail,
       subject: subjectAdmin,
       text: textAdmin,
-      attachments, // ✅ facture aussi (optionnel)
+      attachments,
     });
 
-    if ((rAdmin as any)?.error) console.error("❌ Resend error (Admin)", (rAdmin as any).error);
-    else console.log("✅ Resend ok (Admin) id=", (rAdmin as any)?.data?.id || rAdmin);
-
-    // Logistique
     for (const logEmail of logisticsEmails) {
-      const rLog = await resend.emails.send({
+      await resend.emails.send({
         from: sender,
         to: logEmail,
         subject: subjectLogistics,
         text: textLogistics,
-        attachments, // ✅ facture aussi (optionnel)
+        attachments,
       });
-
-      if ((rLog as any)?.error)
-        console.error(`❌ Resend error (Logistique: ${logEmail})`, (rLog as any).error);
-      else console.log(`✅ Resend ok (Logistique: ${logEmail}) id=`, (rLog as any)?.data?.id || rLog);
     }
 
-    console.log("✅ Envoi terminé");
+    console.log("✅ Emails envoyés");
   } catch (err) {
-    console.error("💥 Erreur critique Resend :", err);
+    console.error("💥 Erreur email :", err);
   }
 }

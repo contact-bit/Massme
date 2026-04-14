@@ -124,3 +124,15 @@ export function getLogisticsSourceUi(source: LogisticsSource) {
     ? { bg: "#EEF2FF", color: "#4338CA", border: "#C7D2FE" }
     : { bg: "#F9FAFB", color: "#374151", border: "#E5E7EB" };
 }
+
+export function getLogisticStatus(order: Order): "to_prepare" | "shipped" {
+  const status = getEffectiveShippingStatus(order);
+
+  // ✅ déjà expédié / livré
+  if (status === "shipped" || status === "delivered") {
+    return "shipped";
+  }
+
+  // 🔥 TOUT LE RESTE = à préparer
+  return "to_prepare";
+}

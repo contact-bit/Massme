@@ -38,7 +38,15 @@ export function useOrders(toastIt: (m: string) => void) {
       const json = JSON.parse(txt);
       const list: Order[] = Array.isArray(json?.orders) ? json.orders : [];
 
-      setOrders(normalizeOrders(list));
+      // 🔥 FIX CRITIQUE : on réinjecte relayPoint après normalize
+      const normalized = normalizeOrders(list);
+
+      const safeOrders = normalized.map((o, i) => ({
+        ...o,
+        relayPoint: (list[i] as any)?.relayPoint ?? null,
+      }));
+
+      setOrders(safeOrders);
     } catch (e: any) {
       setError(e?.message || "Erreur chargement commandes");
       setOrders([]);
@@ -97,16 +105,12 @@ export function useOrders(toastIt: (m: string) => void) {
       const pass = requirePassOrRedirect();
       if (!pass) return;
 
-      let tracking: string | null = order.trackingNumber ?? null;
+      const isPickup =
+        order.shippingMethod?.name
+          ?.toLowerCase()
+          .includes("retrait") ?? false;
 
-      if (nextStatus === "shipped") {
-        tracking = window.prompt(
-          "Numéro de suivi (laisse vide si pas encore dispo) :",
-          order.trackingNumber || ""
-        );
-        if (tracking === null) return;
-        if (tracking === "") tracking = null;
-      }
+      let tracking: string | null = order.trackingNumber ?? null;
 
       try {
         const res = await fetch(
@@ -119,8 +123,10 @@ export function useOrders(toastIt: (m: string) => void) {
             },
             body: JSON.stringify({
               shippingStatus: nextStatus,
-              trackingNumber: tracking,
-              carrier: order.carrier || "mondialrelay",
+              trackingNumber: isPickup ? null : tracking,
+              carrier: isPickup
+                ? null
+                : order.carrier || "mondialrelay",
             }),
           }
         );
@@ -134,23 +140,23 @@ export function useOrders(toastIt: (m: string) => void) {
               ? {
                   ...o,
                   shippingStatus: nextStatus,
-                  trackingNumber: tracking,
-                  carrier: order.carrier || "mondialrelay",
+                  trackingNumber: isPickup ? null : tracking,
+                  carrier: isPickup
+                    ? null
+                    : order.carrier || "mondialrelay",
                 }
               : o
           )
         );
 
         toastIt(
-          nextStatus === "pending"
-            ? "Statut livraison: en attente"
-            : nextStatus === "preparing"
-            ? "Statut livraison: en préparation"
+          isPickup
+            ? "Commande prête en retrait ✅"
             : nextStatus === "shipped"
-            ? "Colis marqué comme expédié ✅"
+            ? "Colis expédié ✅"
             : nextStatus === "delivered"
-            ? "Colis marqué comme livré ✅"
-            : "Livraison annulée"
+            ? "Colis livré ✅"
+            : "Statut mis à jour"
         );
       } catch (e: any) {
         toastIt("Erreur mise à jour livraison ❌");

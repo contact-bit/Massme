@@ -211,8 +211,12 @@ function buildShipStationBody(orderData: any, orderId: string) {
     throw new Error("ShipStation payload has no items (check orderData.items mapping).");
   }
 
-  const amountPaidTTC = Number(orderData?.totals?.totalTTC ?? orderData?.totalTTC ?? orderData?.amount_total ?? 0);
-  const shippingAmount = Number(orderData?.totals?.shipping ?? orderData?.shippingMethod?.priceTTC ?? 0);
+  const amountPaidTTC = Number(
+    orderData?.totals?.totalTTC ?? orderData?.totalTTC ?? orderData?.amount_total ?? 0
+  );
+  const shippingAmount = Number(
+    orderData?.totals?.shipping ?? orderData?.shippingMethod?.priceTTC ?? 0
+  );
   const taxAmount = Number(orderData?.totals?.tax ?? orderData?.totals?.vat ?? 0);
 
   return {
@@ -348,7 +352,8 @@ export async function POST(req: Request) {
     normalizeEmail(savedOrder?.customerEmail) ||
     normalizeEmail(savedOrder?.customer_email);
 
-  const customerEmail = firestoreEmail || (stripeEmail && !isFixtureEmail(stripeEmail) ? stripeEmail : null);
+  const customerEmail =
+    firestoreEmail || (stripeEmail && !isFixtureEmail(stripeEmail) ? stripeEmail : null);
 
   await ref.set(
     {
@@ -567,7 +572,8 @@ export async function POST(req: Request) {
      3) INVOICE PDF + EMAIL (non bloquant + anti-doublon)
   ===================================================== */
   try {
-    const after = (await ref.get()).data() as any;
+    const afterSnap = await ref.get();
+    const after = afterSnap.exists ? (afterSnap.data() as any) : savedOrder;
 
     if (after?.invoiceEmail?.status === "sent") {
       console.log("[stripe/webhook] invoice already sent, skip", orderId);
@@ -586,6 +592,21 @@ export async function POST(req: Request) {
     const resend = new Resend(resendKey);
 
     const latest = after || savedOrder || {};
+
+    // 🔥 calcul du vrai numéro de commande pour facture & email
+    const displayOrderNumber: string =
+      (typeof latest.orderNumber === "string" && latest.orderNumber.length > 0
+        ? latest.orderNumber
+        : (session.metadata?.order_number as string | undefined)) ||
+      orderId;
+
+    console.log("WEBHOOK ORDER DEBUG", {
+      orderId,
+      orderNumberFirestore: latest?.orderNumber,
+      orderNumberMetadata: session.metadata?.order_number,
+      displayOrderNumber,
+    });
+
     const items = (latest.items || []).map((it: any) => {
       const priceHT = Number(it?.priceHT ?? it?.price ?? 0);
       return {
@@ -619,24 +640,26 @@ export async function POST(req: Request) {
       shippingPrice: shippingHT,
       customerFirstName: latest?.customerFirstName || firstName,
       customerLastName: latest?.customerLastName || lastName,
+      // on force le numéro métier pour le PDF
+      orderNumber: displayOrderNumber,
     };
 
     const pdfBuffer = await generateInvoicePDF(normalizedOrder, orderId, { locale });
 
     const sent = await resend.emails.send({
-      from: "Massme • Support <contact@hdconnects.com>",
+      from: "Massme • Support tact@hdconnects.com>",
       to: emailForInvoice,
       subject: mail.subject,
       html: `
         <div style="font-family:Arial,sans-serif;padding:20px">
           <h2>${mail.title(firstName)}</h2>
           <p>${mail.intro}</p>
-          <p><b>${mail.orderLabel} :</b> ${orderId}</p>
+          <p><b>${mail.orderLabel} :</b> ${displayOrderNumber}</p>
         </div>
       `,
       attachments: [
         {
-          filename: `invoice-${orderId}.pdf`,
+          filename: `invoice-${displayOrderNumber}.pdf`,
           content: pdfBuffer.toString("base64"),
           contentType: "application/pdf",
         },

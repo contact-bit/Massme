@@ -1,23 +1,17 @@
 "use client";
+
 import React, { useMemo } from "react";
 import type { Order } from "../domain/types";
 import { compactId, formatDateFR, moneyEUR } from "../domain/utils";
 import { StatusPill } from "./StatusPill";
 import { ActionIconButton } from "./ActionIconButton";
 import { IconCopy, IconEye, IconTrash } from "./icons";
-import { LogisticsStatusBadge } from "./LogisticsStatusBadge";
-import { getTrackingNumber } from "../domain/logistics";
+import {
+  getLogisticStatus,
+  getShipDate,
+} from "../domain/logistics";
 
-export function OrdersTable({
-  orders,
-  selected,
-  onToggleOne,
-  onToggleAll,
-  onOpen,
-  onCopyId,
-  onDelete,
-  deleting,
-}: {
+type Props = {
   orders: Order[];
   selected: Record<string, boolean>;
   onToggleOne: (id: string) => void;
@@ -26,7 +20,24 @@ export function OrdersTable({
   onCopyId: (id: string) => void;
   onDelete: (id: string) => void;
   deleting: Record<string, boolean>;
-}) {
+};
+
+type OrderWithPayment = Order & {
+  payment?: {
+    status?: string;
+  };
+};
+
+export default function OrdersTable({
+  orders,
+  selected,
+  onToggleOne,
+  onToggleAll,
+  onOpen,
+  onCopyId,
+  onDelete,
+  deleting,
+}: Props) {
   const allPageSelected = useMemo(() => {
     if (orders.length === 0) return false;
     return orders.every((o) => selected[o.id]);
@@ -55,11 +66,13 @@ export function OrdersTable({
                   <span>Sélect.</span>
                 </label>
               </th>
-              <th>ID / Logistique</th>
+
+              <th>Commande</th> {/* 🔥 renommé */}
               <th>Date</th>
               <th>Email</th>
               <th>Langue</th>
               <th>Paiement</th>
+              <th>Logistique</th>
               <th>Produits</th>
               <th>Total</th>
               <th style={{ textAlign: "right" }}>Actions</th>
@@ -68,49 +81,94 @@ export function OrdersTable({
 
           <tbody>
             {orders.map((o) => {
-              const tracking = getTrackingNumber(o);
-              const paymentStatus = (o as any)?.payment?.status || o.status;
+              const order = o as OrderWithPayment;
+
+              const paymentStatus =
+                order.payment?.status ?? order.status;
+
+              // 🔥 NUMÉRO PROPRE
+              const displayId =
+                (order as any)?.orderNumber ||
+                (order as any)?.number ||
+                compactId(order.id);
+
+              // 🔥 LOGISTIQUE
+              const logisticStatus = getLogisticStatus(order);
+              const shipDate = getShipDate(order);
 
               return (
-                <tr key={o.id}>
+                <tr key={order.id}>
+                  {/* SELECT */}
                   <td>
                     <input
                       type="checkbox"
-                      checked={!!selected[o.id]}
-                      onChange={() => onToggleOne(o.id)}
+                      checked={!!selected[order.id]}
+                      onChange={() => onToggleOne(order.id)}
                     />
                   </td>
 
+                  {/* 🔥 ID PROPRE */}
                   <td>
-                    <div className="mono">{compactId(o.id)}</div>
-
-                    <div
-                      className="statusBlock"
-                      style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}
-                    >
-                      <div className="statusMain">
-                        <LogisticsStatusBadge order={o} />
-                      </div>
-
-                      {tracking ? (
-                        <div style={{ fontSize: 12, color: "#6B7280" }}>
-                          Tracking : {tracking}
-                        </div>
-                      ) : null}
+                    <div className="mono" style={{ fontWeight: 700 }}>
+                      #{displayId}
                     </div>
                   </td>
 
-                  <td>{formatDateFR(o.__created ?? null)}</td>
-                  <td>{o.__email || "—"}</td>
-                  <td>{o.__lang || "—"}</td>
+                  {/* DATE */}
+                  <td>{formatDateFR(order.__created ?? null)}</td>
 
+                  {/* EMAIL */}
+                  <td>{order.__email || "—"}</td>
+
+                  {/* LANG */}
+                  <td>{order.__lang || "—"}</td>
+
+                  {/* PAYMENT */}
                   <td>
                     <StatusPill status={paymentStatus} />
                   </td>
 
-                  <td>{o.__itemsLabel || "—"}</td>
-                  <td>{moneyEUR(o.__total ?? 0)}</td>
+                  {/* 🔥 LOGISTIQUE + HEURE */}
+                  <td>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color:
+                            logisticStatus === "shipped"
+                              ? "#047857"
+                              : "#92400E",
+                        }}
+                      >
+                        {logisticStatus === "shipped"
+                          ? "Expédiée"
+                          : "À préparer"}
+                      </span>
 
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: "#6B7280",
+                        }}
+                      >
+                        {logisticStatus === "shipped" && shipDate
+                          ? new Intl.DateTimeFormat("fr-FR", {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            }).format(new Date(shipDate))
+                          : "—"}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* ITEMS */}
+                  <td>{order.__itemsLabel || "—"}</td>
+
+                  {/* TOTAL */}
+                  <td>{moneyEUR(order.__total ?? 0)}</td>
+
+                  {/* ACTIONS */}
                   <td>
                     <div
                       style={{
@@ -124,24 +182,24 @@ export function OrdersTable({
                       <div style={{ display: "flex", gap: 6 }}>
                         <ActionIconButton
                           title="Détails"
-                          onClick={() => onOpen(o.id)}
+                          onClick={() => onOpen(order.id)}
                           icon={<IconEye />}
                           variant="primary"
                         />
 
                         <ActionIconButton
                           title="Copier ID"
-                          onClick={() => onCopyId(o.id)}
+                          onClick={() => onCopyId(order.id)}
                           icon={<IconCopy />}
                         />
                       </div>
 
                       <ActionIconButton
                         title="Supprimer"
-                        onClick={() => onDelete(o.id)}
+                        onClick={() => onDelete(order.id)}
                         icon={<IconTrash />}
                         variant="danger"
-                        disabled={!!deleting[o.id]}
+                        disabled={!!deleting[order.id]}
                       />
                     </div>
                   </td>

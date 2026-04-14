@@ -20,13 +20,14 @@ type StatsResponse = {
     revenueDayPct: number;
   };
   series: { day: string; revenue: number }[];
-  lastOrders: {
-    id: string;
-    status: string;
-    total: number;
-    email: string;
-    createdAt: string | null;
-  }[];
+lastOrders: {
+  id: string;
+  orderNumber?: string; // 🔥 AJOUT
+  status: string;
+  total: number;
+  email: string;
+  createdAt: string | null;
+}[];
   lowStock: { id: string; name: string; stock: number }[];
   alerts: { tone: "info" | "warn" | "danger"; title: string; desc: string }[];
 };
@@ -287,7 +288,9 @@ export default function AdminDashboardPage() {
             ) : (
               lastOrders.slice(0, 5).map((o) => (
                 <div key={o.id} className="dash-row">
-                  <div className="mono">{o.id.slice(0, 6)}…</div>
+<div className="mono">
+  {o.orderNumber || `${o.id.slice(0, 6)}…`}
+</div>
                   <div className="truncate">{o.email || "—"}</div>
                   <div>
                     <span

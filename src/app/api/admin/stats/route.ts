@@ -166,20 +166,22 @@ export async function GET() {
       .limit(8)
       .get();
 
-    const lastOrders = lastOrdersSnap.docs.map((d) => {
-      const o: any = d.data();
-      const iso =
-        o?.createdAt?.toDate?.()?.toISOString?.() ??
-        (typeof o?.createdAt === "string" ? o.createdAt : null);
+const lastOrders = lastOrdersSnap.docs.map((d) => {
+  const o: any = d.data();
 
-      return {
-        id: d.id,
-        status: o?.status ?? "unknown",
-        total: orderTotalEUR(o),
-        email: o?.email ?? "",
-        createdAt: iso,
-      };
-    });
+  const iso =
+    o?.createdAt?.toDate?.()?.toISOString?.() ??
+    (typeof o?.createdAt === "string" ? o.createdAt : null);
+
+  return {
+    id: d.id,
+    orderNumber: o?.orderNumber ?? null, // 🔥 AJOUT ICI
+    status: o?.status ?? "unknown",
+    total: orderTotalEUR(o),
+    email: o?.email ?? "",
+    createdAt: iso,
+  };
+});
 
     /* =========================
        REVENUS (14 jours)

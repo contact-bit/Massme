@@ -22,6 +22,9 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#039;");
 }
 
+/* =========================================================
+   HTML
+========================================================= */
 function buildReviewEmailHtml(params: {
   locale: string;
   reviewBase: string;
@@ -30,85 +33,64 @@ function buildReviewEmailHtml(params: {
   star3: string;
   star4: string;
   star5: string;
+  orderNumber: string;
 }) {
-  const { locale, reviewBase, star1, star2, star3, star4, star5 } = params;
+  const { locale, reviewBase, star1, star2, star3, star4, star5, orderNumber } = params;
 
   if (locale === "fr") {
     return `
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charSet="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Donnez-nous votre avis</title>
-  </head>
-  <body style="margin:0;padding:0;background-color:#f6f6f6;">
-    <div style="width:100%;background-color:#f6f6f6;padding:24px 12px;">
-      <table
-        role="presentation"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        width="100%"
-        style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;"
-      >
-        <tr>
-          <td style="padding:32px 24px 16px 24px;font-family:Arial,Helvetica,sans-serif;color:#111111;">
-            <p style="margin:0 0 16px 0;font-size:16px;line-height:24px;">
-              Bonjour,
-            </p>
+<head>
+<meta charSet="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Donnez-nous votre avis</title>
+</head>
+<body style="margin:0;padding:0;background:#f6f6f6;">
+<div style="padding:24px;">
+<table style="max-width:560px;margin:auto;background:#fff;border-radius:12px;">
+<tr>
+<td style="padding:32px;font-family:Arial;color:#111;">
 
-            <h1 style="margin:0 0 16px 0;font-size:24px;line-height:32px;font-weight:700;color:#111111;">
-              Votre avis compte
-            </h1>
+<p>Bonjour,</p>
 
-            <p style="margin:0 0 20px 0;font-size:15px;line-height:24px;color:#333333;">
-              Suite à votre commande, pourriez-vous prendre quelques secondes pour noter votre expérience ?
-            </p>
+<h1 style="font-size:24px;margin-bottom:16px;">Votre avis compte</h1>
 
-            <p style="margin:0 0 10px 0;font-size:14px;line-height:22px;color:#666666;">
-              Cliquez sur une étoile :
-            </p>
+<p>
+Suite à votre commande <strong>#${escapeHtml(orderNumber)}</strong>, 
+pourriez-vous prendre quelques secondes pour noter votre expérience ?
+</p>
 
-            <div style="text-align:center;margin:24px 0 28px 0;">
-              <a href="${escapeHtml(star1)}" style="text-decoration:none;font-size:34px;line-height:34px;margin:0 4px;" aria-label="1 étoile">⭐</a>
-              <a href="${escapeHtml(star2)}" style="text-decoration:none;font-size:34px;line-height:34px;margin:0 4px;" aria-label="2 étoiles">⭐</a>
-              <a href="${escapeHtml(star3)}" style="text-decoration:none;font-size:34px;line-height:34px;margin:0 4px;" aria-label="3 étoiles">⭐</a>
-              <a href="${escapeHtml(star4)}" style="text-decoration:none;font-size:34px;line-height:34px;margin:0 4px;" aria-label="4 étoiles">⭐</a>
-              <a href="${escapeHtml(star5)}" style="text-decoration:none;font-size:34px;line-height:34px;margin:0 4px;" aria-label="5 étoiles">⭐</a>
-            </div>
+<p style="font-size:14px;color:#666;">Cliquez sur une étoile :</p>
 
-            <div style="text-align:center;margin:0 0 28px 0;">
-              <a
-                href="${escapeHtml(reviewBase)}"
-                style="
-                  display:inline-block;
-                  background-color:#111111;
-                  color:#ffffff;
-                  text-decoration:none;
-                  font-size:14px;
-                  font-weight:700;
-                  line-height:14px;
-                  padding:14px 22px;
-                  border-radius:8px;
-                "
-              >
-                Laisser un avis
-              </a>
-            </div>
+<div style="text-align:center;margin:24px 0;">
+<a href="${escapeHtml(star1)}">⭐</a>
+<a href="${escapeHtml(star2)}">⭐</a>
+<a href="${escapeHtml(star3)}">⭐</a>
+<a href="${escapeHtml(star4)}">⭐</a>
+<a href="${escapeHtml(star5)}">⭐</a>
+</div>
 
-            <p style="margin:0 0 16px 0;font-size:14px;line-height:22px;color:#555555;">
-              Votre retour aide les autres clients et nous permet d'améliorer nos produits et notre service.
-            </p>
+<div style="text-align:center;margin:24px 0;">
+<a href="${escapeHtml(reviewBase)}"
+style="background:#111;color:#fff;padding:14px 22px;border-radius:8px;text-decoration:none;font-weight:bold;">
+Laisser un avis
+</a>
+</div>
 
-            <p style="margin:24px 0 0 0;font-size:12px;line-height:20px;color:#888888;">
-              Vous recevez cet email suite à votre commande.
-            </p>
-          </td>
-        </tr>
-      </table>
-    </div>
-  </body>
+<p style="font-size:14px;color:#555;">
+Votre retour aide les autres clients et nous permet d'améliorer nos produits.
+</p>
+
+<p style="font-size:12px;color:#888;margin-top:24px;">
+Email lié à la commande #${escapeHtml(orderNumber)}
+</p>
+
+</td>
+</tr>
+</table>
+</div>
+</body>
 </html>
 `;
   }
@@ -116,82 +98,52 @@ function buildReviewEmailHtml(params: {
   return `
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charSet="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Share your feedback</title>
-  </head>
-  <body style="margin:0;padding:0;background-color:#f6f6f6;">
-    <div style="width:100%;background-color:#f6f6f6;padding:24px 12px;">
-      <table
-        role="presentation"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        width="100%"
-        style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;"
-      >
-        <tr>
-          <td style="padding:32px 24px 16px 24px;font-family:Arial,Helvetica,sans-serif;color:#111111;">
-            <p style="margin:0 0 16px 0;font-size:16px;line-height:24px;">
-              Hello,
-            </p>
+<body style="margin:0;padding:0;background:#f6f6f6;">
+<div style="padding:24px;">
+<table style="max-width:560px;margin:auto;background:#fff;border-radius:12px;">
+<tr>
+<td style="padding:32px;font-family:Arial;color:#111;">
 
-            <h1 style="margin:0 0 16px 0;font-size:24px;line-height:32px;font-weight:700;color:#111111;">
-              Your feedback matters
-            </h1>
+<p>Hello,</p>
 
-            <p style="margin:0 0 20px 0;font-size:15px;line-height:24px;color:#333333;">
-              Following your purchase, could you take a few seconds to rate your experience?
-            </p>
+<h1>Your feedback matters</h1>
 
-            <p style="margin:0 0 10px 0;font-size:14px;line-height:22px;color:#666666;">
-              Click on a star:
-            </p>
+<p>
+Following your order <strong>#${escapeHtml(orderNumber)}</strong>, 
+could you rate your experience?
+</p>
 
-            <div style="text-align:center;margin:24px 0 28px 0;">
-              <a href="${escapeHtml(star1)}" style="text-decoration:none;font-size:34px;line-height:34px;margin:0 4px;" aria-label="1 star">⭐</a>
-              <a href="${escapeHtml(star2)}" style="text-decoration:none;font-size:34px;line-height:34px;margin:0 4px;" aria-label="2 stars">⭐</a>
-              <a href="${escapeHtml(star3)}" style="text-decoration:none;font-size:34px;line-height:34px;margin:0 4px;" aria-label="3 stars">⭐</a>
-              <a href="${escapeHtml(star4)}" style="text-decoration:none;font-size:34px;line-height:34px;margin:0 4px;" aria-label="4 stars">⭐</a>
-              <a href="${escapeHtml(star5)}" style="text-decoration:none;font-size:34px;line-height:34px;margin:0 4px;" aria-label="5 stars">⭐</a>
-            </div>
+<div style="text-align:center;margin:24px 0;">
+<a href="${escapeHtml(star1)}">⭐</a>
+<a href="${escapeHtml(star2)}">⭐</a>
+<a href="${escapeHtml(star3)}">⭐</a>
+<a href="${escapeHtml(star4)}">⭐</a>
+<a href="${escapeHtml(star5)}">⭐</a>
+</div>
 
-            <div style="text-align:center;margin:0 0 28px 0;">
-              <a
-                href="${escapeHtml(reviewBase)}"
-                style="
-                  display:inline-block;
-                  background-color:#111111;
-                  color:#ffffff;
-                  text-decoration:none;
-                  font-size:14px;
-                  font-weight:700;
-                  line-height:14px;
-                  padding:14px 22px;
-                  border-radius:8px;
-                "
-              >
-                Leave a review
-              </a>
-            </div>
+<div style="text-align:center;margin:24px 0;">
+<a href="${escapeHtml(reviewBase)}"
+style="background:#111;color:#fff;padding:14px 22px;border-radius:8px;text-decoration:none;">
+Leave a review
+</a>
+</div>
 
-            <p style="margin:0 0 16px 0;font-size:14px;line-height:22px;color:#555555;">
-              Your feedback helps other customers and helps us improve our products and service.
-            </p>
+<p style="font-size:12px;color:#888;">
+Related to order #${escapeHtml(orderNumber)}
+</p>
 
-            <p style="margin:24px 0 0 0;font-size:12px;line-height:20px;color:#888888;">
-              You received this email following your purchase.
-            </p>
-          </td>
-        </tr>
-      </table>
-    </div>
-  </body>
+</td>
+</tr>
+</table>
+</div>
+</body>
 </html>
 `;
 }
 
+/* =========================================================
+   TEXT
+========================================================= */
 function buildReviewEmailText(params: {
   locale: string;
   reviewBase: string;
@@ -200,44 +152,44 @@ function buildReviewEmailText(params: {
   star3: string;
   star4: string;
   star5: string;
+  orderNumber: string;
 }) {
-  const { locale, reviewBase, star1, star2, star3, star4, star5 } = params;
+  const { locale, reviewBase, star1, star2, star3, star4, star5, orderNumber } = params;
 
   if (locale === "fr") {
     return [
       "Bonjour,",
       "",
-      "Suite à votre commande, pourriez-vous nous donner votre avis ?",
+      `Suite à votre commande #${orderNumber}, pourriez-vous nous donner votre avis ?`,
       "",
-      `1 étoile : ${star1}`,
-      `2 étoiles : ${star2}`,
-      `3 étoiles : ${star3}`,
-      `4 étoiles : ${star4}`,
-      `5 étoiles : ${star5}`,
+      `1⭐ ${star1}`,
+      `2⭐ ${star2}`,
+      `3⭐ ${star3}`,
+      `4⭐ ${star4}`,
+      `5⭐ ${star5}`,
       "",
-      `Laisser un avis : ${reviewBase}`,
-      "",
-      "Vous recevez cet email suite à votre commande.",
+      `Lien : ${reviewBase}`,
     ].join("\n");
   }
 
   return [
     "Hello,",
     "",
-    "Following your purchase, could you share your feedback?",
+    `Following your order #${orderNumber}, could you share your feedback?`,
     "",
-    `1 star: ${star1}`,
-    `2 stars: ${star2}`,
-    `3 stars: ${star3}`,
-    `4 stars: ${star4}`,
-    `5 stars: ${star5}`,
+    `1⭐ ${star1}`,
+    `2⭐ ${star2}`,
+    `3⭐ ${star3}`,
+    `4⭐ ${star4}`,
+    `5⭐ ${star5}`,
     "",
-    `Leave a review: ${reviewBase}`,
-    "",
-    "You received this email following your purchase.",
+    `Review: ${reviewBase}`,
   ].join("\n");
 }
 
+/* =========================================================
+   MAIN
+========================================================= */
 export async function sendReviewEmailNow(orderId: string) {
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) throw new Error("missing_resend_api_key");
@@ -248,17 +200,31 @@ export async function sendReviewEmailNow(orderId: string) {
   const from = process.env.REVIEW_EMAIL_FROM || "Massme <contact@hdconnects.com>";
 
   const orderRef = dbAdmin.collection("orders").doc(orderId);
-
   const snap = await orderRef.get();
+
   if (!snap.exists) throw new Error(`order_not_found:${orderId}`);
 
   const order = snap.data() as any;
 
-  const status = String(order?.reviewEmail?.status || "").toLowerCase();
-  if (status === "sent") return { ok: true, skipped: true, reason: "already_sent" };
-  if (status === "sending") return { ok: true, skipped: true, reason: "already_sending" };
+  // 🔥 IMPORTANT
+const orderNumber =
+  typeof order?.orderNumber === "string" && order.orderNumber.length > 0
+    ? order.orderNumber
+    : orderId;
 
-  const email = asStr(order?.email || order?.customerEmail || order?.customer_email, "").trim().toLowerCase();
+console.log("ORDER DEBUG:", {
+  orderId,
+  orderNumber: order?.orderNumber,
+});
+
+  const status = String(order?.reviewEmail?.status || "").toLowerCase();
+  if (status === "sent") return { ok: true, skipped: true };
+  if (status === "sending") return { ok: true, skipped: true };
+
+  const email = asStr(order?.email || order?.customerEmail || order?.customer_email)
+    .trim()
+    .toLowerCase();
+
   const locale = asStr(order?.locale, "fr").trim() || "fr";
 
   if (!isValidEmail(email)) {
@@ -270,11 +236,11 @@ export async function sendReviewEmailNow(orderId: string) {
       },
       { merge: true }
     );
-    return { ok: true, skipped: true, reason: "missing_email" };
+    return { ok: true, skipped: true };
   }
 
   const token =
-    asStr(order?.reviewEmail?.token, "").trim() ||
+    asStr(order?.reviewEmail?.token) ||
     createReviewToken({ orderId, email, ttlDays: 30 });
 
   const reviewBase =
@@ -289,7 +255,9 @@ export async function sendReviewEmailNow(orderId: string) {
   const star4 = `${reviewBase}&rating=4`;
   const star5 = `${reviewBase}&rating=5`;
 
-  const subject = locale === "fr" ? "Donnez-nous votre avis" : "Share your feedback";
+  const subject = locale === "fr"
+    ? `Votre avis - Commande #${orderNumber}`
+    : `Your feedback - Order #${orderNumber}`;
 
   await orderRef.set(
     {
@@ -313,6 +281,7 @@ export async function sendReviewEmailNow(orderId: string) {
     star3,
     star4,
     star5,
+    orderNumber,
   });
 
   const text = buildReviewEmailText({
@@ -323,6 +292,7 @@ export async function sendReviewEmailNow(orderId: string) {
     star3,
     star4,
     star5,
+    orderNumber,
   });
 
   const result = await resend.emails.send({
@@ -340,7 +310,6 @@ export async function sendReviewEmailNow(orderId: string) {
     await orderRef.set(
       {
         "reviewEmail.status": "error",
-        "reviewEmail.token": token,
         "reviewEmail.lastError": resendError,
         "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
       },
@@ -352,12 +321,10 @@ export async function sendReviewEmailNow(orderId: string) {
   await orderRef.set(
     {
       "reviewEmail.status": "sent",
-      "reviewEmail.token": token,
       "reviewEmail.sentAt": FieldValue.serverTimestamp(),
       "reviewEmail.resendId": resendId,
       "reviewEmail.lastError": null,
       "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-
       reviewEmailSent: true,
       reviewEmailSentAt: FieldValue.serverTimestamp(),
     },

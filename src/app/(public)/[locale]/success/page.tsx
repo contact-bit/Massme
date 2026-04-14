@@ -304,8 +304,8 @@ export default function SuccessPage() {
         </h1>
 
         <p className="text-gray-600 mt-2">
-          {t.orderConfirmed} <strong>{order.id}</strong> confirmée
-        </p>
+  {t.orderConfirmed} <strong>{order.orderNumber || order.id}</strong> confirmée
+</p>
 
         <p className="text-sm text-gray-500 mt-1">
           {t.date} {new Date().toLocaleDateString(dateLocale)}

@@ -65,12 +65,30 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
     currentOrderStatus === "paid" &&
     currentPaymentStatus === "paid";
 
+  const orderNumber =
+    typeof order?.orderNumber === "string" && order.orderNumber.trim().length > 0
+      ? order.orderNumber.trim()
+      : typeof order?.invoiceNumber === "string" && order.invoiceNumber.trim().length > 0
+      ? order.invoiceNumber.trim()
+      : null;
+
+  console.log("FINALIZE DEBUG", {
+    orderId,
+    provider,
+    orderNumber,
+    invoiceNumber: order?.invoiceNumber ?? null,
+    currentOrderStatus,
+    currentPaymentStatus,
+    currentReviewStatus,
+  });
+
   await ref.set(
     {
       status: "paid",
       paidAt: order?.paidAt || FieldValue.serverTimestamp(),
       locale,
       ...(email ? { email } : {}),
+      ...(orderNumber ? { orderNumber } : {}),
       payment: {
         ...(order?.payment || {}),
         ...payment,
@@ -80,6 +98,16 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
       updatedAt: FieldValue.serverTimestamp(),
       "payment.finalizedAt": FieldValue.serverTimestamp(),
       "payment.finalizedProvider": provider,
+
+      debug: {
+        ...(order?.debug || {}),
+        finalizePaidOrderAt: FieldValue.serverTimestamp(),
+        finalizePaidOrderProvider: provider,
+        finalizePaidOrderAlreadyPaid: alreadyPaid,
+        finalizePaidOrderReviewStatusBefore: currentReviewStatus || null,
+        finalizePaidOrderOrderNumber: orderNumber,
+        finalizePaidOrderInvoiceNumber: order?.invoiceNumber ?? null,
+      },
     },
     { merge: true }
   );
@@ -118,10 +146,6 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
 
   await ref.set(
     {
-      "debug.finalizePaidOrderAt": FieldValue.serverTimestamp(),
-      "debug.finalizePaidOrderProvider": provider,
-      "debug.finalizePaidOrderAlreadyPaid": alreadyPaid,
-      "debug.finalizePaidOrderReviewStatusBefore": currentReviewStatus || null,
       "debug.finalizePaidOrderReviewSkippedReason": reviewSkippedReason,
     },
     { merge: true }
@@ -131,6 +155,7 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
     ok: true,
     alreadyPaid,
     orderId,
+    orderNumber,
     email,
     locale,
     provider,

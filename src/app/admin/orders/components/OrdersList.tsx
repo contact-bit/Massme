@@ -1,24 +1,14 @@
 "use client";
+
 import React from "react";
 import type { Order, ShippingStatus } from "../domain/types";
-import { OrdersTable } from "./OrdersTable";
+import OrdersTable from "./OrdersTable";
 import { OrdersCards } from "./OrdersCards";
 import { PaginationControls } from "./PaginationControls";
 
-export function OrdersList({
-  loading,
-  error,
-  filteredCount,
-  pagination,
-  selection,
-  deleting,
-  onOpen,
-  onCopyId,
-  onDelete,
-  onUpdateShippingStatus,
-}: {
+type Props = {
   loading: boolean;
-  error: string;
+  error?: string | null;
   filteredCount: number;
   pagination: {
     currentPage: number;
@@ -36,26 +26,47 @@ export function OrdersList({
   onOpen: (id: string) => void;
   onCopyId: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdateShippingStatus: (order: Order, next: ShippingStatus) => void;
-}) {
+};
+
+export function OrdersList({
+  loading,
+  error,
+  filteredCount,
+  pagination,
+  selection,
+  deleting,
+  onOpen,
+  onCopyId,
+  onDelete,
+}: Props) {
   const { currentPage, totalPages, paged, setPage } = pagination;
 
   const toggleAllPage = () => {
     selection.setSelected((prev) => {
       const next = { ...prev };
-      const allSelected = paged.length > 0 && paged.every((o) => prev[o.id]);
+
+      const allSelected =
+        paged.length > 0 && paged.every((o) => prev[o.id]);
+
       const target = !allSelected;
-      for (const o of paged) next[o.id] = target;
+
+      for (const o of paged) {
+        next[o.id] = target;
+      }
+
       return next;
     });
   };
 
   return (
     <div className="card" style={{ marginTop: 14, overflow: "hidden" }}>
+      {/* HEADER */}
       <div className="listHead">
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div className="listTitle">Liste</div>
-          <div className="muted">{filteredCount} résultat(s)</div>
+          <div className="muted">
+            {filteredCount} résultat{filteredCount > 1 ? "s" : ""}
+          </div>
         </div>
 
         <PaginationControls
@@ -66,19 +77,22 @@ export function OrdersList({
         />
       </div>
 
+      {/* CONTENT */}
       {loading ? (
         <div style={{ padding: 16 }} className="muted">
           Chargement…
         </div>
       ) : error ? (
         <div style={{ padding: 16 }}>
-          <div style={{ fontWeight: 950, marginBottom: 8 }}>Erreur</div>
+          <div style={{ fontWeight: 900, marginBottom: 8 }}>
+            Erreur
+          </div>
           <pre
             style={{
               whiteSpace: "pre-wrap",
               margin: 0,
               padding: 12,
-              borderRadius: 16,
+              borderRadius: 12,
               border: "1px solid rgba(11,18,32,.12)",
               background: "rgba(11,18,32,.03)",
               fontSize: 12,
@@ -93,6 +107,7 @@ export function OrdersList({
         </div>
       ) : (
         <>
+          {/* TABLE DESKTOP */}
           <OrdersTable
             orders={paged}
             selected={selection.selected}
@@ -104,6 +119,7 @@ export function OrdersList({
             deleting={deleting}
           />
 
+          {/* CARDS MOBILE */}
           <OrdersCards
             orders={paged}
             selected={selection.selected}
@@ -112,14 +128,26 @@ export function OrdersList({
             onCopyId={onCopyId}
             onDelete={onDelete}
             deleting={deleting}
-            onUpdateShippingStatus={onUpdateShippingStatus}
           />
 
+          {/* FOOTER */}
           <div className="footer">
             <div className="muted">
-              {selection.selectedIds.length > 0 ? `${selection.selectedIds.length} sélectionnée(s)` : ""}
+              {selection.selectedIds.length > 0
+                ? `${selection.selectedIds.length} sélectionnée${
+                    selection.selectedIds.length > 1 ? "s" : ""
+                  }`
+                : ""}
             </div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
               <button
                 className="btn btn--ghost"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -127,6 +155,7 @@ export function OrdersList({
               >
                 ←
               </button>
+
               <button
                 className="btn btn--ghost"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
