@@ -1,105 +1,93 @@
 /* =========================================================
-   🧭 ADMIN TOPBAR NAV
+   ADMIN — TOPBAR NAV
+   Uniquement les éléments de navigation du header
 ========================================================= */
 
-.admin-shell {
-  min-height: 100vh;
-  background: var(--color-bg-alt);
-  font-family: var(--font-main);
-  color: var(--color-text);
-}
-
-.admin-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.admin-topbar-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
 .admin-topbar-brand {
-  font-weight: 900;
+  font-weight: 800;
   color: var(--color-primary);
   text-decoration: none;
-  font-size: 1.05rem;
+  font-size: var(--text-base);
+  letter-spacing: -0.01em;
 }
 
 .admin-topbar-nav {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
 .admin-topbar-link {
-  text-decoration: none;
-  color: var(--color-text-light);
-  padding: 8px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 12px;
   border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text-soft);
+  font-size: var(--text-sm);
   font-weight: 600;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+  border: 1px solid transparent;
 }
 
 .admin-topbar-link:hover {
-  background: #eff6ff;
+  background: var(--color-surface-alt);
   color: var(--color-primary);
 }
 
 .admin-topbar-link.active {
   background: var(--color-primary);
   color: #fff;
+  border-color: var(--color-primary);
 }
 
 .admin-topbar-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
 }
 
 .admin-topbar-logout {
-  background: var(--color-danger);
-  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
   padding: 8px 12px;
   border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   font-weight: 700;
-  border: none;
+  border: 1px solid var(--color-danger);
+  background: var(--color-danger);
+  color: #fff;
   cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .admin-topbar-logout:hover {
-  background: var(--color-danger-dark);
+  filter: brightness(0.96);
 }
 
-.admin-main {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 22px 18px 50px;
-}
-
-/* Mobile */
 @media (max-width: 720px) {
-  .admin-topbar-inner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .admin-topbar-nav {
     width: 100%;
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .admin-topbar-link {
-    width: fit-content;
+    min-height: 38px;
+  }
+
+  .admin-topbar-right {
+    width: 100%;
+    justify-content: flex-start;
   }
 }

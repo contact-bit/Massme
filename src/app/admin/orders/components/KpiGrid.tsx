@@ -19,32 +19,32 @@ export function KpiGrid({
   to: string;
 }) {
   return (
-    <div className="gridKpi">
-      <div className="card cardPad">
+    <section className="gridKpi" aria-label="Indicateurs commandes">
+      <article className="card cardPad kpiCard">
         <div className="kLabel">Commandes</div>
         <div className="kValue">{stats.count}</div>
         <div className="kSub">
-          Période: {from} → {to}
+          Période : {from} → {to}
         </div>
-      </div>
+      </article>
 
-      <div className="card cardPad">
+      <article className="card cardPad kpiCard">
         <div className="kLabel">Payées</div>
         <div className="kValue">{stats.paidCount}</div>
         <div className="kSub">{moneyEUR(stats.paidEUR)}</div>
-      </div>
+      </article>
 
-      <div className="card cardPad">
+      <article className="card cardPad kpiCard">
         <div className="kLabel">En attente</div>
         <div className="kValue">{stats.pendingCount}</div>
-        <div className="kSub">pending_payment</div>
-      </div>
+        <div className="kSub">Paiement non validé</div>
+      </article>
 
-      <div className="card cardPad">
+      <article className="card cardPad kpiCard kpiCard--highlight">
         <div className="kLabel">Panier moyen</div>
         <div className="kValue">{moneyEUR(stats.avg)}</div>
-        <div className="kSub">CA: {moneyEUR(stats.totalEUR)}</div>
-      </div>
-    </div>
+        <div className="kSub">CA total : {moneyEUR(stats.totalEUR)}</div>
+      </article>
+    </section>
   );
 }

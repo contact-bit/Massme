@@ -1,0 +1,281 @@
+/* =========================================================
+   ADMIN — REVIEWS (MODÉRATION AVIS CLIENTS)
+========================================================= */
+
+/* Page plus étroite pour la modération */
+
+.admin-page--narrow {
+  max-width: 1100px;
+}
+
+/* ================== HEADER ================== */
+
+.admin-page-title {
+  margin: 0;
+}
+
+.admin-page-subtitle {
+  margin-top: 4px;
+}
+
+/* ================== CARD RÉGLAGES ================== */
+
+.reviews-settings {
+  margin-bottom: 16px;
+}
+
+.reviews-settings-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.reviews-settings-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.reviews-settings-subtitle {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.reviews-settings-status {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.reviews-settings-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.reviews-settings-error {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--color-danger, #b91c1c);
+  font-weight: 700;
+}
+
+.reviews-settings-switch {
+  margin-top: 12px;
+}
+
+.reviews-settings-switch label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.reviews-settings-presets {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.reviews-settings-chip {
+  border-radius: 999px;
+  padding-inline: 12px;
+  height: 32px;
+  font-size: 13px;
+}
+
+.reviews-settings-custom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.reviews-settings-input {
+  width: 90px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  font-size: 13px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.reviews-settings-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.reviews-settings-msg {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.reviews-settings-msg--success {
+  color: var(--color-success, #15803d);
+}
+
+.reviews-settings-msg--error {
+  color: var(--color-danger, #b91c1c);
+}
+
+/* ================== TABS + TOOLBAR ================== */
+
+.reviews-tabsBar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.reviews-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reviews-tab {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reviews-tab--active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.reviews-refresh {
+  margin-left: auto;
+}
+
+/* ================== LISTE AVIS ================== */
+
+.reviews-listMeta {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+.reviews-error {
+  margin-bottom: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--color-danger-soft, #ffccc7);
+  background: color-mix(
+    in srgb,
+    var(--color-danger-soft, #fff2f0) 90%,
+    transparent
+  );
+  color: var(--color-danger, #a8071a);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.reviews-list {
+  display: grid;
+  gap: 10px;
+}
+
+/* Card avis */
+
+.reviews-review {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 14px);
+  padding: 14px;
+  background: var(--color-surface);
+}
+
+.reviews-review-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.reviews-review-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.reviews-review-date {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.reviews-review-comment {
+  margin-top: 6px;
+  color: var(--color-text);
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.reviews-review-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Actions sur un avis */
+
+.reviews-review-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.reviews-review-empty {
+  padding: 14px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg, 14px);
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+/* Boutons de modération */
+
+.reviews-approveBtn {
+  border-color: #b7eb8f;
+  background: #f6ffed;
+  color: #135200;
+}
+
+.reviews-rejectBtn {
+  border-color: #ffccc7;
+  background: #fff2f0;
+  color: #a8071a;
+}
+
+.reviews-approveBtn,
+.reviews-rejectBtn {
+  padding-inline: 12px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.reviews-approveBtn:disabled,
+.reviews-rejectBtn:disabled {
+  opacity: 0.6;
+}
+
+/* ================== UTIL ================== */
+
+.reviews-inlineBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}

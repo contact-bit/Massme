@@ -261,7 +261,7 @@ export default function ProductPage() {
           {/* CONTENU */}
           <div className="product-detail-content">
             <p className="product-detail-eyebrow">
-              VitectroMed · Vitrectomy support
+              VitrectoMed · Vitrectomy support
             </p>
             <h1 className="product-detail-title">{name}</h1>
 

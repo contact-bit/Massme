@@ -1,54 +1,102 @@
+/* =========================================================
+   ADMIN — SIDEBAR
+========================================================= */
+
 .admin-sidebar {
-  width: 260px;
-  background: var(--color-secondary);
-  color: white;
-  padding: var(--space-lg) var(--space-md);
+  width: var(--sidebar-width);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: var(--space-5) var(--space-4);
   height: 100vh;
   position: fixed;
   left: 0;
   top: 0;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
+  border-right: 1px solid var(--color-border);
 }
 
 .admin-logo {
-  font-size: 22px;
-  font-weight: bold;
-  margin-bottom: var(--space-xl);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  margin-bottom: var(--space-6);
+  letter-spacing: -0.02em;
 }
 
 .admin-nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-1);
   flex-grow: 1;
 }
 
+/* lien sidebar */
+
 .admin-nav a {
-  color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-soft);
   text-decoration: none;
-  padding: var(--space-sm) var(--space-md);
+  padding: 8px 10px;
   border-radius: var(--radius-md);
-  transition: var(--transition);
-  font-size: 16px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base),
+    padding-left var(--transition-base);
 }
 
 .admin-nav a:hover {
-  background: rgba(255, 255, 255, 0.1);
-  padding-left: calc(var(--space-md) + 4px);
+  background: var(--color-surface-alt);
+  color: var(--color-primary);
+  padding-left: 12px;
 }
 
+.admin-nav a.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* bouton de logout en bas */
+
 .sidebar-logout {
+  margin-top: var(--space-4);
   background: var(--color-danger);
-  padding: var(--space-sm);
+  padding: 8px 10px;
   border-radius: var(--radius-md);
-  color: white;
+  color: #fff;
   cursor: pointer;
-  border: none;
-  transition: var(--transition);
+  border: 1px solid var(--color-danger);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    filter var(--transition-base);
 }
 
 .sidebar-logout:hover {
-  background: #dc2626;
+  background: var(--color-danger-dark);
+  border-color: var(--color-danger-dark);
+  filter: brightness(0.97);
+}
+
+/* Responsive : sidebar collapsée */
+
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 220px;
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+    z-index: 50;
+  }
+
+  .admin-sidebar.is-open {
+    transform: translateX(0);
+  }
 }

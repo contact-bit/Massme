@@ -14,10 +14,7 @@ import {
   getTotal,
 } from "../domain/orderMath";
 import { StatusPill } from "./StatusPill";
-import {
-  getShipDate,
-  getLogisticStatus,
-} from "../domain/logistics";
+import { getShipDate, getLogisticStatus } from "../domain/logistics";
 
 function formatDateTime(value: unknown) {
   if (!value) return "—";
@@ -62,34 +59,34 @@ export function OrderDetails({
   const shipping = getShipping(order);
   const subtotal = getSubtotal(order);
 
-  const email = (order as any)?.__email || order.email || "—";
+  const email = (order as any).__email || order.email || "—";
 
   const displayId =
-    (order as any)?.orderNumber ||
-    (order as any)?.number ||
+    (order as any).orderNumber ||
+    (order as any).number ||
     compactId(order.id);
 
   const logisticStatus = getLogisticStatus(order);
   const shipDate = getShipDate(order);
 
-  const relay = (order as any)?.relayPoint ?? null;
-  const billing = (order as any)?.billingAddress ?? null;
+  const relay = (order as any).relayPoint ?? null;
+  const billing = (order as any).billingAddress ?? null;
 
   const paymentProvider =
-    (order as any)?.payment?.provider ||
-    (order as any)?.paymentProvider ||
-    (order as any)?.provider ||
+    (order as any).payment?.provider ||
+    (order as any).paymentProvider ||
+    (order as any).provider ||
     null;
 
   const paymentStatus =
-    (order as any)?.payment?.status ||
-    (order as any)?.paymentStatus ||
+    (order as any).payment?.status ||
+    (order as any).paymentStatus ||
     null;
 
   const bankTransferRef =
-    (order as any)?.payment?.reference ||
-    (order as any)?.bankTransfer?.reference ||
-    (order as any)?.reference ||
+    (order as any).payment?.reference ||
+    (order as any).bankTransfer?.reference ||
+    (order as any).reference ||
     null;
 
   const isBankTransfer = paymentProvider === "bank_transfer";
@@ -133,8 +130,8 @@ export function OrderDetails({
       </div>
 
       {/* INFOS */}
-      <div className="box">
-        <div className="boxTitle">Infos</div>
+      <section className="box">
+        <h3 className="boxTitle">Infos</h3>
 
         <div className="kv">
           <div className="kvKey">Commande</div>
@@ -192,25 +189,12 @@ export function OrderDetails({
         </div>
 
         {canValidateBankTransfer && (
-          <div
-            style={{
-              marginTop: 14,
-              paddingTop: 14,
-              borderTop: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
+          <div className="bankValidateBlock">
             <button
               type="button"
-              className="btn"
+              className="btn bankValidateBtn"
               onClick={handleValidate}
               disabled={validating}
-              style={{
-                width: "100%",
-                background: validating ? "#0f766e99" : "#0f766e",
-                color: "#fff",
-                border: "1px solid #115e59",
-                fontWeight: 700,
-              }}
             >
               {validating
                 ? "Validation du paiement..."
@@ -218,11 +202,11 @@ export function OrderDetails({
             </button>
           </div>
         )}
-      </div>
+      </section>
 
       {/* PRODUITS */}
-      <div className="box">
-        <div className="boxTitle">Produits</div>
+      <section className="box">
+        <h3 className="boxTitle">Produits</h3>
 
         {items.length === 0 ? (
           <div className="muted">Aucun item</div>
@@ -241,7 +225,7 @@ export function OrderDetails({
                 <div key={idx} className="itemCard">
                   <div className="itemLeft">
                     <div className="itemName">{name}</div>
-                    <div className="itemMeta">Qté: {qty}</div>
+                    <div className="itemMeta">Qté : {qty}</div>
                   </div>
                   <div className="itemPrice">
                     {moneyEUR(price * qty)}
@@ -254,31 +238,27 @@ export function OrderDetails({
 
         <div className="sum">
           <div className="sumRow">
-            <span>Sous-total</span>
-            <span>{moneyEUR(subtotal)}</span>
+            <span className="sumKey">Sous-total</span>
+            <span className="sumVal">{moneyEUR(subtotal)}</span>
           </div>
           <div className="sumRow">
-            <span>Livraison</span>
-            <span>{moneyEUR(shipping)}</span>
+            <span className="sumKey">Livraison</span>
+            <span className="sumVal">{moneyEUR(shipping)}</span>
           </div>
           <div className="sumRow sumRow--total">
-            <span>Total</span>
-            <span>{moneyEUR(total)}</span>
+            <span className="sumKey sumKey--total">Total</span>
+            <span className="sumVal sumVal--total">
+              {moneyEUR(total)}
+            </span>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 📦 + 🧾 */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 16,
-        }}
-      >
+      {/* LIVRAISON + FACTURATION */}
+      <section className="detailColumns">
         {/* LIVRAISON */}
         <div className="box">
-          <div className="boxTitle">📦 Livraison</div>
+          <h3 className="boxTitle">📦 Livraison</h3>
 
           <div className="kv">
             <div className="kvKey">Statut</div>
@@ -300,9 +280,7 @@ export function OrderDetails({
 
           {relay ? (
             <div className="addr">
-              <div style={{ fontWeight: 700 }}>
-                📦 Point relais
-              </div>
+              <div className="addrTitle">📦 Point relais</div>
               <div>{relay.name}</div>
               <div>{relay.address}</div>
               <div>
@@ -316,7 +294,10 @@ export function OrderDetails({
           )}
 
           <div className="rowBtns">
-            <button className="btn btn--soft" onClick={onCopyAddress}>
+            <button
+              className="btn btn--soft"
+              onClick={onCopyAddress}
+            >
               Copier adresse livraison
             </button>
           </div>
@@ -324,7 +305,7 @@ export function OrderDetails({
 
         {/* FACTURATION */}
         <div className="box">
-          <div className="boxTitle">🧾 Facturation</div>
+          <h3 className="boxTitle">🧾 Facturation</h3>
 
           <div className="addr">
             <div>{billing?.name || "—"}</div>
@@ -336,7 +317,7 @@ export function OrderDetails({
             {billing?.phone && <div>{billing.phone}</div>}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

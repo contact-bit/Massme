@@ -1,50 +1,63 @@
 "use client";
 import React from "react";
 
-export function IconEye() {
+type IconProps = {
+  size?: number | string;
+  strokeWidth?: number;
+};
+
+function BaseIcon({
+  children,
+  size = 18,
+  strokeWidth = 2,
+}: React.PropsWithChildren<IconProps>) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <g
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-      />
-      <path
-        d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
+      >
+        {children}
+      </g>
     </svg>
   );
 }
 
-export function IconCopy() {
+export function IconEye(props: IconProps) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M9 9h10v10H9V9Z" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-    </svg>
+    <BaseIcon {...props}>
+      <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" />
+      <circle cx="12" cy="12" r="3.5" />
+    </BaseIcon>
   );
 }
 
-export function IconTrash() {
+export function IconCopy(props: IconProps) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M8 6V4h8v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path
-        d="M6 6l1 16h10l1-16"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
+    <BaseIcon {...props}>
+      <rect x="9" y="9" width="10" height="10" rx="1.5" />
+      <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+    </BaseIcon>
+  );
+}
+
+export function IconTrash(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M6 6l1 14h10l1-14" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </BaseIcon>
   );
 }

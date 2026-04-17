@@ -20,14 +20,14 @@ type StatsResponse = {
     revenueDayPct: number;
   };
   series: { day: string; revenue: number }[];
-lastOrders: {
-  id: string;
-  orderNumber?: string; // 🔥 AJOUT
-  status: string;
-  total: number;
-  email: string;
-  createdAt: string | null;
-}[];
+  lastOrders: {
+    id: string;
+    orderNumber?: string;
+    status: string;
+    total: number;
+    email: string;
+    createdAt: string | null;
+  }[];
   lowStock: { id: string; name: string; stock: number }[];
   alerts: { tone: "info" | "warn" | "danger"; title: string; desc: string }[];
 };
@@ -76,13 +76,17 @@ export default function AdminDashboardPage() {
       setLoading(true);
       setErr(null);
 
-      const res = await fetch("/api/admin/stats", { 
+      const res = await fetch("/api/admin/stats", {
         cache: "no-store",
-        headers: { "X-Refresh": Date.now().toString() }
+        headers: { "X-Refresh": Date.now().toString() },
       });
       const json = await res.json();
 
-      console.log("📊 API Response:", { ok: res.ok, status: res.status, data: json });
+      console.log("📊 API Response:", {
+        ok: res.ok,
+        status: res.status,
+        data: json,
+      });
 
       if (!res.ok) {
         throw new Error(json?.error ?? `Erreur HTTP ${res.status}`);
@@ -115,10 +119,13 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="admin-page">
-        <div className="dash-head">
-          <h1 className="admin-title">📊 Dashboard</h1>
-          <p className="dash-sub">Chargement des stats…</p>
-        </div>
+        <header className="admin-page-header">
+          <div>
+            <h1 className="admin-page-title">📊 Dashboard</h1>
+            <p className="admin-page-subtitle">Chargement des stats…</p>
+          </div>
+        </header>
+
         <div className="dash-skeleton-grid">
           <div className="dash-skel" />
           <div className="dash-skel" />
@@ -132,12 +139,17 @@ export default function AdminDashboardPage() {
   if (err || !data) {
     return (
       <div className="admin-page">
-        <div className="dash-head">
-          <h1 className="admin-title">📊 Dashboard</h1>
-          <p className="dash-sub">Erreur de chargement</p>
-        </div>
+        <header className="admin-page-header">
+          <div>
+            <h1 className="admin-page-title">📊 Dashboard</h1>
+            <p className="admin-page-subtitle">Erreur de chargement</p>
+          </div>
+        </header>
+
         <div className="dash-error">
-          <div className="dash-error-title">❌ {err ?? "Données indisponibles"}</div>
+          <div className="dash-error-title">
+            ❌ {err ?? "Données indisponibles"}
+          </div>
           <div className="dash-error-msg">
             Vérifiez les logs console et Firestore.
           </div>
@@ -160,19 +172,28 @@ export default function AdminDashboardPage() {
   const lastOrders = Array.isArray(data.lastOrders) ? data.lastOrders : [];
   const lowStock = Array.isArray(data.lowStock) ? data.lowStock : [];
 
-  const d7 = deltaLabel(k.revenueLast7 ?? 0, k.revenuePrev7 ?? 0, deltas.revenue7dPct ?? 0);
-  const dd = deltaLabel(k.revenueToday ?? 0, k.revenueYesterday ?? 0, deltas.revenueDayPct ?? 0);
+  const d7 = deltaLabel(
+    k.revenueLast7 ?? 0,
+    k.revenuePrev7 ?? 0,
+    deltas.revenue7dPct ?? 0
+  );
+  const dd = deltaLabel(
+    k.revenueToday ?? 0,
+    k.revenueYesterday ?? 0,
+    deltas.revenueDayPct ?? 0
+  );
 
   return (
     <div className="admin-page">
-      <div className="dash-head">
+      {/* Header de page standardisé */}
+      <header className="admin-page-header">
         <div>
-          <h1 className="admin-title">📊 Dashboard</h1>
-          <p className="dash-sub">
+          <h1 className="admin-page-title">📊 Dashboard</h1>
+          <p className="admin-page-subtitle">
             {k.ordersCount ?? 0} commandes • {eur(k.revenueLast7)} (7j)
           </p>
         </div>
-        <div className="dash-actions">
+        <div className="admin-page-actions">
           <button className="btn-secondary" onClick={refresh}>
             🔄 Actualiser
           </button>
@@ -180,7 +201,7 @@ export default function AdminDashboardPage() {
             Commandes →
           </a>
         </div>
-      </div>
+      </header>
 
       {/* Alerts */}
       {alerts.length > 0 && (
@@ -195,8 +216,8 @@ export default function AdminDashboardPage() {
       )}
 
       {/* KPI Cards */}
-      <div className="dash-kpis">
-        <div className="dash-card">
+      <section className="dash-kpis">
+        <article className="dash-card">
           <div className="dash-card-top">
             <span className="dash-label">Produits</span>
             <span className="dash-chip">
@@ -205,47 +226,53 @@ export default function AdminDashboardPage() {
           </div>
           <div className="dash-value">{k.productsCount}</div>
           <div className="dash-foot">Total catalogue</div>
-        </div>
+        </article>
 
-        <div className="dash-card">
+        <article className="dash-card">
           <div className="dash-card-top">
             <span className="dash-label">Commandes</span>
             {k.pendingCount > 0 ? (
-              <span className="dash-chip warn">{k.pendingCount} attente</span>
+              <span className="dash-chip warn">
+                {k.pendingCount} attente
+              </span>
             ) : (
               <span className="dash-chip ok">✅ Tout OK</span>
             )}
           </div>
           <div className="dash-value">{k.ordersCount}</div>
           <div className="dash-foot">{k.paidOrdersCount} payée(s)</div>
-        </div>
+        </article>
 
-        <div className="dash-card highlight">
+        <article className="dash-card highlight">
           <div className="dash-card-top">
             <span className="dash-label">CA 7 jours</span>
             <span className={`dash-badge ${d7.tone}`}>{d7.text}</span>
           </div>
           <div className="dash-value">{eur(k.revenueLast7)}</div>
           <div className="dash-foot">AOV: {eur(k.aov)}</div>
-        </div>
+        </article>
 
-        <div className="dash-card">
+        <article className="dash-card">
           <div className="dash-card-top">
-            <span className="dash-label">CA aujourd'hui</span>
+            <span className="dash-label">CA aujourd&apos;hui</span>
             <span className={`dash-badge ${dd.tone}`}>{dd.text}</span>
           </div>
           <div className="dash-value">{eur(k.revenueToday)}</div>
-          <div className="dash-foot">Hier: {eur(k.revenueYesterday)}</div>
-        </div>
-      </div>
+          <div className="dash-foot">
+            Hier: {eur(k.revenueYesterday)}
+          </div>
+        </article>
+      </section>
 
       {/* Grid principal */}
-      <div className="dash-grid">
+      <section className="dash-grid">
         {/* Graphique revenus */}
-        <div className="dash-panel">
+        <article className="dash-panel">
           <div className="dash-panel-head">
             <h2 className="dash-panel-title">Revenus — 7 jours</h2>
-            <div className="dash-panel-meta">{eur(k.revenueLast7)}</div>
+            <div className="dash-panel-meta">
+              {eur(k.revenueLast7)}
+            </div>
           </div>
           <div className="dash-chart">
             {data.series.map((s) => {
@@ -256,10 +283,12 @@ export default function AdminDashboardPage() {
                     <div
                       className="dash-bar-fill"
                       style={{ height: `${h}%` }}
-                      title={`${eur(s.revenue)}`}
+                      title={eur(s.revenue)}
                     />
                   </div>
-                  <div className="dash-bar-day">{s.day.slice(5)}</div>
+                  <div className="dash-bar-day">
+                    {s.day.slice(5)}
+                  </div>
                   <div className="dash-bar-val">
                     {s.revenue > 0 ? eur(s.revenue) : "0€"}
                   </div>
@@ -267,13 +296,15 @@ export default function AdminDashboardPage() {
               );
             })}
           </div>
-        </div>
+        </article>
 
         {/* Dernières commandes */}
-        <div className="dash-panel">
+        <article className="dash-panel">
           <div className="dash-panel-head">
             <h2 className="dash-panel-title">Dernières commandes</h2>
-            <a className="dash-link" href="/admin/orders">Voir tout →</a>
+            <a className="dash-link" href="/admin/orders">
+              Voir tout →
+            </a>
           </div>
           <div className="dash-table">
             <div className="dash-row dash-row-head">
@@ -284,48 +315,62 @@ export default function AdminDashboardPage() {
               <div>Date</div>
             </div>
             {lastOrders.length === 0 ? (
-              <div className="dash-empty">Aucune commande récente</div>
+              <div className="dash-empty">
+                Aucune commande récente
+              </div>
             ) : (
               lastOrders.slice(0, 5).map((o) => (
                 <div key={o.id} className="dash-row">
-<div className="mono">
-  {o.orderNumber || `${o.id.slice(0, 6)}…`}
-</div>
-                  <div className="truncate">{o.email || "—"}</div>
+                  <div className="mono">
+                    {o.orderNumber || `${o.id.slice(0, 6)}…`}
+                  </div>
+                  <div className="truncate">
+                    {o.email || "—"}
+                  </div>
                   <div>
                     <span
                       className={`status-pill ${
                         o.status === "paid" ? "paid" : "pending"
                       }`}
                     >
-                      {o.status === "paid" ? "✅ Payé" : "⏳ Attente"}
+                      {o.status === "paid"
+                        ? "✅ Payé"
+                        : "⏳ Attente"}
                     </span>
                   </div>
                   <div className="strong">{eur(o.total)}</div>
-                  <div className="muted">{shortDate(o.createdAt)}</div>
+                  <div className="muted">
+                    {shortDate(o.createdAt)}
+                  </div>
                 </div>
               ))
             )}
           </div>
-        </div>
-      </div>
+        </article>
+      </section>
 
       {/* Stocks faibles */}
       {lowStock.length > 0 && (
-        <div className="dash-panel">
+        <section className="dash-panel">
           <div className="dash-panel-head">
-            <h2 className="dash-panel-title">⚠️ Stocks faibles</h2>
-            <a className="dash-link" href="/admin/products">Gérer →</a>
+            <h2 className="dash-panel-title">
+              ⚠️ Stocks faibles
+            </h2>
+            <a className="dash-link" href="/admin/products">
+              Gérer →
+            </a>
           </div>
           <div className="dash-lowstock">
             {lowStock.slice(0, 8).map((p) => (
               <div key={p.id} className="dash-lowstock-item">
                 <div className="truncate">{p.name}</div>
-                <div className="dash-chip warn">stock {p.stock}</div>
+                <div className="dash-chip warn">
+                  stock {p.stock}
+                </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

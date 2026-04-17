@@ -1,118 +1,153 @@
 /* =========================================================
-   ADMIN — FORMS (OculaRest)
-   ✅ Fix lisibilité inputs même si thème global force du blanc
+   ADMIN — FORMS
 ========================================================= */
 
 .admin-form {
   max-width: 760px;
   margin: 0 auto;
-  padding: 28px;
-  background: #ffffff;
-  border-radius: 18px;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
-
-  color: #0f172a;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
 }
 
-/* Title */
 .admin-section-title {
-  font-size: 1.4rem;
-  font-weight: 900;
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-xl);
+  font-weight: 800;
   letter-spacing: -0.02em;
-  margin: 0 0 18px;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
-/* Small helper spacing */
+/* Helpers */
+
 .admin-form .mt-4 {
-  margin-top: 14px;
+  margin-top: var(--space-3);
 }
 
 /* Labels */
+
 .admin-label {
   display: block;
-  font-size: 0.85rem;
-  font-weight: 850;
-  margin: 16px 0 8px;
-  color: #334155;
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-soft);
 }
 
-/* Inputs / textarea / select — FORCE visibility */
+/* Inputs / textarea / select */
+
 .admin-input,
 .admin-textarea,
 .admin-select {
   width: 100%;
+  min-height: 44px;
   padding: 12px 14px;
-  border-radius: 12px;
-
-  /* ✅ background & border clearly visible */
-  background: #f8fafc !important;
-  border: 1px solid #cbd5e1 !important;
-
-  /* ✅ text always dark (fix global override) */
-  color: #0f172a !important;
-  -webkit-text-fill-color: #0f172a !important;
-  caret-color: #0f172a !important;
-
-  font-size: 0.95rem;
-  line-height: 1.25;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+  -webkit-text-fill-color: var(--color-text) !important;
+  caret-color: var(--color-text) !important;
+  font-size: var(--text-sm);
+  line-height: 1.4;
   outline: none;
-
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
+  appearance: none;
 }
 
-/* textarea */
 .admin-textarea {
   min-height: 120px;
   resize: vertical;
 }
 
-/* Placeholder (force) */
+.admin-select {
+  cursor: pointer;
+}
+
+/* Placeholder */
+
 .admin-input::placeholder,
 .admin-textarea::placeholder {
-  color: #94a3b8 !important;
+  color: var(--color-text-muted) !important;
   opacity: 1 !important;
-  -webkit-text-fill-color: #94a3b8 !important;
+  -webkit-text-fill-color: var(--color-text-muted) !important;
 }
 
 /* Focus */
+
 .admin-input:focus,
 .admin-textarea:focus,
 .admin-select:focus {
-  background: #ffffff !important;
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18) !important;
+  background: var(--color-surface) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-soft) !important;
 }
 
 /* Disabled */
+
 .admin-input:disabled,
 .admin-textarea:disabled,
 .admin-select:disabled {
-  opacity: 0.7;
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
-/* Chrome Autofill fix (sinon jaune + texte bizarre) */
+/* Autofill */
+
 .admin-input:-webkit-autofill,
 .admin-textarea:-webkit-autofill,
 .admin-select:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0px 1000px #f8fafc inset !important;
-  -webkit-text-fill-color: #0f172a !important;
-  caret-color: #0f172a !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface-alt) inset !important;
+  -webkit-text-fill-color: var(--color-text) !important;
+  caret-color: var(--color-text) !important;
   transition: background-color 9999s ease-in-out 0s;
 }
 
+/* Input groups / rows */
+
+.admin-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.admin-form-col {
+  min-width: 0;
+}
+
+/* Help / error text */
+
+.admin-help {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.admin-error,
+.admin-form .text-red-500 {
+  color: var(--color-danger) !important;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
 /* Image preview */
+
 .admin-img-wrapper {
   width: 100%;
   height: 240px;
-  border-radius: 16px;
-  border: 1px dashed rgba(15, 23, 42, 0.22);
-  background: linear-gradient(180deg, #f8fafc, #ffffff);
+  border-radius: var(--radius-lg);
+  border: 1px dashed color-mix(in srgb, var(--color-text) 18%, transparent);
+  background: linear-gradient(180deg, var(--color-surface-alt), var(--color-surface));
   display: grid;
   place-items: center;
-  margin-bottom: 14px;
+  margin-bottom: var(--space-3);
   overflow: hidden;
 }
 
@@ -120,96 +155,59 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .admin-img-placeholder {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
-/* Switch */
+/* Switch / checkbox line */
+
 .admin-switch {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 16px;
-
-  font-size: 0.92rem;
-  font-weight: 750;
-  color: #0f172a;
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
 }
 
 .admin-switch input {
   width: 18px;
   height: 18px;
-  accent-color: #2563eb;
+  accent-color: var(--color-primary);
 }
 
 /* Actions */
+
 .admin-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
 }
 
-/* Buttons (admin) */
-.admin-form .btn {
-  padding: 10px 18px;
-  border-radius: 12px;
-  font-size: 0.92rem;
-  font-weight: 850;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
-  user-select: none;
-}
-
-.admin-form .btn:active {
-  transform: translateY(1px);
-}
-
-.admin-form .btn-primary {
-  background: #2563eb;
-  color: #ffffff;
-  border-color: #2563eb;
-  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.25);
-}
-
-.admin-form .btn-primary:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
-}
-
-.admin-form .btn-secondary {
-  background: #f1f5f9;
-  color: #0f172a;
-  border-color: #cbd5e1;
-}
-
-.admin-form .btn-secondary:hover {
-  background: #e2e8f0;
-}
-
-/* Error text */
-.admin-form .text-red-500 {
-  color: #dc2626 !important;
-  font-size: 0.86rem;
-  font-weight: 700;
-  margin-top: 10px;
-}
+/* Boutons dans les formulaires : on s’appuie sur les classes globales */
+/* .btn-primary / .btn-secondary / .btn-danger sont gérés dans admin.components.css */
 
 /* Responsive */
+
 @media (max-width: 640px) {
   .admin-form {
-    padding: 18px;
-    border-radius: 16px;
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
   }
 
   .admin-img-wrapper {
     height: 200px;
+  }
+
+  .admin-form-row {
+    grid-template-columns: 1fr;
   }
 
   .admin-form-actions {

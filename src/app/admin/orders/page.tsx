@@ -20,7 +20,6 @@ import { AdminOrdersStyles } from "./components/AdminOrdersStyles";
 import { Toast } from "./components/Toast";
 import { TopBar } from "./components/TopBar";
 import { KpiGrid } from "./components/KpiGrid";
-import { FiltersBar } from "./components/FiltersBar";
 import { OrdersList } from "./components/OrdersList";
 import { Drawer } from "./components/Drawer";
 import { OrderDetails } from "./components/OrderDetails";
@@ -88,11 +87,14 @@ export default function AdminOrdersPage() {
 
   const handleValidateBankTransfer = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/orders/${id}/validate-bank-transfer`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await fetch(
+        `/api/admin/orders/${id}/validate-bank-transfer`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       const json = await res.json();
 
@@ -116,7 +118,9 @@ export default function AdminOrdersPage() {
       <AdminOrdersStyles />
       <Toast message={toast} />
 
-      <div className="adminWrap">
+      {/* Enveloppe uniforme admin */}
+      <div className="admin-page">
+        {/* Topbar spécifique à la page commandes */}
         <TopBar
           loading={loading}
           onRefresh={fetchOrders}
@@ -124,42 +128,33 @@ export default function AdminOrdersPage() {
           onClearSelection={selection.clearSelection}
         />
 
-        <KpiGrid stats={stats} from={filters.from} to={filters.to} />
+        {/* Contenu principal */}
+        <main className="admin-main">
+          <KpiGrid stats={stats} from={filters.from} to={filters.to} />
 
-        <FiltersBar
-          filters={filters}
-          onReset={() => {
-            filters.setQ("");
-            filters.setStatus("all");
-            filters.setSort("date_desc");
-            filters.setFrom(firstDayOfMonthISO());
-            filters.setTo(todayISO());
-            filters.setLang("all");
-            pagination.setPage(() => 1);
-          }}
-          onAnyChange={() => pagination.setPage(() => 1)}
-        />
+          
 
-        <OrdersList
-          loading={loading}
-          error={error}
-          filteredCount={filtered.length}
-          pagination={{
-            currentPage: pagination.currentPage,
-            totalPages: pagination.totalPages,
-            paged: pagination.paged as Order[],
-            setPage: pagination.setPage as any,
-          }}
-          selection={selection}
-          deleting={deleting}
-          onOpen={(id) => setDrawerId(id)}
-          onCopyId={async (id) => {
-            const order = orders.find((o) => o.id === id);
-            await copyText(getOrderLabel(order));
-            toastIt("Numéro de commande copié ✅");
-          }}
-          onDelete={handleDelete}
-        />
+          <OrdersList
+            loading={loading}
+            error={error}
+            filteredCount={filtered.length}
+            pagination={{
+              currentPage: pagination.currentPage,
+              totalPages: pagination.totalPages,
+              paged: pagination.paged as Order[],
+              setPage: pagination.setPage as any,
+            }}
+            selection={selection}
+            deleting={deleting}
+            onOpen={(id) => setDrawerId(id)}
+            onCopyId={async (id) => {
+              const order = orders.find((o) => o.id === id);
+              await copyText(getOrderLabel(order));
+              toastIt("Numéro de commande copié ✅");
+            }}
+            onDelete={handleDelete}
+          />
+        </main>
 
         <Drawer
           open={!!drawerId}
@@ -186,9 +181,7 @@ export default function AdminOrdersPage() {
                 toastIt("Email copié ✅");
               }}
               onCopyAddress={async () => {
-                await copyText(
-                  formatAddress(activeOrder.shippingAddress)
-                );
+                await copyText(formatAddress(activeOrder.shippingAddress));
                 toastIt("Adresse copiée ✅");
               }}
               onValidateBankTransfer={handleValidateBankTransfer}

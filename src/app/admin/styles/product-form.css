@@ -1,185 +1,141 @@
 /* =====================================================
-   PRODUCT EDIT FORM — PREMIUM ADMIN
+   PRODUCT FORM — SPECIFIC STYLES ONLY
 ===================================================== */
 
-.admin-form {
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 36px;
-  background: #ffffff;
-  border-radius: 18px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-.admin-section-title {
-  font-size: 24px;
-  font-weight: 800;
-  margin-bottom: 28px;
-  color: #111827;
-}
-
-/* ================= LANG TABS ================= */
+/* Language tabs */
 
 .admin-lang-tabs {
   display: flex;
-  gap: 10px;
-  margin-bottom: 22px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
 }
 
 .admin-lang-tabs button {
+  min-height: 40px;
   padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #f9fafb;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: var(--text-sm);
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .admin-lang-tabs button:hover {
-  background: #e5e7eb;
+  background: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-primary) 25%, var(--color-border));
 }
 
 .admin-lang-tabs button.active {
-  background: #111827;
-  color: #ffffff;
-  border-color: #111827;
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
 }
 
-/* ================= LABELS ================= */
-
-.admin-label {
-  display: block;
-  margin: 18px 0 6px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #111827;
-}
-
-/* ================= INPUTS ================= */
-
-.admin-input,
-.admin-textarea {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.admin-input:focus,
-.admin-textarea:focus {
-  outline: none;
-  border-color: #111827;
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
-}
-
-/* ================= SWITCH ================= */
-
-.admin-switch {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 24px;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-/* ================= CARD ================= */
+/* Product cards / sections */
 
 .pf-card {
-  margin-top: 36px;
-  padding: 26px;
-  border-radius: 16px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  margin-top: var(--space-8);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
 }
 
 .pf-card h3 {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 800;
-  margin-bottom: 18px;
+  margin-bottom: var(--space-4);
+  color: var(--color-text);
 }
 
-/* ================= TABLE ================= */
+/* Product data table/grid */
 
 .pf-table {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .pf-row {
   display: grid;
   grid-template-columns: 1.6fr 0.6fr 1fr 0.6fr 0.8fr 0.7fr;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .pf-head {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
-  color: #374151;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #d1d5db;
+  color: var(--color-text-soft);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.pf-row input[type="number"] {
+/* Inputs spécifiques dans le tableau */
+.pf-row input[type="number"],
+.pf-row input[type="text"],
+.pf-row select {
   width: 100%;
+  min-height: 40px;
   padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .pf-row input[type="checkbox"] {
-  transform: scale(1.15);
+  transform: scale(1.1);
+  accent-color: var(--color-primary);
 }
 
-.pf-row input:disabled {
-  background: #e5e7eb;
+.pf-row input:disabled,
+.pf-row select:disabled {
+  background: var(--color-surface-alt);
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* ================= ERROR ================= */
-
+/* Error message spécifique produit */
 .admin-error {
-  margin-top: 18px;
-  font-size: 14px;
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
   font-weight: 700;
-  color: #b91c1c;
+  color: var(--color-danger);
 }
 
-/* ================= ACTIONS ================= */
+/* Responsive */
 
-.admin-form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 14px;
-  margin-top: 36px;
+@media (max-width: 960px) {
+  .pf-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pf-head {
+    display: none;
+  }
 }
 
-.btn {
-  padding: 12px 18px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  border: none;
-}
+@media (max-width: 640px) {
+  .pf-card {
+    padding: var(--space-4);
+  }
 
-.btn-primary {
-  background: #111827;
-  color: #ffffff;
-}
+  .pf-row {
+    grid-template-columns: 1fr;
+  }
 
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+  .admin-lang-tabs {
+    gap: var(--space-2);
+  }
 
-.btn-ghost {
-  background: transparent;
-  border: 1px solid #d1d5db;
+  .admin-lang-tabs button {
+    width: 100%;
+  }
 }

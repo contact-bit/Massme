@@ -1,86 +1,83 @@
-/* ======================================================
-   RESET / BASE
-====================================================== */
+/* =========================================================
+   ADMIN — TOPBAR NAV MODERNE
+========================================================= */
 
-.admin-topbar * {
-  box-sizing: border-box;
-}
-
-/* ======================================================
-   TOPBAR
-====================================================== */
-
+/* Topbar shell — si déjà géré dans admin.shell.css, ne garde que ce qui manque */
 .admin-topbar {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(10px);
 }
 
 .admin-topbar-inner {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 14px 20px;
-  max-width: 1400px;
+  gap: var(--space-4);
+  padding: 12px 20px;
+  max-width: var(--content-max);
   margin: 0 auto;
 }
 
-/* ======================================================
-   LOGO / BRAND
-====================================================== */
+/* Logo / brand */
 
 .admin-logo {
   display: flex;
   flex-direction: column;
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: 800;
+  font-size: var(--text-base);
   text-decoration: none;
-  color: #111827;
+  color: var(--color-text);
   line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .admin-logo span {
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
-/* ======================================================
-   NAVIGATION
-====================================================== */
+/* Navigation */
 
 .admin-nav {
   display: flex;
   gap: 4px;
-  margin-left: 20px;
+  margin-left: var(--space-4);
+  flex-wrap: wrap;
 }
 
 .admin-nav-link {
   position: relative;
-  padding: 10px 14px;
-  font-size: 14px;
+  padding: 8px 12px;
+  font-size: var(--text-sm);
   font-weight: 500;
-  color: #6b7280;
+  color: var(--color-text-soft);
   text-decoration: none;
-  border-radius: 8px;
-  transition: color 0.2s ease, background 0.2s ease;
+  border-radius: var(--radius-md);
+  transition:
+    color var(--transition-base),
+    background var(--transition-base);
 }
+
+/* hover */
 
 .admin-nav-link:hover {
-  color: #111827;
-  background: #f3f4f6;
+  color: var(--color-text);
+  background: var(--color-surface-alt);
 }
 
-/* underline animé */
+/* underline animé (optionnel mais moderne) */
+
 .nav-underline {
   position: absolute;
-  left: 12px;
-  right: 12px;
+  left: 10px;
+  right: 10px;
   bottom: 4px;
   height: 2px;
-  background: #2563eb;
+  background: var(--color-primary);
   border-radius: 2px;
   transform: scaleX(0);
   transform-origin: center;
@@ -91,10 +88,11 @@
   transform: scaleX(0.5);
 }
 
-/* ACTIVE */
+/* lien actif */
+
 .admin-nav-link.active {
-  color: #2563eb;
-  background: #eff6ff;
+  color: #fff;
+  background: var(--color-primary);
   font-weight: 600;
 }
 
@@ -102,38 +100,37 @@
   transform: scaleX(1);
 }
 
-/* ======================================================
-   ACTIONS (RIGHT)
-====================================================== */
+/* Actions à droite */
 
 .admin-actions {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
 }
 
-/* ======================================================
-   NOTIFICATIONS BUTTON
-====================================================== */
+/* Bouton notifications */
 
 .admin-notif-btn {
   position: relative;
   font-size: 18px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 8px 10px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
   cursor: pointer;
-  transition: background 0.2s ease, border 0.2s ease;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base);
 }
 
 .admin-notif-btn:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
+  background: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
 }
 
-/* badge */
+/* badge compteur */
+
 .notif-badge {
   position: absolute;
   top: -4px;
@@ -142,8 +139,8 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  background: #ef4444;
-  color: white;
+  background: var(--color-danger);
+  color: #fff;
   font-size: 11px;
   font-weight: 700;
   display: flex;
@@ -151,110 +148,51 @@
   justify-content: center;
 }
 
-/* ======================================================
-   LOGOUT BUTTON
-====================================================== */
+/* Bouton logout */
 
 .admin-logout {
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 9px 14px;
-  font-size: 13px;
-  font-weight: 500;
+  background: var(--color-danger);
+  color: #fff;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.05s ease;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    transform 80ms ease;
 }
 
 .admin-logout:hover {
-  background: #dc2626;
+  background: var(--color-danger-dark);
+  border-color: var(--color-danger-dark);
 }
 
 .admin-logout:active {
   transform: translateY(1px);
 }
 
-/* ======================================================
-   NOTIFICATIONS PANEL
-====================================================== */
+/* Responsive */
 
-.notif-panel {
-  position: absolute;
-  right: 20px;
-  top: 70px;
-  width: 320px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  padding: 14px;
-  z-index: 60;
-}
+@media (max-width: 720px) {
+  .admin-topbar-inner {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    row-gap: var(--space-2);
+  }
 
-.notif-panel h4 {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
+  .admin-nav {
+    margin-left: 0;
+    width: 100%;
+    order: 3;
+  }
 
-/* empty */
-.notif-empty {
-  font-size: 13px;
-  color: #6b7280;
-  text-align: center;
-  padding: 12px 0;
-}
-
-/* ======================================================
-   NOTIFICATION ITEM
-====================================================== */
-
-.notif-item {
-  width: 100%;
-  text-align: left;
-  border: none;
-  background: #f9fafb;
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.05s ease;
-}
-
-.notif-item:hover {
-  background: #f3f4f6;
-}
-
-.notif-item:active {
-  transform: translateY(1px);
-}
-
-.notif-item strong {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.notif-item span {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-/* tones */
-.notif-item.tone-success {
-  border-left: 3px solid #22c55e;
-}
-
-.notif-item.tone-warning {
-  border-left: 3px solid #f59e0b;
-}
-
-.notif-item.tone-danger {
-  border-left: 3px solid #ef4444;
-}
-
-.notif-item.tone-info {
-  border-left: 3px solid #3b82f6;
+  .admin-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+    order: 2;
+  }
 }

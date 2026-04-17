@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
-
+import "./reviews.css";
 
 type ReviewStatus = "pending" | "approved" | "rejected";
 
 type ReviewRow = {
   id: string;
   orderId: string;
-    orderNumber?: string;
+  orderNumber?: string;
   email: string;
   rating: number | null;
   comment: string;
@@ -24,28 +23,6 @@ type ReviewEmailSettings = {
   mode: "immediate" | "delay";
   delayDays: number;
 };
-
-function Card({
-  children,
-  style,
-}: {
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <div
-      style={{
-        border: "1px solid #eee",
-        borderRadius: 14,
-        padding: 14,
-        background: "#fff",
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
 
 async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const res = await fetch(input, {
@@ -73,6 +50,12 @@ function formatDate(value: string | null) {
   } catch {
     return "";
   }
+}
+
+function getStatusLabel(status: ReviewStatus) {
+  if (status === "pending") return "En attente";
+  if (status === "approved") return "Publiés";
+  return "Refusés";
 }
 
 function useReviewSettings() {
@@ -228,37 +211,49 @@ export default function AdminReviewsPage() {
   const emailLabel = useMemo(() => {
     if (!draftSettings) return "";
     if (!draftSettings.enabled) return "Désactivé";
-    if (draftSettings.mode === "immediate" || draftSettings.delayDays === 0) return "Immédiat";
+    if (draftSettings.mode === "immediate" || draftSettings.delayDays === 0) {
+      return "Immédiat";
+    }
     return `Après ${draftSettings.delayDays} jour(s)`;
   }, [draftSettings]);
 
   return (
-    <div style={{ padding: 20, maxWidth: 1100 }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 10 }}>
-        Modération — Avis clients
-      </h1>
+    <div className="admin-page admin-page--narrow">
+      <header className="admin-page-header">
+        <div>
+          <h1 className="admin-page-title">Modération — Avis clients</h1>
+          <p className="admin-page-subtitle">
+            Gérez les avis publiés et l’envoi automatique des emails d’invitation.
+          </p>
+        </div>
+      </header>
 
-      <Card style={{ marginBottom: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ fontWeight: 900, fontSize: 16 }}>Envoi du mail d’avis</div>
-          <div style={{ fontSize: 12, color: "#666" }}>{emailLabel}</div>
-          <div style={{ marginLeft: "auto", fontSize: 12, color: "#666" }}>
-            {settingsLoading ? "Chargement…" : settingsSaving ? "Enregistrement…" : ""}
+      <section className="card cardPad reviews-settings">
+        <div className="reviews-settings-head">
+          <div>
+            <h2 className="reviews-settings-title">Envoi du mail d’avis</h2>
+            <p className="reviews-settings-subtitle">{emailLabel}</p>
+          </div>
+
+          <div className="reviews-settings-status">
+            {settingsLoading
+              ? "Chargement…"
+              : settingsSaving
+              ? "Enregistrement…"
+              : ""}
           </div>
         </div>
 
         {settingsLoading ? (
-          <div style={{ marginTop: 10, fontSize: 13, color: "#666" }}>
-            Récupération des réglages…
-          </div>
+          <p className="reviews-settings-hint">Récupération des réglages…</p>
         ) : !draftSettings ? (
-          <div style={{ marginTop: 10, color: "crimson", fontWeight: 800 }}>
+          <p className="reviews-settings-error">
             Impossible de charger les réglages.
-          </div>
+          </p>
         ) : (
           <>
-            <div style={{ marginTop: 12 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 800 }}>
+            <div className="reviews-settings-switch">
+              <label>
                 <input
                   type="checkbox"
                   checked={draftSettings.enabled}
@@ -269,12 +264,13 @@ export default function AdminReviewsPage() {
                     })
                   }
                 />
-                Activer l’envoi automatique du mail d’avis
+                <span>Activer l’envoi automatique du mail d’avis</span>
               </label>
             </div>
 
-            <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="reviews-settings-presets">
               <button
+                type="button"
                 disabled={!draftSettings.enabled || settingsSaving}
                 onClick={() =>
                   setDraftSettings({
@@ -283,276 +279,206 @@ export default function AdminReviewsPage() {
                     delayDays: 0,
                   })
                 }
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #ddd",
-                  background: draftSettings.mode === "immediate" ? "#111" : "white",
-                  color: draftSettings.mode === "immediate" ? "white" : "#111",
-                  fontWeight: 900,
-                  cursor: "pointer",
-                }}
+                className={
+                  draftSettings.mode === "immediate" && draftSettings.enabled
+                    ? "btn btn--primary reviews-settings-chip"
+                    : "btn btn--soft reviews-settings-chip"
+                }
               >
                 Immédiat
               </button>
 
-              {[5, 20].map((d) => (
-                <button
-                  key={d}
-                  disabled={!draftSettings.enabled || settingsSaving}
-                  onClick={() =>
-                    setDraftSettings({
-                      ...draftSettings,
-                      mode: "delay",
-                      delayDays: d,
-                    })
-                  }
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: 10,
-                    border: "1px solid #ddd",
-                    background:
-                      draftSettings.mode === "delay" && draftSettings.delayDays === d
-                        ? "#111"
-                        : "white",
-                    color:
-                      draftSettings.mode === "delay" && draftSettings.delayDays === d
-                        ? "white"
-                        : "#111",
-                    fontWeight: 900,
-                    cursor: "pointer",
-                  }}
-                >
-                  {d} jours
-                </button>
-              ))}
+              {[5, 20].map((d) => {
+                const active =
+                  draftSettings.mode === "delay" &&
+                  draftSettings.delayDays === d &&
+                  draftSettings.enabled;
 
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 12, color: "#666" }}>Personnalisé :</span>
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    disabled={!draftSettings.enabled || settingsSaving}
+                    onClick={() =>
+                      setDraftSettings({
+                        ...draftSettings,
+                        mode: "delay",
+                        delayDays: d,
+                      })
+                    }
+                    className={
+                      active
+                        ? "btn btn--primary reviews-settings-chip"
+                        : "btn btn--soft reviews-settings-chip"
+                    }
+                  >
+                    {d} jours
+                  </button>
+                );
+              })}
+
+              <div className="reviews-settings-custom">
+                <span>Personnalisé :</span>
                 <input
                   disabled={!draftSettings.enabled || settingsSaving}
                   type="number"
                   min={0}
                   max={365}
-                  value={draftSettings.mode === "immediate" ? 0 : draftSettings.delayDays}
+                  value={
+                    draftSettings.mode === "immediate" ? 0 : draftSettings.delayDays
+                  }
                   onChange={(e) => {
-                    const v = Math.max(0, Math.min(365, Math.floor(Number(e.target.value || 0))));
+                    const v = Math.max(
+                      0,
+                      Math.min(365, Math.floor(Number(e.target.value || 0)))
+                    );
+
                     setDraftSettings({
                       ...draftSettings,
                       mode: v === 0 ? "immediate" : "delay",
                       delayDays: v,
                     });
                   }}
-                  style={{
-                    width: 90,
-                    padding: "8px 10px",
-                    borderRadius: 10,
-                    border: "1px solid #ddd",
-                  }}
+                  className="reviews-settings-input"
                 />
-                <span style={{ fontSize: 12, color: "#666" }}>jours</span>
+                <span>jours</span>
               </div>
             </div>
 
-            <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+            <div className="reviews-settings-actions">
               <button
+                type="button"
                 onClick={saveSettings}
                 disabled={!isDirty || settingsSaving}
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #ddd",
-                  background: "#111",
-                  color: "#fff",
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  opacity: !isDirty || settingsSaving ? 0.6 : 1,
-                }}
+                className="btn btn--primary"
               >
                 Enregistrer
               </button>
 
               <button
+                type="button"
                 onClick={reloadSettings}
                 disabled={settingsSaving}
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #ddd",
-                  background: "white",
-                  fontWeight: 900,
-                  cursor: "pointer",
-                }}
+                className="btn btn--soft"
               >
                 Recharger
               </button>
             </div>
 
             {settingsMessage && (
-              <div
-                style={{
-                  marginTop: 10,
-                  fontSize: 12,
-                  color: settingsMessage.startsWith("✅") ? "#135200" : "crimson",
-                }}
+              <p
+                className={
+                  settingsMessage.startsWith("✅")
+                    ? "reviews-settings-msg reviews-settings-msg--success"
+                    : "reviews-settings-msg reviews-settings-msg--error"
+                }
               >
                 {settingsMessage}
-              </div>
+              </p>
             )}
 
-            <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
+            <p className="reviews-settings-hint">
               Ce réglage sert à planifier l’envoi du mail d’avis après une commande.
-            </div>
+            </p>
           </>
         )}
-      </Card>
+      </section>
 
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14 }}>
-        {(["pending", "approved", "rejected"] as ReviewStatus[]).map((value) => (
-          <button
-            key={value}
-            onClick={() => setStatus(value)}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              background: status === value ? "#111" : "white",
-              color: status === value ? "white" : "#111",
-              fontWeight: 900,
-              cursor: "pointer",
-            }}
-          >
-            {value === "pending"
-              ? "En attente"
-              : value === "approved"
-              ? "Publiés"
-              : "Refusés"}
-          </button>
-        ))}
+      <section className="reviews-tabsBar">
+        <div className="reviews-tabs" role="tablist" aria-label="Filtres avis">
+          {(["pending", "approved", "rejected"] as ReviewStatus[]).map((value) => {
+            const active = status === value;
 
-        <div style={{ marginLeft: "auto" }}>
-          <button
-            onClick={reloadReviews}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              background: "white",
-              fontWeight: 900,
-              cursor: "pointer",
-            }}
-          >
+            return (
+              <button
+                key={value}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                className={active ? "reviews-tab reviews-tab--active" : "reviews-tab"}
+                onClick={() => setStatus(value)}
+              >
+                {getStatusLabel(value)}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="reviews-refresh">
+          <button type="button" onClick={reloadReviews} className="btn btn--soft">
             Rafraîchir
           </button>
         </div>
-      </div>
+      </section>
 
-      <div style={{ fontSize: 14, color: "#666", marginBottom: 10 }}>
+      <div className="reviews-listMeta">
         <b>{title}</b> — {loading ? "Chargement…" : `${rows.length} avis`}
       </div>
 
-      {error && (
-        <div
-          style={{
-            marginBottom: 12,
-            padding: 10,
-            borderRadius: 10,
-            border: "1px solid #ffccc7",
-            background: "#fff2f0",
-            color: "#a8071a",
-            fontWeight: 800,
-          }}
-        >
-          {error}
-        </div>
-      )}
+      {error && <div className="reviews-error">{error}</div>}
 
-      <div style={{ display: "grid", gap: 10 }}>
+      <section className="reviews-list">
         {rows.map((r) => {
           const isProcessing = processingId === r.id;
 
           return (
-            <div
-              key={r.id}
-              style={{
-                border: "1px solid #eee",
-                borderRadius: 14,
-                padding: 14,
-                background: "white",
-              }}
-            >
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <div style={{ fontWeight: 900, fontSize: 16 }}>
+            <article key={r.id} className="reviews-review">
+              <div className="reviews-review-head">
+                <div className="reviews-review-title">
                   {r.rating ?? "?"}★ — {r.email}
                 </div>
-                <div style={{ marginLeft: "auto", fontSize: 12, color: "#666" }}>
-                  {formatDate(r.createdAt)}
-                </div>
+
+                <div className="reviews-review-date">{formatDate(r.createdAt)}</div>
               </div>
 
-              <div style={{ marginTop: 6, color: "#222", whiteSpace: "pre-wrap" }}>
+              <div className="reviews-review-comment">
                 {r.comment || "Aucun commentaire"}
               </div>
 
-              <div style={{ marginTop: 8, fontSize: 12, color: "#666" }}>
-Commande: <b>{r.orderNumber || r.orderId}</b>                {r.items?.length ? (
+              <div className="reviews-review-meta">
+                Commande : <b>{r.orderNumber || r.orderId}</b>
+                {r.items?.length ? (
                   <>
                     {" "}
-                    — items:{" "}
+                    — items :{" "}
                     {r.items
-                      .map((it) => `${it.name || it.productId || "?"} x${it.qty || 1}`)
+                      .map(
+                        (it) => `${it.name || it.productId || "?"} x${it.qty || 1}`
+                      )
                       .join(", ")}
                   </>
                 ) : null}
               </div>
 
               {status === "pending" && (
-                <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                <div className="reviews-review-actions">
                   <button
+                    type="button"
                     disabled={isProcessing}
                     onClick={() => moderate(r.id, "approve")}
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: 10,
-                      border: "1px solid #b7eb8f",
-                      background: "#f6ffed",
-                      color: "#135200",
-                      fontWeight: 900,
-                      cursor: "pointer",
-                      opacity: isProcessing ? 0.6 : 1,
-                    }}
+                    className="btn reviews-approveBtn"
                   >
                     {isProcessing ? "Traitement…" : "Approuver"}
                   </button>
 
                   <button
+                    type="button"
                     disabled={isProcessing}
                     onClick={() => moderate(r.id, "reject")}
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: 10,
-                      border: "1px solid #ffccc7",
-                      background: "#fff2f0",
-                      color: "#a8071a",
-                      fontWeight: 900,
-                      cursor: "pointer",
-                      opacity: isProcessing ? 0.6 : 1,
-                    }}
+                    className="btn reviews-rejectBtn"
                   >
                     {isProcessing ? "Traitement…" : "Refuser"}
                   </button>
                 </div>
               )}
-            </div>
+            </article>
           );
         })}
 
         {!loading && rows.length === 0 && (
-          <div style={{ padding: 14, border: "1px dashed #ddd", borderRadius: 14, color: "#666" }}>
-            Aucun avis dans cet état.
-          </div>
+          <div className="reviews-review-empty">Aucun avis dans cet état.</div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

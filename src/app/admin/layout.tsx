@@ -7,8 +7,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { CartProvider } from "@/context/CartContext";
 
 import "./styles/admin.css";
-import "./styles/admin-login.css";
-
 import AdminShell from "./components/AdminShell";
 
 type AdminRole = "admin" | "logistics";
@@ -16,7 +14,6 @@ type AdminRole = "admin" | "logistics";
 function isAllowedForRole(pathname: string, role: AdminRole) {
   if (role === "admin") return true;
 
-  // logistics: accès très limité
   if (role === "logistics") {
     return (
       pathname === "/admin/logistics" ||
@@ -32,8 +29,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const isLogin = pathname === "/admin/login";
-  const [authChecked, setAuthChecked] = useState(false);
+  const isLoginPage = pathname === "/admin/login";
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -41,33 +38,31 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("admin_token");
     const role = (localStorage.getItem("admin_role") || "admin") as AdminRole;
 
-    if (!token && !isLogin) {
+    if (!token && !isLoginPage) {
       router.replace("/admin/login");
       return;
     }
 
-    if (token && isLogin) {
+    if (token && isLoginPage) {
       router.replace(role === "logistics" ? "/admin/logistics" : "/admin");
       return;
     }
 
-    if (token && !isLogin && !isAllowedForRole(pathname, role)) {
+    if (token && !isLoginPage && !isAllowedForRole(pathname, role)) {
       router.replace(role === "logistics" ? "/admin/logistics" : "/admin");
       return;
     }
 
-    setAuthChecked(true);
-  }, [router, pathname, isLogin]);
+    setIsReady(true);
+  }, [router, pathname, isLoginPage]);
 
-  if (!authChecked && !isLogin) return null;
-
-  if (isLogin) {
-    return <CartProvider>{children}</CartProvider>;
+  if (!isLoginPage && !isReady) {
+    return null;
   }
 
   return (
     <CartProvider>
-      <AdminShell>{children}</AdminShell>
+      {isLoginPage ? children : <AdminShell>{children}</AdminShell>}
     </CartProvider>
   );
 }

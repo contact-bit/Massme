@@ -6,7 +6,7 @@ import { isLocale } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
 
 const BANK_DETAILS = {
-  beneficiary: "MASSME SAS", // ✅ remplace
+  beneficiary: "Lazurco SAS", // ✅ remplace
   iban: "FR76 XXXX XXXX XXXX XXXX XXXX XXX", // ✅ remplace
   bic: "XXXXXXXXXXX", // ✅ remplace
   bankName: "Votre banque", // ✅ optionnel

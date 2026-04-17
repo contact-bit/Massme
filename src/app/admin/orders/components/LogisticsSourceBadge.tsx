@@ -14,18 +14,14 @@ export function LogisticsSourceBadge({ order }: { order: Order }) {
 
   return (
     <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "6px 10px",
-        borderRadius: 999,
-        border: `1px solid ${ui.border}`,
-        background: ui.bg,
-        color: ui.color,
-        fontSize: 12,
-        fontWeight: 800,
-        lineHeight: 1,
-      }}
+      className="statusBadge"
+      style={
+        {
+          "--badge-bg": ui.bg,
+          "--badge-border": ui.border,
+          "--badge-color": ui.color,
+        } as React.CSSProperties
+      }
     >
       {getLogisticsSourceLabel(source)}
     </span>

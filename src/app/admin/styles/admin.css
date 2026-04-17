@@ -1,22 +1,10 @@
 /* =========================================================
-   ADMIN — MAIN ENTRY (imports)
-   ⚠️ Ne mets RIEN d’autre que des @import ici
+   ADMIN — MAIN ENTRY (imports only)
 ========================================================= */
 
-/* 1) Design tokens (couleurs, radius, ombres, fonts) */
 @import "./admin.tokens.css";
-
-/* 2) Shell global (navbar, layout principal, pages) */
 @import "./admin.shell.css";
-
-/* 3) Components réutilisables (cards, buttons, forms, tables…) */
 @import "./admin.components.css";
-
-/* 4) Dashboard (KPIs, graph, alerts, tables) */
-@import "./admin.dashboard.css";
-
-/* 5) Login */
-@import "./admin-login.css";
-
 @import "./admin.forms.css";
-
+@import "./admin.dashboard.css";
+@import "./admin-login.css";

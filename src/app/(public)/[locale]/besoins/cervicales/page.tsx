@@ -14,8 +14,8 @@ export default function CervicalesPage() {
         "La position dite « position bulle » est indispensable pour permettre au gaz intraoculaire d’agir correctement sur la rétine.",
         "Cependant, sans support adapté, cette posture peut rapidement provoquer des tensions cervicales, des raideurs et une fatigue musculaire marquée.",
 
-        // ROLE D’VITECTROMED
-        "VitectroMed a été conçu pour accompagner les patients durant cette phase de convalescence en facilitant le maintien de la position prescrite.",
+        // ROLE D’VITRECTOMED
+        "Vitrectomed a été conçu pour accompagner les patients durant cette phase de convalescence en facilitant le maintien de la position prescrite.",
         "En offrant un appui stable et mieux réparti, il aide à limiter les contraintes exercées sur les cervicales pendant les périodes prolongées en position.",
 
         // CONFORT & STABILITE
@@ -23,15 +23,15 @@ export default function CervicalesPage() {
         "Il permet de maintenir la tête dans une position plus stable, ce qui contribue à diminuer la sollicitation excessive des muscles du cou.",
 
         // USAGES QUOTIDIENS
-        "Pendant la convalescence, VitectroMed peut être utilisé lors des temps de repos compatibles avec les recommandations médicales.",
+        "Pendant la convalescence, Vitrectomed peut être utilisé lors des temps de repos compatibles avec les recommandations médicales.",
         "Il aide le patient à conserver une posture plus constante, de jour comme de nuit, sans multiplier les ajustements inconfortables.",
 
         // LIMITES & RAPPEL MEDICAL
         "Les douleurs cervicales peuvent varier d’un patient à l’autre en fonction de la durée de la position prescrite et de la condition physique individuelle.",
-        "VitectroMed n’a pas vocation à traiter une pathologie cervicale en dehors du cadre post-opératoire.",
+        "Vitrectomed n’a pas vocation à traiter une pathologie cervicale en dehors du cadre post-opératoire.",
 
         // CONCLUSION
-        "En facilitant le maintien de la position post-vitrectomie, VitectroMed contribue à réduire l’inconfort cervical lié à la posture.",
+        "En facilitant le maintien de la position post-vitrectomie, Vitrectomed contribue à réduire l’inconfort cervical lié à la posture.",
         "Il s’inscrit comme un dispositif d’accompagnement destiné à améliorer le confort pendant la période de récupération.",
         "Pour toute douleur persistante ou inhabituelle, il est essentiel de consulter un professionnel de santé."
       ]}

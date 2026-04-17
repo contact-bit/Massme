@@ -45,7 +45,7 @@ export default function AdminNavbar() {
     <header className="admin-topbar">
       <div className="admin-topbar-inner">
         <Link href={role === "logistics" ? "/admin/logistics" : "/admin"} className="admin-logo">
-          Vitectromed <span>Admin</span>
+          Vitrectomed <span>Admin</span>
         </Link>
 
         <nav className="admin-nav">
