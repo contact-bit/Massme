@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import paypal from "@paypal/checkout-server-sdk";
 import { getPayPalClient } from "@/lib/paypal-client";
 import { dbAdmin } from "@/lib/firebase.admin";
-import { sendOrderEmails } from "@/lib/mailer";
+import { sendOrderEmails } from "@/lib/mailer"; // ⬅️ sendReviewEmail supprimé ici
 import { createOrUpdateOrder } from "@/server/shipstation/client";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 import { generateOrderNumber } from "@/server/orders/generateOrderNumber";
@@ -38,7 +38,6 @@ function normalizeEmail(v: unknown): string | null {
   return e;
 }
 
-// Build ShipStation payload from your Firestore order shape (best-effort)
 function buildShipStationBody(orderData: any, orderDocId: string) {
   const orderNumber =
     asString(pickFirst(orderData?.orderNumber, orderData?.number, orderData?.id), orderDocId) ||
@@ -58,7 +57,9 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
     ? orderData.customer_email
     : undefined;
 
-  const totalTTC = Number(orderData?.totals?.totalTTC ?? orderData?.total ?? orderData?.amount_total ?? 0);
+  const totalTTC = Number(
+    orderData?.totals?.totalTTC ?? orderData?.total ?? orderData?.amount_total ?? 0
+  );
 
   const ship =
     pickFirst(
@@ -89,7 +90,6 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
         ),
         ""
       ).trim() || "Customer",
-
     street1: asString(
       pickFirst(
         bill?.street1,
@@ -104,7 +104,6 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
       ),
       ""
     ).trim(),
-
     street2:
       asString(
         pickFirst(
@@ -118,19 +117,15 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
         ),
         ""
       ).trim() || undefined,
-
     city: asString(pickFirst(bill?.city, bill?.town, bill?.locality), "").trim(),
-
     state: asString(pickFirst(bill?.state, bill?.province, bill?.region), "").trim() || undefined,
-
     postalCode: asString(
       pickFirst(bill?.postalCode, bill?.zip, bill?.postcode, bill?.zipCode, bill?.zip_code),
       ""
     ).trim(),
-
     country: asString(pickFirst(bill?.country, bill?.countryCode, bill?.country_code), "FR").trim(),
-
-    phone: asString(pickFirst(bill?.phone, bill?.phoneNumber, bill?.mobile), "").trim() || undefined,
+    phone:
+      asString(pickFirst(bill?.phone, bill?.phoneNumber, bill?.mobile), "").trim() || undefined,
   };
 
   const shipTo = {
@@ -146,7 +141,6 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
         ),
         ""
       ).trim() || billTo.name || "Customer",
-
     street1:
       asString(
         pickFirst(
@@ -162,7 +156,6 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
         ),
         ""
       ).trim() || billTo.street1,
-
     street2:
       asString(
         pickFirst(
@@ -176,20 +169,19 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
         ),
         ""
       ).trim() || undefined,
-
     city: asString(pickFirst(ship?.city, ship?.town, ship?.locality), "").trim() || billTo.city,
-
     state: asString(pickFirst(ship?.state, ship?.province, ship?.region), "").trim() || undefined,
-
     postalCode:
       asString(
         pickFirst(ship?.postalCode, ship?.zip, ship?.postcode, ship?.zipCode, ship?.zip_code),
         ""
       ).trim() || billTo.postalCode,
-
-    country: asString(pickFirst(ship?.country, ship?.countryCode, ship?.country_code), billTo.country || "FR").trim(),
-
-    phone: asString(pickFirst(ship?.phone, ship?.phoneNumber, ship?.mobile), "").trim() || billTo.phone,
+    country: asString(
+      pickFirst(ship?.country, ship?.countryCode, ship?.country_code),
+      billTo.country || "FR"
+    ).trim(),
+    phone:
+      asString(pickFirst(ship?.phone, ship?.phoneNumber, ship?.mobile), "").trim() || billTo.phone,
   };
 
   if (!shipTo.street1 || !shipTo.city || !shipTo.postalCode || !shipTo.country) {
@@ -199,7 +191,8 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
   }
 
   const rawItems =
-    pickFirst(orderData?.items, orderData?.line_items, orderData?.cart?.items, orderData?.products) ?? [];
+    pickFirst(orderData?.items, orderData?.line_items, orderData?.cart?.items, orderData?.products) ??
+    [];
 
   const items = Array.isArray(rawItems)
     ? rawItems
@@ -231,12 +224,10 @@ function buildShipStationBody(orderData: any, orderDocId: string) {
         .filter((it: any) => it.name.length > 0)
     : [];
 
-  const orderStatus: "awaiting_shipment" = "awaiting_shipment";
-
   return {
     orderNumber,
     orderDate,
-    orderStatus,
+    orderStatus: "awaiting_shipment" as const,
     customerEmail,
     billTo,
     shipTo,
@@ -253,7 +244,6 @@ export async function POST(req: Request) {
 
   try {
     const body = (await req.json().catch(() => ({}))) as any;
-
     const orderId = body?.orderId;
     const fallbackOrderDocId = body?.orderDocId || body?.customId || null;
 
@@ -262,10 +252,8 @@ export async function POST(req: Request) {
     }
 
     const client = getPayPalClient();
-
     const captureRequest = new paypal.orders.OrdersCaptureRequest(orderId);
     captureRequest.requestBody({});
-
     const capture = await client.execute(captureRequest);
 
     const purchaseUnit = capture?.result?.purchase_units?.[0];
@@ -296,12 +284,6 @@ export async function POST(req: Request) {
     }
 
     if (!orderDocId) {
-      console.warn("[paypal/capture-order] orderDocId introuvable", {
-        orderId,
-        customId,
-        fallbackOrderDocId,
-      });
-
       return NextResponse.json({
         ok: true,
         reqId,
@@ -322,13 +304,13 @@ export async function POST(req: Request) {
     const snapBefore = await orderRef.get();
     const existing = snapBefore.exists ? (snapBefore.data() as any) : null;
 
-    const alreadySent = Boolean(existing?.emails?.sent);
-    const alreadyPushedToShipstation = Boolean(existing?.shipstation?.pushedAt);
-
     const existingEmail =
       normalizeEmail(existing?.email) ||
       normalizeEmail(existing?.customerEmail) ||
       normalizeEmail(existing?.customer_email);
+
+    const alreadySent = Boolean(existing?.emails?.sent);
+    const alreadyPushedToShipstation = Boolean(existing?.shipstation?.pushedAt);
 
     await orderRef.set(
       {
@@ -360,76 +342,36 @@ export async function POST(req: Request) {
         {
           "debug.paypalFinalizeAt": new Date(),
           "debug.paypalFinalizeResult": finalizeResult ?? null,
-          "reviewEmail.debugLastScheduleAt": new Date(),
-          "reviewEmail.debugLastScheduleResult": finalizeResult?.reviewResult ?? null,
         },
         { merge: true }
       );
     } catch (err: any) {
-      console.error("[paypal/capture-order] finalize paid order failed:", err?.message || err);
-
       await orderRef.set(
         {
           "debug.paypalFinalizeErrorAt": new Date(),
           "debug.paypalFinalizeError": String(err?.message || err),
-          "reviewEmail.lastError": String(err?.message || err),
-          "reviewEmail.lastErrorAt": new Date(),
         },
         { merge: true }
       );
     }
 
-    const snapAfter = await orderRef.get();
-    const orderData = snapAfter.exists ? (snapAfter.data() as any) : null;
+    let snapAfter = await orderRef.get();
+    let orderData = snapAfter.exists ? (snapAfter.data() as any) : null;
 
-// ✅ FIX ORDER NUMBER
-let orderNumber = orderData?.orderNumber;
-
-if (!orderNumber) {
-  orderNumber = await generateOrderNumber();
-
-  await orderRef.set(
-    { orderNumber },
-    { merge: true }
-  );
-
-  // recharge pour avoir la bonne valeur partout
-  const updatedSnap = await orderRef.get();
-  Object.assign(orderData, updatedSnap.data());
-}
-
-console.log("[orderNumber] final =", orderNumber);
-
-    console.log("[paypal/capture-order] finalized", {
-      reqId,
-      orderDocId,
-      hasOrderData: !!orderData,
-      orderKeys: orderData ? Object.keys(orderData) : [],
-      alreadyPushedToShipstation,
-    });
+    let orderNumber = orderData?.orderNumber;
+    if (!orderNumber) {
+      orderNumber = await generateOrderNumber();
+      await orderRef.set({ orderNumber }, { merge: true });
+      snapAfter = await orderRef.get();
+      orderData = snapAfter.exists ? (snapAfter.data() as any) : null;
+    }
 
     let shipstationPushed = false;
     let shipstationError: string | null = null;
 
     if (!alreadyPushedToShipstation) {
       try {
-        console.log("[shipstation] shippingAddress sample", {
-          shippingAddress: orderData?.shippingAddress,
-          billingAddress: orderData?.billingAddress,
-        });
-
         const ssBody = buildShipStationBody(orderData, orderDocId);
-
-        console.log("[shipstation] build summary", {
-          reqId,
-          orderNumber: ssBody.orderNumber,
-          itemsLen: ssBody.items?.length ?? 0,
-          hasShipTo: !!ssBody.shipTo?.street1,
-          env: {
-            hasKey: !!process.env.SHIPSTATION_API_KEY,
-            hasSecret: !!process.env.SHIPSTATION_API_SECRET,
-          },
-        });
 
         if (!ssBody.items || ssBody.items.length === 0) {
           throw new Error("ShipStation payload has no items (check orderData items mapping).");
@@ -449,10 +391,8 @@ console.log("[orderNumber] final =", orderNumber);
         );
 
         shipstationPushed = true;
-        console.log("[shipstation] push OK", { reqId, ssOrderId: (ssOrder as any)?.orderId });
       } catch (err: any) {
         shipstationError = String(err?.message || err);
-        console.error("[shipstation] push ERROR (non bloquant):", shipstationError);
 
         await orderRef.set(
           {
@@ -466,66 +406,78 @@ console.log("[orderNumber] final =", orderNumber);
         );
       }
     } else {
-      console.log("[shipstation] already pushed, skip", { reqId, orderDocId });
       shipstationPushed = true;
     }
 
     let emailSent = false;
 
-    if (!alreadySent && orderData?.email) {
+    const clientEmail = normalizeEmail(orderData?.email) || existingEmail;
+
+    if (clientEmail && orderData) {
       const totalTTC = Number(orderData?.totals?.totalTTC ?? 0);
       const amountTotalCents = totalTTC > 0 ? toCents(totalTTC) : toCents(capturedValue);
 
-      try {
-        await sendOrderEmails({
-          order: {
-            id: orderData.id || orderDocId,
-            amount_total: amountTotalCents,
-            currency: (orderData?.currency || "EUR").toLowerCase(),
-            customer_email: orderData.email,
-            payment_status: "paid",
-            created_at: orderData.createdAt,
-            provider: "paypal",
-            orderData,
-            locale: orderData?.locale || "fr",
-          },
-          clientEmail: orderData.email,
-        });
+      const emailOrderPayload = {
+        id: orderData.id || orderDocId,
+        amount_total: amountTotalCents,
+        currency: (orderData?.currency || "EUR").toLowerCase(),
+        customer_email: clientEmail,
+        payment_status: "paid",
+        created_at: orderData.createdAt || orderData.created_at || new Date(),
+        provider: "paypal" as const,
+        orderData,
+        locale: orderData?.locale || "fr",
+        orderNumber,
+      };
 
-        emailSent = true;
+      if (!alreadySent) {
+        try {
+          const mailResult = await sendOrderEmails({
+            order: emailOrderPayload,
+            clientEmail,
+          });
 
-        await orderRef.set(
-          {
-            emails: {
-              sent: true,
-              sentAt: new Date(),
-              provider: "paypal",
+          emailSent = true;
+
+          await orderRef.set(
+            {
+              emails: {
+                sent: true,
+                sentAt: new Date(),
+                provider: "paypal",
+                client: mailResult?.client ?? null,
+                admin: mailResult?.admin ?? null,
+                logistics: mailResult?.logistics ?? [],
+              },
+              invoiceEmail: {
+                status: "sent",
+                sentAt: new Date(),
+                provider: "paypal",
+                orderNumber: mailResult?.orderNumber ?? orderNumber,
+              },
             },
-          },
-          { merge: true }
-        );
-      } catch (mailErr: any) {
-        console.error("[paypal/capture-order] EMAIL ERROR (non bloquant):", mailErr);
-
-        await orderRef.set(
-          {
-            emails: {
-              sent: false,
-              lastErrorAt: new Date(),
-              lastError: String(mailErr?.message || mailErr),
-              provider: "paypal",
+            { merge: true }
+          );
+        } catch (mailErr: any) {
+          await orderRef.set(
+            {
+              emails: {
+                sent: false,
+                lastErrorAt: new Date(),
+                lastError: String(mailErr?.message || mailErr),
+                provider: "paypal",
+              },
+              invoiceEmail: {
+                status: "error",
+                lastErrorAt: new Date(),
+                lastError: String(mailErr?.message || mailErr),
+                provider: "paypal",
+              },
             },
-          },
-          { merge: true }
-        );
+            { merge: true }
+          );
+        }
       }
-    } else if (alreadySent) {
-      console.log("[paypal/capture-order] email déjà envoyé, skip", { orderDocId });
-    } else {
-      console.warn("[paypal/capture-order] Email non envoyé: orderData/email manquant", {
-        orderDocId,
-        hasOrderData: !!orderData,
-      });
     }
 
     return NextResponse.json({
@@ -542,8 +494,9 @@ console.log("[orderNumber] final =", orderNumber);
       shipstationError,
     });
   } catch (e: any) {
-    console.error("[paypal/capture-order] ERROR:", e);
-
-    return NextResponse.json({ ok: false, error: e?.message ?? "Capture failed" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: e?.message ?? "Capture failed" },
+      { status: 500 }
+    );
   }
 }

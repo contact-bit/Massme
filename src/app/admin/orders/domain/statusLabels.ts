@@ -10,6 +10,8 @@ export function paymentStatusLabelFR(status?: string) {
       return "Payé";
     case "pending_payment":
       return "En attente de paiement";
+    case "awaiting_bank_transfer":
+      return "En attente de virement";
     case "refunded":
       return "Remboursé";
     case "failed":
@@ -18,7 +20,7 @@ export function paymentStatusLabelFR(status?: string) {
     case "cancelled":
       return "Annulé";
     default:
-      return "Inconnu";
+      return "En attente";
   }
 }
 

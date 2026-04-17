@@ -3,19 +3,18 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { dbAdmin } from "@/lib/firebase.admin";
-import { Resend } from "resend";
-import { generateInvoicePDF } from "@/lib/generateInvoice";
+import { FieldValue } from "firebase-admin/firestore";
 import { computePrice } from "@/lib/pricing";
 import { createOrUpdateOrder } from "@/server/shipstation/client";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 import { scheduleReviewEmailForOrder } from "@/server/reviewEmailScheduler";
-import { FieldValue } from "firebase-admin/firestore";
+import { sendOrderEmails, OrderEmailPayload } from "@/lib/mailer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /* =====================================================
-   EMAIL I18N
+   EMAIL I18N (toujours utilisé pour le contenu de finalize/review, etc.)
 ===================================================== */
 type EmailLocale = "fr" | "en" | "it" | "es" | "de" | "nl";
 
@@ -214,9 +213,7 @@ function buildShipStationBody(orderData: any, orderId: string) {
   const amountPaidTTC = Number(
     orderData?.totals?.totalTTC ?? orderData?.totalTTC ?? orderData?.amount_total ?? 0
   );
-  const shippingAmount = Number(
-    orderData?.totals?.shipping ?? orderData?.shippingMethod?.priceTTC ?? 0
-  );
+  const shippingAmount = Number(orderData?.totals?.shipping ?? orderData?.shippingMethod?.priceTTC ?? 0);
   const taxAmount = Number(orderData?.totals?.tax ?? orderData?.totals?.vat ?? 0);
 
   return {
@@ -538,7 +535,9 @@ export async function POST(req: Request) {
 
       const bodyHasImages =
         Array.isArray((ssBody as any)?.items) &&
-        (ssBody as any).items.some((x: any) => typeof x?.imageUrl === "string" && x.imageUrl.trim().length > 0);
+        (ssBody as any).items.some(
+          (x: any) => typeof x?.imageUrl === "string" && x.imageUrl.trim().length > 0
+        );
 
       await ref.set(
         {
@@ -569,7 +568,7 @@ export async function POST(req: Request) {
   }
 
   /* =====================================================
-     3) INVOICE PDF + EMAIL (non bloquant + anti-doublon)
+     3) EMAIL CONFIRMATION + FACTURE (commun Stripe/PayPal)
   ===================================================== */
   try {
     const afterSnap = await ref.get();
@@ -583,101 +582,70 @@ export async function POST(req: Request) {
     const emailForInvoice = normalizeEmail(after?.email) || customerEmail;
     if (!emailForInvoice) {
       console.warn("[stripe/webhook] invoice skipped (no email)", { orderId });
+      await ref.set(
+        {
+          invoiceEmail: {
+            status: "skipped",
+            reason: "missing_email",
+            updatedAt: new Date(),
+          },
+        },
+        { merge: true }
+      );
       return NextResponse.json({ received: true });
     }
 
-    const resendKey = process.env.RESEND_API_KEY;
-    if (!resendKey) throw new Error("missing_RESEND_API_KEY");
+    const totalTTC = Number(after?.totals?.totalTTC ?? after?.amount_total ?? 0);
+    const amountTotalCents = Math.round((totalTTC || 0) * 100);
 
-    const resend = new Resend(resendKey);
+    const orderNumberForEmail: string =
+      (typeof after.orderNumber === "string" && after.orderNumber.length > 0
+        ? after.orderNumber
+        : (session.metadata?.order_number as string | undefined)) || orderId;
 
-    const latest = after || savedOrder || {};
-
-    // 🔥 calcul du vrai numéro de commande pour facture & email
-    const displayOrderNumber: string =
-      (typeof latest.orderNumber === "string" && latest.orderNumber.length > 0
-        ? latest.orderNumber
-        : (session.metadata?.order_number as string | undefined)) ||
-      orderId;
-
-    console.log("WEBHOOK ORDER DEBUG", {
-      orderId,
-      orderNumberFirestore: latest?.orderNumber,
-      orderNumberMetadata: session.metadata?.order_number,
-      displayOrderNumber,
-    });
-
-    const items = (latest.items || []).map((it: any) => {
-      const priceHT = Number(it?.priceHT ?? it?.price ?? 0);
-      return {
-        name: it?.name || "Produit",
-        description: it?.description || "",
-        quantity: Number(it?.quantity || 1),
-        price: priceHT,
-        priceHT,
-      };
-    });
-
-    const sm = latest.shippingMethod || {};
-    const shippingHT = Number(sm?.priceHT ?? sm?.price ?? 0);
-    const vatRate = Number(sm?.vatRate ?? 0);
-    const shippingCalc = computePrice({ priceHT: shippingHT, vatRate });
-
-    const shippingMethod = {
-      ...sm,
-      price: shippingCalc.ttc,
-      priceHT: shippingHT,
-      vatRate,
-      priceTTC: shippingCalc.ttc,
-      type: sm?.type || "home",
-      relayProvider: sm?.relayProvider || null,
+    const emailOrderPayload: OrderEmailPayload = {
+      id: after.id || orderId,
+      amount_total: amountTotalCents,
+      currency: (after?.currency || "EUR").toLowerCase(),
+      customer_email: emailForInvoice,
+      payment_status: "paid",
+      created_at: after.createdAt || after.created_at || new Date(),
+      provider: "stripe",
+      orderData: {
+        ...after,
+        orderNumber: orderNumberForEmail,
+      },
+      locale,
+      orderNumber: orderNumberForEmail,
     };
 
-    const normalizedOrder = {
-      ...latest,
-      items,
-      shippingMethod,
-      shippingPrice: shippingHT,
-      customerFirstName: latest?.customerFirstName || firstName,
-      customerLastName: latest?.customerLastName || lastName,
-      // on force le numéro métier pour le PDF
-      orderNumber: displayOrderNumber,
-    };
-
-    const pdfBuffer = await generateInvoicePDF(normalizedOrder, orderId, { locale });
-
-    const sent = await resend.emails.send({
-      from: "Massme • Support tact@hdconnects.com>",
-      to: emailForInvoice,
-      subject: mail.subject,
-      html: `
-        <div style="font-family:Arial,sans-serif;padding:20px">
-          <h2>${mail.title(firstName)}</h2>
-          <p>${mail.intro}</p>
-          <p><b>${mail.orderLabel} :</b> ${displayOrderNumber}</p>
-        </div>
-      `,
-      attachments: [
-        {
-          filename: `invoice-${displayOrderNumber}.pdf`,
-          content: pdfBuffer.toString("base64"),
-          contentType: "application/pdf",
-        },
-      ],
+    const mailResult = await sendOrderEmails({
+      order: emailOrderPayload,
+      clientEmail: emailForInvoice,
     });
 
     await ref.set(
       {
+        emails: {
+          sent: true,
+          sentAt: new Date(),
+          provider: "stripe",
+          client: mailResult?.client ?? null,
+          admin: mailResult?.admin ?? null,
+          logistics: mailResult?.logistics ?? [],
+        },
         invoiceEmail: {
           status: "sent",
           sentAt: new Date(),
-          resendId: (sent as any)?.data?.id || (sent as any)?.id || null,
+          provider: "stripe",
+          orderNumber: mailResult?.orderNumber ?? orderNumberForEmail,
+          to: emailForInvoice,
         },
       },
       { merge: true }
     );
   } catch (err: any) {
-    console.error("❌ PDF / invoice email error:", err?.message || err);
+    console.error("❌ Stripe email / invoice error:", err?.message || err);
 
     await ref.set(
       {

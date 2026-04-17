@@ -6,7 +6,7 @@ import { scheduleReviewEmailForOrder } from "@/server/reviewEmailScheduler";
 
 type FinalizePaidOrderInput = {
   orderId: string;
-  provider: "stripe" | "paypal";
+  provider: "stripe" | "paypal" | "bank_transfer";
   email?: string | null;
   locale?: string | null;
   payment: Record<string, any>;

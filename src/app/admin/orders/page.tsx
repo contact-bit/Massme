@@ -45,13 +45,12 @@ export default function AdminOrdersPage() {
     const count = filtered.length;
     const paidCount = filtered.filter((o) => o.status === "paid").length;
     const pendingCount = filtered.filter(
-      (o) => o.status === "pending_payment"
+      (o) =>
+        o.status === "pending_payment" ||
+        o.status === "awaiting_bank_transfer"
     ).length;
 
-    const totalEUR = filtered.reduce(
-      (sum, o) => sum + (o.__total ?? 0),
-      0
-    );
+    const totalEUR = filtered.reduce((sum, o) => sum + (o.__total ?? 0), 0);
 
     const paidEUR = filtered
       .filter((o) => o.status === "paid")
@@ -87,9 +86,28 @@ export default function AdminOrdersPage() {
     });
   };
 
-  /**
-   * 🔥 Helper global → numéro client prioritaire
-   */
+  const handleValidateBankTransfer = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/orders/${id}/validate-bank-transfer`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Échec de validation du virement");
+      }
+
+      toastIt("Virement validé ✅");
+      await fetchOrders();
+      setDrawerId((curr) => (curr === id ? id : curr));
+    } catch (e: any) {
+      toastIt(e?.message || "Erreur validation virement ❌");
+    }
+  };
+
   const getOrderLabel = (o?: Order | null) =>
     o?.orderNumber || (o?.id ? compactId(o.id) : "—");
 
@@ -135,22 +153,17 @@ export default function AdminOrdersPage() {
           selection={selection}
           deleting={deleting}
           onOpen={(id) => setDrawerId(id)}
-
-          /** ✅ COPY NUMERO CLIENT */
           onCopyId={async (id) => {
             const order = orders.find((o) => o.id === id);
             await copyText(getOrderLabel(order));
             toastIt("Numéro de commande copié ✅");
           }}
-
           onDelete={handleDelete}
         />
 
         <Drawer
           open={!!drawerId}
           onClose={() => setDrawerId(null)}
-
-          /** ✅ TITRE PRO */
           title={
             activeOrder
               ? `Commande ${getOrderLabel(activeOrder)}`
@@ -162,26 +175,23 @@ export default function AdminOrdersPage() {
           ) : (
             <OrderDetails
               order={activeOrder}
-
-              /** ✅ COPY NUMERO */
               onCopyId={async () => {
                 await copyText(getOrderLabel(activeOrder));
                 toastIt("Numéro de commande copié ✅");
               }}
-
               onCopyEmail={async () => {
                 await copyText(
                   activeOrder.__email || activeOrder.email || ""
                 );
                 toastIt("Email copié ✅");
               }}
-
               onCopyAddress={async () => {
                 await copyText(
                   formatAddress(activeOrder.shippingAddress)
                 );
                 toastIt("Adresse copiée ✅");
               }}
+              onValidateBankTransfer={handleValidateBankTransfer}
             />
           )}
         </Drawer>

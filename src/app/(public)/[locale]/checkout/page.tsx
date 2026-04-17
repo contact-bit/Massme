@@ -58,14 +58,12 @@ export default function CheckoutPage() {
   >("");
   const [heardFromOther, setHeardFromOther] = useState("");
 
-  // country auto selon locale
   useEffect(() => {
     const country = LOCALE_TO_COUNTRY[locale] ?? "FR";
     setBillingCustomer((prev) => ({ ...prev, country }));
     setShippingCustomer((prev) => ({ ...prev, country }));
   }, [locale]);
 
-  // shipping = billing si checkbox
   useEffect(() => {
     if (sameAsBilling) {
       setShippingCustomer({
@@ -77,7 +75,6 @@ export default function CheckoutPage() {
     }
   }, [sameAsBilling, billingCustomer]);
 
-  // hooks
   const {
     methods,
     loading: shippingLoading,
@@ -94,7 +91,6 @@ export default function CheckoutPage() {
     error: paymentError,
   } = usePaymentMethods({ country: shippingCustomer.country });
 
-  // totals en centimes
   const shippingHTEUR = shippingMethod?.priceHT ?? 0;
   const shippingVatRate = shippingMethod?.vatRate ?? 0;
 
@@ -109,13 +105,9 @@ export default function CheckoutPage() {
 
   const finalTTCCents = cartTTCCents + shippingTTCCents;
 
-  // -----------------------
-  // PayPal options (prod-safe)
-  // -----------------------
   const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
 
   useEffect(() => {
-    // Logs utiles en prod (sans exposer tout le secret)
     console.log("[PayPal] NEXT_PUBLIC_PAYPAL_CLIENT_ID present =", !!paypalClientId);
     if (paypalClientId) {
       console.log("[PayPal] clientId prefix =", paypalClientId.slice(0, 6) + "...");
@@ -124,7 +116,6 @@ export default function CheckoutPage() {
 
   const paypalOptions = useMemo(
     () => ({
-      // Si jamais quelqu’un a un clientId vide en prod, on évite le crash en le voyant tout de suite
       clientId: paypalClientId || "MISSING_CLIENT_ID",
       currency: "EUR",
       intent: "capture",
@@ -134,7 +125,6 @@ export default function CheckoutPage() {
     [locale, paypalClientId]
   );
 
-  // items safe (ocularest max 2)
   const safeItems = useMemo(() => {
     return items.map((item) => {
       if (item.id === OCULAREST_ID) {
@@ -158,7 +148,6 @@ export default function CheckoutPage() {
 
     const fullName = `${billingCustomer.firstName.trim()} ${billingCustomer.lastName.trim()}`;
 
-    // ✅ VIREMENT BANCAIRE
     if (paymentMethod.provider === "bank_transfer") {
       const res = await fetch("/api/bank-transfer/create-order", {
         method: "POST",
@@ -203,11 +192,13 @@ export default function CheckoutPage() {
 
       window.location.href = `/${locale}/bank-transfer?order_id=${encodeURIComponent(
         json.orderId
-      )}`;
+      )}&reference=${encodeURIComponent(
+        json.reference || json.orderNumber || ""
+      )}&amount=${encodeURIComponent(String(json.totalTTC ?? ""))}`;
+
       return;
     }
 
-    // ✅ STRIPE
     if (paymentMethod.provider === "stripe") {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -253,7 +244,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    // ✅ PAYPAL : paiement via bouton, pas via ce bouton
     if (paymentMethod.provider === "paypal") {
       alert("Merci d’utiliser le bouton PayPal pour régler la commande.");
       return;
@@ -330,7 +320,6 @@ export default function CheckoutPage() {
         finalTTCCents={finalTTCCents}
       />
 
-      {/* PayPal: on n'affiche PAS le composant si le clientId manque en prod */}
       {paymentMethod?.provider === "paypal" &&
         (!paypalClientId ? (
           <section className="checkout-section">

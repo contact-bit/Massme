@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useMemo, useState } from "react";
 import type { Order } from "../domain/types";
 import {
   formatDateFR,
@@ -46,12 +46,16 @@ export function OrderDetails({
   onCopyId,
   onCopyEmail,
   onCopyAddress,
+  onValidateBankTransfer,
 }: {
   order: Order;
   onCopyId: () => void;
   onCopyEmail: () => void;
   onCopyAddress: () => void;
+  onValidateBankTransfer?: (id: string) => Promise<void>;
 }) {
+  const [validating, setValidating] = useState(false);
+
   const items = Array.isArray(order.items) ? order.items : [];
   const created = order.__created ?? null;
   const total = order.__total ?? getTotal(order);
@@ -71,7 +75,51 @@ export function OrderDetails({
   const relay = (order as any)?.relayPoint ?? null;
   const billing = (order as any)?.billingAddress ?? null;
 
-  const paymentProvider = (order as any)?.payment?.provider;
+  const paymentProvider =
+    (order as any)?.payment?.provider ||
+    (order as any)?.paymentProvider ||
+    (order as any)?.provider ||
+    null;
+
+  const paymentStatus =
+    (order as any)?.payment?.status ||
+    (order as any)?.paymentStatus ||
+    null;
+
+  const bankTransferRef =
+    (order as any)?.payment?.reference ||
+    (order as any)?.bankTransfer?.reference ||
+    (order as any)?.reference ||
+    null;
+
+  const isBankTransfer = paymentProvider === "bank_transfer";
+
+  const canValidateBankTransfer = useMemo(() => {
+    if (!isBankTransfer) return false;
+
+    const status = String(order.status || "").toLowerCase();
+    const payStatus = String(paymentStatus || "").toLowerCase();
+
+    if (status === "paid") return false;
+    if (payStatus === "paid" || payStatus === "validated") return false;
+
+    return (
+      status === "awaiting_bank_transfer" ||
+      status === "pending_payment" ||
+      payStatus === "pending" ||
+      payStatus === "awaiting_bank_transfer"
+    );
+  }, [isBankTransfer, order.status, paymentStatus]);
+
+  const handleValidate = async () => {
+    if (!onValidateBankTransfer || !order?.id || validating) return;
+    try {
+      setValidating(true);
+      await onValidateBankTransfer(order.id);
+    } finally {
+      setValidating(false);
+    }
+  };
 
   return (
     <div className="detailGrid">
@@ -105,9 +153,29 @@ export function OrderDetails({
               ? "💳 Carte bancaire"
               : paymentProvider === "paypal"
               ? "🅿️ PayPal"
+              : paymentProvider === "bank_transfer"
+              ? "🏦 Virement bancaire"
               : "—"}
           </div>
         </div>
+
+        <div className="kv">
+          <div className="kvKey">Statut paiement</div>
+          <div className="kvVal">
+            {paymentStatus === "paid" || paymentStatus === "validated"
+              ? "✅ Payé"
+              : isBankTransfer
+              ? "⏳ En attente de virement"
+              : "—"}
+          </div>
+        </div>
+
+        {isBankTransfer && bankTransferRef && (
+          <div className="kv">
+            <div className="kvKey">Référence virement</div>
+            <div className="kvVal mono">{bankTransferRef}</div>
+          </div>
+        )}
 
         <div className="kv">
           <div className="kvKey">Langue</div>
@@ -122,6 +190,34 @@ export function OrderDetails({
             Copier email
           </button>
         </div>
+
+        {canValidateBankTransfer && (
+          <div
+            style={{
+              marginTop: 14,
+              paddingTop: 14,
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <button
+              type="button"
+              className="btn"
+              onClick={handleValidate}
+              disabled={validating}
+              style={{
+                width: "100%",
+                background: validating ? "#0f766e99" : "#0f766e",
+                color: "#fff",
+                border: "1px solid #115e59",
+                fontWeight: 700,
+              }}
+            >
+              {validating
+                ? "Validation du paiement..."
+                : "✅ Valider le paiement par virement"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* PRODUITS */}
