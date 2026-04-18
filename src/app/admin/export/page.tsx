@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import ExportFilters from "./ExportFilters";
 import ExportActions from "./ExportActions";
 import ExportColumns from "./ExportColumns";
+import "./export.css";
 
-export type Format = "pdf" | "csv" | "accounting_xlsx";
+export type Format = "pdf" | "csv" | "xlsx";
 export type Mode = "day" | "month" | "range";
 
 function localDateISO(date = new Date()) {
@@ -28,12 +29,6 @@ function buildExportLabel(
   if (mode === "day") return `Jour sélectionné : ${day}`;
   if (mode === "month") return `Mois sélectionné : ${month}`;
   return `Période : ${from} → ${to}`;
-}
-
-function getFormatLabel(format: Format) {
-  if (format === "pdf") return "PDF";
-  if (format === "csv") return "CSV complet";
-  return "Compta Excel";
 }
 
 export default function AdminExportPage() {
@@ -79,21 +74,14 @@ export default function AdminExportPage() {
     return `/api/admin/orders/export?${sp.toString()}`;
   }
 
-  const previewHref = useMemo(() => {
-    try {
-      return buildHref("pdf");
-    } catch {
-      return "#";
-    }
-  }, [mode, day, month, from, to]);
-
   async function download(format: Format) {
     setError("");
     setSuccess("");
 
     try {
       const adminPassword = localStorage.getItem("admin_password");
-      if (!adminPassword) {
+
+      if (!adminPassword || adminPassword.length < 5) {
         alert("Session admin expirée, reconnecte-toi.");
         window.location.href = "/admin/login";
         return;
@@ -109,6 +97,7 @@ export default function AdminExportPage() {
 
       if (!res.ok) {
         let message = "Échec de l’export.";
+
         try {
           const data = await res.json();
           message = data?.message || data?.error || message;
@@ -117,11 +106,13 @@ export default function AdminExportPage() {
             message = await res.text();
           } catch {}
         }
+
         setError(`Erreur export : ${message}`);
         return;
       }
 
       const blob = await res.blob();
+
       if (!blob || blob.size === 0) {
         setError("Le fichier généré est vide.");
         return;
@@ -132,14 +123,13 @@ export default function AdminExportPage() {
         dispo.match(/filename\*=UTF-8''([^;]+)/i) ||
         dispo.match(/filename="?([^"]+)"?/i);
 
-      const filename =
-        match?.[1]
-          ? decodeURIComponent(match[1])
-          : format === "pdf"
-          ? "export.pdf"
-          : format === "csv"
-          ? "export.csv"
-          : "accounting_export.xlsx";
+      const filename = match?.[1]
+        ? decodeURIComponent(match[1])
+        : format === "pdf"
+        ? "export.pdf"
+        : format === "csv"
+        ? "export.csv"
+        : "export.xlsx";
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -148,9 +138,11 @@ export default function AdminExportPage() {
       document.body.appendChild(a);
       a.click();
       a.remove();
+
       setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-      setSuccess(`Export téléchargé avec succès : ${filename}`);
+      setSuccess(`Export téléchargé : ${filename}`);
+      setTimeout(() => setSuccess(""), 4000);
     } catch (e: any) {
       console.error(e);
       setError(
@@ -164,16 +156,16 @@ export default function AdminExportPage() {
   const summary = buildExportLabel(mode, day, month, from, to);
 
   return (
-    <main className="admin-page" style={{ paddingBottom: 40 }}>
-      <div className="admin-card" style={{ display: "grid", gap: 18 }}>
-        <div>
-          <h1 className="admin-title" style={{ marginBottom: 6 }}>
-            Export des commandes
-          </h1>
-          <p style={{ margin: 0, color: "rgba(11,18,32,.68)" }}>
-            Choisis la période puis clique directement sur le format voulu.
-          </p>
-        </div>
+    <main className="admin-page exportPage">
+      <section className="admin-card exportCard">
+        <header className="exportHeader">
+          <div>
+            <h1 className="admin-title exportTitle">Export des commandes</h1>
+            <p className="exportSubtitle">
+              Choisis la période puis clique sur le format.
+            </p>
+          </div>
+        </header>
 
         <ExportFilters
           mode={mode}
@@ -188,35 +180,10 @@ export default function AdminExportPage() {
           setTo={setTo}
         />
 
-        <ExportColumns format="pdf" summary={summary} href={previewHref} />
+        <ExportColumns summary={summary} />
 
-        {error && (
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              background: "rgba(239,68,68,.08)",
-              color: "#b91c1c",
-              border: "1px solid rgba(239,68,68,.18)",
-            }}
-          >
-            ⚠️ {error}
-          </div>
-        )}
-
-        {success && (
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              background: "rgba(16,185,129,.08)",
-              color: "#047857",
-              border: "1px solid rgba(16,185,129,.18)",
-            }}
-          >
-            ✅ {success}
-          </div>
-        )}
+        {error && <div className="exportAlert exportAlert--error">⚠️ {error}</div>}
+        {success && <div className="exportAlert exportAlert--success">✅ {success}</div>}
 
         <ExportActions
           mode={mode}
@@ -227,9 +194,8 @@ export default function AdminExportPage() {
           isDownloading={isDownloading}
           isRangeInvalid={isRangeInvalid}
           onDownload={download}
-          getFormatLabel={getFormatLabel}
         />
-      </div>
+      </section>
     </main>
   );
 }

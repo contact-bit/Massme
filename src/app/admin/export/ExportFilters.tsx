@@ -28,29 +28,37 @@ export default function ExportFilters({
   to,
   setTo,
 }: Props) {
+  const isRangeInvalid = mode === "range" && from && to && from > to;
+
+  function changeMode(next: Mode) {
+    setMode(next);
+
+    // reset intelligent (UX propre)
+    if (next === "day") {
+      setMonth("");
+    }
+
+    if (next === "month") {
+      setDay("");
+    }
+
+    if (next !== "range") {
+      setFrom("");
+      setTo("");
+    }
+  }
+
   return (
-    <div style={{ display: "grid", gap: 18 }}>
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          flexWrap: "wrap",
-          alignItems: "center",
-        }}
-      >
-        <ModeButton active={mode === "day"} onClick={() => setMode("day")} label="Jour" />
-        <ModeButton active={mode === "month"} onClick={() => setMode("month")} label="Mois" />
-        <ModeButton active={mode === "range"} onClick={() => setMode("range")} label="Plage" />
+    <section className="exportFilters">
+      {/* MODES */}
+      <div className="exportFilters-modes">
+        <ModeButton active={mode === "day"} onClick={() => changeMode("day")} label="Jour" />
+        <ModeButton active={mode === "month"} onClick={() => changeMode("month")} label="Mois" />
+        <ModeButton active={mode === "range"} onClick={() => changeMode("range")} label="Plage" />
       </div>
 
-      <div
-        style={{
-          padding: 14,
-          borderRadius: 16,
-          background: "rgba(248,250,252,.9)",
-          border: "1px solid rgba(148,163,184,.18)",
-        }}
-      >
+      {/* PANEL */}
+      <div className="exportFilters-panel">
         {mode === "day" && (
           <div className="admin-field">
             <label className="admin-label">Choisir un jour</label>
@@ -76,13 +84,7 @@ export default function ExportFilters({
         )}
 
         {mode === "range" && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 14,
-            }}
-          >
+          <div className="exportFilters-range">
             <div className="admin-field">
               <label className="admin-label">Du</label>
               <input
@@ -96,7 +98,9 @@ export default function ExportFilters({
             <div className="admin-field">
               <label className="admin-label">Au</label>
               <input
-                className="admin-input"
+                className={`admin-input ${
+                  isRangeInvalid ? "admin-input--error" : ""
+                }`}
                 type="date"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
@@ -106,21 +110,23 @@ export default function ExportFilters({
         )}
       </div>
 
-      <div
-        style={{
-          fontSize: 13,
-          color: "#64748b",
-          lineHeight: 1.5,
-        }}
-      >
-        Choisis uniquement la période, puis clique directement sur le format voulu.
-        CSV complet télécharge toutes les colonnes, PDF génère l’export détaillé, et
-        Compta Excel télécharge un vrai fichier Excel modifiable. Les CSV peuvent aussi
-        s’ouvrir dans Excel, mais ce ne sont pas de vrais classeurs `.xlsx`. [web:75][web:76][web:91]
-      </div>
-    </div>
+      {/* ERROR RANGE */}
+      {isRangeInvalid && (
+        <div className="exportAlert exportAlert--error">
+          ⚠️ La date de début ne peut pas être après la date de fin.
+        </div>
+      )}
+
+      {/* HELP */}
+      <p className="exportFilters-help">
+        Choisis uniquement la période, puis clique sur le format voulu.
+        CSV = données brutes, Excel = fichier comptable, PDF = aperçu lisible.
+      </p>
+    </section>
   );
 }
+
+/* ================= BUTTON ================= */
 
 type ModeButtonProps = {
   active: boolean;
@@ -133,11 +139,7 @@ function ModeButton({ active, onClick, label }: ModeButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className={active ? "btn-primary" : "btn-secondary"}
-      style={{
-        minWidth: 110,
-        justifyContent: "center",
-      }}
+      className={active ? "exportModeBtn exportModeBtn--active" : "exportModeBtn"}
     >
       {label}
     </button>

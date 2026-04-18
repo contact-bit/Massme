@@ -42,9 +42,13 @@ export async function PATCH(
   req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = assertAdminOrLogistics(req);
-  if (auth) return auth;
+  const roleOrResponse = assertAdminOrLogistics(req);
 
+if (roleOrResponse instanceof Response) {
+  return roleOrResponse;
+}
+
+const role = roleOrResponse;
   try {
     const { id } = await context.params;
     if (!id) {

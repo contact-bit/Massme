@@ -1,0 +1,394 @@
+/* =========================================================
+   ADMIN EXPORT
+   Page: /admin/export
+========================================================= */
+
+/* ================== PAGE ================== */
+
+.exportPage {
+  padding-bottom: 40px;
+}
+
+.exportCard {
+  display: grid;
+  gap: 18px;
+}
+
+.exportHeader {
+  display: block;
+}
+
+.exportTitle {
+  margin-bottom: 6px;
+}
+
+.exportSubtitle {
+  margin: 0;
+  color: rgba(11, 18, 32, 0.68);
+  line-height: 1.5;
+}
+
+/* ================== ALERTS ================== */
+
+.exportAlert {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.exportAlert--error {
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.18);
+}
+
+.exportAlert--success {
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.18);
+}
+
+/* ================== FILTERS ================== */
+
+.exportFilters {
+  display: grid;
+  gap: 18px;
+}
+
+.exportFilters-modes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Segmented buttons for day / month / range */
+.exportModeBtn {
+  min-width: 110px;
+  height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: #fff;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.exportModeBtn:hover:not(:disabled) {
+  border-color: rgba(100, 116, 139, 0.35);
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.exportModeBtn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.exportModeBtn:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.22);
+  outline-offset: 2px;
+}
+
+.exportModeBtn--active {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+}
+
+.exportFilters-panel {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.exportFilters-range {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.exportFilters-help {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* ================== PREVIEW ================== */
+
+.exportPreview {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.exportPreview-head {
+  display: grid;
+  gap: 6px;
+}
+
+.exportPreview-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.exportPreview-summary {
+  margin: 0;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.exportPreview-format {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.exportPreview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.exportPreview-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  display: grid;
+  gap: 6px;
+}
+
+.exportPreview-cardTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.exportPreview-cardText {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+/* ================== ACTIONS ================== */
+
+.exportActions {
+  display: grid;
+  gap: 16px;
+}
+
+.exportActions-head {
+  display: grid;
+  gap: 6px;
+}
+
+.exportActions-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.exportActions-subtitle {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.exportActions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.exportActions-legend {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.exportActions-legend > div + div {
+  margin-top: 4px;
+}
+
+/* ================== QUICK EXPORT CARDS ================== */
+
+.exportQuickCard {
+  text-align: left;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  min-height: 120px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.exportQuickCard:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  border-color: rgba(100, 116, 139, 0.28);
+}
+
+.exportQuickCard:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.exportQuickCard:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.18);
+  outline-offset: 2px;
+}
+
+.exportQuickCard--featured {
+  border-color: rgba(15, 23, 42, 0.18);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(241, 245, 249, 1) 100%
+  );
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.exportQuickCard:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.exportQuickCard-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.exportQuickCard-desc {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.exportQuickCard-cta {
+  margin-top: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.exportQuickCard--featured .exportQuickCard-cta {
+  color: #0f172a;
+}
+
+/* ================== RESPONSIVE ================== */
+
+@media (max-width: 640px) {
+  .exportCard {
+    gap: 16px;
+  }
+
+  .exportFilters {
+    gap: 14px;
+  }
+
+  .exportActions {
+    gap: 14px;
+  }
+
+  .exportPreview {
+    padding: 14px;
+  }
+
+  .exportQuickCard {
+    min-height: 110px;
+    padding: 16px;
+  }
+
+  .exportModeBtn {
+    min-width: 96px;
+  }
+}
+/* ================== INPUT ERROR ================== */
+
+.admin-input--error {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  background: rgba(239, 68, 68, 0.04);
+}
+
+.admin-input--error:focus {
+  outline: 2px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ================== DISABLED CARD ================== */
+
+.exportQuickCard:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.2);
+}
+
+/* ================== CTA IMPROVEMENT ================== */
+
+.exportQuickCard-cta {
+  margin-top: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* ================== LOADING STATE ================== */
+
+.exportQuickCard.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.exportQuickCard.loading::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(15, 23, 42, 0.2);
+  border-top-color: #0f172a;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

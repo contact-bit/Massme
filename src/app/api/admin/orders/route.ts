@@ -1,25 +1,42 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
-import {
-  assertAdminOrLogistics,
-  getRoleFromRequest,
-} from "@/server/adminAuth";
+import { assertAdminOrLogistics } from "@/server/adminAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function getDateValue(v: any): number {
+  if (!v) return 0;
+
+  if (typeof v?.toDate === "function") {
+    try {
+      return v.toDate().getTime();
+    } catch {}
+  }
+
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
 
 /* =========================================================
    GET ORDERS
 ========================================================= */
 
 export async function GET(req: Request) {
-  const auth = assertAdminOrLogistics(req);
-  if (auth) return auth;
+  const roleOrResponse = assertAdminOrLogistics(req);
 
-  const role = getRoleFromRequest(req);
+  // 🔥 FIX CRITIQUE (le bug venait de là)
+  if (roleOrResponse instanceof Response) {
+    return roleOrResponse;
+  }
+
+  const role = roleOrResponse;
 
   try {
-    // 🔥 FIX: suppression du orderBy Firestore (source du bug)
     const snap = await dbAdmin
       .collection("orders")
       .limit(300)
@@ -33,31 +50,30 @@ export async function GET(req: Request) {
           id: d.id,
 
           orderNumber:
-            typeof o.orderNumber === "string" ? o.orderNumber : null,
+            typeof o?.orderNumber === "string" ? o.orderNumber : null,
 
-          status: o.status ?? "unknown",
-          email: o.email ?? "",
-          items: Array.isArray(o.items) ? o.items : [],
+          status: o?.status ?? "unknown",
+          email: o?.email ?? "",
+          items: Array.isArray(o?.items) ? o.items : [],
 
-          shippingMethod: o.shippingMethod ?? null,
-          shippingAddress: o.shippingAddress ?? null,
-          billingAddress: o.billingAddress ?? null,
+          shippingMethod: o?.shippingMethod ?? null,
+          shippingAddress: o?.shippingAddress ?? null,
+          billingAddress: o?.billingAddress ?? null,
 
-          relayPoint: o.relayPoint ?? null,
+          relayPoint: o?.relayPoint ?? null,
+          payment: o?.payment ?? null,
 
-          payment: o.payment ?? null,
+          createdAt: o?.createdAt ?? null,
+          paidAt: o?.paidAt ?? null,
 
-          createdAt: o.createdAt ?? null,
-          paidAt: o.paidAt ?? null,
+          shippingStatus: o?.shippingStatus ?? null,
+          trackingNumber: o?.trackingNumber ?? null,
+          carrier: o?.carrier ?? null,
 
-          shippingStatus: o.shippingStatus ?? null,
-          trackingNumber: o.trackingNumber ?? null,
-          carrier: o.carrier ?? null,
-
-          totals: o.totals ?? null,
+          totals: o?.totals ?? null,
         };
 
-        // 👑 ADMIN → full data
+        // 👑 ADMIN → avec prix
         if (role === "admin") {
           return {
             ...base,
@@ -75,18 +91,9 @@ export async function GET(req: Request) {
           total: 0,
         };
       })
-      // 🔥 TRI SAFE côté JS
       .sort((a, b) => {
-        const da =
-          a.createdAt?.toDate?.()?.getTime?.() ||
-          new Date(a.createdAt || 0).getTime() ||
-          0;
-
-        const db =
-          b.createdAt?.toDate?.()?.getTime?.() ||
-          new Date(b.createdAt || 0).getTime() ||
-          0;
-
+        const da = getDateValue(a.createdAt);
+        const db = getDateValue(b.createdAt);
         return db - da;
       });
 
@@ -109,10 +116,13 @@ export async function GET(req: Request) {
 ========================================================= */
 
 export async function DELETE(req: Request) {
-  const auth = assertAdminOrLogistics(req);
-  if (auth) return auth;
+  const roleOrResponse = assertAdminOrLogistics(req);
 
-  const role = getRoleFromRequest(req);
+  if (roleOrResponse instanceof Response) {
+    return roleOrResponse;
+  }
+
+  const role = roleOrResponse;
 
   if (role !== "admin") {
     return NextResponse.json(

@@ -11,7 +11,6 @@ type Props = {
   isDownloading: boolean;
   isRangeInvalid: boolean;
   onDownload: (format: Format) => void;
-  getFormatLabel: (format: Format) => string;
 };
 
 export default function ExportActions({
@@ -39,41 +38,21 @@ export default function ExportActions({
   const disabled = isDownloading || isRangeInvalid || disabledBecauseMissingDate;
 
   return (
-    <section style={{ display: "grid", gap: 16 }}>
-      <div>
-        <h2
-          style={{
-            margin: 0,
-            fontSize: 18,
-            fontWeight: 700,
-            color: "#0f172a",
-          }}
-        >
-          Lancer un export
-        </h2>
-        <p
-          style={{
-            margin: "6px 0 0",
-            color: "#64748b",
-            fontSize: 14,
-          }}
-        >
+    <section className="exportActions">
+      <div className="exportActions-head">
+        <h2 className="exportActions-title">Lancer un export</h2>
+        <p className="exportActions-subtitle">
           Période sélectionnée : {periodLabel}
         </p>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 14,
-        }}
-      >
+      <div className="exportActions-grid">
         <QuickExportCard
           title="PDF"
           description="Export détaillé"
           onClick={() => onDownload("pdf")}
           disabled={disabled}
+          isLoading={isDownloading}
         />
 
         <QuickExportCard
@@ -81,28 +60,20 @@ export default function ExportActions({
           description="Toutes les colonnes"
           onClick={() => onDownload("csv")}
           disabled={disabled}
+          isLoading={isDownloading}
         />
 
         <QuickExportCard
           title="Compta Excel"
           description="Format comptable"
-          onClick={() => onDownload("accounting_xlsx")}
+          onClick={() => onDownload("xlsx")} // ✅ FIX ICI
           disabled={disabled}
           featured
+          isLoading={isDownloading}
         />
       </div>
 
-      <div
-        style={{
-          padding: 14,
-          borderRadius: 14,
-          background: "rgba(248,250,252,.95)",
-          border: "1px solid rgba(148,163,184,.18)",
-          color: "#475569",
-          fontSize: 13,
-          lineHeight: 1.55,
-        }}
-      >
+      <div className="exportActions-legend">
         <div>
           <strong>PDF</strong> : export lisible et détaillé.
         </div>
@@ -110,13 +81,15 @@ export default function ExportActions({
           <strong>CSV complet</strong> : toutes les colonnes, ouvrable dans Excel.
         </div>
         <div>
-          <strong>Compta Excel</strong> : vrai fichier Excel `.xlsx`, modifiable
-          directement.
+          <strong>Compta Excel</strong> : fichier Excel <code>.xlsx</code>,
+          modifiable directement.
         </div>
       </div>
     </section>
   );
 }
+
+/* ================= CARD ================= */
 
 type QuickExportCardProps = {
   title: string;
@@ -124,6 +97,7 @@ type QuickExportCardProps = {
   onClick: () => void;
   disabled?: boolean;
   featured?: boolean;
+  isLoading?: boolean;
 };
 
 function QuickExportCard({
@@ -132,62 +106,23 @@ function QuickExportCard({
   onClick,
   disabled = false,
   featured = false,
+  isLoading = false,
 }: QuickExportCardProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      style={{
-        textAlign: "left",
-        padding: 18,
-        borderRadius: 18,
-        border: featured
-          ? "1px solid rgba(15,23,42,.18)"
-          : "1px solid rgba(148,163,184,.22)",
-        background: featured
-          ? "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(241,245,249,1) 100%)"
-          : "#fff",
-        boxShadow: featured
-          ? "0 10px 30px rgba(15,23,42,.08)"
-          : "0 4px 16px rgba(15,23,42,.04)",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.6 : 1,
-        display: "grid",
-        gap: 8,
-        minHeight: 120,
-        transition: "all .2s ease",
-      }}
+      className={
+        featured
+          ? "exportQuickCard exportQuickCard--featured"
+          : "exportQuickCard"
+      }
     >
-      <div
-        style={{
-          fontSize: 16,
-          fontWeight: 700,
-          color: "#0f172a",
-        }}
-      >
-        {title}
-      </div>
-
-      <div
-        style={{
-          fontSize: 14,
-          color: "#64748b",
-          lineHeight: 1.45,
-        }}
-      >
-        {description}
-      </div>
-
-      <div
-        style={{
-          marginTop: "auto",
-          fontSize: 13,
-          fontWeight: 600,
-          color: featured ? "#0f172a" : "#334155",
-        }}
-      >
-        {disabled ? "Indisponible" : "Télécharger"}
+      <div className="exportQuickCard-title">{title}</div>
+      <div className="exportQuickCard-desc">{description}</div>
+      <div className="exportQuickCard-cta">
+        {isLoading ? "Téléchargement..." : disabled ? "Sélection requise" : "Télécharger"}
       </div>
     </button>
   );
