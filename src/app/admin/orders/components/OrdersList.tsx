@@ -211,16 +211,13 @@ export function OrdersList({
             {/* DESKTOP */}
             <div style={S.desktopOnly}>
               <OrdersTable
-                orders={paged}
-                selected={selection.selected}
-                onToggleOne={selection.toggleOne}
-                onToggleAll={toggleAllPage}
-                onOpen={onOpen}
-                onCopyId={onCopyId}
-                onDelete={onDelete}
-                deleting={deleting}
-                onMarkAsPaid={onMarkAsPaid} // 💥 FIX
-              />
+  orders={paged}
+  onOpen={onOpen}
+  onCopyId={onCopyId}
+  onDelete={onDelete}
+  deleting={deleting}
+  onMarkAsPaid={onMarkAsPaid}
+/>
             </div>
 
             {/* MOBILE */}
