@@ -1,115 +1,129 @@
 /* =========================================================
-   ADMIN — FORMS
+   ADMIN — FORMS (FINAL PRO / DESIGN SYSTEM SAFE)
 ========================================================= */
 
 .admin-form {
+  width: 100%;
   max-width: 760px;
   margin: 0 auto;
-  padding: var(--space-6);
+
+  padding: var(--space-5);
+
   background: var(--color-surface);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
+
   box-shadow: var(--shadow-md);
+
   color: var(--color-text);
 }
 
+/* ================= TITLES ================= */
+
 .admin-section-title {
-  margin: 0 0 var(--space-4);
+  margin-bottom: var(--space-4);
+
   font-size: var(--text-xl);
   font-weight: 800;
   letter-spacing: -0.02em;
+
   color: var(--color-text);
 }
 
-/* Helpers */
-
-.admin-form .mt-4 {
-  margin-top: var(--space-3);
-}
-
-/* Labels */
+/* ================= LABEL ================= */
 
 .admin-label {
   display: block;
   margin: var(--space-4) 0 var(--space-2);
+
   font-size: var(--text-sm);
   font-weight: 700;
+
   color: var(--color-text-soft);
 }
 
-/* Inputs / textarea / select */
+/* ================= INPUTS ================= */
 
 .admin-input,
 .admin-textarea,
 .admin-select {
   width: 100%;
   min-height: 44px;
+
   padding: 12px 14px;
+
   border-radius: var(--radius-md);
-  background: var(--color-surface-alt) !important;
-  border: 1px solid var(--color-border) !important;
-  color: var(--color-text) !important;
-  -webkit-text-fill-color: var(--color-text) !important;
-  caret-color: var(--color-text) !important;
+
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+
+  color: var(--color-text);
+
   font-size: var(--text-sm);
   line-height: 1.4;
+
   outline: none;
+
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast),
     background var(--transition-fast);
+
   appearance: none;
 }
+
+/* textarea */
 
 .admin-textarea {
   min-height: 120px;
   resize: vertical;
 }
 
+/* select */
+
 .admin-select {
   cursor: pointer;
 }
 
-/* Placeholder */
+/* ================= PLACEHOLDER ================= */
 
 .admin-input::placeholder,
 .admin-textarea::placeholder {
-  color: var(--color-text-muted) !important;
-  opacity: 1 !important;
-  -webkit-text-fill-color: var(--color-text-muted) !important;
+  color: var(--color-text-muted);
+  opacity: 1;
 }
 
-/* Focus */
+/* ================= FOCUS ================= */
 
 .admin-input:focus,
 .admin-textarea:focus,
 .admin-select:focus {
-  background: var(--color-surface) !important;
-  border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 3px var(--color-primary-soft) !important;
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
-/* Disabled */
+/* ================= DISABLED ================= */
 
 .admin-input:disabled,
 .admin-textarea:disabled,
 .admin-select:disabled {
-  opacity: 0.65;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Autofill */
+/* ================= AUTOFILL FIX ================= */
 
 .admin-input:-webkit-autofill,
 .admin-textarea:-webkit-autofill,
 .admin-select:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface-alt) inset !important;
-  -webkit-text-fill-color: var(--color-text) !important;
-  caret-color: var(--color-text) !important;
-  transition: background-color 9999s ease-in-out 0s;
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface-alt) inset;
+  -webkit-text-fill-color: var(--color-text);
+  caret-color: var(--color-text);
 }
 
-/* Input groups / rows */
+/* ================= GRID ================= */
 
 .admin-form-row {
   display: grid;
@@ -121,7 +135,7 @@
   min-width: 0;
 }
 
-/* Help / error text */
+/* ================= HELP / ERROR ================= */
 
 .admin-help {
   margin-top: 6px;
@@ -131,31 +145,41 @@
 
 .admin-error,
 .admin-form .text-red-500 {
-  color: var(--color-danger) !important;
+  margin-top: 6px;
+
   font-size: 12px;
   font-weight: 700;
-  margin-top: 8px;
+
+  color: var(--color-danger);
 }
 
-/* Image preview */
+/* ================= IMAGE ================= */
 
 .admin-img-wrapper {
   width: 100%;
-  height: 240px;
+  height: 220px;
+
   border-radius: var(--radius-lg);
   border: 1px dashed color-mix(in srgb, var(--color-text) 18%, transparent);
-  background: linear-gradient(180deg, var(--color-surface-alt), var(--color-surface));
+
+  background: linear-gradient(
+    180deg,
+    var(--color-surface-alt),
+    var(--color-surface)
+  );
+
   display: grid;
   place-items: center;
-  margin-bottom: var(--space-3);
+
   overflow: hidden;
+
+  margin-bottom: var(--space-3);
 }
 
 .admin-img-preview {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: var(--radius-md);
 }
 
 .admin-img-placeholder {
@@ -164,15 +188,18 @@
   color: var(--color-text-muted);
 }
 
-/* Switch / checkbox line */
+/* ================= SWITCH ================= */
 
 .admin-switch {
   display: flex;
   align-items: center;
   gap: 10px;
+
   margin-top: var(--space-4);
+
   font-size: var(--text-sm);
   font-weight: 600;
+
   color: var(--color-text);
 }
 
@@ -182,28 +209,21 @@
   accent-color: var(--color-primary);
 }
 
-/* Actions */
+/* ================= ACTIONS ================= */
 
 .admin-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
-  margin-top: var(--space-6);
+
+  margin-top: var(--space-5);
 }
 
-/* Boutons dans les formulaires : on s’appuie sur les classes globales */
-/* .btn-primary / .btn-secondary / .btn-danger sont gérés dans admin.components.css */
-
-/* Responsive */
+/* ================= RESPONSIVE ================= */
 
 @media (max-width: 640px) {
   .admin-form {
     padding: var(--space-4);
-    border-radius: var(--radius-lg);
-  }
-
-  .admin-img-wrapper {
-    height: 200px;
   }
 
   .admin-form-row {

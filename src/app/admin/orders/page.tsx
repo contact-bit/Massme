@@ -2,11 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  firstDayOfMonthISO,
-  todayISO,
   copyText,
   compactId,
-  formatAddress,
 } from "./domain/utils";
 import type { Order } from "./domain/types";
 
@@ -16,13 +13,16 @@ import { useSelection } from "./hooks/useSelection";
 import { usePagination } from "./hooks/usePagination";
 import { useOrderFilters } from "./hooks/useOrderFilters";
 
-import { AdminOrdersStyles } from "./components/AdminOrdersStyles";
 import { Toast } from "./components/Toast";
 import { TopBar } from "./components/TopBar";
 import { KpiGrid } from "./components/KpiGrid";
 import { OrdersList } from "./components/OrdersList";
-import { Drawer } from "./components/Drawer";
-import { OrderDetails } from "./components/OrderDetails";
+
+/* ================= HELPERS ================= */
+
+function getOrderTotal(o: any): number {
+  return o?.total ?? o?.__total ?? o?.totals?.totalTTC ?? 0;
+}
 
 export default function AdminOrdersPage() {
   const { toast, toastIt } = useToast();
@@ -35,44 +35,54 @@ export default function AdminOrdersPage() {
     fetchOrders,
     initOnce,
     deleteOrder,
-  } = useOrders(toastIt);
+  } = useOrders(toastIt); // ✅ FIX (plus de updatePaymentStatus)
 
-  const filters = useOrderFilters(firstDayOfMonthISO(), todayISO());
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const filters = useOrderFilters("", "");
   const filtered = useMemo(() => filters.apply(orders), [orders, filters]);
 
   const stats = useMemo(() => {
     const count = filtered.length;
-    const paidCount = filtered.filter((o) => o.status === "paid").length;
+
+    const paidOrders = filtered.filter((o) => o.status === "paid");
+
     const pendingCount = filtered.filter(
       (o) =>
         o.status === "pending_payment" ||
         o.status === "awaiting_bank_transfer"
     ).length;
 
-    const totalEUR = filtered.reduce((sum, o) => sum + (o.__total ?? 0), 0);
+    const totalEUR = filtered.reduce(
+      (sum, o) => sum + getOrderTotal(o),
+      0
+    );
 
-    const paidEUR = filtered
-      .filter((o) => o.status === "paid")
-      .reduce((sum, o) => sum + (o.__total ?? 0), 0);
+    const paidEUR = paidOrders.reduce(
+      (sum, o) => sum + getOrderTotal(o),
+      0
+    );
 
     const avg = count > 0 ? totalEUR / count : 0;
 
-    return { count, paidCount, pendingCount, totalEUR, paidEUR, avg };
+    return {
+      count,
+      paidCount: paidOrders.length,
+      pendingCount,
+      totalEUR,
+      paidEUR,
+      avg,
+    };
   }, [filtered]);
 
   const pagination = usePagination(filtered, 12);
   const selection = useSelection();
 
-  const [drawerId, setDrawerId] = useState<string | null>(null);
-
-  const activeOrder = useMemo(
-    () => orders.find((o) => o.id === drawerId) || null,
-    [orders, drawerId]
-  );
-
   useEffect(() => {
     initOnce();
   }, [initOnce]);
+
+  /* ================= ACTIONS ================= */
 
   const handleDelete = async (id: string) => {
     await deleteOrder(id, () => {
@@ -81,46 +91,39 @@ export default function AdminOrdersPage() {
         delete n[id];
         return n;
       });
-      setDrawerId((curr) => (curr === id ? null : curr));
     });
   };
 
-  const handleValidateBankTransfer = async (id: string) => {
+  // 💥 VERSION SANS HOOK → API DIRECT
+  const handleMarkAsPaid = async (id: string) => {
     try {
-      const res = await fetch(
-        `/api/admin/orders/${id}/validate-bank-transfer`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      await fetch("/api/mark-as-paid", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ orderId: id }),
+      });
 
-      const json = await res.json();
+      await fetchOrders(); // refresh propre
 
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Échec de validation du virement");
-      }
-
-      toastIt("Virement validé ✅");
-      await fetchOrders();
-      setDrawerId((curr) => (curr === id ? id : curr));
-    } catch (e: any) {
-      toastIt(e?.message || "Erreur validation virement ❌");
+      toastIt("Commande marquée comme payée ✅");
+    } catch {
+      toastIt("Erreur paiement ❌");
     }
   };
 
   const getOrderLabel = (o?: Order | null) =>
     o?.orderNumber || (o?.id ? compactId(o.id) : "—");
 
+  /* ================= UI ================= */
+
   return (
     <>
-      <AdminOrdersStyles />
       <Toast message={toast} />
 
-      {/* Enveloppe uniforme admin */}
-      <div className="admin-page">
-        {/* Topbar spécifique à la page commandes */}
+      <div className="flex flex-col gap-6 h-full">
+
         <TopBar
           loading={loading}
           onRefresh={fetchOrders}
@@ -128,66 +131,40 @@ export default function AdminOrdersPage() {
           onClearSelection={selection.clearSelection}
         />
 
-        {/* Contenu principal */}
-        <main className="admin-main">
-          <KpiGrid stats={stats} from={filters.from} to={filters.to} />
+        <KpiGrid stats={stats} from={filters.from} to={filters.to} />
 
-          
+        <div className="grid grid-cols-1 gap-4 flex-1 min-h-0">
 
-          <OrdersList
-            loading={loading}
-            error={error}
-            filteredCount={filtered.length}
-            pagination={{
-              currentPage: pagination.currentPage,
-              totalPages: pagination.totalPages,
-              paged: pagination.paged as Order[],
-              setPage: pagination.setPage as any,
-            }}
-            selection={selection}
-            deleting={deleting}
-            onOpen={(id) => setDrawerId(id)}
-            onCopyId={async (id) => {
-              const order = orders.find((o) => o.id === id);
-              await copyText(getOrderLabel(order));
-              toastIt("Numéro de commande copié ✅");
-            }}
-            onDelete={handleDelete}
-          />
-        </main>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto">
 
-        <Drawer
-          open={!!drawerId}
-          onClose={() => setDrawerId(null)}
-          title={
-            activeOrder
-              ? `Commande ${getOrderLabel(activeOrder)}`
-              : "Commande"
-          }
-        >
-          {!activeOrder ? (
-            <div className="muted">Chargement…</div>
-          ) : (
-            <OrderDetails
-              order={activeOrder}
-              onCopyId={async () => {
-                await copyText(getOrderLabel(activeOrder));
-                toastIt("Numéro de commande copié ✅");
-              }}
-              onCopyEmail={async () => {
-                await copyText(
-                  activeOrder.__email || activeOrder.email || ""
-                );
-                toastIt("Email copié ✅");
-              }}
-              onCopyAddress={async () => {
-                await copyText(formatAddress(activeOrder.shippingAddress));
-                toastIt("Adresse copiée ✅");
-              }}
-              onValidateBankTransfer={handleValidateBankTransfer}
-            />
-          )}
-        </Drawer>
+              <OrdersList
+                activeId={activeId}
+                loading={loading}
+                error={error}
+                filteredCount={filtered.length}
+                pagination={{
+                  currentPage: pagination.currentPage,
+                  totalPages: pagination.totalPages,
+                  paged: pagination.paged as Order[],
+                  setPage: pagination.setPage as any,
+                }}
+                selection={selection}
+                deleting={deleting}
+                onOpen={(id) => setActiveId(id)}
+                onCopyId={async (id) => {
+                  const order = orders.find((o) => o.id === id);
+                  await copyText(getOrderLabel(order));
+                  toastIt("Copié ✅");
+                }}
+                onDelete={handleDelete}
+                onMarkAsPaid={handleMarkAsPaid} // ✅ OK
+              />
+
+            </div>
+          </div>
+
+        </div>
       </div>
     </>
   );

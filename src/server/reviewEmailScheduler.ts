@@ -13,6 +13,10 @@ type ReviewEmailSettings = {
 
 const REVIEW_EMAIL_SETTINGS_DOC = "settings/review_email";
 
+/* =========================================================
+   HELPERS
+========================================================= */
+
 function clampInt(n: unknown, min: number, max: number, fallback: number) {
   const v = Number(n);
   if (!Number.isFinite(v)) return fallback;
@@ -30,50 +34,63 @@ async function readReviewEmailSettings(): Promise<ReviewEmailSettings> {
   const d = snap.exists ? (snap.data() as any) : null;
 
   const enabled = typeof d?.enabled === "boolean" ? d.enabled : true;
-  const mode: "immediate" | "delay" = d?.mode === "immediate" ? "immediate" : "delay";
+  const mode: "immediate" | "delay" =
+    d?.mode === "immediate" ? "immediate" : "delay";
 
   const rawDelayDays = clampInt(d?.delayDays, 0, 365, 5);
   const delayDays = mode === "immediate" ? 0 : rawDelayDays;
 
-  return {
-    enabled,
-    mode,
-    delayDays,
-  };
+  return { enabled, mode, delayDays };
 }
+
+/* =========================================================
+   MAIN
+========================================================= */
 
 export async function scheduleReviewEmailForOrder(orderId: string) {
   const ref = dbAdmin.collection("orders").doc(orderId);
-
   const snap = await ref.get();
+
   if (!snap.exists) {
-    await ref.set(
-      {
-        "reviewEmail.status": "error",
-        "reviewEmail.lastErrorAt": FieldValue.serverTimestamp(),
-        "reviewEmail.lastError": `Order not found: ${orderId}`,
-      },
-      { merge: true }
-    );
+    await ref.update({
+      "reviewEmail.status": "error",
+      "reviewEmail.lastError": `Order not found: ${orderId}`,
+      "reviewEmail.lastErrorAt": FieldValue.serverTimestamp(),
+    });
 
     throw new Error(`Order not found: ${orderId}`);
   }
 
   const order = snap.data() as any;
+  const review = order?.reviewEmail || {};
 
-  const curStatus = String(order?.reviewEmail?.status || "").toLowerCase();
-  if (curStatus === "scheduled" || curStatus === "sent" || curStatus === "sending") {
-    return { ok: true, skipped: true, reason: `already_${curStatus}` };
+  /* =========================================================
+     🔒 HARD GUARD (ANTI BUG FINAL)
+  ========================================================= */
+
+  // ✅ SI DÉJÀ ENVOYÉ → ON NE TOUCHE PLUS JAMAIS
+  if (review?.sentAt) {
+    return {
+      ok: true,
+      skipped: true,
+      reason: "already_sent",
+    };
   }
 
-  await ref.set(
-    {
-      "reviewEmail.status": "starting",
-      "reviewEmail.startedAt": FieldValue.serverTimestamp(),
-      "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
+  const currentStatus = String(review?.status || "").toLowerCase();
+
+  // ✅ Évite double schedule / race condition
+  if (["scheduled", "sending", "submitted"].includes(currentStatus)) {
+    return {
+      ok: true,
+      skipped: true,
+      reason: `already_${currentStatus}`,
+    };
+  }
+
+  /* =========================================================
+     EMAIL / LOCALE
+  ========================================================= */
 
   const email =
     normalizeEmail(order?.email) ||
@@ -83,110 +100,103 @@ export async function scheduleReviewEmailForOrder(orderId: string) {
   const locale = String(order?.locale || "fr").trim() || "fr";
 
   if (!email) {
-    await ref.set(
-      {
-        "reviewEmail.status": "skipped",
-        "reviewEmail.reason": "missing_email",
-        "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+    await ref.update({
+      "reviewEmail.status": "skipped",
+      "reviewEmail.reason": "missing_email",
+      "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
+    });
 
-    return { ok: true, skipped: true, reason: "missing_email" };
+    return { ok: true, skipped: true };
   }
+
+  /* =========================================================
+     SETTINGS
+  ========================================================= */
 
   const settings = await readReviewEmailSettings();
 
   if (!settings.enabled) {
-    await ref.set(
-      {
-        "reviewEmail.status": "disabled",
-        "reviewEmail.reason": "settings_disabled",
-        "reviewEmail.settings": settings,
-        "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+    await ref.update({
+      "reviewEmail.status": "disabled",
+      "reviewEmail.settings": settings,
+      "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
+    });
 
-    return { ok: true, skipped: true, reason: "settings_disabled" };
+    return { ok: true, skipped: true };
   }
 
-  const delayDays = settings.mode === "immediate" ? 0 : clampInt(settings.delayDays, 0, 365, 5);
-  const scheduledAt = new Date(Date.now() + delayDays * 24 * 3600 * 1000);
+  const delayDays =
+    settings.mode === "immediate"
+      ? 0
+      : clampInt(settings.delayDays, 0, 365, 5);
 
-  const token = createReviewToken({
-    orderId,
-    email,
-    ttlDays: 30,
+  const scheduledAt = new Date(Date.now() + delayDays * 86400000);
+
+  /* =========================================================
+     🔐 TOKEN SAFE
+  ========================================================= */
+
+  let token = review?.token;
+
+  if (!(typeof token === "string" && token.length > 10)) {
+    token = createReviewToken({
+      orderId,
+      email,
+      ttlDays: 30,
+    });
+
+    await ref.update({
+      "reviewEmail.token": token,
+    });
+  }
+
+  /* =========================================================
+     SAVE (SAFE UPDATE — PAS DE SET GLOBAL)
+  ========================================================= */
+
+  await ref.update({
+    "reviewEmail.status": "scheduled",
+    "reviewEmail.scheduledAt": scheduledAt,
+    "reviewEmail.delayDays": delayDays,
+    "reviewEmail.email": email,
+    "reviewEmail.locale": locale,
+    "reviewEmail.settings": settings,
+    "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
+    "reviewEmail.createdAt":
+      review?.createdAt || FieldValue.serverTimestamp(),
   });
 
-  await ref.set(
-    {
-      "reviewEmail.status": "scheduled",
-      "reviewEmail.scheduledAt": scheduledAt,
-      "reviewEmail.token": token,
-      "reviewEmail.locale": locale,
-      "reviewEmail.email": email,
-      "reviewEmail.settings": {
-        enabled: settings.enabled,
-        mode: settings.mode,
-        delayDays,
-      },
-      "reviewEmail.createdAt": FieldValue.serverTimestamp(),
-      "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
+  /* =========================================================
+     🚀 SEND IMMEDIATE
+  ========================================================= */
 
-  if (settings.mode === "immediate" || delayDays === 0) {
+  if (delayDays === 0) {
     try {
-      await ref.set(
-        {
-          "reviewEmail.status": "sending",
-          "reviewEmail.sendingAt": FieldValue.serverTimestamp(),
-          "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+const result = await sendReviewEmailNow(orderId);
 
-      const sent = await sendReviewEmailNow(orderId);
+const { ok: _ignored, ...rest } = result || {};
 
-      await ref.set(
-        {
-          "reviewEmail.status": "sent",
-          "reviewEmail.sentAt": FieldValue.serverTimestamp(),
-          "reviewEmail.sendResult": sent ?? null,
-          "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
-
-      return {
-        ...(sent ?? {}),
-        ok: true,
-        immediate: true,
-        delayDays: 0,
-      };
+return {
+  ok: true,
+  immediate: true,
+  ...rest,
+};
     } catch (err: any) {
       const msg = String(err?.message || err);
 
-      await ref.set(
-        {
-          "reviewEmail.status": "error",
-          "reviewEmail.lastErrorAt": FieldValue.serverTimestamp(),
-          "reviewEmail.lastError": msg,
-          "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+      await ref.update({
+        "reviewEmail.status": "error",
+        "reviewEmail.lastError": msg,
+        "reviewEmail.lastErrorAt": FieldValue.serverTimestamp(),
+      });
 
-      return {
-        ok: false,
-        immediate: true,
-        error: msg,
-      };
+      return { ok: false, error: msg };
     }
   }
+
+  /* =========================================================
+     ⏳ DELAY
+  ========================================================= */
 
   return {
     ok: true,

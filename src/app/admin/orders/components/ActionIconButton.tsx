@@ -3,12 +3,19 @@ import React from "react";
 
 type ActionVariant = "neutral" | "primary" | "success" | "danger";
 
+const variantMap: Record<ActionVariant, string> = {
+  neutral: "btn-secondary",
+  primary: "btn-primary",
+  success: "btn-success",
+  danger: "btn-danger",
+};
+
 export function ActionIconButton({
   title,
   onClick,
   icon,
   variant = "neutral",
-  disabled,
+  disabled = false,
 }: {
   title: string;
   onClick: () => void;
@@ -19,12 +26,11 @@ export function ActionIconButton({
   return (
     <button
       type="button"
-      className={`iconBtn iconBtn--${variant}`}
+      className={`admin-icon-btn ${variantMap[variant]}`}
       onClick={onClick}
       title={title}
       aria-label={title}
       disabled={disabled}
-      style={disabled ? { opacity: 0.55, cursor: "not-allowed" } : undefined}
     >
       {icon}
     </button>

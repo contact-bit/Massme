@@ -17,6 +17,10 @@ export type OrderEmailPayload = {
   orderNumber?: string;
 };
 
+/* =========================================================
+   HELPERS
+========================================================= */
+
 function formatMoney(cents: number, currency: string) {
   const value = (Number(cents || 0) / 100).toFixed(2);
   return `${value} ${String(currency || "EUR").toUpperCase()}`;
@@ -32,10 +36,7 @@ function toDate(created_at: any) {
 
 function safeEmailList(raw?: string) {
   if (!raw) return [];
-  return raw
-    .split(",")
-    .map((e) => e.trim())
-    .filter(Boolean);
+  return raw.split(",").map((e) => e.trim()).filter(Boolean);
 }
 
 function resolveLogisticsEmails() {
@@ -47,48 +48,35 @@ function resolveLogisticsEmails() {
 function resolveOrderNumber(order: OrderEmailPayload): string {
   const fromOrderData =
     typeof order?.orderData?.orderNumber === "string" &&
-    order.orderData.orderNumber.trim().length > 0
+    order.orderData.orderNumber.trim()
       ? order.orderData.orderNumber.trim()
       : typeof order?.orderData?.invoiceNumber === "string" &&
-        order.orderData.invoiceNumber.trim().length > 0
+        order.orderData.invoiceNumber.trim()
       ? order.orderData.invoiceNumber.trim()
       : null;
 
   const fromRoot =
-    typeof order?.orderNumber === "string" && order.orderNumber.trim().length > 0
+    typeof order?.orderNumber === "string" && order.orderNumber.trim()
       ? order.orderNumber.trim()
-      : typeof (order as any)?.orderNumber === "string" &&
-        (order as any).orderNumber.trim().length > 0
-      ? (order as any).orderNumber.trim()
       : null;
 
-  const fallbackId =
-    typeof order?.id === "string" && order.id.trim().length > 0
-      ? order.id.trim()
-      : "UNKNOWN_ORDER";
-
-  return fromOrderData || fromRoot || fallbackId;
+  return fromOrderData || fromRoot || order.id || "UNKNOWN_ORDER";
 }
 
 function buildInvoiceFilename(orderNumber: string) {
   return `facture-${orderNumber}.pdf`;
 }
 
+/* =========================================================
+   INVOICE
+========================================================= */
+
 async function buildInvoiceAttachment(order: OrderEmailPayload) {
   const orderData = order.orderData;
-  if (!orderData) {
-    return { attachment: null, error: "Missing orderData" };
-  }
+  if (!orderData) return { attachment: null, error: "Missing orderData" };
 
   try {
-    const locale = (order.locale || orderData?.locale || "fr") as
-      | "fr"
-      | "en"
-      | "es"
-      | "de"
-      | "it"
-      | "nl";
-
+    const locale = (order.locale || orderData?.locale || "fr") as any;
     const orderNumber = resolveOrderNumber(order);
 
     const pdfBuffer = await generateInvoicePDF(
@@ -98,32 +86,19 @@ async function buildInvoiceAttachment(order: OrderEmailPayload) {
         shippingAddress: orderData?.shippingAddress || {},
         billingAddress: orderData?.billingAddress || {},
         shippingPrice:
-          typeof orderData?.totals?.shipHT === "number"
-            ? orderData.totals.shipHT
-            : typeof orderData?.shippingMethod?.priceHT === "number"
-            ? orderData.shippingMethod.priceHT
-            : typeof orderData?.shippingPrice === "number"
-            ? orderData.shippingPrice
-            : 0,
+          orderData?.totals?.shipHT ??
+          orderData?.shippingMethod?.priceHT ??
+          orderData?.shippingPrice ??
+          0,
         totals: {
           totalHT: Number(orderData?.totals?.totalHT || 0),
-          totalVAT: Number(orderData?.totals?.totalVAT || orderData?.totals?.tax || 0),
+          totalVAT: Number(orderData?.totals?.totalVAT || 0),
           totalTTC: Number(orderData?.totals?.totalTTC || 0),
-          vatRate:
-            typeof orderData?.totals?.vatRate === "number"
-              ? orderData.totals.vatRate > 1
-                ? orderData.totals.vatRate / 100
-                : orderData.totals.vatRate
-              : undefined,
         },
         orderNumber,
-        // customerFirstName / customerLastName retirés pour respecter le type attendu
       },
       orderNumber,
-      {
-        locale,
-        paidLabel: true,
-      }
+      { locale, paidLabel: true }
     );
 
     return {
@@ -142,88 +117,9 @@ async function buildInvoiceAttachment(order: OrderEmailPayload) {
   }
 }
 
-function buildReviewBase(order: OrderEmailPayload, clientEmail: string) {
-  const locale = order.locale || order.orderData?.locale || "fr";
-  const base =
-    process.env.REVIEW_BASE_URL?.trim() ||
-    `https://hdconnects.com/${locale}/review`;
-
-  return `${base}?order_id=${encodeURIComponent(order.id)}&email=${encodeURIComponent(
-    clientEmail
-  )}`;
-}
-
-function buildReviewUrl(base: string, rating: number) {
-  return `${base}&rating=${rating}`;
-}
-
-async function sendReviewEmail({
-  order,
-  clientEmail,
-}: {
-  order: OrderEmailPayload;
-  clientEmail: string;
-}) {
-  const sender =
-    process.env.RESEND_FROM?.trim() || "Massme Support <contact@hdconnects.com>";
-
-  const orderNumber = resolveOrderNumber(order);
-  const reviewBase = buildReviewBase(order, clientEmail);
-
-  const subject = `Votre avis sur la commande #${orderNumber}`;
-
-  const starsRow = [1, 2, 3, 4, 5]
-    .map(
-      (n) => `
-      <a href="${buildReviewUrl(reviewBase, n)}"
-         style="text-decoration:none;font-size:32px;line-height:1;color:#f5b301;margin:0 4px;display:inline-block"
-         target="_blank">★</a>`
-    )
-    .join("");
-
-  const text = `
-Bonjour,
-
-Merci pour votre commande chez Massme.
-
-Nous serions ravis d’avoir votre avis sur votre expérience.
-Commande : ${orderNumber}
-
-Donner une note :
-1 étoile : ${buildReviewUrl(reviewBase, 1)}
-2 étoiles : ${buildReviewUrl(reviewBase, 2)}
-3 étoiles : ${buildReviewUrl(reviewBase, 3)}
-4 étoiles : ${buildReviewUrl(reviewBase, 4)}
-5 étoiles : ${buildReviewUrl(reviewBase, 5)}
-
-À bientôt,
-L’équipe Massme
-  `.trim();
-
-  const html = `
-<div style="font-family:Arial,sans-serif;padding:24px;color:#111;text-align:center">
-  <h2 style="margin:0 0 16px">Merci pour votre commande</h2>
-  <p>Comment évalueriez-vous votre expérience pour la commande <strong>#${orderNumber}</strong> ?</p>
-  <div style="margin:24px 0">${starsRow}</div>
-  <p style="font-size:14px;color:#666">Cliquez sur une étoile pour laisser votre avis.</p>
-  <p>À bientôt,<br/>L’équipe Massme</p>
-</div>
-  `.trim();
-
-  const res = await resend.emails.send({
-    from: sender,
-    to: clientEmail,
-    subject,
-    text,
-    html,
-  });
-
-  return {
-    to: clientEmail,
-    resendId: (res as any)?.data?.id || (res as any)?.id || null,
-    reviewBase,
-  };
-}
+/* =========================================================
+   MAIN
+========================================================= */
 
 export async function sendOrderEmails({
   order,
@@ -233,10 +129,11 @@ export async function sendOrderEmails({
   clientEmail: string;
 }) {
   const sender =
-    process.env.RESEND_FROM?.trim() || "Massme Support <contact@hdconnects.com>";
+    process.env.RESEND_FROM || "Vitrectomed Support <contact@hdconnects.com>";
 
   const created = toDate(order.created_at);
   const amountText = formatMoney(order.amount_total, order.currency);
+  const orderNumber = resolveOrderNumber(order);
 
   const providerLabel =
     order.provider === "stripe"
@@ -247,63 +144,63 @@ export async function sendOrderEmails({
       ? "Virement bancaire"
       : "Paiement";
 
-  const adminEmail = (process.env.ADMIN_EMAIL || "contact@hdconnects.com").trim();
+  const adminEmail = process.env.ADMIN_EMAIL || "contact@hdconnects.com";
   const logisticsEmails = resolveLogisticsEmails();
-  const orderNumber = resolveOrderNumber(order);
+
+  /* =========================================================
+     CLIENT EMAIL
+  ========================================================= */
 
   const subjectClient = `Commande #${orderNumber} confirmée`;
-  const subjectAdmin = `Nouvelle commande #${orderNumber}`;
-  const subjectLogistics = `Préparer commande #${orderNumber}`;
-
-  const textClient = `
-Bonjour,
-
-Merci pour votre commande chez Massme.
-Votre paiement de ${amountText} a bien été reçu.
-
-Moyen de paiement : ${providerLabel}
-Commande : ${orderNumber}
-
-Votre facture est jointe à cet email.
-
-À bientôt,
-L’équipe Massme
-`.trim();
 
   const htmlClient = `
 <div style="font-family:Arial,sans-serif;padding:24px;color:#111">
-  <h2 style="margin:0 0 16px">Merci pour votre commande</h2>
+  <h2>Merci pour votre commande</h2>
   <p>Votre paiement de <strong>${amountText}</strong> a bien été reçu.</p>
-  <p><strong>Commande :</strong> ${orderNumber}<br/>
-  <strong>Moyen de paiement :</strong> ${providerLabel}</p>
+  <p><strong>Commande :</strong> ${orderNumber}</p>
+  <p><strong>Moyen de paiement :</strong> ${providerLabel}</p>
   <p>Votre facture est jointe à cet email.</p>
-  <p>À bientôt,<br/>L’équipe Massme</p>
 </div>
+`;
+
+  const textClient = `
+Merci pour votre commande
+
+Commande: ${orderNumber}
+Montant: ${amountText}
+Paiement: ${providerLabel}
 `.trim();
+
+  /* =========================================================
+     ADMIN
+  ========================================================= */
 
   const textAdmin = `
-Nouvelle commande reçue !
+Nouvelle commande
 
-- Commande: ${orderNumber}
-- Email client: ${order.customer_email}
-- Montant: ${amountText}
-- Statut: ${order.payment_status}
-- Provider: ${providerLabel}
-- Date: ${created.toLocaleString("fr-FR")}
+Commande: ${orderNumber}
+Email: ${order.customer_email}
+Montant: ${amountText}
 `.trim();
 
-  const textLogistics = `
-Une nouvelle commande doit être traitée :
+  /* =========================================================
+     LOGISTICS
+  ========================================================= */
 
-Commande : ${orderNumber}
-Client : ${order.customer_email}
-Montant : ${amountText}
-Date : ${created.toLocaleString("fr-FR")}
-Provider : ${providerLabel}
+  const textLogistics = `
+Préparer commande
+
+Commande: ${orderNumber}
+Client: ${order.customer_email}
+Montant: ${amountText}
 `.trim();
 
   const invoiceResult = await buildInvoiceAttachment(order);
   const attachments = invoiceResult.attachment ? [invoiceResult.attachment] : undefined;
+
+  /* =========================================================
+     SEND
+  ========================================================= */
 
   const clientRes = await resend.emails.send({
     from: sender,
@@ -317,31 +214,31 @@ Provider : ${providerLabel}
   const adminRes = await resend.emails.send({
     from: sender,
     to: adminEmail,
-    subject: subjectAdmin,
+    subject: `Nouvelle commande #${orderNumber}`,
     text: textAdmin,
     attachments,
   });
 
-  const logistics: Array<{ to: string; resendId: string | null }> = [];
+  const logistics = [];
+
   for (const email of logisticsEmails) {
     const res = await resend.emails.send({
       from: sender,
       to: email,
-      subject: subjectLogistics,
+      subject: `Préparer commande #${orderNumber}`,
       text: textLogistics,
       attachments,
     });
 
     logistics.push({
       to: email,
-      resendId: (res as any)?.data?.id || (res as any)?.id || null,
+      resendId: (res as any)?.data?.id || null,
     });
   }
 
-  const review = await sendReviewEmail({
-    order,
-    clientEmail,
-  });
+  /* =========================================================
+     ❌ PLUS AUCUN EMAIL AVIS ICI
+  ========================================================= */
 
   return {
     ok: true,
@@ -349,17 +246,13 @@ Provider : ${providerLabel}
     invoice: {
       attached: Boolean(invoiceResult.attachment),
       error: invoiceResult.error,
-      filename: invoiceResult.attachment?.filename ?? null,
     },
     client: {
-      to: clientEmail,
-      resendId: (clientRes as any)?.data?.id || (clientRes as any)?.id || null,
+      resendId: (clientRes as any)?.data?.id || null,
     },
     admin: {
-      to: adminEmail,
-      resendId: (adminRes as any)?.data?.id || (adminRes as any)?.id || null,
+      resendId: (adminRes as any)?.data?.id || null,
     },
     logistics,
-    review,
   };
 }

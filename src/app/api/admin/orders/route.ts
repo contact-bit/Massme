@@ -29,12 +29,9 @@ function getDateValue(v: any): number {
 export async function GET(req: Request) {
   const roleOrResponse = assertAdminOrLogistics(req);
 
-  // 🔥 FIX CRITIQUE (le bug venait de là)
   if (roleOrResponse instanceof Response) {
     return roleOrResponse;
   }
-
-  const role = roleOrResponse;
 
   try {
     const snap = await dbAdmin
@@ -46,7 +43,37 @@ export async function GET(req: Request) {
       .map((d) => {
         const o = d.data() as any;
 
-        const base = {
+        /* =========================================================
+           TOTAL ULTRA ROBUSTE
+        ========================================================= */
+        const total =
+          typeof o?.totals?.totalTTC === "number"
+            ? o.totals.totalTTC
+            : typeof o?.totals?.totalHT === "number"
+            ? o.totals.totalHT
+            : typeof o?.total === "number"
+            ? o.total
+            : typeof o?.amount_total === "number"
+            ? o.amount_total / 100
+            : Array.isArray(o?.items)
+            ? o.items.reduce(
+                (sum: number, it: any) =>
+                  sum +
+                  (typeof it?.priceHT === "number"
+                    ? it.priceHT
+                    : typeof it?.price === "number"
+                    ? it.price
+                    : 0) *
+                    (it?.quantity ?? 1),
+                0
+              )
+            : 0;
+
+        /* =========================================================
+           RETURN CLEAN + FIX REVIEW EMAIL
+        ========================================================= */
+
+        return {
           id: d.id,
 
           orderNumber:
@@ -70,25 +97,20 @@ export async function GET(req: Request) {
           trackingNumber: o?.trackingNumber ?? null,
           carrier: o?.carrier ?? null,
 
-          totals: o?.totals ?? null,
-        };
+          /* =========================================================
+             ✅ 🔥 FIX CRITIQUE (TON PROBLÈME)
+          ========================================================= */
+          reviewEmail: o?.reviewEmail ?? null,
 
-        // 👑 ADMIN → avec prix
-        if (role === "admin") {
-          return {
-            ...base,
-            total:
-              typeof o?.totals?.totalTTC === "number"
-                ? o.totals.totalTTC
-                : 0,
-          };
-        }
+          /* =========================================================
+             TOTALS
+          ========================================================= */
+          totals: {
+            totalTTC: total,
+          },
 
-        // 📦 LOGISTICS → sans prix
-        return {
-          ...base,
-          totals: null,
-          total: 0,
+          total,
+          __total: total,
         };
       })
       .sort((a, b) => {

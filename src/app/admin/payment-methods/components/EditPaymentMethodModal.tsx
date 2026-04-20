@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { COUNTRY_LANGUAGE_MAP } from "@/lib/shipping-i18n";
 import type { PaymentMethod, PaymentMethodProvider } from "../types";
-
-const LOCALES = ["fr", "en", "es", "de", "it", "nl"] as const;
-type LocaleKey = (typeof LOCALES)[number];
 
 type Props = {
   data: PaymentMethod;
@@ -12,230 +10,299 @@ type Props = {
   onSaved: () => void;
 };
 
-export default function EditPaymentMethodModal({
+export default function EditPaymentMethodPanel({
   data,
   onClose,
   onSaved,
 }: Props) {
+  const locale = COUNTRY_LANGUAGE_MAP[data.country];
+
   const [provider, setProvider] = useState<PaymentMethodProvider>(
     data.provider
   );
-  const [isActive, setIsActive] = useState<boolean>(data.isActive);
+  const [isActive, setIsActive] = useState(data.isActive);
   const [sortOrder, setSortOrder] = useState<number | "">(
     data.sortOrder ?? ""
   );
-  const [activeLocale, setActiveLocale] = useState<LocaleKey>("fr");
 
-  const [name, setName] = useState<Record<LocaleKey, string>>({
-    fr: (data.name as any)?.fr ?? "",
-    en: (data.name as any)?.en ?? "",
-    es: (data.name as any)?.es ?? "",
-    de: (data.name as any)?.de ?? "",
-    it: (data.name as any)?.it ?? "",
-    nl: (data.name as any)?.nl ?? "",
-  });
-
-  const [description, setDescription] = useState<
-    Record<LocaleKey, string>
-  >({
-    fr: (data.description as any)?.fr ?? "",
-    en: (data.description as any)?.en ?? "",
-    es: (data.description as any)?.es ?? "",
-    de: (data.description as any)?.de ?? "",
-    it: (data.description as any)?.it ?? "",
-    nl: (data.description as any)?.nl ?? "",
-  });
+  const [name, setName] = useState(
+    data.name?.[locale] ?? ""
+  );
+  const [description, setDescription] = useState(
+    data.description?.[locale] ?? ""
+  );
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function updateName(locale: LocaleKey, value: string) {
-    setName((prev) => ({ ...prev, [locale]: value }));
-  }
-
-  function updateDescription(locale: LocaleKey, value: string) {
-    setDescription((prev) => ({ ...prev, [locale]: value }));
-  }
-
-  async function handleSave(e: React.FormEvent) {
+  async function save(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    const hasName = Object.values(name).some((v) => v.trim().length > 0);
-    if (!hasName) {
-      setError("Renseigne au moins un nom dans une langue.");
+    if (!name.trim()) {
+      setError("Ajoute un nom.");
       return;
     }
 
     try {
       setLoading(true);
 
-      const payload = {
-        provider,
-        isActive,
-        sortOrder: sortOrder === "" ? null : Number(sortOrder),
-        name,
-        description,
-      };
-
-      const res = await fetch(`/api/admin/payment-methods/${data.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `/api/admin/payment-methods/${data.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider,
+            isActive,
+            sortOrder: sortOrder === "" ? null : Number(sortOrder),
+            name: { ...data.name, [locale]: name },
+            description: {
+              ...data.description,
+              [locale]: description,
+            },
+          }),
+        }
+      );
 
       const json = await res.json();
-      if (!res.ok || !json.ok) {
-        throw new Error(json?.error ?? "Erreur serveur");
-      }
+      if (!res.ok || !json.ok) throw new Error();
 
       onSaved();
-      onClose();
-    } catch (e: any) {
-      setError(e?.message ?? "Erreur inconnue");
+    } catch {
+      setError("Erreur sauvegarde");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <form
-        onSubmit={handleSave}
-        className="bg-white rounded-lg p-4 max-w-lg w-full space-y-4"
-      >
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Modifier la méthode</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-sm text-gray-500"
-          >
-            ✕
-          </button>
-        </div>
+    <form onSubmit={save} className="wrap">
 
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">
-            Pays : <strong>{data.country}</strong>
-          </span>
-          <label className="flex items-center gap-2 text-sm">
-            <span>Active</span>
-            <input
-              type="checkbox"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-            />
-          </label>
-        </div>
-
-        {/* Provider + ordre */}
-        <div className="flex flex-wrap gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Provider
-            </label>
-            <select
-              value={provider}
-              onChange={(e) =>
-                setProvider(e.target.value as PaymentMethodProvider)
-              }
-              className="border rounded px-2 py-1 text-sm"
-            >
-              <option value="stripe">Stripe</option>
-              <option value="paypal">PayPal</option>
-              <option value="manual">Manuel / Autre</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Ordre d'affichage
-            </label>
-            <input
-              type="number"
-              value={sortOrder}
-              onChange={(e) =>
-                setSortOrder(
-                  e.target.value === "" ? "" : Number(e.target.value)
-                )
-              }
-              className="border rounded px-2 py-1 text-sm w-24"
-            />
-          </div>
-        </div>
-
-        {/* Onglets langues */}
+      {/* HEADER */}
+      <div className="header">
         <div>
-          <div className="flex gap-2 mb-2">
-            {LOCALES.map((loc) => (
-              <button
-                key={loc}
-                type="button"
-                onClick={() => setActiveLocale(loc)}
-                className={`px-2 py-1 text-xs rounded border ${
-                  activeLocale === loc
-                    ? "bg-blue-600 text-white"
-                    : "bg-white"
-                }`}
-              >
-                {loc.toUpperCase()}
-              </button>
-            ))}
-          </div>
-
-          <div className="space-y-2">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Nom ({activeLocale.toUpperCase()})
-              </label>
-              <input
-                type="text"
-                value={name[activeLocale]}
-                onChange={(e) =>
-                  updateName(activeLocale, e.target.value)
-                }
-                className="border rounded px-2 py-1 text-sm w-full"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Description ({activeLocale.toUpperCase()})
-              </label>
-              <input
-                type="text"
-                value={description[activeLocale]}
-                onChange={(e) =>
-                  updateDescription(activeLocale, e.target.value)
-                }
-                className="border rounded px-2 py-1 text-sm w-full"
-              />
-            </div>
-          </div>
+          <h3>Modifier</h3>
+          <span>
+            {data.country} • {locale.toUpperCase()}
+          </span>
         </div>
 
-        {error && (
-          <p className="text-sm text-red-600">{error}</p>
-        )}
+        <button
+          type="button"
+          className="close"
+          onClick={onClose}
+        >
+          ✕
+        </button>
+      </div>
 
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onClose}
-          >
-            Annuler
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={loading}
-          >
-            {loading ? "Enregistrement…" : "Sauvegarder"}
-          </button>
+      {/* PROVIDER */}
+      <div className="block">
+        <p className="label">Provider</p>
+
+        <div className="providers">
+          {[
+            { id: "stripe", label: "Stripe" },
+            { id: "paypal", label: "PayPal" },
+            { id: "manual", label: "Manuel" },
+          ].map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() =>
+                setProvider(p.id as PaymentMethodProvider)
+              }
+              className={`provider ${
+                provider === p.id ? "active" : ""
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
-      </form>
-    </div>
+      </div>
+
+      {/* CONTENT */}
+      <div className="block">
+        <p className="label">Contenu</p>
+
+        <div className="grid">
+          <input
+            placeholder={`Nom (${locale.toUpperCase()})`}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          <input
+            placeholder={`Description (${locale.toUpperCase()})`}
+            value={description}
+            onChange={(e) =>
+              setDescription(e.target.value)
+            }
+          />
+        </div>
+      </div>
+
+      {/* SETTINGS */}
+      <div className="block grid">
+
+        <input
+          type="number"
+          placeholder="Ordre"
+          value={sortOrder}
+          onChange={(e) =>
+            setSortOrder(
+              e.target.value === ""
+                ? ""
+                : Number(e.target.value)
+            )
+          }
+        />
+
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) =>
+              setIsActive(e.target.checked)
+            }
+          />
+          Actif
+        </label>
+
+      </div>
+
+      {error && <p className="error">{error}</p>}
+
+      {/* ACTIONS */}
+      <div className="actions">
+        <button
+          type="button"
+          className="ghost"
+          onClick={onClose}
+        >
+          Annuler
+        </button>
+
+        <button
+          type="submit"
+          className="primary"
+          disabled={loading}
+        >
+          {loading ? "..." : "Sauvegarder"}
+        </button>
+      </div>
+
+      <style jsx>{`
+
+        .wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 22px;
+        }
+
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        h3 {
+          font-size: 20px;
+          font-weight: 600;
+        }
+
+        span {
+          font-size: 12px;
+          color: #64748b;
+        }
+
+        .close {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(255,255,255,0.05);
+        }
+
+        .block {
+          padding: 16px;
+          border-radius: 16px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .label {
+          font-size: 12px;
+          color: #94a3b8;
+          margin-bottom: 10px;
+        }
+
+        .providers {
+          display: flex;
+          gap: 10px;
+        }
+
+        .provider {
+          flex: 1;
+          padding: 12px;
+          border-radius: 12px;
+          background: rgba(255,255,255,0.05);
+        }
+
+        .provider.active {
+          background: linear-gradient(135deg,#3b82f6,#2563eb);
+        }
+
+        .grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        input {
+          height: 46px;
+          padding: 0 14px;
+          border-radius: 12px;
+          background: rgba(15,23,42,0.7);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: white;
+        }
+
+        input:focus {
+          outline: none;
+          border-color: #3b82f6;
+        }
+
+        .toggle {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+        }
+
+        .ghost {
+          background: rgba(255,255,255,0.05);
+          padding: 8px 14px;
+          border-radius: 10px;
+        }
+
+        .primary {
+          background: linear-gradient(135deg,#3b82f6,#2563eb);
+          padding: 8px 14px;
+          border-radius: 10px;
+        }
+
+        .error {
+          color: #f87171;
+        }
+
+      `}</style>
+    </form>
   );
 }

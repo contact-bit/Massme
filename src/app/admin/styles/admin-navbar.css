@@ -1,198 +1,276 @@
-/* =========================================================
-   ADMIN — TOPBAR NAV MODERNE
-========================================================= */
+/* ================= ROOT ================= */
 
-/* Topbar shell — si déjà géré dans admin.shell.css, ne garde que ce qui manque */
 .admin-topbar {
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
-  border-bottom: 1px solid var(--color-border);
-  backdrop-filter: blur(10px);
+  z-index: 100;
+
+  backdrop-filter: blur(24px);
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 15, 30, 0.85),
+    rgba(10, 15, 30, 0.65)
+  );
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+/* ================= INNER ================= */
 
 .admin-topbar-inner {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  justify-content: space-between;
+
   padding: 12px 20px;
-  max-width: var(--content-max);
-  margin: 0 auto;
+  max-width: 1400px;
+  margin: auto;
 }
 
-/* Logo / brand */
+/* ================= LOGO ================= */
 
 .admin-logo {
-  display: flex;
-  flex-direction: column;
-  font-weight: 800;
-  font-size: var(--text-base);
+  font-weight: 600;
+  font-size: 15px;
+  color: white;
   text-decoration: none;
-  color: var(--color-text);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.2px;
 }
 
 .admin-logo span {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-muted);
+  font-size: 11px;
+  opacity: 0.5;
+  margin-left: 6px;
 }
 
-/* Navigation */
+/* ================= NAV WRAPPER ================= */
+
+.admin-nav-scroll {
+  flex: 1;
+  margin: 0 16px;
+
+  display: flex;
+  align-items: center;
+
+  /* 🔥 masque premium fade */
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 20px,
+    black calc(100% - 20px),
+    transparent
+  );
+}
+
+/* ================= NAV ================= */
 
 .admin-nav {
   display: flex;
-  gap: 4px;
-  margin-left: var(--space-4);
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
+/* ================= LINK ================= */
+
 .admin-nav-link {
-  position: relative;
-  padding: 8px 12px;
-  font-size: var(--text-sm);
+  padding: 7px 12px;
+  border-radius: 999px;
+
+  font-size: 12.5px;
   font-weight: 500;
-  color: var(--color-text-soft);
+
+  color: rgba(255, 255, 255, 0.65);
   text-decoration: none;
-  border-radius: var(--radius-md);
-  transition:
-    color var(--transition-base),
-    background var(--transition-base);
+
+  transition: all 0.25s ease;
+  white-space: nowrap;
 }
 
 /* hover */
-
 .admin-nav-link:hover {
-  color: var(--color-text);
-  background: var(--color-surface-alt);
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
 }
 
-/* underline animé (optionnel mais moderne) */
-
-.nav-underline {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 4px;
-  height: 2px;
-  background: var(--color-primary);
-  border-radius: 2px;
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.25s ease;
-}
-
-.admin-nav-link:hover .nav-underline {
-  transform: scaleX(0.5);
-}
-
-/* lien actif */
-
+/* active */
 .admin-nav-link.active {
-  color: #fff;
-  background: var(--color-primary);
-  font-weight: 600;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.18),
+    rgba(255,255,255,0.08)
+  );
+  color: white;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset;
 }
 
-.admin-nav-link.active .nav-underline {
-  transform: scaleX(1);
-}
-
-/* Actions à droite */
+/* ================= ACTIONS ================= */
 
 .admin-actions {
-  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 8px;
 }
-
-/* Bouton notifications */
-
-.admin-notif-btn {
-  position: relative;
-  font-size: 18px;
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 6px 10px;
-  cursor: pointer;
-  transition:
-    background var(--transition-base),
-    border-color var(--transition-base);
-}
-
-.admin-notif-btn:hover {
-  background: var(--color-surface);
-  border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
-}
-
-/* badge compteur */
-
-.notif-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: var(--color-danger);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Bouton logout */
 
 .admin-logout {
-  background: var(--color-danger);
-  color: #fff;
-  border: 1px solid var(--color-danger);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  font-size: var(--text-sm);
-  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(255, 77, 79, 0.5);
+
+  padding: 7px 12px;
+  border-radius: 999px;
+
+  color: #ff4d4f;
+  font-size: 12px;
+  font-weight: 500;
+
   cursor: pointer;
-  transition:
-    background var(--transition-base),
-    border-color var(--transition-base),
-    transform 80ms ease;
+
+  transition: all 0.25s ease;
 }
 
+/* hover premium */
 .admin-logout:hover {
-  background: var(--color-danger-dark);
-  border-color: var(--color-danger-dark);
+  background: rgba(255, 77, 79, 0.08);
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 1px rgba(255, 77, 79, 0.2),
+              0 4px 20px rgba(255, 77, 79, 0.15);
+  transform: translateY(-1px);
 }
 
+/* click */
 .admin-logout:active {
-  transform: translateY(1px);
+  transform: scale(0.96);
 }
 
-/* Responsive */
+/* burger */
+.admin-burger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: white;
+  cursor: pointer;
+}
 
-@media (max-width: 720px) {
-  .admin-topbar-inner {
-    flex-wrap: wrap;
-    align-items: flex-start;
-    row-gap: var(--space-2);
+/* =========================================================
+   🔥 BREAKPOINT FIX (TRÈS IMPORTANT)
+========================================================= */
+
+/* 👉 MODE COMPACT (petits laptops) */
+@media (max-width: 1200px) {
+  .admin-nav-link {
+    padding: 6px 10px;
+    font-size: 12px;
   }
 
-  .admin-nav {
-    margin-left: 0;
-    width: 100%;
-    order: 3;
+  .admin-logo span {
+    display: none;
+  }
+}
+
+/* 👉 MOBILE (PLUS TÔT pour éviter scroll) */
+@media (max-width: 1000px) {
+  .admin-nav-scroll {
+    display: none;
   }
 
-  .admin-actions {
-    margin-left: 0;
-    width: 100%;
-    justify-content: flex-end;
-    order: 2;
+  .admin-burger {
+    display: block;
   }
+
+  .admin-logout {
+    display: none;
+  }
+}
+
+/* ================= MOBILE MENU ================= */
+
+.admin-mobile-menu {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 85%;
+  height: 100%;
+
+  background: linear-gradient(
+    180deg,
+    #0b0f1a,
+    #070b14
+  );
+
+  z-index: 200;
+  padding: 20px;
+
+  transition: right 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.admin-mobile-menu.open {
+  right: 0;
+}
+
+/* header */
+.admin-mobile-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  font-weight: 500;
+  color: white;
+}
+
+/* nav */
+.admin-mobile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-mobile-link {
+  padding: 14px;
+  border-radius: 12px;
+
+  color: white;
+  text-decoration: none;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  transition: all 0.2s ease;
+}
+
+.admin-mobile-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-mobile-link.active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* logout */
+.admin-mobile-logout {
+  margin-top: 20px;
+  padding: 14px;
+  width: 100%;
+
+  border-radius: 12px;
+  border: 1px solid rgba(255, 77, 79, 0.5);
+
+  background: transparent;
+  color: #ff4d4f;
+
+  font-weight: 500;
+
+  transition: all 0.25s ease;
+}
+
+.admin-mobile-logout:hover {
+  background: rgba(255, 77, 79, 0.08);
+  border-color: #ff4d4f;
+}
+
+/* backdrop */
+.admin-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 150;
 }

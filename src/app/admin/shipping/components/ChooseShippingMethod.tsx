@@ -52,68 +52,69 @@ export default function ChooseShippingMethod({
     title: locale === "fr" ? "Méthode de livraison" : "Shipping method",
     relay:
       locale === "fr"
-        ? "Point relais Mondial Relay"
-        : "Mondial Relay pickup point",
+        ? "Point relais"
+        : "Pickup point",
     chooseRelay:
       locale === "fr"
-        ? "Choisir un point relais Mondial Relay"
-        : "Choose a Mondial Relay pickup point",
+        ? "Choisir un point relais"
+        : "Choose pickup point",
   };
 
-  // 🔹 TRI PAR ORDRE D’AFFICHAGE
   const orderedMethods = useMemo(
     () =>
-      [...methods].sort((a, b) => {
-        const aOrder = a.sortOrder ?? 999;
-        const bOrder = b.sortOrder ?? 999;
-        return aOrder - bOrder;
-      }),
+      [...methods].sort(
+        (a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999)
+      ),
     [methods]
   );
 
   return (
-    <div className="space-y-4">
-      <h2 className="font-semibold mb-2 text-lg">{t.title}</h2>
+    <div className="wrap">
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <h2>{t.title}</h2>
 
-      {orderedMethods.map((m) => {
-        const isSelected = selected?.id === m.id;
+      {error && <p className="error">{error}</p>}
 
-        return (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => selectMethod(m)}
-            className={`w-full text-left border p-4 rounded-lg transition ${
-              isSelected
-                ? "border-blue-600 bg-blue-50"
-                : "border-gray-300 bg-white"
-            }`}
-          >
-            <p className="font-semibold">
-              {m.name} — {priceTTC(m).toFixed(2)} € TTC
-            </p>
+      <div className="list">
+        {orderedMethods.map((m) => {
+          const isSelected = selected?.id === m.id;
 
-            <p className="text-sm text-gray-600">{m.delay}</p>
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => selectMethod(m)}
+              className={`card ${isSelected ? "active" : ""}`}
+            >
+              <div className="row">
+                <div>
+                  <p className="name">{m.name}</p>
+                  <p className="delay">{m.delay}</p>
+                </div>
 
-            <p className="text-xs text-gray-500">
-              {m.priceHT.toFixed(2)} € HT
-              {m.vatRate ? ` • TVA ${m.vatRate}%` : ""}
-            </p>
+                <div className="price">
+                  {priceTTC(m).toFixed(2)}€
+                </div>
+              </div>
 
-            {m.type === "relay" && (
-              <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded mt-2 inline-block">
-                {t.relay}
-              </span>
-            )}
-          </button>
-        );
-      })}
+              <div className="meta">
+                {m.priceHT.toFixed(2)}€ HT
+                {m.vatRate ? ` • TVA ${m.vatRate}%` : ""}
+              </div>
 
+              {m.type === "relay" && (
+                <div className="tag">{t.relay}</div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* RELAY */}
       {selected?.type === "relay" && (
-        <div className="border p-4 rounded-lg mt-4 bg-white shadow-sm">
-          <h3 className="font-semibold mb-2">{t.chooseRelay}</h3>
+        <div className="relay-box">
+
+          <h3>{t.chooseRelay}</h3>
 
           <RelayPointMondialRelay
             onSelect={handleRelayChosen}
@@ -122,17 +123,121 @@ export default function ChooseShippingMethod({
           />
 
           {relayPoint && (
-            <div className="mt-3 text-sm bg-gray-100 p-2 rounded">
-              <p className="font-bold">{relayPoint.name}</p>
+            <div className="relay-selected">
+              <strong>{relayPoint.name}</strong>
               <p>{relayPoint.address}</p>
               <p>
                 {relayPoint.postalCode} {relayPoint.city}
               </p>
-              {relayPoint.country && <p>{relayPoint.country}</p>}
             </div>
           )}
+
         </div>
       )}
+
+      <style jsx>{`
+
+        .wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          color: white;
+        }
+
+        h2 {
+          font-size: 20px;
+          font-weight: 600;
+        }
+
+        .error {
+          color: #f87171;
+          font-size: 14px;
+        }
+
+        .list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .card {
+          padding: 16px;
+          border-radius: 14px;
+
+          background: rgba(15,23,42,0.6);
+          backdrop-filter: blur(8px);
+
+          border: 1px solid rgba(255,255,255,0.08);
+
+          transition: 0.25s;
+          cursor: pointer;
+        }
+
+        .card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(59,130,246,0.5);
+        }
+
+        .card.active {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 2px rgba(59,130,246,0.25),
+                      0 10px 30px rgba(37,99,235,0.3);
+        }
+
+        .row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .name {
+          font-weight: 600;
+        }
+
+        .delay {
+          font-size: 13px;
+          color: #94a3b8;
+        }
+
+        .price {
+          font-weight: 700;
+          font-size: 16px;
+        }
+
+        .meta {
+          font-size: 12px;
+          color: #64748b;
+          margin-top: 6px;
+        }
+
+        .tag {
+          margin-top: 10px;
+          font-size: 11px;
+          background: rgba(139,92,246,0.2);
+          color: #c4b5fd;
+          padding: 4px 8px;
+          border-radius: 999px;
+          display: inline-block;
+        }
+
+        .relay-box {
+          padding: 18px;
+          border-radius: 16px;
+
+          background: rgba(15,23,42,0.6);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .relay-selected {
+          margin-top: 12px;
+          font-size: 13px;
+
+          background: rgba(255,255,255,0.05);
+          padding: 10px;
+          border-radius: 10px;
+        }
+
+      `}</style>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { MouseGradient } from "./MouseGradient";
 import "@/styles/components.css";
 
 export const metadata = {
-  title: "Vitectromed",
+  title: "Vitrectomed.com",
   description: "Boutique Vitectromed",
 };
 

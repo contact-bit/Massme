@@ -10,6 +10,7 @@ type Props = {
   loading: boolean;
   error: string | null;
   toastIt: (msg: string) => void;
+  onShip: (order: Order) => Promise<void>; // 💥 NEW
 };
 
 export default function LogisticsList({
@@ -17,12 +18,14 @@ export default function LogisticsList({
   loading,
   error,
   toastIt,
+  onShip,
 }: Props) {
   const [q, setQ] = useState("");
 
+  /* ================= FILTER ================= */
+
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-
     if (!term) return orders;
 
     return orders.filter((o) => {
@@ -37,6 +40,7 @@ export default function LogisticsList({
       const name = o.shippingAddress?.name || "";
 
       const items = Array.isArray((o as any)?.items) ? (o as any).items : [];
+
       const itemText = items
         .map((item: any) =>
           [
@@ -52,7 +56,7 @@ export default function LogisticsList({
         .join(" ")
         .toLowerCase();
 
-      const shippingMethodText = [
+      const shippingText = [
         (o as any)?.shippingMethod?.name,
         (o as any)?.shippingMethod?.label,
         (o as any)?.shippingMethod?.type,
@@ -67,10 +71,12 @@ export default function LogisticsList({
         city.toLowerCase().includes(term) ||
         name.toLowerCase().includes(term) ||
         itemText.includes(term) ||
-        shippingMethodText.includes(term)
+        shippingText.includes(term)
       );
     });
   }, [orders, q]);
+
+  /* ================= LOGIC ================= */
 
   const logisticsEligible = useMemo(() => {
     return filtered.filter((o) => {
@@ -90,19 +96,11 @@ export default function LogisticsList({
       ).toLowerCase();
 
       const isBankTransfer = provider === "bank_transfer";
-      const isAwaitingBankTransfer = orderStatus === "awaiting_bank_transfer";
+      const isAwaiting = orderStatus === "awaiting_bank_transfer";
 
-      // ❌ On exclut les virements non validés de la logistique
-      if (isBankTransfer && (isAwaitingBankTransfer || paymentStatus !== "paid")) {
-        return false;
-      }
+      if (isBankTransfer && (isAwaiting || paymentStatus !== "paid")) return false;
+      if (paymentStatus && paymentStatus !== "paid") return false;
 
-      // ❌ Plus largement, on exclut les commandes non payées
-      if (paymentStatus && paymentStatus !== "paid") {
-        return false;
-      }
-
-      // ✅ Si pas de paymentStatus exploitable, on se rabat sur le statut global
       if (
         !paymentStatus &&
         orderStatus &&
@@ -132,173 +130,81 @@ export default function LogisticsList({
         ? (order as any).items
         : [];
 
-      const qty = items.reduce((acc: number, item: any) => {
-        return acc + (item?.quantity ?? item?.qty ?? item?.count ?? 1);
-      }, 0);
-
-      return sum + qty;
+      return (
+        sum +
+        items.reduce(
+          (acc: number, item: any) =>
+            acc + (item?.quantity ?? item?.qty ?? item?.count ?? 1),
+          0
+        )
+      );
     }, 0);
   }, [logisticsEligible]);
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #E5E7EB",
-          borderRadius: 14,
-          padding: 20,
-          color: "#374151",
-        }}
-      >
-        Chargement…
-      </div>
-    );
-  }
+  /* ================= STATES ================= */
 
-  if (error) {
-    return (
-      <div
-        style={{
-          background: "#FEF2F2",
-          border: "1px solid #FECACA",
-          borderRadius: 14,
-          padding: 20,
-          color: "#B91C1C",
-        }}
-      >
-        {error}
-      </div>
-    );
-  }
+  if (loading) return <div className="log-state">Chargement…</div>;
+  if (error) return <div className="log-error">{error}</div>;
+
+  /* ================= UI ================= */
 
   return (
-    <div style={{ marginTop: 20, display: "grid", gap: 20 }}>
-      {/* SEARCH + RESUME */}
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #E5E7EB",
-          borderRadius: 14,
-          padding: 16,
-          display: "grid",
-          gap: 14,
-        }}
-      >
+    <div className="log-list">
+
+      {/* SEARCH + STATS */}
+      <div className="log-toolbar">
         <input
-          placeholder="Rechercher commande / email / ville / client / produit / livraison"
+          className="log-search"
+          placeholder="Rechercher commande, email, ville, produit…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 12,
-            borderRadius: 10,
-            border: "1px solid #D1D5DB",
-            outline: "none",
-            fontSize: 14,
-          }}
         />
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 10,
-          }}
-        >
-          <div
-            style={{
-              background: "#F9FAFB",
-              border: "1px solid #E5E7EB",
-              borderRadius: 10,
-              padding: "10px 12px",
-              fontSize: 13,
-            }}
-          >
-            <strong>{logisticsEligible.length}</strong> commandes prêtes pour la logistique
-          </div>
-
-          <div
-            style={{
-              background: "#F9FAFB",
-              border: "1px solid #E5E7EB",
-              borderRadius: 10,
-              padding: "10px 12px",
-              fontSize: 13,
-            }}
-          >
-            <strong>{totalItems}</strong> articles à traiter
-          </div>
+        <div className="log-stats">
+          <div className="log-chip">{logisticsEligible.length} commandes</div>
+          <div className="log-chip">{totalItems} articles</div>
         </div>
       </div>
 
       {/* A PREPARER */}
-      <div
-        style={{
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>
-          📦 À préparer ({toPrepare.length})
-        </h2>
+      <div className="log-section">
+        <div className="log-section-title">
+          À préparer ({toPrepare.length})
+        </div>
 
         {toPrepare.length === 0 ? (
-          <div
-            style={{
-              background: "#fff",
-              border: "1px solid #E5E7EB",
-              borderRadius: 14,
-              padding: 18,
-              color: "#6B7280",
-            }}
-          >
-            {q.trim()
-              ? "Aucune commande à préparer pour cette recherche."
-              : "Aucune commande à préparer 🎉"}
+          <div className="log-empty">
+            {q ? "Aucun résultat." : "Rien à préparer."}
           </div>
         ) : (
-          toPrepare.map((order) => (
+          toPrepare.map((o) => (
             <LogisticsItem
-              key={order.id}
-              order={order}
+              key={o.id}
+              order={o}
               toastIt={toastIt}
+              onShip={onShip} // 💥 FIX
             />
           ))
         )}
       </div>
 
-      {/* EXPEDIEES */}
-      <div
-        style={{
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>
-          🚚 Expédiées ({shipped.length})
-        </h2>
+      {/* SHIPPED */}
+      <div className="log-section">
+        <div className="log-section-title">
+          Expédiées ({shipped.length})
+        </div>
 
         {shipped.length === 0 ? (
-          <div
-            style={{
-              background: "#fff",
-              border: "1px solid #E5E7EB",
-              borderRadius: 14,
-              padding: 18,
-              color: "#6B7280",
-            }}
-          >
-            {q.trim()
-              ? "Aucune commande expédiée pour cette recherche."
-              : "Aucune commande expédiée."}
+          <div className="log-empty">
+            {q ? "Aucun résultat." : "Aucune expédition."}
           </div>
         ) : (
-          shipped.map((order) => (
+          shipped.map((o) => (
             <LogisticsItem
-              key={order.id}
-              order={order}
+              key={o.id}
+              order={o}
               toastIt={toastIt}
+              onShip={onShip} // 💥 FIX
             />
           ))
         )}

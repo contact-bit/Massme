@@ -2,32 +2,47 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import "../styles/admin-navbar.css";
 
 type AdminRole = "admin" | "logistics";
 
+type Tab = {
+  href: string;
+  label: string;
+  short: string;
+};
+
 export default function AdminNavbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
-  const role = (typeof window !== "undefined"
-    ? localStorage.getItem("admin_role")
-    : "admin") as AdminRole | null;
+  const role =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("admin_role") as AdminRole | null)
+      : "admin";
 
-  const tabs = useMemo(() => {
+  const tabs: Tab[] = useMemo(() => {
     if (role === "logistics") {
-      return [{ href: "/admin/logistics", label: "Logistique" }];
+      return [
+        {
+          href: "/admin/logistics",
+          label: "Logistique",
+          short: "Logistique",
+        },
+      ];
     }
 
     return [
-      { href: "/admin", label: "Dashboard" },
-      { href: "/admin/orders", label: "Commandes" },
-      { href: "/admin/logistics", label: "Logistique" },
-      { href: "/admin/products", label: "Produits" },
-      { href: "/admin/reviews", label: "Avis" },
-      { href: "/admin/shipping", label: "Livraison" },
-      { href: "/admin/payment-methods", label: "Méthodes de paiement" },
+      { href: "/admin", label: "Dashboard", short: "Dashboard" },
+      { href: "/admin/orders", label: "Commandes", short: "Commandes" },
+      { href: "/admin/products", label: "Produits", short: "Produits" },
+      { href: "/admin/logistics", label: "Logistique", short: "Logistique" },
+      { href: "/admin/shipping", label: "Livraison", short: "Livraison" },
+      { href: "/admin/payment-methods", label: "Paiement", short: "Paiement" },
+      { href: "/admin/reviews", label: "Avis clients", short: "Avis" },
+      { href: "/admin/export", label: "Exports", short: "Exports" },
     ];
   }, [role]);
 
@@ -42,31 +57,79 @@ export default function AdminNavbar() {
   }
 
   return (
-    <header className="admin-topbar">
-      <div className="admin-topbar-inner">
-        <Link href={role === "logistics" ? "/admin/logistics" : "/admin"} className="admin-logo">
-          Vitrectomed <span>Admin</span>
-        </Link>
+    <>
+      <header className="admin-topbar">
+        <div className="admin-topbar-inner">
 
-        <nav className="admin-nav">
+          {/* LOGO */}
+          <Link
+            href={role === "logistics" ? "/admin/logistics" : "/admin"}
+            className="admin-logo"
+          >
+            Vitrectomed
+            <span>Admin</span>
+          </Link>
+
+          {/* NAV DESKTOP */}
+          <div className="admin-nav-scroll">
+            <nav className="admin-nav">
+              {tabs.map((tab) => (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={`admin-nav-link ${
+                    isActive(tab.href) ? "active" : ""
+                  }`}
+                >
+                  {tab.short}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* ACTIONS */}
+          <div className="admin-actions">
+            <button className="admin-burger" onClick={() => setOpen(true)}>
+              ☰
+            </button>
+
+            <button className="admin-logout" onClick={logout}>
+              Déconnexion
+            </button>
+          </div>
+
+        </div>
+      </header>
+
+      {/* MOBILE MENU */}
+      <div className={`admin-mobile-menu ${open ? "open" : ""}`}>
+        <div className="admin-mobile-header">
+          <span>Navigation</span>
+          <button onClick={() => setOpen(false)}>✕</button>
+        </div>
+
+        <nav className="admin-mobile-nav">
           {tabs.map((tab) => (
             <Link
               key={tab.href}
               href={tab.href}
-              className={`admin-nav-link ${isActive(tab.href) ? "active" : ""}`}
+              onClick={() => setOpen(false)}
+              className={`admin-mobile-link ${
+                isActive(tab.href) ? "active" : ""
+              }`}
             >
               {tab.label}
-              <span className="nav-underline" />
             </Link>
           ))}
         </nav>
 
-        <div className="admin-actions">
-          <button className="admin-logout" onClick={logout}>
-            Déconnexion
-          </button>
-        </div>
+        <button className="admin-mobile-logout" onClick={logout}>
+          Déconnexion
+        </button>
       </div>
-    </header>
+
+      {/* BACKDROP */}
+      {open && <div className="admin-backdrop" onClick={() => setOpen(false)} />}
+    </>
   );
 }

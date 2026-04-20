@@ -5,7 +5,6 @@ import type { Order, ShippingStatus } from "../domain/types";
 import {
   getEffectiveShippingStatus,
   getShippingStatusLabel,
-  getShippingStatusUi,
 } from "../domain/logistics";
 
 export function LogisticsStatusBadge({
@@ -18,19 +17,8 @@ export function LogisticsStatusBadge({
   const effectiveStatus =
     status || (order ? getEffectiveShippingStatus(order) : "pending");
 
-  const ui = getShippingStatusUi(effectiveStatus);
-
   return (
-    <span
-      className="statusBadge"
-      style={
-        {
-          "--badge-bg": ui.bg,
-          "--badge-border": ui.border,
-          "--badge-color": ui.color,
-        } as React.CSSProperties
-      }
-    >
+    <span className={`admin-badge status-${effectiveStatus}`}>
       {getShippingStatusLabel(effectiveStatus)}
     </span>
   );

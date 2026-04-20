@@ -1,45 +1,79 @@
 /* =========================================================
-   ADMIN — TOPBAR NAV
-   Uniquement les éléments de navigation du header
+   ADMIN — TOPBAR NAV (FINAL PRO)
 ========================================================= */
+
+/* ================= BRAND ================= */
 
 .admin-topbar-brand {
   font-weight: 800;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+
   color: var(--color-primary);
   text-decoration: none;
-  font-size: var(--text-base);
-  letter-spacing: -0.01em;
+
+  white-space: nowrap;
 }
+
+/* ================= NAV ================= */
 
 .admin-topbar-nav {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  flex-wrap: wrap;
+
+  /* 🔥 important */
+  flex: 1;
+  min-width: 0;
+
+  /* 🔥 empêche de casser la ligne */
+  flex-wrap: nowrap;
+
+  /* 🔥 scroll si trop de tabs */
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
+.admin-topbar-nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* ================= LINK ================= */
+
 .admin-topbar-link {
+  flex: 0 0 auto;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 8px 12px;
+
+  min-height: 38px;
+  padding: 6px 10px;
+
   border-radius: var(--radius-md);
+
   text-decoration: none;
   color: var(--color-text-soft);
+
   font-size: var(--text-sm);
   font-weight: 600;
+
+  border: 1px solid transparent;
+
   transition:
     background var(--transition-fast),
     color var(--transition-fast),
     border-color var(--transition-fast);
-  border: 1px solid transparent;
 }
+
+/* hover */
 
 .admin-topbar-link:hover {
   background: var(--color-surface-alt);
-  color: var(--color-primary);
+  color: var(--color-text);
 }
+
+/* active */
 
 .admin-topbar-link.active {
   background: var(--color-primary);
@@ -47,47 +81,53 @@
   border-color: var(--color-primary);
 }
 
+/* ================= RIGHT ================= */
+
 .admin-topbar-right {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+
+  flex: 0 0 auto;
 }
+
+/* ================= LOGOUT ================= */
 
 .admin-topbar-logout {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 8px 12px;
+
+  min-height: 38px;
+  padding: 6px 12px;
+
   border-radius: var(--radius-md);
+
   font-size: var(--text-sm);
   font-weight: 700;
+
   border: 1px solid var(--color-danger);
   background: var(--color-danger);
   color: #fff;
+
   cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    filter var(--transition-fast);
+
+  transition: filter var(--transition-fast);
 }
 
 .admin-topbar-logout:hover {
-  filter: brightness(0.96);
+  filter: brightness(0.95);
 }
+
+/* ================= RESPONSIVE ================= */
 
 @media (max-width: 720px) {
   .admin-topbar-nav {
-    width: 100%;
-    gap: var(--space-2);
+    gap: 6px;
   }
 
   .admin-topbar-link {
-    min-height: 38px;
-  }
-
-  .admin-topbar-right {
-    width: 100%;
-    justify-content: flex-start;
+    font-size: 12px;
+    padding: 6px 8px;
   }
 }

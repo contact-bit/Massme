@@ -1,31 +1,16 @@
+/* =========================================================
+   GLOBAL IMPORTS
+========================================================= */
+
 @import "tailwindcss";
 @import "../styles/tokens.css";
 @import "../styles/utilities.css";
 @import "../styles/components.css";
 
-/* ============================================
-   SCROLL NORMAL (sans snap)
-============================================ */
+/* =========================================================
+   ANIMATIONS
+========================================================= */
 
-.snap-container {
-  /* plus de height forcé ici */
-  height: auto;
-  overflow-y: visible;          /* laisse le body gérer le scroll */
-  scroll-snap-type: none;       /* désactive le snap */
-  scroll-behavior: smooth;      /* tu peux garder le smooth si tu veux */
-}
-
-.snap-section {
-  /* plus de 100vh, plus de snap-align */
-  height: auto;
-  scroll-snap-align: none;
-  scroll-snap-stop: normal;
-  display: block;               /* ou flex si ton layout en a besoin */
-  box-sizing: border-box;
-  animation: section-enter 0.6s ease-out;
-}
-
-/* Animation : slide + fade */
 @keyframes section-enter {
   from {
     opacity: 0;
@@ -37,7 +22,10 @@
   }
 }
 
-/* Mobile : même comportement que desktop */
+/* =========================================================
+   SNAP FIX MOBILE
+========================================================= */
+
 @media (max-width: 768px) {
   .snap-container {
     height: auto;
@@ -47,192 +35,168 @@
   .snap-section {
     height: auto;
     scroll-snap-align: none;
-    scroll-snap-stop: normal;
   }
 }
 
-/* ============================================
-   FOND GLOBAL DE L'APPLICATION + TYPO
-============================================ */
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
-}
-
-/* Le gradient est géré dans le layout,
-   ici juste couleur de texte + police */
-body {
-  color: #0f172a;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
-}
-
-/* ============================================
-   WRAPPER MASSME
-============================================ */
+/* =========================================================
+   MONDIAL RELAY WRAPPER (SAFE)
+========================================================= */
 
 .mr-wrapper {
   width: 100%;
-  margin: 0 auto !important;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 14px;
-  box-sizing: border-box;
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  background: var(--color-surface);
 }
 
 .mr-title {
   font-weight: 700;
-  font-size: 1.2rem;
-  margin-bottom: 14px;
+  font-size: var(--text-md);
+  margin-bottom: var(--space-3);
   text-align: center;
-  width: 100%;
 }
 
-/* ============================================
-   ZONE MONDIAL RELAY
-============================================ */
+/* =========================================================
+   MONDIAL RELAY CORE
+========================================================= */
 
 #mr-zone,
 #mr-list,
 #MRW-Enveloppe,
 #MRW-Widget {
-  width: 100% !important;
-  max-width: 760px !important;
-  margin: 0 auto !important;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
 }
 
-.mr-zone {
-  max-height: none !important;
-  overflow: visible !important;
-}
+/* inputs */
 
-.mr-zone * {
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-/* Inputs + boutons */
 #mr-zone input[type="text"] {
-  border: 1px solid #d1d5db !important;
-  background: #f9fafb !important;
-  border-radius: 8px !important;
-  padding: 10px !important;
-  font-size: 0.95rem !important;
-  width: 100% !important;
-  margin-bottom: 12px !important;
+  width: 100%;
+  padding: 10px;
+
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+
+  font-size: var(--text-sm);
+
+  margin-bottom: var(--space-3);
 }
+
+/* bouton */
 
 #mr-zone input[type="button"] {
-  background: #2563eb !important;
-  color: #fff !important;
-  border-radius: 8px !important;
-  padding: 8px 12px !important;
-  border: none !important;
+  background: var(--color-primary);
+  color: #fff;
+
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+
+  border: none;
   cursor: pointer;
-  margin-bottom: 14px !important;
+
+  margin-bottom: var(--space-3);
 }
 
 #mr-zone input[type="button"]:hover {
-  background: #1e40af !important;
+  background: var(--color-primary-hover);
 }
 
-/* ============================================
-   CARTE LEAFLET
-============================================ */
+/* =========================================================
+   MAP
+========================================================= */
 
 #mr-zone .leaflet-container {
-  width: 100% !important;
-  height: 340px !important;
-  border-radius: 12px !important;
-  border: 1px solid #e5e7eb !important;
-  margin: 12px 0 !important;
+  width: 100%;
+  height: 340px;
+
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+
+  margin: var(--space-3) 0;
 }
 
-/* Supprime logos MR */
-#mr-list [style*="background"],
-#mr-zone [style*="background"],
-#mr-list *[style*="url"],
-#mr-zone *[style*="url"] {
-  display: none !important;
+/* =========================================================
+   CLEAN MR LOGOS (SAFE VERSION)
+========================================================= */
+
+/* ⚠️ moins agressif */
+#mr-list img[style*="background"],
+#mr-zone img[style*="background"] {
+  display: none;
 }
 
-/* ============================================
-   PC — CARTE + LISTE
-============================================ */
-
-.MRW-Map,
-.MRW-RList {
-  float: none !important;
-}
+/* =========================================================
+   DESKTOP LAYOUT
+========================================================= */
 
 .MRW-Results {
-  width: 100% !important;
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: flex-start !important;
-  gap: 18px !important;
+  width: 100%;
+
+  display: flex;
+  gap: var(--space-4);
+
+  align-items: flex-start;
 }
 
 @media (min-width: 821px) {
   .MRW-Map {
-    width: 65% !important;
-    height: 370px !important;
+    width: 65%;
+    height: 370px;
   }
+
   .MRW-RList {
-    width: 35% !important;
-    height: auto !important;
-    overflow: visible !important;
+    width: 35%;
   }
 }
 
-/* ============================================
-   MOBILE — CARTE EN HAUT / LISTE EN BAS
-============================================ */
+/* =========================================================
+   MOBILE LAYOUT
+========================================================= */
 
 @media (max-width: 820px) {
   .MRW-Results {
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 20px !important;
+    flex-direction: column;
+    gap: var(--space-4);
   }
 
   .MRW-Map {
-    width: 100% !important;
-    height: auto !important;
-    min-height: 300px !important;
+    width: 100%;
+    min-height: 300px;
   }
 
   .MRW-Map .leaflet-container {
-    width: 100% !important;
-    height: 300px !important;
+    height: 300px;
   }
 
   .MRW-RList {
-    width: 100% !important;
-    padding: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    overflow: visible !important;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .PR-List-Item {
-    width: 94% !important;
-    max-width: 420px !important;
-    margin: 0 auto 14px auto !important;
-    padding: 14px !important;
-    border-radius: 10px !important;
-    background: #ffffff !important;
-  }
+    width: 94%;
+    max-width: 420px;
 
-  .MRW-RList[style] {
-    width: 100% !important;
-    height: auto !important;
+    margin-bottom: var(--space-3);
+
+    padding: var(--space-3);
+
+    border-radius: var(--radius-md);
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
   }
 }

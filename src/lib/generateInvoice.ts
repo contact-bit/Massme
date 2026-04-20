@@ -308,9 +308,18 @@ const drawLine = (
   });
 
 const getItemUnitPrice = (it: OrderItem) => {
+  // ✅ PRIORITÉ : ton vrai champ BDD
+  if (typeof (it as any).priceHT === "number") {
+    return (it as any).priceHT;
+  }
+
+  // fallback legacy
   if (typeof it.price === "number") return it.price;
-  if (typeof it.price === "object" && typeof it.price.eur === "number")
+
+  if (typeof it.price === "object" && typeof it.price?.eur === "number") {
     return it.price.eur;
+  }
+
   return 0;
 };
 

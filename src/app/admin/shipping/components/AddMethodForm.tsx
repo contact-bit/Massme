@@ -16,11 +16,10 @@ type Props = {
   onCreated: () => void;
 };
 
-export default function AddMethodForm({
-  country,
-  onCreated,
-}: Props) {
+export default function AddMethodForm({ country, onCreated }: Props) {
   const lang = COUNTRY_LANGUAGE_MAP[country];
+
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -29,133 +28,140 @@ export default function AddMethodForm({
     relayProvider: null as RelayProvider | null,
     priceHT: "",
     vatRate: country === "CH" ? "0" : "",
-    sortOrder: "", // 🔹 nouveau champ
+    sortOrder: "",
   });
 
-  /* -----------------------------
-     SUBMIT
-  ------------------------------ */
   async function submit(e: React.FormEvent) {
     e.preventDefault();
 
-    // 🔒 VALIDATION RELAY
     if (form.type === "relay" && !form.relayProvider) {
-      alert("Choisissez un fournisseur de point relais");
+      alert("Choisissez un transporteur relais");
       return;
     }
 
-    const res = await fetch("/api/admin/shipping-methods", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        country,
-        name: { [lang]: form.name },
-        delay: { [lang]: form.delay },
-        type: form.type,
-        relayProvider:
-          form.type === "relay" ? form.relayProvider : null,
-        priceHT: Number(form.priceHT),
-        vatRate: Number(form.vatRate || 0),
-        isActive: true,
-        sortOrder:
-          form.sortOrder !== ""
-            ? Number(form.sortOrder)
-            : undefined, // 🔹 envoyé à l’API
-      }),
-    });
+    try {
+      setLoading(true);
 
-    if (!res.ok) {
-      alert("Erreur création méthode de livraison");
-      return;
+      const res = await fetch("/api/admin/shipping-methods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          country,
+          name: { [lang]: form.name },
+          delay: { [lang]: form.delay },
+          type: form.type,
+          relayProvider:
+            form.type === "relay" ? form.relayProvider : null,
+          priceHT: Number(form.priceHT),
+          vatRate: Number(form.vatRate || 0),
+          isActive: true,
+          sortOrder:
+            form.sortOrder !== ""
+              ? Number(form.sortOrder)
+              : undefined,
+        }),
+      });
+
+      if (!res.ok) throw new Error();
+
+      setForm({
+        name: "",
+        delay: "",
+        type: "home",
+        relayProvider: null,
+        priceHT: "",
+        vatRate: country === "CH" ? "0" : "",
+        sortOrder: "",
+      });
+
+      onCreated();
+    } catch {
+      alert("Erreur création");
+    } finally {
+      setLoading(false);
     }
-
-    setForm({
-      name: "",
-      delay: "",
-      type: "home",
-      relayProvider: null,
-      priceHT: "",
-      vatRate: country === "CH" ? "0" : "",
-      sortOrder: "",
-    });
-
-    onCreated();
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className="space-y-4 border rounded-xl p-4 bg-white"
-    >
-      <p className="text-sm text-gray-500">
-        ➕ Méthode pour <strong>{country}</strong> — langue{" "}
-        <strong>{lang.toUpperCase()}</strong>
-      </p>
+    <form onSubmit={submit} className="wrap">
 
-      {/* NOM */}
-      <input
-        className="admin-input"
-        placeholder={`Nom (${lang.toUpperCase()})`}
-        value={form.name}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, name: e.target.value }))
-        }
-        required
-      />
+      {/* HEADER */}
+      <div className="header">
+        <h3>Nouvelle méthode</h3>
+        <span>{country} • {lang.toUpperCase()}</span>
+      </div>
 
-      {/* DÉLAI */}
-      <input
-        className="admin-input"
-        placeholder={`Délai (${lang.toUpperCase()})`}
-        value={form.delay}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, delay: e.target.value }))
-        }
-      />
+      {/* INFOS */}
+      <div className="block">
+        <div className="grid">
+          <input
+            placeholder="Nom de la méthode"
+            value={form.name}
+            onChange={(e) =>
+              setForm({ ...form, name: e.target.value })
+            }
+            required
+          />
 
-      {/* TYPE */}
-      <select
-        className="admin-input"
-        value={form.type}
-        onChange={(e) =>
-          setForm((f) => ({
-            ...f,
-            type: e.target.value as ShippingMethodType,
-            relayProvider: null,
-          }))
-        }
-      >
-        <option value="home">Livraison à domicile</option>
-        <option value="relay">Point relais</option>
-        <option value="local_pickup">Retrait sur place</option>
-      </select>
+          <input
+            placeholder="Délai (ex: 2-3 jours)"
+            value={form.delay}
+            onChange={(e) =>
+              setForm({ ...form, delay: e.target.value })
+            }
+          />
+        </div>
+      </div>
 
-      {/* FOURNISSEUR RELAY */}
+      {/* TYPE VISUEL */}
+      <div className="block">
+        <p className="label">Type de livraison</p>
+
+        <div className="types">
+          {[
+            { id: "home", label: "Domicile" },
+            { id: "relay", label: "Point relais" },
+            { id: "local_pickup", label: "Retrait" },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() =>
+                setForm({
+                  ...form,
+                  type: t.id as ShippingMethodType,
+                  relayProvider: null,
+                })
+              }
+              className={`type ${
+                form.type === t.id ? "active" : ""
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* RELAY */}
       {form.type === "relay" && (
-        <div>
-          <p className="text-sm font-semibold mb-2">
-            Fournisseur point relais
-          </p>
+        <div className="block">
+          <p className="label">Transporteur</p>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="relay">
             {(Object.keys(RELAY_PROVIDERS) as RelayProvider[]).map(
-              (provider) => (
+              (p) => (
                 <button
-                  key={provider}
+                  key={p}
                   type="button"
                   onClick={() =>
-                    setForm((f) => ({
-                      ...f,
-                      relayProvider: provider,
-                    }))
+                    setForm({ ...form, relayProvider: p })
                   }
-                  className={`border rounded-lg p-3 text-sm font-medium transition ${
-                    form.relayProvider === provider
-                      ? "border-blue-600 bg-blue-50"
-                      : "border-gray-300 hover:border-gray-400"
+                  className={`relayBtn ${
+                    form.relayProvider === p ? "active" : ""
                   }`}
                 >
-                  {RELAY_PROVIDERS[provider].label.fr}
+                  {RELAY_PROVIDERS[p].label.fr}
                 </button>
               )
             )}
@@ -164,47 +170,149 @@ export default function AddMethodForm({
       )}
 
       {/* PRIX */}
-      <input
-        type="number"
-        step="0.01"
-        min="0"
-        className="admin-input"
-        placeholder="Prix HT (€)"
-        value={form.priceHT}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, priceHT: e.target.value }))
-        }
-        required
-      />
+      <div className="block">
+        <p className="label">Tarification</p>
 
-      {/* TVA */}
-      <input
-        type="number"
-        step="0.01"
-        min="0"
-        className="admin-input"
-        placeholder="TVA (%)"
-        value={form.vatRate}
-        disabled={country === "CH"}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, vatRate: e.target.value }))
-        }
-      />
+        <div className="grid">
+          <input
+            type="number"
+            placeholder="Prix HT"
+            value={form.priceHT}
+            onChange={(e) =>
+              setForm({ ...form, priceHT: e.target.value })
+            }
+            required
+          />
 
-      {/* ORDRE D’AFFICHAGE */}
+          <input
+            type="number"
+            placeholder="TVA %"
+            value={form.vatRate}
+            disabled={country === "CH"}
+            onChange={(e) =>
+              setForm({ ...form, vatRate: e.target.value })
+            }
+          />
+        </div>
+      </div>
+
+      {/* ORDER */}
       <input
         type="number"
-        className="admin-input"
-        placeholder="Ordre d'affichage (1, 2, 3...)"
+        placeholder="Ordre d’affichage"
         value={form.sortOrder}
         onChange={(e) =>
-          setForm((f) => ({ ...f, sortOrder: e.target.value }))
+          setForm({ ...form, sortOrder: e.target.value })
         }
       />
 
-      <button className="btn-blue w-full">
-        ➕ Ajouter la livraison
+      {/* CTA */}
+      <button className="submit" disabled={loading}>
+        {loading ? "Création…" : "Ajouter la méthode"}
       </button>
+
+      <style jsx>{`
+
+        .wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 22px;
+        }
+
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        h3 {
+          font-size: 20px;
+          font-weight: 600;
+        }
+
+        span {
+          font-size: 12px;
+          color: #64748b;
+        }
+
+        .block {
+          padding: 14px;
+          border-radius: 14px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .label {
+          font-size: 12px;
+          color: #94a3b8;
+          margin-bottom: 8px;
+        }
+
+        .grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+
+        input {
+          height: 44px;
+          padding: 0 12px;
+          border-radius: 10px;
+
+          background: rgba(15,23,42,0.7);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: white;
+        }
+
+        input:focus {
+          outline: none;
+          border-color: #3b82f6;
+        }
+
+        /* TYPES */
+        .types {
+          display: flex;
+          gap: 10px;
+        }
+
+        .type {
+          flex: 1;
+          padding: 10px;
+          border-radius: 10px;
+          background: rgba(255,255,255,0.05);
+          cursor: pointer;
+        }
+
+        .type.active {
+          background: linear-gradient(135deg,#3b82f6,#2563eb);
+        }
+
+        /* RELAY */
+        .relay {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .relayBtn {
+          padding: 8px 12px;
+          border-radius: 10px;
+          background: rgba(255,255,255,0.05);
+        }
+
+        .relayBtn.active {
+          background: #3b82f6;
+        }
+
+        .submit {
+          height: 46px;
+          border-radius: 12px;
+          background: linear-gradient(135deg,#3b82f6,#2563eb);
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+      `}</style>
     </form>
   );
 }

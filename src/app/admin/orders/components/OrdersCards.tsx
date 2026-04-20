@@ -11,16 +11,20 @@ import { StatusPill } from "./StatusPill";
 import {
   getLogisticStatus,
   getShipDate,
-} from "../domain/logistics"; // 🔥 AJOUT
+} from "../domain/logistics";
 
 type Props = {
   orders: Order[];
   selected: Record<string, boolean>;
   onToggleOne: (id: string) => void;
   onOpen: (id: string) => void;
-  onCopyId: (value: string) => void;
+
+  onCopyId: (id: string) => void;
+
   onDelete: (id: string) => void;
   deleting: Record<string, boolean>;
+
+  onMarkAsPaid: (id: string) => Promise<void>; // 💥 AJOUT
 };
 
 export function OrdersCards({
@@ -31,38 +35,39 @@ export function OrdersCards({
   onCopyId,
   onDelete,
   deleting,
+  onMarkAsPaid, // 💥 IMPORTANT
 }: Props) {
   if (!orders?.length) return null;
 
   return (
     <div className="showMobile">
-      <div className="cards">
+      <div className="admin-cards">
         {orders.map((o) => {
           const orderLabel = getOrderLabel(o);
 
           const paymentStatus =
-            (o as unknown as { payment?: { status?: string } }).payment?.status ??
-            o.status;
+            (o as any)?.payment?.status ?? o.status;
 
-          // 🔥 LOGISTIQUE
           const logisticStatus = getLogisticStatus(o);
           const shipDate = getShipDate(o);
 
+          const total =
+            (o as any).total ??
+            (o as any).__total ??
+            o.totals?.totalTTC ??
+            0;
+
+          const isPaid = paymentStatus === "paid";
+
           return (
-            <div key={o.id} className="orderCard">
-              {/* TOP */}
-              <div className="cardTop">
+            <div key={o.id} className="order-card-v2">
+
+              {/* HEADER */}
+              <div className="oc-header">
                 <div>
-                  <div className="amount">
-                    {moneyEUR(o.__total ?? 0)}
-                  </div>
-
-                  <div className="date">
+                  <div className="oc-price">{moneyEUR(total)}</div>
+                  <div className="oc-date">
                     {formatDateFR(o.__created ?? null)}
-                  </div>
-
-                  <div className="date">
-                    Langue: {o.__lang || "—"}
                   </div>
                 </div>
 
@@ -70,86 +75,79 @@ export function OrdersCards({
               </div>
 
               {/* BODY */}
-              <div className="cardBody">
-                <div
-                  className="mono"
-                  style={{ fontWeight: 700, fontSize: 13 }}
-                >
-                  #{orderLabel}
-                </div>
-
-                <div className="cardEmail">
+              <div className="oc-body">
+                <div className="oc-id">#{orderLabel}</div>
+                <div className="oc-email">
                   {o.__email || "—"}
                 </div>
 
-                <div className="cardItems">
+                <div className="oc-items">
                   {o.__itemsLabel || "—"}
-                </div>
-
-                {/* 🔥 LOGISTIQUE */}
-                <div style={{ marginTop: 8 }}>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color:
-                        logisticStatus === "shipped"
-                          ? "#047857"
-                          : "#92400E",
-                    }}
-                  >
-                    {logisticStatus === "shipped"
-                      ? "Expédiée"
-                      : "À préparer"}
-                  </div>
-
-                  <div style={{ fontSize: 12, color: "#6B7280" }}>
-                    {logisticStatus === "shipped" && shipDate
-                      ? new Intl.DateTimeFormat("fr-FR", {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        }).format(new Date(shipDate))
-                      : "—"}
-                  </div>
                 </div>
               </div>
 
+              {/* LOGISTIC */}
+              <div className="oc-logistic">
+                <span
+                  className={`oc-status ${
+                    logisticStatus === "shipped"
+                      ? "success"
+                      : "warning"
+                  }`}
+                >
+                  {logisticStatus === "shipped"
+                    ? "Expédiée"
+                    : "À préparer"}
+                </span>
+
+                <span className="oc-shipdate">
+                  {logisticStatus === "shipped" && shipDate
+                    ? new Intl.DateTimeFormat("fr-FR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      }).format(new Date(shipDate))
+                    : "—"}
+                </span>
+              </div>
+
               {/* ACTIONS */}
-              <div className="cardBtns">
+              <div className="oc-footer">
                 <button
-                  className="btn btn--primary"
+                  className="btn-primary"
                   onClick={() => onOpen(o.id)}
                 >
                   Voir
                 </button>
 
                 <button
-                  className="btn btn--ghost"
+                  className="btn-secondary"
+                  onClick={() => onCopyId(o.id)}
+                >
+                  Copier
+                </button>
+
+                <button
+                  className="btn-danger"
                   onClick={() => onDelete(o.id)}
                   disabled={!!deleting[o.id]}
                 >
-                  {deleting[o.id] ? "Suppression..." : "Suppr"}
+                  {deleting[o.id] ? "..." : "Suppr"}
                 </button>
-              </div>
 
-              {/* SELECT */}
-              <div className="selectLine">
-                <label
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    alignItems: "center",
-                  }}
+                {/* 💥 BOUTON PAIEMENT */}
+                <button
+                  className="btn-success"
+                  onClick={() => onMarkAsPaid(o.id)}
+                  disabled={isPaid}
                 >
-                  <input
-                    type="checkbox"
-                    checked={!!selected[o.id]}
-                    onChange={() => onToggleOne(o.id)}
-                  />
-                  <span className="muted" style={{ fontSize: 12 }}>
-                    Sélectionner
-                  </span>
-                </label>
+                  {isPaid ? "Payé ✓" : "Marquer payé"}
+                </button>
+
+                <input
+                  type="checkbox"
+                  checked={!!selected[o.id]}
+                  onChange={() => onToggleOne(o.id)}
+                />
               </div>
             </div>
           );

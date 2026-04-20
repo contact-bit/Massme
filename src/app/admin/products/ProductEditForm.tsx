@@ -329,7 +329,7 @@ export default function ProductEditForm({
   ===================================================== */
   return (
     <form onSubmit={handleSave} className="admin-form">
-      <h2 className="admin-section-title">✏️ Modifier le produit</h2>
+      <h2 className="admin-section-title">Modifier le produit</h2>
 
       {/* LANG */}
       <div className="admin-lang-tabs">

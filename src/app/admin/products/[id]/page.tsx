@@ -12,8 +12,6 @@ export default function EditProductPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-
-  // ⬅️ Next 16 : params est une Promise → on l’unwrap avec React.use()
   const { id } = React.use(params);
 
   const [product, setProduct] = useState<any | null>(null);
@@ -24,6 +22,7 @@ export default function EditProductPage({
       try {
         const ref = doc(db, "products", id);
         const snap = await getDoc(ref);
+
         if (snap.exists()) {
           setProduct({ id, ...snap.data() });
         }
@@ -36,14 +35,30 @@ export default function EditProductPage({
   }, [id]);
 
   return (
-    <div className="admin-content admin-page">
-      <h1 className="admin-page-title">✏️ Modifier le produit</h1>
+    <main className="page">
 
-      <div className="admin-card">
+      {/* HEADER */}
+      <div className="header">
+        <div>
+          <h1>Modifier le produit</h1>
+          <p>Édition du produit #{id.slice(0, 8)}</p>
+        </div>
+
+        <button
+          className="btn ghost"
+          onClick={() => router.push("/admin/products")}
+        >
+          ← Retour
+        </button>
+      </div>
+
+      {/* CONTENT */}
+      <div className="card">
+
         {loading ? (
-          <p>Chargement…</p>
+          <div className="state">Chargement…</div>
         ) : !product ? (
-          <p>Produit introuvable.</p>
+          <div className="state error">Produit introuvable</div>
         ) : (
           <ProductEditForm
             product={product}
@@ -51,7 +66,82 @@ export default function EditProductPage({
             onUpdated={() => router.push("/admin/products")}
           />
         )}
+
       </div>
-    </div>
+
+      {/* STYLE */}
+      <style jsx>{`
+
+        .page {
+          max-width: 1000px;
+          margin: auto;
+          padding: 28px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          color: white;
+        }
+
+        /* HEADER */
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+        }
+
+        h1 {
+          font-size: 22px;
+          font-weight: 900;
+        }
+
+        p {
+          font-size: 13px;
+          color: rgba(255,255,255,0.6);
+        }
+
+        /* CARD */
+        .card {
+          border-radius: 18px;
+          padding: 22px;
+          background: rgba(255,255,255,0.05);
+          backdrop-filter: blur(14px);
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+
+        /* STATES */
+        .state {
+          padding: 30px;
+          text-align: center;
+          color: rgba(255,255,255,0.7);
+        }
+
+        .error {
+          color: #ef4444;
+        }
+
+        /* BUTTONS */
+        .btn {
+          padding: 10px 14px;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.15);
+          background: rgba(255,255,255,0.05);
+          color: white;
+          cursor: pointer;
+          font-weight: 600;
+          transition: 0.2s;
+        }
+
+        .btn:hover {
+          background: rgba(255,255,255,0.08);
+        }
+
+        .ghost {
+          opacity: 0.8;
+        }
+
+      `}</style>
+    </main>
   );
 }

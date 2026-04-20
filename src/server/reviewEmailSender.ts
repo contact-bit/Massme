@@ -5,6 +5,10 @@ import { FieldValue } from "firebase-admin/firestore";
 import { Resend } from "resend";
 import { createReviewToken } from "@/lib/reviewToken";
 
+/* =========================================================
+   HELPERS
+========================================================= */
+
 function asStr(v: any, fallback = "") {
   return typeof v === "string" ? v : fallback;
 }
@@ -22,314 +26,293 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#039;");
 }
 
-/* =========================================================
-   HTML
-========================================================= */
-function buildReviewEmailHtml(params: {
-  locale: string;
-  reviewBase: string;
-  star1: string;
-  star2: string;
-  star3: string;
-  star4: string;
-  star5: string;
-  orderNumber: string;
-}) {
-  const { locale, reviewBase, star1, star2, star3, star4, star5, orderNumber } = params;
+function buildHtml({ locale, reviewBase, stars, orderNumber }: any) {
+  const isFR = locale === "fr";
 
-  if (locale === "fr") {
-    return `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charSet="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Donnez-nous votre avis</title>
-</head>
-<body style="margin:0;padding:0;background:#f6f6f6;">
-<div style="padding:24px;">
-<table style="max-width:560px;margin:auto;background:#fff;border-radius:12px;">
-<tr>
-<td style="padding:32px;font-family:Arial;color:#111;">
+  return `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f2f4f7;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center">
 
-<p>Bonjour,</p>
+        <!-- CONTAINER -->
+        <table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;margin:40px 0;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
 
-<h1 style="font-size:24px;margin-bottom:16px;">Votre avis compte</h1>
+          <!-- HEADER -->
+          <tr>
+            <td style="padding:28px 36px;border-bottom:1px solid #f1f1f1;">
+              <div style="font-size:20px;font-weight:700;letter-spacing:-0.3px;">
+                Vitrectomed
+              </div>
+            </td>
+          </tr>
 
-<p>
-Suite à votre commande <strong>#${escapeHtml(orderNumber)}</strong>, 
-pourriez-vous prendre quelques secondes pour noter votre expérience ?
-</p>
+          <!-- HERO -->
+          <tr>
+            <td style="padding:40px 36px 20px 36px;text-align:center;">
+              <h1 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-0.4px;">
+                ${
+                  isFR
+                    ? "Votre expérience compte vraiment"
+                    : "Your experience matters"
+                }
+              </h1>
 
-<p style="font-size:14px;color:#666;">Cliquez sur une étoile :</p>
+              <p style="margin:12px 0 0 0;font-size:15px;color:#475569;">
+                ${
+                  isFR
+                    ? "Merci pour votre commande"
+                    : "Thank you for your order"
+                }
+                <strong>#${escapeHtml(orderNumber)}</strong>
+              </p>
+            </td>
+          </tr>
 
-<div style="text-align:center;margin:24px 0;">
-<a href="${escapeHtml(star1)}">⭐</a>
-<a href="${escapeHtml(star2)}">⭐</a>
-<a href="${escapeHtml(star3)}">⭐</a>
-<a href="${escapeHtml(star4)}">⭐</a>
-<a href="${escapeHtml(star5)}">⭐</a>
-</div>
+          <!-- PREMIUM CARD -->
+          <tr>
+            <td style="padding:0 36px 36px 36px;">
+              <div style="
+                background:linear-gradient(180deg,#f8fafc,#ffffff);
+                border:1px solid #e2e8f0;
+                border-radius:14px;
+                padding:28px;
+                text-align:center;
+              ">
 
-<div style="text-align:center;margin:24px 0;">
-<a href="${escapeHtml(reviewBase)}"
-style="background:#111;color:#fff;padding:14px 22px;border-radius:8px;text-decoration:none;font-weight:bold;">
-Laisser un avis
-</a>
-</div>
+                <p style="margin:0 0 20px 0;font-size:15px;color:#334155;">
+                  ${
+                    isFR
+                      ? "Comment évalueriez-vous votre expérience ?"
+                      : "How would you rate your experience?"
+                  }
+                </p>
 
-<p style="font-size:14px;color:#555;">
-Votre retour aide les autres clients et nous permet d'améliorer nos produits.
-</p>
+                <!-- STARS -->
+                <div style="margin:10px 0 24px 0;">
+                  ${stars
+                    .map(
+                      (s: string) => `
+                        <a href="${s}" 
+                           style="
+                             text-decoration:none;
+                             font-size:30px;
+                             margin:0 6px;
+                             color:#fbbf24;
+                             display:inline-block;
+                             transition:transform 0.15s ease;
+                           ">
+                          ★
+                        </a>
+                      `
+                    )
+                    .join("")}
+                </div>
 
-<p style="font-size:12px;color:#888;margin-top:24px;">
-Email lié à la commande #${escapeHtml(orderNumber)}
-</p>
+                <!-- CTA -->
+                <a href="${reviewBase}"
+                   style="
+                     display:inline-block;
+                     background:#0f172a;
+                     color:#ffffff;
+                     padding:14px 26px;
+                     border-radius:10px;
+                     text-decoration:none;
+                     font-size:14px;
+                     font-weight:600;
+                     letter-spacing:0.2px;
+                     box-shadow:0 4px 14px rgba(0,0,0,0.15);
+                   ">
+                  ${
+                    isFR
+                      ? "Donner mon avis"
+                      : "Leave a review"
+                  }
+                </a>
 
-</td>
-</tr>
-</table>
-</div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- DIVIDER -->
+          <tr>
+            <td style="padding:0 36px;">
+              <div style="height:1px;background:#f1f5f9;"></div>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding:24px 36px 32px 36px;font-size:12px;color:#94a3b8;line-height:1.6;">
+
+              ${
+                isFR
+                  ? "Cet email fait suite à votre commande récente."
+                  : "This email relates to your recent order."
+              }
+
+              <br/><br/>
+
+              Vitrectomed — Tous droits réservés
+
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
 </body>
-</html>
-`;
-  }
+</html>`
 
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<body style="margin:0;padding:0;background:#f6f6f6;">
-<div style="padding:24px;">
-<table style="max-width:560px;margin:auto;background:#fff;border-radius:12px;">
-<tr>
-<td style="padding:32px;font-family:Arial;color:#111;">
-
-<p>Hello,</p>
-
-<h1>Your feedback matters</h1>
-
-<p>
-Following your order <strong>#${escapeHtml(orderNumber)}</strong>, 
-could you rate your experience?
-</p>
-
-<div style="text-align:center;margin:24px 0;">
-<a href="${escapeHtml(star1)}">⭐</a>
-<a href="${escapeHtml(star2)}">⭐</a>
-<a href="${escapeHtml(star3)}">⭐</a>
-<a href="${escapeHtml(star4)}">⭐</a>
-<a href="${escapeHtml(star5)}">⭐</a>
-</div>
-
-<div style="text-align:center;margin:24px 0;">
-<a href="${escapeHtml(reviewBase)}"
-style="background:#111;color:#fff;padding:14px 22px;border-radius:8px;text-decoration:none;">
-Leave a review
-</a>
-</div>
-
-<p style="font-size:12px;color:#888;">
-Related to order #${escapeHtml(orderNumber)}
-</p>
-
-</td>
-</tr>
-</table>
-</div>
-</body>
-</html>
-`;
-}
-
-/* =========================================================
-   TEXT
-========================================================= */
-function buildReviewEmailText(params: {
-  locale: string;
-  reviewBase: string;
-  star1: string;
-  star2: string;
-  star3: string;
-  star4: string;
-  star5: string;
-  orderNumber: string;
-}) {
-  const { locale, reviewBase, star1, star2, star3, star4, star5, orderNumber } = params;
-
-  if (locale === "fr") {
-    return [
-      "Bonjour,",
-      "",
-      `Suite à votre commande #${orderNumber}, pourriez-vous nous donner votre avis ?`,
-      "",
-      `1⭐ ${star1}`,
-      `2⭐ ${star2}`,
-      `3⭐ ${star3}`,
-      `4⭐ ${star4}`,
-      `5⭐ ${star5}`,
-      "",
-      `Lien : ${reviewBase}`,
-    ].join("\n");
-  }
-
-  return [
-    "Hello,",
-    "",
-    `Following your order #${orderNumber}, could you share your feedback?`,
-    "",
-    `1⭐ ${star1}`,
-    `2⭐ ${star2}`,
-    `3⭐ ${star3}`,
-    `4⭐ ${star4}`,
-    `5⭐ ${star5}`,
-    "",
-    `Review: ${reviewBase}`,
-  ].join("\n");
+;
 }
 
 /* =========================================================
    MAIN
 ========================================================= */
-export async function sendReviewEmailNow(orderId: string) {
+
+export async function sendReviewEmailNow(
+  orderId: string,
+  opts?: { force?: boolean } // 🔥 permet le renvoi manuel
+) {
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) throw new Error("missing_resend_api_key");
 
-  const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/+$/, "");
+  const baseUrl =
+    (process.env.APP_BASE_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXT_PUBLIC_URL ||
+      "").replace(/\/+$/, "");
+
   if (!baseUrl) throw new Error("missing_base_url");
 
-  const from = process.env.REVIEW_EMAIL_FROM || "Massme <contact@hdconnects.com>";
-
-  const orderRef = dbAdmin.collection("orders").doc(orderId);
-  const snap = await orderRef.get();
-
-  if (!snap.exists) throw new Error(`order_not_found:${orderId}`);
-
-  const order = snap.data() as any;
-
-  // 🔥 IMPORTANT
-const orderNumber =
-  typeof order?.orderNumber === "string" && order.orderNumber.length > 0
-    ? order.orderNumber
-    : orderId;
-
-console.log("ORDER DEBUG:", {
-  orderId,
-  orderNumber: order?.orderNumber,
-});
-
-  const status = String(order?.reviewEmail?.status || "").toLowerCase();
-  if (status === "sent") return { ok: true, skipped: true };
-  if (status === "sending") return { ok: true, skipped: true };
-
-  const email = asStr(order?.email || order?.customerEmail || order?.customer_email)
-    .trim()
-    .toLowerCase();
-
-  const locale = asStr(order?.locale, "fr").trim() || "fr";
-
-  if (!isValidEmail(email)) {
-    await orderRef.set(
-      {
-        "reviewEmail.status": "skipped",
-        "reviewEmail.reason": "missing_email",
-        "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-    return { ok: true, skipped: true };
-  }
-
-  const token =
-    asStr(order?.reviewEmail?.token) ||
-    createReviewToken({ orderId, email, ttlDays: 30 });
-
-  const reviewBase =
-    `${baseUrl}/${encodeURIComponent(locale)}/review` +
-    `?order_id=${encodeURIComponent(orderId)}` +
-    `&token=${encodeURIComponent(token)}` +
-    `&email=${encodeURIComponent(email)}`;
-
-  const star1 = `${reviewBase}&rating=1`;
-  const star2 = `${reviewBase}&rating=2`;
-  const star3 = `${reviewBase}&rating=3`;
-  const star4 = `${reviewBase}&rating=4`;
-  const star5 = `${reviewBase}&rating=5`;
-
-  const subject = locale === "fr"
-    ? `Votre avis - Commande #${orderNumber}`
-    : `Your feedback - Order #${orderNumber}`;
-
-  await orderRef.set(
-    {
-      "reviewEmail.status": "sending",
-      "reviewEmail.token": token,
-      "reviewEmail.email": email,
-      "reviewEmail.locale": locale,
-      "reviewEmail.lastAttemptAt": FieldValue.serverTimestamp(),
-      "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
+  const from =
+    process.env.REVIEW_EMAIL_FROM ||
+    "Vitrectomed <onboarding@resend.dev>";
 
   const resend = new Resend(resendKey);
 
-  const html = buildReviewEmailHtml({
-    locale,
-    reviewBase,
-    star1,
-    star2,
-    star3,
-    star4,
-    star5,
-    orderNumber,
-  });
+  const ref = dbAdmin.collection("orders").doc(orderId);
+  const snap = await ref.get();
 
-  const text = buildReviewEmailText({
-    locale,
-    reviewBase,
-    star1,
-    star2,
-    star3,
-    star4,
-    star5,
-    orderNumber,
-  });
+  if (!snap.exists) throw new Error("order_not_found");
 
-  const result = await resend.emails.send({
-    from,
-    to: [email],
-    subject,
-    html,
-    text,
-  });
+  const order = snap.data() as any;
 
-  const resendId = (result as any)?.data?.id ?? null;
-  const resendError = (result as any)?.error?.message ?? null;
+  /* =========================================================
+     🔒 ANTI DOUBLE (SAUF SI FORCE)
+  ========================================================= */
 
-  if (resendError) {
-    await orderRef.set(
-      {
-        "reviewEmail.status": "error",
-        "reviewEmail.lastError": resendError,
-        "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-    return { ok: false, error: resendError };
+  const alreadySent = order?.reviewEmail?.status === "sent";
+
+  if (alreadySent && !opts?.force) {
+    return { ok: true, alreadySent: true };
   }
 
-  await orderRef.set(
-    {
-      "reviewEmail.status": "sent",
-      "reviewEmail.sentAt": FieldValue.serverTimestamp(),
-      "reviewEmail.resendId": resendId,
-      "reviewEmail.lastError": null,
-      "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
-      reviewEmailSent: true,
-      reviewEmailSentAt: FieldValue.serverTimestamp(),
-    },
-    { merge: true }
+  const orderNumber =
+    order?.orderNumber ||
+    order?.invoiceEmail?.orderNumber ||
+    orderId;
+
+  const email = asStr(
+    order?.email || order?.customerEmail || order?.customer_email
+  )
+    .trim()
+    .toLowerCase();
+
+  if (!isValidEmail(email)) throw new Error("invalid_email");
+
+  const locale = asStr(order?.locale, "fr");
+
+  /* =========================================================
+     🔐 TOKEN (NE PAS REGENERER INUTILEMENT)
+  ========================================================= */
+
+  let token = asStr(order?.reviewEmail?.token);
+
+  if (!token) {
+    token = createReviewToken({ orderId, email, ttlDays: 30 });
+
+    await ref.update({
+      "reviewEmail.token": token,
+    });
+  }
+
+  /* =========================================================
+     URL
+  ========================================================= */
+
+  const reviewBase =
+    `${baseUrl}/${locale}/review` +
+    `?order_id=${orderId}` +
+    `&token=${encodeURIComponent(token)}` +
+    `&email=${encodeURIComponent(email)}`;
+
+  const stars = [1, 2, 3, 4, 5].map(
+    (n) => `${reviewBase}&rating=${n}`
   );
 
-  return { ok: true, resendId, reviewBase };
+  /* =========================================================
+     STATUS SENDING
+  ========================================================= */
+
+  await ref.update({
+    "reviewEmail.status": "sending",
+    "reviewEmail.lastAttemptAt": FieldValue.serverTimestamp(),
+  });
+
+  /* =========================================================
+     SEND EMAIL
+  ========================================================= */
+
+  const res = await resend.emails.send({
+    from,
+    to: email,
+    subject: `Votre avis - Commande #${orderNumber}`,
+    html: buildHtml({
+      locale,
+      reviewBase,
+      stars,
+      orderNumber,
+    }),
+  });
+
+  const resendId =
+    (res as any)?.data?.id ||
+    (res as any)?.id ||
+    null;
+
+  if (!resendId) {
+    await ref.update({
+      "reviewEmail.status": "error",
+      "reviewEmail.lastError": JSON.stringify(res),
+    });
+
+    throw new Error("resend_failed");
+  }
+
+  /* =========================================================
+     SUCCESS
+  ========================================================= */
+
+  const now = new Date();
+
+  await ref.update({
+    "reviewEmail.status": "sent",
+    "reviewEmail.sentAt": now,         // date principale
+    "reviewEmail.lastSentAt": now,     // 🔥 utile pour renvoi UI
+    "reviewEmail.resendId": resendId,
+    "reviewEmail.lastError": null,
+    "reviewEmail.scheduledAt": null,   // 🔥 bloque le scheduler
+    "reviewEmail.resendCount": FieldValue.increment(1), // 🔥 bonus
+  });
+
+  return {
+    ok: true,
+    resendId,
+    forced: !!opts?.force,
+  };
 }

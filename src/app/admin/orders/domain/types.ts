@@ -1,6 +1,12 @@
 export type OrderItem = {
   name?: any;
+
+  // 🔥 TON FORMAT FIRESTORE
+  priceHT?: number;
+
+  // compat anciens formats
   price?: number | { eur?: number };
+
   quantity?: number;
   description?: string;
 };
@@ -14,7 +20,9 @@ export type ShippingStatus =
   | "delivered"
   | "cancelled";
 
-// 🔥 NEW TYPE RELAY
+/* =========================================================
+   RELAY POINT
+========================================================= */
 export type RelayPoint = {
   id?: string;
   name?: string;
@@ -26,25 +34,56 @@ export type RelayPoint = {
   raw?: any;
 };
 
+/* =========================================================
+   ORDER
+========================================================= */
 export type Order = {
   id: string;
 
   email?: string;
   status?: string;
   createdAt?: any;
+  paidAt?: any;
 
-  // ✅ NUMÉRO
+  // NUMÉRO
   orderNumber?: string;
   __orderNumber?: string;
 
+  /* =========================================================
+     🔥 STRIPE / LEGACY
+  ========================================================= */
   amount_total?: number;
+
+  /* =========================================================
+     🔥 TOTAL NORMALISÉ API
+  ========================================================= */
   total?: number;
 
-  // 🔥 FIX SHIPPING METHOD COMPLET
+  /* =========================================================
+     🔥 SOURCE FIRESTORE (CRITIQUE)
+  ========================================================= */
+  totals?: {
+    totalHT?: number;
+    totalTTC?: number;
+    totalVAT?: number;
+    vatRate?: number;
+    vatDisabled?: boolean;
+    country?: string;
+  };
+
+  /* =========================================================
+     SHIPPING
+  ========================================================= */
   shippingMethod?: {
     name?: string;
-    type?: string; // 🔥 IMPORTANT
-    relayProvider?: string; // 🔥 IMPORTANT
+    type?: string;
+    relayProvider?: string;
+
+    // 🔥 TES CHAMPS RÉELS
+    priceHT?: number;
+    priceTTC?: number;
+
+    // compat ancien
     price?: number | { eur?: number };
   };
 
@@ -52,14 +91,17 @@ export type Order = {
 
   items?: OrderItem[];
   shippingAddress?: any;
+  billingAddress?: any;
 
-  // 🔥 AJOUT RELAY (CRITIQUE)
   relayPoint?: RelayPoint | null;
 
   shippingStatus?: ShippingStatus;
   trackingNumber?: string | null;
   carrier?: "mondialrelay" | "other" | null;
 
+  /* =========================================================
+     🔥 NORMALIZED (FRONT)
+  ========================================================= */
   __created?: Date | null;
   __total?: number;
   __email?: string;
@@ -67,6 +109,9 @@ export type Order = {
   __lang?: LangCode;
 };
 
+/* =========================================================
+   FILTERS
+========================================================= */
 export type StatusFilter =
   | "all"
   | "paid"

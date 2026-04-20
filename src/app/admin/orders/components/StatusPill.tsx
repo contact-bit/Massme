@@ -1,23 +1,28 @@
 "use client";
+
 import React from "react";
 import { paymentStatusLabelFR } from "../domain/statusLabels";
 
-export function StatusPill({ status }: { status?: string }) {
+type Tone = "success" | "warning" | "danger" | "info";
+
+function getTone(status?: string): Tone {
   const s = (status || "unknown").toLowerCase();
 
-  let cls = "pill";
+  if (s === "paid") return "success";
+  if (s === "pending_payment" || s === "pending") return "warning";
+  if (s === "canceled" || s === "cancelled") return "danger";
+  if (s === "refunded") return "info";
 
-  if (s === "paid") {
-    cls = "pill pill--paid";
-  } else if (s === "pending_payment" || s === "pending") {
-    cls = "pill pill--pending";
-  } else if (s === "canceled" || s === "cancelled") {
-    cls = "pill pill--canceled";
-  } else if (s === "refunded") {
-    cls = "pill pill--refunded";
-  } else {
-    cls = "pill pill--other";
-  }
+  return "info";
+}
 
-  return <span className={cls}>{paymentStatusLabelFR(s)}</span>;
+export function StatusPill({ status }: { status?: string }) {
+  const tone = getTone(status);
+
+  return (
+    <span className={`status-pill ${tone}`}>
+      <span className="status-dot" />
+      {paymentStatusLabelFR(status || "unknown")}
+    </span>
+  );
 }

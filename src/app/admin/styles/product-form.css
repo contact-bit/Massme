@@ -1,93 +1,136 @@
 /* =====================================================
-   PRODUCT FORM — SPECIFIC STYLES ONLY
+   PRODUCT FORM — PREMIUM PRO (UPGRADE)
 ===================================================== */
 
-/* Language tabs */
+/* ================= LANG TABS ================= */
 
 .admin-lang-tabs {
   display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  gap: 8px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
 }
 
 .admin-lang-tabs button {
-  min-height: 40px;
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
+  min-height: 36px;
+  padding: 6px 14px;
+
+  border-radius: 10px;
   border: 1px solid var(--color-border);
+
   background: var(--color-surface-alt);
   color: var(--color-text);
-  font-size: var(--text-sm);
+
+  font-size: 12px;
   font-weight: 700;
+
   cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast),
-    border-color var(--transition-fast);
+  transition: all 0.2s ease;
 }
 
 .admin-lang-tabs button:hover {
-  background: var(--color-surface);
-  border-color: color-mix(in srgb, var(--color-primary) 25%, var(--color-border));
-}
-
-.admin-lang-tabs button.active {
-  background: var(--color-primary);
-  color: #fff;
+  transform: translateY(-1px);
   border-color: var(--color-primary);
 }
 
-/* Product cards / sections */
+.admin-lang-tabs button.active {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white;
+  border: none;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+
+/* ================= CARD ================= */
 
 .pf-card {
-  margin-top: var(--space-8);
-  padding: var(--space-5);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-alt);
+  margin-top: 18px;
+  padding: 18px;
+
+  border-radius: 16px;
   border: 1px solid var(--color-border);
+
+  background: linear-gradient(
+    180deg,
+    var(--color-surface),
+    var(--color-surface-alt)
+  );
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+
+  transition: 0.2s ease;
+}
+
+.pf-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
 }
 
 .pf-card h3 {
-  font-size: var(--text-lg);
-  font-weight: 800;
-  margin-bottom: var(--space-4);
-  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 900;
+  margin-bottom: 12px;
 }
 
-/* Product data table/grid */
+/* ================= TABLE ================= */
 
 .pf-table {
-  display: grid;
-  gap: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
+
+/* meilleure lisibilité */
 
 .pf-row {
   display: grid;
-  grid-template-columns: 1.6fr 0.6fr 1fr 0.6fr 0.8fr 0.7fr;
+  grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.8fr 0.7fr;
   align-items: center;
-  gap: var(--space-3);
+  gap: 8px;
+
+  padding: 8px;
+  border-radius: 10px;
+
+  transition: 0.15s;
 }
 
+.pf-row:hover {
+  background: var(--color-surface-alt);
+}
+
+/* HEADER */
 .pf-head {
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 900;
   color: var(--color-text-soft);
-  padding-bottom: var(--space-2);
+
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--color-border);
 }
 
-/* Inputs spécifiques dans le tableau */
-.pf-row input[type="number"],
-.pf-row input[type="text"],
+/* ================= INPUTS ================= */
+
+.pf-row input,
 .pf-row select {
   width: 100%;
-  min-height: 40px;
-  padding: 8px 10px;
-  border-radius: var(--radius-md);
+  min-height: 34px;
+
+  padding: 6px 8px;
+
+  border-radius: 8px;
   border: 1px solid var(--color-border);
+
   background: var(--color-surface);
   color: var(--color-text);
+
+  font-size: 12px;
+
+  transition: 0.15s;
+}
+
+.pf-row input:focus,
+.pf-row select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-soft);
 }
 
 .pf-row input[type="checkbox"] {
@@ -102,15 +145,55 @@
   cursor: not-allowed;
 }
 
-/* Error message spécifique produit */
+/* ================= BUTTONS ================= */
+
+.btn {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary {
+  background: var(--color-surface-alt);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-soft);
+}
+
+/* ================= ERROR ================= */
+
 .admin-error {
-  margin-top: var(--space-4);
-  font-size: var(--text-sm);
+  margin-top: 12px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--color-danger);
 }
 
-/* Responsive */
+/* ================= HELP TEXT ================= */
+
+.pf-help {
+  font-size: 12px;
+  color: var(--color-text-soft);
+  margin-bottom: 8px;
+}
+
+/* ================= RESPONSIVE ================= */
 
 @media (max-width: 960px) {
   .pf-row {
@@ -123,16 +206,12 @@
 }
 
 @media (max-width: 640px) {
-  .pf-card {
-    padding: var(--space-4);
-  }
-
   .pf-row {
     grid-template-columns: 1fr;
   }
 
-  .admin-lang-tabs {
-    gap: var(--space-2);
+  .pf-card {
+    padding: 14px;
   }
 
   .admin-lang-tabs button {

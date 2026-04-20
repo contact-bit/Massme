@@ -12,6 +12,8 @@ export function Drawer({
   title: string;
   children: React.ReactNode;
 }) {
+  /* ================= ESC KEY ================= */
+
   useEffect(() => {
     if (!open) return;
 
@@ -23,36 +25,53 @@ export function Drawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  /* ================= LOCK SCROLL ================= */
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
     <>
+      {/* BACKDROP */}
       <div
-        className={`drawerBackdrop ${open ? "drawerBackdrop--open" : ""}`}
+        className={`admin-drawer-backdrop ${open ? "open" : ""}`}
         onClick={onClose}
-        aria-hidden={!open}
       />
 
+      {/* DRAWER */}
       <aside
-        className={`drawer ${open ? "drawer--open" : ""}`}
+        className={`admin-drawer ${open ? "open" : ""}`}
         role="dialog"
         aria-modal="true"
-        aria-hidden={!open}
         aria-label={title}
       >
-        <div className="drawerHead">
-          <div className="drawerTitle">{title}</div>
+        {/* HEADER */}
+        <div className="admin-drawer-header">
+          <div className="admin-drawer-title">{title}</div>
 
           <button
             type="button"
-            className="iconBtn"
+            className="admin-icon-btn btn-secondary"
             onClick={onClose}
-            aria-label="Fermer le panneau"
-            title="Fermer"
+            aria-label="Fermer"
           >
             ✕
           </button>
         </div>
 
-        <div className="drawerBody">{children}</div>
+        {/* BODY */}
+        <div className="admin-drawer-body">
+          {children}
+        </div>
       </aside>
     </>
   );

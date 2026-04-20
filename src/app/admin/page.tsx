@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  Tooltip,
+} from "recharts";
 
 type StatsResponse = {
   kpis: {
@@ -32,37 +39,19 @@ type StatsResponse = {
   alerts: { tone: "info" | "warn" | "danger"; title: string; desc: string }[];
 };
 
-function eur(n: number | null | undefined): string {
-  const v = typeof n === "number" && !isNaN(n) ? n : 0;
+function eur(n?: number) {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
-  }).format(v);
+  }).format(n ?? 0);
 }
 
-function shortDate(iso: string | null): string {
+function shortDate(iso: string | null) {
   if (!iso) return "—";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "—";
   return new Intl.DateTimeFormat("fr-FR", {
-    timeZone: "Europe/Paris",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(d);
-}
-
-function deltaLabel(current: number, previous: number, pct: number) {
-  const c = current || 0;
-  const p = previous || 0;
-  const r = pct || 0;
-
-  if (p === 0 && c > 0) return { text: "Nouveau", tone: "pos" as const };
-  if (r === 0) return { text: "0%", tone: "neu" as const };
-  if (r > 0) return { text: `+${r.toFixed(1)}%`, tone: "pos" as const };
-  return { text: `${r.toFixed(1)}%`, tone: "neg" as const };
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(iso));
 }
 
 export default function AdminDashboardPage() {
@@ -71,37 +60,20 @@ export default function AdminDashboardPage() {
   const [err, setErr] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    let alive = true;
     try {
       setLoading(true);
       setErr(null);
 
-      const res = await fetch("/api/admin/stats", {
-        cache: "no-store",
-        headers: { "X-Refresh": Date.now().toString() },
-      });
+      const res = await fetch("/api/admin/stats", { cache: "no-store" });
       const json = await res.json();
 
-      console.log("📊 API Response:", {
-        ok: res.ok,
-        status: res.status,
-        data: json,
-      });
+      if (!res.ok) throw new Error(json?.error || "Erreur API");
 
-      if (!res.ok) {
-        throw new Error(json?.error ?? `Erreur HTTP ${res.status}`);
-      }
-
-      if (!json || typeof json !== "object") {
-        throw new Error("Réponse invalide");
-      }
-
-      if (alive) setData(json as StatsResponse);
+      setData(json);
     } catch (e: any) {
-      console.error("Dashboard error:", e);
-      if (alive) setErr(e?.message ?? "Erreur inconnue");
+      setErr(e.message);
     } finally {
-      if (alive) setLoading(false);
+      setLoading(false);
     }
   }, []);
 
@@ -109,25 +81,11 @@ export default function AdminDashboardPage() {
     refresh();
   }, [refresh]);
 
-  const maxRevenue = useMemo(() => {
-    const series = Array.isArray(data?.series) ? data!.series : [];
-    const values = series.map((s) => s.revenue || 0);
-    const max = Math.max(...values, 1);
-    return max;
-  }, [data]);
-
   if (loading) {
     return (
       <div className="admin-page">
-        <header className="admin-page-header">
-          <div>
-            <h1 className="admin-page-title">📊 Dashboard</h1>
-            <p className="admin-page-subtitle">Chargement des stats…</p>
-          </div>
-        </header>
-
+        <h1 className="admin-page-title">Dashboard</h1>
         <div className="dash-skeleton-grid">
-          <div className="dash-skel" />
           <div className="dash-skel" />
           <div className="dash-skel" />
           <div className="dash-skel" />
@@ -139,71 +97,43 @@ export default function AdminDashboardPage() {
   if (err || !data) {
     return (
       <div className="admin-page">
-        <header className="admin-page-header">
-          <div>
-            <h1 className="admin-page-title">📊 Dashboard</h1>
-            <p className="admin-page-subtitle">Erreur de chargement</p>
-          </div>
-        </header>
+        <h1 className="admin-page-title">Dashboard</h1>
 
         <div className="dash-error">
-          <div className="dash-error-title">
-            ❌ {err ?? "Données indisponibles"}
-          </div>
-          <div className="dash-error-msg">
-            Vérifiez les logs console et Firestore.
-          </div>
-          <div className="dash-error-actions">
-            <button className="btn-secondary" onClick={refresh}>
-              🔄 Réessayer
-            </button>
-            <button className="btn-primary" onClick={() => location.reload()}>
-              Reload complet
-            </button>
-          </div>
+          <div className="dash-error-title">{err}</div>
+          <button className="btn-secondary" onClick={refresh}>
+            Réessayer
+          </button>
         </div>
       </div>
     );
   }
 
-  const k = data.kpis || ({} as StatsResponse["kpis"]);
-  const deltas = data.deltas || ({} as StatsResponse["deltas"]);
-  const alerts = Array.isArray(data.alerts) ? data.alerts : [];
-  const lastOrders = Array.isArray(data.lastOrders) ? data.lastOrders : [];
-  const lowStock = Array.isArray(data.lowStock) ? data.lowStock : [];
-
-  const d7 = deltaLabel(
-    k.revenueLast7 ?? 0,
-    k.revenuePrev7 ?? 0,
-    deltas.revenue7dPct ?? 0
-  );
-  const dd = deltaLabel(
-    k.revenueToday ?? 0,
-    k.revenueYesterday ?? 0,
-    deltas.revenueDayPct ?? 0
-  );
+  const { kpis: k, alerts, lastOrders, lowStock, series } = data;
 
   return (
     <div className="admin-page">
-      {/* Header de page standardisé */}
-      <header className="admin-page-header">
+
+      {/* HEADER */}
+      <div className="dash-head">
         <div>
-          <h1 className="admin-page-title">📊 Dashboard</h1>
-          <p className="admin-page-subtitle">
-            {k.ordersCount ?? 0} commandes • {eur(k.revenueLast7)} (7j)
+          <h1 className="admin-page-title">Dashboard</h1>
+          <p className="dash-sub">
+            {k.ordersCount} commandes • {eur(k.revenueLast7)}
           </p>
         </div>
-        <div className="admin-page-actions">
+
+        <div className="dash-actions">
           <button className="btn-secondary" onClick={refresh}>
-            🔄 Actualiser
+            Actualiser
           </button>
           <a className="btn-primary" href="/admin/orders">
-            Commandes →
+            Commandes
           </a>
         </div>
-      </header>
+      </div>
 
-      {/* Alerts */}
+      {/* ALERTS */}
       {alerts.length > 0 && (
         <div className="dash-alerts">
           {alerts.map((a, i) => (
@@ -215,163 +145,119 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* KPI Cards */}
-      <section className="dash-kpis">
-        <article className="dash-card">
-          <div className="dash-card-top">
-            <span className="dash-label">Produits</span>
-            <span className="dash-chip">
-              {k.activeProducts}/{k.productsCount} actifs
-            </span>
-          </div>
+      {/* KPI */}
+      <div className="dash-kpis">
+        <div className="dash-card">
+          <div className="dash-label">Produits</div>
           <div className="dash-value">{k.productsCount}</div>
-          <div className="dash-foot">Total catalogue</div>
-        </article>
+          <div className="dash-foot">{k.activeProducts} actifs</div>
+        </div>
 
-        <article className="dash-card">
-          <div className="dash-card-top">
-            <span className="dash-label">Commandes</span>
-            {k.pendingCount > 0 ? (
-              <span className="dash-chip warn">
-                {k.pendingCount} attente
-              </span>
-            ) : (
-              <span className="dash-chip ok">✅ Tout OK</span>
-            )}
-          </div>
+        <div className="dash-card">
+          <div className="dash-label">Commandes</div>
           <div className="dash-value">{k.ordersCount}</div>
-          <div className="dash-foot">{k.paidOrdersCount} payée(s)</div>
-        </article>
+          <div className="dash-foot">{k.pendingCount} en attente</div>
+        </div>
 
-        <article className="dash-card highlight">
-          <div className="dash-card-top">
-            <span className="dash-label">CA 7 jours</span>
-            <span className={`dash-badge ${d7.tone}`}>{d7.text}</span>
-          </div>
+        <div className="dash-card highlight">
+          <div className="dash-label">CA 7 jours</div>
           <div className="dash-value">{eur(k.revenueLast7)}</div>
-          <div className="dash-foot">AOV: {eur(k.aov)}</div>
-        </article>
+          <div className="dash-foot">Panier moyen: {eur(k.aov)}</div>
+        </div>
 
-        <article className="dash-card">
-          <div className="dash-card-top">
-            <span className="dash-label">CA aujourd&apos;hui</span>
-            <span className={`dash-badge ${dd.tone}`}>{dd.text}</span>
-          </div>
+        <div className="dash-card">
+          <div className="dash-label">Aujourd’hui</div>
           <div className="dash-value">{eur(k.revenueToday)}</div>
-          <div className="dash-foot">
-            Hier: {eur(k.revenueYesterday)}
-          </div>
-        </article>
-      </section>
+          <div className="dash-foot">Hier: {eur(k.revenueYesterday)}</div>
+        </div>
+      </div>
 
-      {/* Grid principal */}
-      <section className="dash-grid">
-        {/* Graphique revenus */}
-        <article className="dash-panel">
+      {/* GRID */}
+      <div className="dash-grid">
+
+        {/* GRAPH */}
+        <div className="dash-panel">
           <div className="dash-panel-head">
-            <h2 className="dash-panel-title">Revenus — 7 jours</h2>
-            <div className="dash-panel-meta">
-              {eur(k.revenueLast7)}
-            </div>
+            <h2 className="dash-panel-title">Revenus</h2>
+            <div className="dash-panel-meta">{eur(k.revenueLast7)}</div>
           </div>
-          <div className="dash-chart">
-            {data.series.map((s) => {
-              const h = Math.round(((s.revenue || 0) / maxRevenue) * 100);
-              return (
-                <div key={s.day} className="dash-bar">
-                  <div className="dash-bar-col">
-                    <div
-                      className="dash-bar-fill"
-                      style={{ height: `${h}%` }}
-                      title={eur(s.revenue)}
-                    />
-                  </div>
-                  <div className="dash-bar-day">
-                    {s.day.slice(5)}
-                  </div>
-                  <div className="dash-bar-val">
-                    {s.revenue > 0 ? eur(s.revenue) : "0€"}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </article>
 
-        {/* Dernières commandes */}
-        <article className="dash-panel">
+          <div style={{ width: "100%", height: 260 }}>
+            <ResponsiveContainer>
+              <AreaChart data={series}>
+                <defs>
+                  <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+
+                <XAxis
+                  dataKey="day"
+                  tick={{ fill: "#888", fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+
+                <Tooltip
+                  contentStyle={{
+                    background: "#111",
+                    border: "1px solid #333",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                />
+
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  fill="url(#rev)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* LAST ORDERS */}
+        <div className="dash-panel">
           <div className="dash-panel-head">
             <h2 className="dash-panel-title">Dernières commandes</h2>
-            <a className="dash-link" href="/admin/orders">
-              Voir tout →
-            </a>
           </div>
-          <div className="dash-table">
-            <div className="dash-row dash-row-head">
-              <div>ID</div>
-              <div>Client</div>
-              <div>Statut</div>
-              <div>Montant</div>
-              <div>Date</div>
-            </div>
-            {lastOrders.length === 0 ? (
-              <div className="dash-empty">
-                Aucune commande récente
-              </div>
-            ) : (
-              lastOrders.slice(0, 5).map((o) => (
-                <div key={o.id} className="dash-row">
-                  <div className="mono">
-                    {o.orderNumber || `${o.id.slice(0, 6)}…`}
-                  </div>
-                  <div className="truncate">
-                    {o.email || "—"}
-                  </div>
-                  <div>
-                    <span
-                      className={`status-pill ${
-                        o.status === "paid" ? "paid" : "pending"
-                      }`}
-                    >
-                      {o.status === "paid"
-                        ? "✅ Payé"
-                        : "⏳ Attente"}
-                    </span>
-                  </div>
-                  <div className="strong">{eur(o.total)}</div>
-                  <div className="muted">
-                    {shortDate(o.createdAt)}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </article>
-      </section>
 
-      {/* Stocks faibles */}
+          {lastOrders.slice(0, 5).map((o) => (
+            <div key={o.id} className="dash-row">
+              <div className="mono">
+                {o.orderNumber || o.id.slice(0, 6)}
+              </div>
+              <div className="truncate">{o.email}</div>
+              <div className="strong">{eur(o.total)}</div>
+              <div className="muted">{shortDate(o.createdAt)}</div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+
+      {/* STOCK */}
       {lowStock.length > 0 && (
-        <section className="dash-panel">
+        <div className="dash-panel">
           <div className="dash-panel-head">
-            <h2 className="dash-panel-title">
-              ⚠️ Stocks faibles
-            </h2>
-            <a className="dash-link" href="/admin/products">
-              Gérer →
-            </a>
+            <h2 className="dash-panel-title">Stocks faibles</h2>
           </div>
+
           <div className="dash-lowstock">
             {lowStock.slice(0, 8).map((p) => (
               <div key={p.id} className="dash-lowstock-item">
-                <div className="truncate">{p.name}</div>
-                <div className="dash-chip warn">
-                  stock {p.stock}
-                </div>
+                <span className="truncate">{p.name}</span>
+                <span className="dash-chip warn">{p.stock}</span>
               </div>
             ))}
           </div>
-        </section>
+        </div>
       )}
+
     </div>
   );
 }

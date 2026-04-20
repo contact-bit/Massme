@@ -13,23 +13,33 @@ export function PaginationControls({
   onNext: () => void;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 10,
-        alignItems: "center",
-        flexWrap: "wrap",
-      }}
-    >
-      <div className="muted">
-        Page {currentPage} / {totalPages}
+    <div className="pagination">
+
+      {/* INFO */}
+      <div className="pagination-info">
+        Page <strong>{currentPage}</strong>
+        <span className="muted"> / {totalPages}</span>
       </div>
-      <button className="btn btn--ghost" onClick={onPrev} disabled={currentPage <= 1}>
-        ←
-      </button>
-      <button className="btn btn--ghost" onClick={onNext} disabled={currentPage >= totalPages}>
-        →
-      </button>
+
+      {/* ACTIONS */}
+      <div className="pagination-actions">
+        <button
+          className="pagination-btn"
+          onClick={onPrev}
+          disabled={currentPage <= 1}
+        >
+          ←
+        </button>
+
+        <button
+          className="pagination-btn"
+          onClick={onNext}
+          disabled={currentPage >= totalPages}
+        >
+          →
+        </button>
+      </div>
+
     </div>
   );
 }

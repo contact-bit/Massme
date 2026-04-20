@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 
-/* ==================================
-   COMPONENT
-================================== */
 export default function ProductForm({
   onSuccess,
 }: {
@@ -15,9 +12,7 @@ export default function ProductForm({
   const [priceHT, setPriceHT] = useState("");
   const [stock, setStock] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-
-  // 🔥 nouveau : ce produit gère-t-il le stock ?
-  const [manageStock, setManageStock] = useState<boolean>(false); // par défaut : stock NON géré
+  const [manageStock, setManageStock] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,33 +21,21 @@ export default function ProductForm({
     e.preventDefault();
     setError(null);
 
-    if (!nameFr.trim()) {
-      return setError("Le nom FR est obligatoire.");
-    }
-    if (!priceHT) {
-      return setError("Le prix est obligatoire.");
-    }
-    if (manageStock && !stock) {
-      return setError("Le stock est obligatoire quand la gestion de stock est activée.");
-    }
+    if (!nameFr.trim()) return setError("Nom obligatoire");
+    if (!priceHT) return setError("Prix obligatoire");
+    if (manageStock && !stock)
+      return setError("Stock requis si activé");
 
     setLoading(true);
-    try {
-      const adminPassword =
-        typeof window !== "undefined"
-          ? localStorage.getItem("admin_password") || ""
-          : "";
 
-      if (!adminPassword) {
-        setLoading(false);
-        return setError("Mot de passe admin manquant (reconnecte-toi).");
-      }
+    try {
+      const pass = localStorage.getItem("admin_password") || "";
 
       const res = await fetch("/api/admin/products", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-password": adminPassword,
+          "x-admin-password": pass,
         },
         body: JSON.stringify({
           nameFr,
@@ -60,15 +43,13 @@ export default function ProductForm({
           priceHT,
           stock: stock || "0",
           imageUrl,
-          manageStock, // 🔥 on envoie bien au backend
+          manageStock,
         }),
       });
 
-      const json = await res.json().catch(() => null);
+      const json = await res.json();
 
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || `HTTP ${res.status}`);
-      }
+      if (!res.ok || !json?.ok) throw new Error(json?.error);
 
       // reset
       setNameFr("");
@@ -80,100 +61,217 @@ export default function ProductForm({
 
       onSuccess();
     } catch (e: any) {
-      console.error(e);
-      setError(e?.message || "Erreur lors de la création du produit.");
+      setError(e?.message || "Erreur");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="admin-card space-y-6">
-      <h2 className="text-xl font-bold">➕ Ajouter un produit</h2>
+    <form onSubmit={handleSubmit} className="form">
 
-      {/* INFOS PRINCIPALES */}
-      <section className="space-y-4">
+      <h2 className="title">➕ Ajouter un produit</h2>
+
+      {/* INPUTS */}
+      <div className="group">
         <input
-          className="admin-input"
-          placeholder="Nom du produit (FR)"
+          className="input"
+          placeholder="Nom du produit"
           value={nameFr}
           onChange={(e) => setNameFr(e.target.value)}
-          required
         />
 
         <textarea
-          className="admin-textarea"
-          rows={4}
-          placeholder="Description (FR)"
+          className="input textarea"
+          placeholder="Description"
           value={descFr}
           onChange={(e) => setDescFr(e.target.value)}
         />
 
         <input
-          className="admin-input"
-          placeholder="URL de l’image (CDN)"
+          className="input"
+          placeholder="URL image"
           value={imageUrl}
           onChange={(e) => setImageUrl(e.target.value)}
         />
 
         {imageUrl && (
-          <div className="admin-img-wrapper">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageUrl}
-              alt="Preview"
-              className="admin-img-preview"
-            />
+          <div className="preview">
+            <img src={imageUrl} />
           </div>
         )}
-      </section>
-
-      {/* PRIX & STOCK */}
-      <section className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            type="number"
-            className="admin-input"
-            placeholder="Prix HT (FR)"
-            value={priceHT}
-            onChange={(e) => setPriceHT(e.target.value)}
-            required
-          />
-
-          <input
-            type="number"
-            className="admin-input"
-            placeholder="Stock"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-            disabled={!manageStock}
-          />
-        </div>
-
-        <label className="admin-switch flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={manageStock}
-            onChange={(e) => setManageStock(e.target.checked)}
-          />
-          <span>
-            Gestion du stock pour ce produit{" "}
-            {!manageStock && "(le stock ne sera pas pris en compte)"}
-          </span>
-        </label>
-      </section>
-
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          className="btn-primary"
-          disabled={loading}
-        >
-          {loading ? "Création…" : "💾 Créer le produit"}
-        </button>
       </div>
+
+      {/* PRICE + STOCK */}
+      <div className="row">
+        <input
+          type="number"
+          className="input"
+          placeholder="Prix (€)"
+          value={priceHT}
+          onChange={(e) => setPriceHT(e.target.value)}
+        />
+
+        <input
+          type="number"
+          className="input"
+          placeholder="Stock"
+          value={stock}
+          onChange={(e) => setStock(e.target.value)}
+          disabled={!manageStock}
+        />
+      </div>
+
+      {/* SWITCH */}
+      <label className="switch">
+        <input
+          type="checkbox"
+          checked={manageStock}
+          onChange={(e) => setManageStock(e.target.checked)}
+        />
+        <span className="slider" />
+        <span className="label">
+          Gestion du stock
+        </span>
+      </label>
+
+      {error && <div className="error">{error}</div>}
+
+      {/* ACTION */}
+      <button className="submit" disabled={loading}>
+        {loading ? "Création…" : "💾 Créer"}
+      </button>
+
+      {/* STYLE */}
+      <style jsx>{`
+
+        .form {
+          max-width: 600px;
+          margin: auto;
+          padding: 24px;
+          border-radius: 20px;
+          background: rgba(255,255,255,0.05);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255,255,255,0.1);
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+          color: white;
+        }
+
+        .title {
+          font-size: 20px;
+          font-weight: 800;
+        }
+
+        .group {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .input {
+          padding: 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.15);
+          background: rgba(255,255,255,0.05);
+          color: white;
+        }
+
+        .input:focus {
+          outline: none;
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
+        }
+
+        .textarea {
+          min-height: 90px;
+        }
+
+        .preview {
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .preview img {
+          width: 100%;
+          height: 180px;
+          object-fit: cover;
+        }
+
+        .row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        /* SWITCH */
+        .switch {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          cursor: pointer;
+        }
+
+        .switch input {
+          display: none;
+        }
+
+        .slider {
+          width: 40px;
+          height: 22px;
+          background: rgba(255,255,255,0.2);
+          border-radius: 999px;
+          position: relative;
+          transition: 0.2s;
+        }
+
+        .slider::after {
+          content: "";
+          width: 18px;
+          height: 18px;
+          background: white;
+          border-radius: 50%;
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          transition: 0.2s;
+        }
+
+        .switch input:checked + .slider {
+          background: #2563eb;
+        }
+
+        .switch input:checked + .slider::after {
+          transform: translateX(18px);
+        }
+
+        .label {
+          font-size: 13px;
+          color: rgba(255,255,255,0.7);
+        }
+
+        .error {
+          color: #ef4444;
+          font-size: 13px;
+        }
+
+        .submit {
+          padding: 12px;
+          border-radius: 12px;
+          border: none;
+          background: #2563eb;
+          color: white;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .submit:hover {
+          background: #1d4ed8;
+        }
+
+      `}</style>
     </form>
   );
 }

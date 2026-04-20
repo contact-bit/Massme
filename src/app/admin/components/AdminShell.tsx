@@ -10,8 +10,13 @@ export default function AdminShell({ children }: { children: ReactNode }) {
         <AdminNavbar />
 
         <div className="admin-layout-main">
-          <div className="admin-shell-inner">
-            <main className="admin-main">{children}</main>
+          <div className="admin-main">
+
+            {/* 🔥 LE BON CONTAINER */}
+            <div className="admin-container">
+              {children}
+            </div>
+
           </div>
         </div>
       </div>

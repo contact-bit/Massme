@@ -1,118 +1,111 @@
 /* =========================================================
-   ADMIN EXPORT
-   Page: /admin/export
+   ADMIN EXPORT — PREMIUM SaaS UI
 ========================================================= */
 
-/* ================== PAGE ================== */
-
 .exportPage {
-  padding-bottom: 40px;
+  padding: 40px 20px;
+  min-height: 100vh;
+
 }
+
+/* ================== CONTAINER ================== */
 
 .exportCard {
-  display: grid;
-  gap: 18px;
+  max-width: 1100px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
+/* ================== HEADER ================== */
+
 .exportHeader {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .exportTitle {
-  margin-bottom: 6px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: white;
 }
 
 .exportSubtitle {
-  margin: 0;
-  color: rgba(11, 18, 32, 0.68);
-  line-height: 1.5;
+  color: #64748b;
+  font-size: 14px;
 }
 
-/* ================== ALERTS ================== */
+/* ================== ALERT ================== */
 
 .exportAlert {
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid transparent;
+  padding: 14px;
+  border-radius: 14px;
   font-size: 14px;
-  line-height: 1.45;
+  backdrop-filter: blur(10px);
 }
 
 .exportAlert--error {
   background: rgba(239, 68, 68, 0.08);
-  color: #b91c1c;
-  border-color: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #f87171;
 }
 
 .exportAlert--success {
   background: rgba(16, 185, 129, 0.08);
-  color: #047857;
-  border-color: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #34d399;
 }
 
 /* ================== FILTERS ================== */
 
 .exportFilters {
-  display: grid;
-  gap: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .exportFilters-modes {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  align-items: center;
 }
 
-/* Segmented buttons for day / month / range */
+/* SEGMENT BUTTON */
 .exportModeBtn {
-  min-width: 110px;
-  height: 40px;
-  padding: 0 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  height: 42px;
+  padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: #fff;
-  color: #334155;
-  font-size: 14px;
+
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+
+  color: #cbd5f5;
   font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+
+  transition: all 0.2s ease;
 }
 
-.exportModeBtn:hover:not(:disabled) {
-  border-color: rgba(100, 116, 139, 0.35);
-  background: rgba(248, 250, 252, 0.95);
-}
-
-.exportModeBtn:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.exportModeBtn:focus-visible {
-  outline: 2px solid rgba(15, 23, 42, 0.22);
-  outline-offset: 2px;
+.exportModeBtn:hover {
+  background: rgba(255,255,255,0.08);
 }
 
 .exportModeBtn--active {
-  background: #0f172a;
-  color: #fff;
-  border-color: #0f172a;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+  background: linear-gradient(135deg,#3b82f6,#2563eb);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 6px 20px rgba(37,99,235,0.4);
 }
 
+/* PANEL */
 .exportFilters-panel {
-  padding: 14px;
-  border-radius: 16px;
-  background: rgba(248, 250, 252, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(15,23,42,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(14px);
 }
 
 .exportFilters-range {
@@ -122,273 +115,205 @@
 }
 
 .exportFilters-help {
-  margin: 0;
   font-size: 13px;
   color: #64748b;
-  line-height: 1.5;
 }
 
 /* ================== PREVIEW ================== */
 
 .exportPreview {
-  display: grid;
-  gap: 14px;
-  padding: 16px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-}
+  padding: 20px;
+  border-radius: 20px;
 
-.exportPreview-head {
-  display: grid;
-  gap: 6px;
+  background: rgba(15,23,42,0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .exportPreview-title {
-  margin: 0;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: white;
 }
 
 .exportPreview-summary {
-  margin: 0;
   font-size: 14px;
-  color: #475569;
-  line-height: 1.5;
+  color: #94a3b8;
 }
 
 .exportPreview-format {
-  margin: 0;
   font-size: 13px;
   color: #64748b;
-  line-height: 1.5;
 }
 
+/* GRID */
 .exportPreview-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
 }
 
+/* CARD */
 .exportPreview-card {
   padding: 14px;
   border-radius: 14px;
-  background: rgba(248, 250, 252, 0.85);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  display: grid;
-  gap: 6px;
+
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+
+  transition: 0.2s;
+}
+
+.exportPreview-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59,130,246,0.4);
 }
 
 .exportPreview-cardTitle {
-  font-size: 13px;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 600;
+  color: white;
 }
 
 .exportPreview-cardText {
   font-size: 13px;
-  color: #64748b;
-  line-height: 1.45;
+  color: #94a3b8;
 }
 
 /* ================== ACTIONS ================== */
 
 .exportActions {
-  display: grid;
-  gap: 16px;
-}
-
-.exportActions-head {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .exportActions-title {
-  margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  color: #0f172a;
+  color: white;
 }
 
 .exportActions-subtitle {
-  margin: 6px 0 0;
   color: #64748b;
   font-size: 14px;
 }
 
+/* GRID */
 .exportActions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
 }
 
+/* LEGEND */
 .exportActions-legend {
-  padding: 14px;
-  border-radius: 14px;
-  background: rgba(248, 250, 252, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  color: #475569;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(15,23,42,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #94a3b8;
   font-size: 13px;
-  line-height: 1.55;
 }
 
-.exportActions-legend > div + div {
-  margin-top: 4px;
-}
-
-/* ================== QUICK EXPORT CARDS ================== */
+/* ================== QUICK CARDS ================== */
 
 .exportQuickCard {
-  text-align: left;
-  padding: 18px;
+  padding: 20px;
   border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: #fff;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+
+  background: rgba(15,23,42,0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
   cursor: pointer;
-  display: grid;
-  gap: 8px;
-  min-height: 120px;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    background 0.2s ease,
-    opacity 0.2s ease;
+  transition: all 0.25s ease;
 }
 
-.exportQuickCard:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-  border-color: rgba(100, 116, 139, 0.28);
+.exportQuickCard:hover {
+  transform: translateY(-3px);
+  border-color: rgba(59,130,246,0.5);
+  box-shadow: 0 12px 30px rgba(37,99,235,0.25);
 }
 
-.exportQuickCard:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.exportQuickCard:focus-visible {
-  outline: 2px solid rgba(15, 23, 42, 0.18);
-  outline-offset: 2px;
-}
-
+/* FEATURED */
 .exportQuickCard--featured {
-  border-color: rgba(15, 23, 42, 0.18);
   background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(241, 245, 249, 1) 100%
+    135deg,
+    rgba(59,130,246,0.2),
+    rgba(37,99,235,0.15)
   );
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border-color: rgba(59,130,246,0.4);
 }
 
-.exportQuickCard:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
+/* TEXT */
 .exportQuickCard-title {
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: white;
 }
 
 .exportQuickCard-desc {
   font-size: 14px;
-  color: #64748b;
-  line-height: 1.45;
+  color: #94a3b8;
 }
-
-.exportQuickCard-cta {
-  margin-top: auto;
-  font-size: 13px;
-  font-weight: 600;
-  color: #334155;
-}
-
-.exportQuickCard--featured .exportQuickCard-cta {
-  color: #0f172a;
-}
-
-/* ================== RESPONSIVE ================== */
-
-@media (max-width: 640px) {
-  .exportCard {
-    gap: 16px;
-  }
-
-  .exportFilters {
-    gap: 14px;
-  }
-
-  .exportActions {
-    gap: 14px;
-  }
-
-  .exportPreview {
-    padding: 14px;
-  }
-
-  .exportQuickCard {
-    min-height: 110px;
-    padding: 16px;
-  }
-
-  .exportModeBtn {
-    min-width: 96px;
-  }
-}
-/* ================== INPUT ERROR ================== */
-
-.admin-input--error {
-  border-color: rgba(239, 68, 68, 0.6) !important;
-  background: rgba(239, 68, 68, 0.04);
-}
-
-.admin-input--error:focus {
-  outline: 2px solid rgba(239, 68, 68, 0.25);
-}
-
-/* ================== DISABLED CARD ================== */
-
-.exportQuickCard:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  filter: grayscale(0.2);
-}
-
-/* ================== CTA IMPROVEMENT ================== */
 
 .exportQuickCard-cta {
   margin-top: auto;
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: #3b82f6;
 }
 
-/* ================== LOADING STATE ================== */
+/* ================== LOADING ================== */
 
 .exportQuickCard.loading {
+  opacity: 0.6;
   pointer-events: none;
-  opacity: 0.7;
 }
 
 .exportQuickCard.loading::after {
   content: "";
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(15, 23, 42, 0.2);
-  border-top-color: #0f172a;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: #3b82f6;
   border-radius: 50%;
-  display: inline-block;
-  animation: spin 0.8s linear infinite;
-  margin-left: 8px;
-  vertical-align: middle;
+  animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
+  to { transform: rotate(360deg); }
+}
+
+/* ================== INPUT ERROR ================== */
+
+.admin-input--error {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+/* ================== RESPONSIVE ================== */
+
+@media (max-width: 640px) {
+  .exportPage {
+    padding: 20px 14px;
+  }
+
+  .exportTitle {
+    font-size: 22px;
+  }
+
+  .exportQuickCard {
+    padding: 16px;
+  }
+
+  .exportModeBtn {
+    min-width: 90px;
   }
 }

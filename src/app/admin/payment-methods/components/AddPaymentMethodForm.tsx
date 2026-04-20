@@ -1,54 +1,30 @@
 "use client";
 
-import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
 import type { CountryCode } from "@/lib/shipping-i18n";
+import { COUNTRY_LANGUAGE_MAP } from "@/lib/shipping-i18n";
 import type { PaymentMethodProvider } from "../types";
-
-const LOCALES = ["fr", "en", "es", "de", "it", "nl"] as const;
-type LocaleKey = (typeof LOCALES)[number];
 
 type Props = {
   country: CountryCode;
   onCreated: () => void;
 };
 
-const EMPTY_I18N: Record<LocaleKey, string> = {
-  fr: "",
-  en: "",
-  es: "",
-  de: "",
-  it: "",
-  nl: "",
-};
-
-// Les providers "réellement" typés côté TS (selon ton PaymentMethodProvider)
-function isTypedProvider(v: string): v is PaymentMethodProvider {
-  return v === "stripe" || v === "paypal" || v === "manual";
-}
-
-// Les valeurs possibles dans l'UI (inclut bank_transfer même si TS ne l'accepte pas dans PaymentMethodProvider)
 type ProviderUI = PaymentMethodProvider | "bank_transfer";
-function isProviderUI(v: string): v is ProviderUI {
-  return v === "stripe" || v === "paypal" || v === "manual" || v === "bank_transfer";
-}
 
 export default function AddPaymentMethodForm({ country, onCreated }: Props) {
-  const [provider, setProvider] = useState<PaymentMethodProvider>("stripe");
+  const locale = COUNTRY_LANGUAGE_MAP[country];
 
-  // Flag UI pour le virement, sans dépendre de PaymentMethodProvider
-  const [isBankTransferUI, setIsBankTransferUI] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  const [provider, setProvider] = useState<ProviderUI>("stripe");
   const [isActive, setIsActive] = useState(true);
   const [sortOrder, setSortOrder] = useState<number | "">("");
-  const [activeLocale, setActiveLocale] = useState<LocaleKey>("fr");
 
-  const [name, setName] = useState<Record<LocaleKey, string>>({ ...EMPTY_I18N });
-  const [description, setDescription] = useState<Record<LocaleKey, string>>({
-    ...EMPTY_I18N,
-  });
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
 
-  // Config virement bancaire
   const [bank, setBank] = useState({
     accountHolder: "",
     iban: "",
@@ -57,73 +33,40 @@ export default function AddPaymentMethodForm({ country, onCreated }: Props) {
     instructions: "",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const hasName = useMemo(() => name.trim().length > 0, [name]);
 
-  function updateName(locale: LocaleKey, value: string) {
-    setName((prev) => ({ ...prev, [locale]: value }));
-  }
-
-  function updateDescription(locale: LocaleKey, value: string) {
-    setDescription((prev) => ({ ...prev, [locale]: value }));
-  }
-
-  const hasName = useMemo(
-    () => Object.values(name).some((v) => v.trim().length > 0),
-    [name]
-  );
-
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
     if (!hasName) {
-      setError("Renseigne au moins un nom dans une langue.");
+      setError("Ajoute un nom.");
       return;
-    }
-
-    // Validation minimale pour le virement (optionnelle mais utile)
-    if (isBankTransferUI) {
-      if (!bank.iban.trim()) {
-        setError("Pour le virement bancaire, renseigne au moins l’IBAN.");
-        return;
-      }
     }
 
     try {
       setLoading(true);
 
-      const payload = {
-        country,
-        // Si virement, on envoie la string attendue par l'API
-        provider: (isBankTransferUI ? "bank_transfer" : provider) as ProviderUI,
-        isActive,
-        sortOrder: sortOrder === "" ? null : Number(sortOrder),
-        name,
-        description,
-        config: isBankTransferUI ? bank : {},
-      };
-
       const res = await fetch("/api/admin/payment-methods", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          country,
+          provider,
+          isActive,
+          sortOrder: sortOrder === "" ? null : Number(sortOrder),
+          name: { [locale]: name },
+          description: { [locale]: description },
+          config: provider === "bank_transfer" ? bank : {},
+        }),
       });
 
-      const json: any = await res.json().catch(() => null);
+      if (!res.ok) throw new Error();
 
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.error ?? "Erreur serveur");
-      }
-
-      // reset
-      setName({ ...EMPTY_I18N });
-      setDescription({ ...EMPTY_I18N });
+      setName("");
+      setDescription("");
       setProvider("stripe");
-      setIsBankTransferUI(false);
-      setIsActive(true);
       setSortOrder("");
-      setActiveLocale("fr");
       setBank({
         accountHolder: "",
         iban: "",
@@ -133,201 +76,240 @@ export default function AddPaymentMethodForm({ country, onCreated }: Props) {
       });
 
       onCreated();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erreur inconnue";
-      setError(message);
+    } catch {
+      setError("Erreur création");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <form
-      className="border rounded-md p-4 bg-white space-y-4"
-      onSubmit={handleSubmit}
-    >
-      <div className="flex justify-between items-center">
-        <h2 className="font-semibold">
-          Ajouter une méthode de paiement pour {country}
-        </h2>
+    <form onSubmit={submit} className="wrap">
 
-        <label className="flex items-center gap-2 text-sm">
-          <span>Active</span>
+      {/* HEADER */}
+      <div className="header">
+        <div>
+          <h3>Nouvelle méthode</h3>
+          <span>{country} • {locale.toUpperCase()}</span>
+        </div>
+
+        <label className="toggle">
           <input
             type="checkbox"
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
           />
+          Actif
         </label>
       </div>
 
-      {/* Provider + ordre */}
-      <div className="flex flex-wrap gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Provider</label>
-          <select
-            value={(isBankTransferUI ? "bank_transfer" : provider) as ProviderUI}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (!isProviderUI(v)) return;
+      {/* PROVIDER */}
+      <div className="block">
+        <p className="label">Provider</p>
 
-              if (v === "bank_transfer") {
-                setIsBankTransferUI(true);
-                // on garde provider tel quel (stripe/paypal/manual) en mémoire
-                return;
-              }
-
-              // sinon provider typé normal
-              if (isTypedProvider(v)) {
-                setIsBankTransferUI(false);
-                setProvider(v);
-              }
-            }}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            <option value="stripe">Stripe</option>
-            <option value="paypal">PayPal</option>
-            <option value="manual">Manuel / Autre</option>
-            <option value="bank_transfer">Virement bancaire</option>
-          </select>
+        <div className="providers">
+          {[
+            { id: "stripe", label: "Stripe" },
+            { id: "paypal", label: "PayPal" },
+            { id: "manual", label: "Manuel" },
+            { id: "bank_transfer", label: "Virement" },
+          ].map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setProvider(p.id as ProviderUI)}
+              className={`provider ${provider === p.id ? "active" : ""}`}
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Ordre d&apos;affichage
-          </label>
+      {/* CONTENT */}
+      <div className="block">
+        <p className="label">Contenu</p>
+
+        <div className="grid">
           <input
-            type="number"
-            value={sortOrder}
-            onChange={(e) =>
-              setSortOrder(e.target.value === "" ? "" : Number(e.target.value))
-            }
-            className="border rounded px-2 py-1 text-sm w-24"
-            placeholder="ex: 1"
+            placeholder={`Nom (${locale.toUpperCase()})`}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          <input
+            placeholder={`Description (${locale.toUpperCase()})`}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Champs virement bancaire */}
-      {isBankTransferUI && (
-        <div className="border rounded-md p-3 bg-gray-50 space-y-3">
-          <p className="font-medium text-sm">Informations de virement</p>
+      {/* BANK */}
+      {provider === "bank_transfer" && (
+        <div className="block">
+          <p className="label">Informations bancaires</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Titulaire du compte
-              </label>
-              <input
-                className="border rounded px-2 py-1 text-sm w-full"
-                value={bank.accountHolder}
-                onChange={(e) =>
-                  setBank((p) => ({ ...p, accountHolder: e.target.value }))
-                }
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Banque</label>
-              <input
-                className="border rounded px-2 py-1 text-sm w-full"
-                value={bank.bankName}
-                onChange={(e) =>
-                  setBank((p) => ({ ...p, bankName: e.target.value }))
-                }
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">IBAN</label>
-              <input
-                className="border rounded px-2 py-1 text-sm w-full"
-                value={bank.iban}
-                onChange={(e) => setBank((p) => ({ ...p, iban: e.target.value }))}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                BIC / SWIFT
-              </label>
-              <input
-                className="border rounded px-2 py-1 text-sm w-full"
-                value={bank.bic}
-                onChange={(e) => setBank((p) => ({ ...p, bic: e.target.value }))}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Instructions
-            </label>
-            <textarea
-              className="border rounded px-2 py-1 text-sm w-full"
-              value={bank.instructions}
+          <div className="grid">
+            <input
+              placeholder="Titulaire"
+              value={bank.accountHolder}
               onChange={(e) =>
-                setBank((p) => ({ ...p, instructions: e.target.value }))
+                setBank({ ...bank, accountHolder: e.target.value })
               }
-              placeholder="Ex: Indiquez le n° de commande en référence du virement."
+            />
+            <input
+              placeholder="Banque"
+              value={bank.bankName}
+              onChange={(e) =>
+                setBank({ ...bank, bankName: e.target.value })
+              }
+            />
+            <input
+              placeholder="IBAN"
+              value={bank.iban}
+              onChange={(e) =>
+                setBank({ ...bank, iban: e.target.value })
+              }
+            />
+            <input
+              placeholder="BIC"
+              value={bank.bic}
+              onChange={(e) =>
+                setBank({ ...bank, bic: e.target.value })
+              }
             />
           </div>
+
+          <textarea
+            placeholder="Instructions"
+            value={bank.instructions}
+            onChange={(e) =>
+              setBank({ ...bank, instructions: e.target.value })
+            }
+          />
         </div>
       )}
 
-      {/* Onglets langues */}
-      <div>
-        <div className="flex gap-2 mb-2">
-          {LOCALES.map((loc) => (
-            <button
-              key={loc}
-              type="button"
-              onClick={() => setActiveLocale(loc)}
-              className={`px-2 py-1 text-xs rounded border ${
-                activeLocale === loc ? "bg-blue-600 text-white" : "bg-white"
-              }`}
-            >
-              {loc.toUpperCase()}
-            </button>
-          ))}
-        </div>
-
-        <div className="space-y-2">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Nom ({activeLocale.toUpperCase()})
-            </label>
-            <input
-              type="text"
-              value={name[activeLocale]}
-              onChange={(e) => updateName(activeLocale, e.target.value)}
-              className="border rounded px-2 py-1 text-sm w-full"
-              placeholder="Ex: Carte bancaire"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Description ({activeLocale.toUpperCase()})
-            </label>
-            <input
-              type="text"
-              value={description[activeLocale]}
-              onChange={(e) => updateDescription(activeLocale, e.target.value)}
-              className="border rounded px-2 py-1 text-sm w-full"
-              placeholder="Ex: Paiement sécurisé par Stripe"
-            />
-          </div>
-        </div>
+      {/* SETTINGS */}
+      <div className="block grid">
+        <input
+          type="number"
+          placeholder="Ordre d'affichage"
+          value={sortOrder}
+          onChange={(e) =>
+            setSortOrder(e.target.value === "" ? "" : Number(e.target.value))
+          }
+        />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="error">{error}</p>}
 
-      <div className="flex justify-end">
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Enregistrement…" : "Ajouter la méthode"}
-        </button>
-      </div>
+      <button className="submit" disabled={loading}>
+        {loading ? "Création…" : "Ajouter la méthode"}
+      </button>
+
+      <style jsx>{`
+
+        .wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        h3 {
+          font-size: 20px;
+          font-weight: 600;
+        }
+
+        span {
+          font-size: 12px;
+          color: #64748b;
+        }
+
+        .block {
+          padding: 16px;
+          border-radius: 16px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .label {
+          font-size: 12px;
+          color: #94a3b8;
+          margin-bottom: 10px;
+        }
+
+        .providers {
+          display: flex;
+          gap: 10px;
+        }
+
+        .provider {
+          flex: 1;
+          padding: 12px;
+          border-radius: 12px;
+          background: rgba(255,255,255,0.05);
+          transition: 0.2s;
+        }
+
+        .provider.active {
+          background: linear-gradient(135deg,#3b82f6,#2563eb);
+          box-shadow: 0 6px 20px rgba(37,99,235,0.4);
+        }
+
+        .grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        input, textarea {
+          height: 46px;
+          padding: 0 14px;
+          border-radius: 12px;
+          background: rgba(15,23,42,0.7);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: white;
+        }
+
+        textarea {
+          height: 90px;
+          padding-top: 12px;
+        }
+
+        input:focus, textarea:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+        }
+
+        .toggle {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+        }
+
+        .submit {
+          height: 48px;
+          border-radius: 14px;
+          background: linear-gradient(135deg,#3b82f6,#2563eb);
+          font-weight: 600;
+          box-shadow: 0 10px 30px rgba(37,99,235,0.4);
+        }
+
+        .error {
+          color: #f87171;
+        }
+
+      `}</style>
     </form>
   );
 }

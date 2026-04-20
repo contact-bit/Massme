@@ -1,10 +1,25 @@
 /* =========================================================
-   ADMIN — MAIN ENTRY (imports only)
+   ADMIN — MAIN ENTRY (ORDER FIXED)
 ========================================================= */
 
+/* 1. DESIGN SYSTEM */
 @import "./admin.tokens.css";
+
+
+/* 2. BASE / RESET (si t’en as) */
+
+/* 3. LAYOUT (ULTRA IMPORTANT) */
 @import "./admin.shell.css";
+
+/* 4. COMPONENTS (cards, buttons, etc) */
 @import "./admin.components.css";
-@import "./admin.forms.css";
+
+/* 5. FEATURES / PAGES */
 @import "./admin.dashboard.css";
+@import "./admin.forms.css";
+
+/* 6. PAGES SPÉCIALES (login à la fin) */
 @import "./admin-login.css";
+
+
+

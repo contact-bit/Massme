@@ -1,99 +1,124 @@
 /* =========================================================
-   ADMIN — SIDEBAR
+   ADMIN — SIDEBAR (SAFE LAYOUT / NO BREAK)
 ========================================================= */
 
+/* ================= SIDEBAR ================= */
+
 .admin-sidebar {
-  width: var(--sidebar-width);
+  width: var(--sidebar-width, 260px);
+
   background: var(--color-surface);
   color: var(--color-text);
+
   padding: var(--space-5) var(--space-4);
-  height: 100vh;
+
   position: fixed;
-  left: 0;
-  top: 0;
+  inset: 0 auto 0 0; /* top + left fix propre */
+
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-md);
+
   border-right: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+
+  z-index: 40;
 }
 
-.admin-logo {
+/* ================= LOGO ================= */
+
+.admin-sidebar .admin-logo {
   font-size: var(--text-lg);
   font-weight: 800;
   margin-bottom: var(--space-6);
   letter-spacing: -0.02em;
 }
 
-.admin-nav {
+/* ================= NAV ================= */
+
+.admin-sidebar .admin-nav {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   flex-grow: 1;
 }
 
-/* lien sidebar */
+/* ================= LINKS ================= */
 
-.admin-nav a {
+.admin-sidebar .admin-nav a {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--color-text-soft);
-  text-decoration: none;
+
   padding: 8px 10px;
+
   border-radius: var(--radius-md);
+
   font-size: var(--text-sm);
   font-weight: 600;
+
+  color: var(--color-text-soft);
+  text-decoration: none;
+
   transition:
-    background var(--transition-base),
-    color var(--transition-base),
-    padding-left var(--transition-base);
+    background var(--transition-fast),
+    color var(--transition-fast),
+    padding-left var(--transition-fast);
 }
 
-.admin-nav a:hover {
+/* hover */
+
+.admin-sidebar .admin-nav a:hover {
   background: var(--color-surface-alt);
-  color: var(--color-primary);
+  color: var(--color-text);
   padding-left: 12px;
 }
 
-.admin-nav a.active {
+/* active */
+
+.admin-sidebar .admin-nav a.active {
   background: var(--color-primary);
   color: #fff;
 }
 
-/* bouton de logout en bas */
+/* ================= LOGOUT ================= */
 
 .sidebar-logout {
-  margin-top: var(--space-4);
-  background: var(--color-danger);
+  margin-top: auto;
+
   padding: 8px 10px;
+
   border-radius: var(--radius-md);
-  color: #fff;
-  cursor: pointer;
-  border: 1px solid var(--color-danger);
+
   font-size: var(--text-sm);
   font-weight: 700;
+
+  background: var(--color-danger);
+  border: 1px solid var(--color-danger);
+  color: #fff;
+
+  cursor: pointer;
+
   transition:
-    background var(--transition-base),
-    border-color var(--transition-base),
-    filter var(--transition-base);
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform 0.08s ease;
 }
 
 .sidebar-logout:hover {
-  background: var(--color-danger-dark);
-  border-color: var(--color-danger-dark);
-  filter: brightness(0.97);
+  background: #dc2626;
+  border-color: #dc2626;
 }
 
-/* Responsive : sidebar collapsée */
+.sidebar-logout:active {
+  transform: translateY(1px);
+}
+
+/* ================= RESPONSIVE ================= */
 
 @media (max-width: 1024px) {
   .admin-sidebar {
-    position: fixed;
-    inset: 0 auto 0 0;
-    width: 220px;
     transform: translateX(-100%);
-    transition: transform var(--transition-base);
-    z-index: 50;
+    transition: transform var(--transition-fast);
   }
 
   .admin-sidebar.is-open {

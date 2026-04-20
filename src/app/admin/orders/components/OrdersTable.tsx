@@ -1,214 +1,183 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useState } from "react";
 import type { Order } from "../domain/types";
 import { compactId, formatDateFR, moneyEUR } from "../domain/utils";
 import { StatusPill } from "./StatusPill";
 import { ActionIconButton } from "./ActionIconButton";
 import { IconCopy, IconEye, IconTrash } from "./icons";
-import {
-  getLogisticStatus,
-  getShipDate,
-} from "../domain/logistics";
+import { getLogisticStatus, getShipDate } from "../domain/logistics";
+import { OrderDetails } from "./OrderDetails";
 
 type Props = {
   orders: Order[];
-  selected: Record<string, boolean>;
-  onToggleOne: (id: string) => void;
-  onToggleAll: () => void;
-  onOpen: (id: string) => void;
+
+  /* ACTIONS */
   onCopyId: (id: string) => void;
   onDelete: (id: string) => void;
   deleting: Record<string, boolean>;
-};
+  onMarkAsPaid: (id: string) => Promise<void>;
 
-type OrderWithPayment = Order & {
-  payment?: {
-    status?: string;
-  };
+  /* OPEN */
+  onOpen: (id: string) => void;
 };
 
 export default function OrdersTable({
   orders,
-  selected,
-  onToggleOne,
-  onToggleAll,
-  onOpen,
   onCopyId,
   onDelete,
   deleting,
+  onOpen,
+  onMarkAsPaid,
 }: Props) {
-  const allPageSelected = useMemo(() => {
-    if (orders.length === 0) return false;
-    return orders.every((o) => selected[o.id]);
-  }, [orders, selected]);
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const toggle = (id: string) => {
+    setOpenId((prev) => (prev === id ? null : id));
+    onOpen(id);
+  };
 
   return (
-    <div className="hideMobile">
-      <div className="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>
-                <label
-                  style={{
-                    display: "inline-flex",
-                    gap: 6,
-                    alignItems: "center",
-                    cursor: "pointer",
-                  }}
+    <div className="orders-table-wrap">
+      <table className="orders-table-v2">
+        <thead>
+          <tr>
+            {/* ❌ CHECKBOX SUPPRIMÉ */}
+            <th>Commande</th>
+            <th>Client</th>
+            <th>Paiement</th>
+            <th>Livraison</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {orders.map((o) => {
+            const isOpen = openId === o.id;
+
+            const paymentStatus =
+              (o as any)?.payment?.status ?? o.status;
+
+            const displayId =
+              (o as any)?.orderNumber ||
+              (o as any)?.number ||
+              compactId(o.id);
+
+            const logisticStatus = getLogisticStatus(o);
+            const shipDate = getShipDate(o);
+
+            const total =
+              (o as any).total ??
+              (o as any).__total ??
+              (o as any).totals?.totalTTC ??
+              0;
+
+            return (
+              <React.Fragment key={o.id}>
+                <tr
+                  className={`row ${isOpen ? "open" : ""}`}
+                  onClick={() => toggle(o.id)}
                 >
-                  <input
-                    type="checkbox"
-                    checked={allPageSelected}
-                    onChange={onToggleAll}
-                  />
-                  <span>Sélect.</span>
-                </label>
-              </th>
-
-              <th>Commande</th> {/* 🔥 renommé */}
-              <th>Date</th>
-              <th>Email</th>
-              <th>Langue</th>
-              <th>Paiement</th>
-              <th>Logistique</th>
-              <th>Produits</th>
-              <th>Total</th>
-              <th style={{ textAlign: "right" }}>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {orders.map((o) => {
-              const order = o as OrderWithPayment;
-
-              const paymentStatus =
-                order.payment?.status ?? order.status;
-
-              // 🔥 NUMÉRO PROPRE
-              const displayId =
-                (order as any)?.orderNumber ||
-                (order as any)?.number ||
-                compactId(order.id);
-
-              // 🔥 LOGISTIQUE
-              const logisticStatus = getLogisticStatus(order);
-              const shipDate = getShipDate(order);
-
-              return (
-                <tr key={order.id}>
-                  {/* SELECT */}
+                  {/* ❌ CHECKBOX SUPPRIMÉ */}
                   <td>
-                    <input
-                      type="checkbox"
-                      checked={!!selected[order.id]}
-                      onChange={() => onToggleOne(order.id)}
-                    />
-                  </td>
-
-                  {/* 🔥 ID PROPRE */}
-                  <td>
-                    <div className="mono" style={{ fontWeight: 700 }}>
-                      #{displayId}
+                    <div className="cell-main">#{displayId}</div>
+                    <div className="cell-sub">
+                      {formatDateFR(o.__created ?? null)}
                     </div>
                   </td>
 
-                  {/* DATE */}
-                  <td>{formatDateFR(order.__created ?? null)}</td>
+                  <td>
+                    <div className="cell-main">{o.__email || "—"}</div>
+                    <div className="cell-sub">
+                      {o.__itemsLabel || "—"}
+                    </div>
+                  </td>
 
-                  {/* EMAIL */}
-                  <td>{order.__email || "—"}</td>
-
-                  {/* LANG */}
-                  <td>{order.__lang || "—"}</td>
-
-                  {/* PAYMENT */}
                   <td>
                     <StatusPill status={paymentStatus} />
                   </td>
 
-                  {/* 🔥 LOGISTIQUE + HEURE */}
                   <td>
-                    <div style={{ display: "flex", flexDirection: "column" }}>
+                    <div className="logistic-cell">
                       <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color:
-                            logisticStatus === "shipped"
-                              ? "#047857"
-                              : "#92400E",
-                        }}
+                        className={
+                          logisticStatus === "shipped"
+                            ? "ok"
+                            : "pending"
+                        }
                       >
                         {logisticStatus === "shipped"
                           ? "Expédiée"
-                          : "À préparer"}
+                          : "Prépa"}
                       </span>
 
-                      <span
-                        style={{
-                          fontSize: 11,
-                          color: "#6B7280",
-                        }}
-                      >
-                        {logisticStatus === "shipped" && shipDate
+                      <span className="cell-sub">
+                        {shipDate
                           ? new Intl.DateTimeFormat("fr-FR", {
-                              dateStyle: "medium",
-                              timeStyle: "short",
+                              dateStyle: "short",
                             }).format(new Date(shipDate))
                           : "—"}
                       </span>
                     </div>
                   </td>
 
-                  {/* ITEMS */}
-                  <td>{order.__itemsLabel || "—"}</td>
+                  <td className="cell-strong">
+                    {moneyEUR(total)}
+                  </td>
 
-                  {/* TOTAL */}
-                  <td>{moneyEUR(order.__total ?? 0)}</td>
+                  <td onClick={(e) => e.stopPropagation()}>
+                    <div className="actions">
+                      <ActionIconButton
+                        title="Voir"
+                        onClick={() => toggle(o.id)}
+                        icon={<IconEye />}
+                        variant="primary"
+                      />
 
-                  {/* ACTIONS */}
-                  <td>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        flexWrap: "wrap",
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <ActionIconButton
-                          title="Détails"
-                          onClick={() => onOpen(order.id)}
-                          icon={<IconEye />}
-                          variant="primary"
-                        />
-
-                        <ActionIconButton
-                          title="Copier ID"
-                          onClick={() => onCopyId(order.id)}
-                          icon={<IconCopy />}
-                        />
-                      </div>
+                      <ActionIconButton
+                        title="Copier"
+                        onClick={() => onCopyId(o.id)}
+                        icon={<IconCopy />}
+                      />
 
                       <ActionIconButton
                         title="Supprimer"
-                        onClick={() => onDelete(order.id)}
+                        onClick={() => onDelete(o.id)}
                         icon={<IconTrash />}
                         variant="danger"
-                        disabled={!!deleting[order.id]}
+                        disabled={!!deleting[o.id]}
+                      />
+
+                      <ActionIconButton
+                        title="Marquer comme payé"
+                        onClick={() => onMarkAsPaid(o.id)}
+                        icon={"💳"}
                       />
                     </div>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+
+                {isOpen && (
+                  <tr className="row-expanded">
+                    {/* ⚠️ 6 colonnes maintenant */}
+                    <td colSpan={6}>
+                      <div className="expanded-content">
+                        <OrderDetails
+                          order={o}
+                          onCopyId={() => onCopyId(o.id)}
+                          onCopyEmail={() => {}}
+                          onCopyAddress={() => {}}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

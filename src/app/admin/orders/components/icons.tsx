@@ -4,12 +4,16 @@ import React from "react";
 type IconProps = {
   size?: number | string;
   strokeWidth?: number;
+  className?: string;
 };
+
+/* ================= BASE ================= */
 
 function BaseIcon({
   children,
   size = 18,
   strokeWidth = 2,
+  className = "",
 }: React.PropsWithChildren<IconProps>) {
   return (
     <svg
@@ -19,6 +23,7 @@ function BaseIcon({
       fill="none"
       aria-hidden="true"
       focusable="false"
+      className={`transition-all duration-200 ${className}`}
     >
       <g
         stroke="currentColor"
@@ -31,6 +36,8 @@ function BaseIcon({
     </svg>
   );
 }
+
+/* ================= ICONS ================= */
 
 export function IconEye(props: IconProps) {
   return (

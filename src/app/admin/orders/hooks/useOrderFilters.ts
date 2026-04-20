@@ -4,25 +4,43 @@ import type { LangCode, Order, SortKey, StatusFilter } from "../domain/types";
 import { safeLower, safeString } from "../domain/utils";
 import { useDebouncedValue } from "./useDebouncedValue";
 
+/* =========================================================
+   🔥 DATE SAFE (ULTRA IMPORTANT)
+========================================================= */
+function toDateSafe(v: any): Date | null {
+  if (!v) return null;
+
+  if (typeof v?.toDate === "function") return v.toDate();
+  if (typeof v?._seconds === "number") return new Date(v._seconds * 1000);
+
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 export function useOrderFilters(initialFrom: string, initialTo: string) {
   const [q, setQ] = useState("");
   const qDebounced = useDebouncedValue(q, 220);
 
   const [status, setStatus] = useState<StatusFilter>("all");
-  const [from, setFrom] = useState(initialFrom);
-  const [to, setTo] = useState(initialTo);
+
+  // 🔥 IMPORTANT pas de filtre par défaut
+  const [from, setFrom] = useState(initialFrom || "");
+  const [to, setTo] = useState(initialTo || "");
+
   const [sort, setSort] = useState<SortKey>("date_desc");
   const [lang, setLang] = useState<LangCode | "all">("all");
 
   const apply = useMemo(
     () => (orders: Order[]) => {
       const qn = qDebounced.trim().toLowerCase();
+
       const fromD = from ? new Date(from + "T00:00:00") : null;
       const toD = to ? new Date(to + "T23:59:59") : null;
 
       let out = orders.filter((o) => {
         const st = safeString(o.status);
 
+        /* ================= STATUS ================= */
         if (status !== "all") {
           if (status === "other") {
             if (["paid", "pending_payment", "refunded", "canceled"].includes(st))
@@ -32,17 +50,26 @@ export function useOrderFilters(initialFrom: string, initialTo: string) {
           }
         }
 
+        /* ================= DATE ================= */
         if (fromD || toD) {
-          const d = o.__created ?? null;
-          if (!d) return false;
+          const d =
+            toDateSafe(o.__created) ||
+            toDateSafe((o as any).createdAt) ||
+            null;
+
+          // 🔥 FIX CRITIQUE ne plus supprimer la commande
+          if (!d) return true;
+
           if (fromD && d.getTime() < fromD.getTime()) return false;
           if (toD && d.getTime() > toD.getTime()) return false;
         }
 
+        /* ================= LANG ================= */
         if (lang !== "all") {
           if (o.__lang !== lang) return false;
         }
 
+        /* ================= SEARCH ================= */
         if (!qn) return true;
 
         const hay = [
@@ -58,9 +85,18 @@ export function useOrderFilters(initialFrom: string, initialTo: string) {
         return hay.includes(qn);
       });
 
+      /* ================= SORT ================= */
       out.sort((a, b) => {
-        const da = a.__created?.getTime?.() ?? 0;
-        const db = b.__created?.getTime?.() ?? 0;
+        const da =
+          toDateSafe(a.__created)?.getTime() ||
+          toDateSafe((a as any).createdAt)?.getTime() ||
+          0;
+
+        const db =
+          toDateSafe(b.__created)?.getTime() ||
+          toDateSafe((b as any).createdAt)?.getTime() ||
+          0;
+
         const ta = a.__total ?? 0;
         const tb = b.__total ?? 0;
 
@@ -73,6 +109,8 @@ export function useOrderFilters(initialFrom: string, initialTo: string) {
             return ta - tb;
           case "total_desc":
             return tb - ta;
+          default:
+            return 0;
         }
       });
 

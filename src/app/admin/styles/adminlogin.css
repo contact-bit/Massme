@@ -1,62 +1,94 @@
 /* =========================================================
-   ADMIN — LOGIN PAGE
+   ADMIN — LOGIN (FINAL PREMIUM)
 ========================================================= */
 
 .admin-login-wrapper {
   min-height: 100vh;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at top, var(--color-surface-alt), var(--color-bg));
+
   padding: var(--space-4);
+
   font-family: var(--font-admin);
+
+  /* 🔥 fond plus premium */
+  background:
+    radial-gradient(circle at 20% 0%, rgba(15,118,110,0.08), transparent 60%),
+    radial-gradient(circle at 80% 100%, rgba(15,118,110,0.06), transparent 60%),
+    var(--color-bg);
 }
+
+/* ================= CARD ================= */
 
 .admin-login-box {
   width: 100%;
   max-width: 420px;
-  background: var(--color-surface);
+
+  padding: var(--space-5) var(--space-4);
+
   border-radius: var(--radius-xl);
-  padding: var(--space-5) var(--space-4) var(--space-4);
-  box-shadow: var(--shadow-lg);
+
+  background: var(--color-surface);
+
   border: 1px solid var(--color-border);
+
+  box-shadow: var(--shadow-lg);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
+
+/* ================= TITLE ================= */
 
 .admin-login-title {
   font-size: var(--text-xl);
   font-weight: 800;
-  margin-bottom: 4px;
+
   text-align: center;
   color: var(--color-text);
 }
 
 .admin-login-subtitle {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--color-text-soft);
+
   text-align: center;
-  margin-bottom: var(--space-3);
 }
 
+/* ================= FIELD ================= */
+
 .admin-login-field {
-  margin-bottom: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .admin-login-label {
-  display: block;
-  font-size: 13px;
+  font-size: var(--text-sm);
+  font-weight: 600;
   color: var(--color-text-soft);
-  margin-bottom: 4px;
 }
+
+/* ================= INPUT ================= */
 
 .admin-login-input {
   width: 100%;
+  height: 42px;
+
+  padding: 0 12px;
+
   border-radius: var(--radius-md);
+
   border: 1px solid var(--color-border);
-  padding: 10px 12px;
-  font-size: var(--text-sm);
-  outline: none;
+
   background: var(--color-surface-alt);
   color: var(--color-text);
+
+  font-size: var(--text-sm);
+
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast),
@@ -67,76 +99,111 @@
   color: var(--color-text-muted);
 }
 
+/* focus */
+
 .admin-login-input:focus {
   border-color: var(--color-primary);
   background: var(--color-surface);
+
   box-shadow: 0 0 0 3px var(--color-primary-soft);
+  outline: none;
 }
 
-/* Button */
+/* accessibilité */
+
+.admin-login-input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ================= BUTTON ================= */
 
 .admin-login-button {
   width: 100%;
-  margin-top: 10px;
-  border-radius: var(--radius-full);
+  height: 42px;
+
+  margin-top: var(--space-2);
+
+  border-radius: var(--radius-md); /* FIX */
+
   background: var(--color-primary);
-  color: #fff;
-  font-weight: 700;
-  font-size: var(--text-sm);
-  padding: 10px 14px;
   border: 1px solid var(--color-primary);
+
+  color: #fff;
+
+  font-size: var(--text-sm);
+  font-weight: 700;
+
   cursor: pointer;
+
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast),
-    background var(--transition-fast),
-    border-color var(--transition-fast);
+    background var(--transition-fast);
 }
+
+/* hover */
 
 .admin-login-button:hover:not(:disabled) {
   background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-  box-shadow: var(--shadow-sm);
+
   transform: translateY(-1px);
+
+  box-shadow: 0 6px 18px rgba(15,118,110,0.25);
 }
+
+/* active */
+
+.admin-login-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* disabled */
 
 .admin-login-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Messages */
+/* ================= ALERTS ================= */
+
+.admin-login-error,
+.admin-login-info {
+  font-size: var(--text-sm);
+
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+
+  font-weight: 600;
+}
 
 .admin-login-error {
-  margin-top: 6px;
-  font-size: 13px;
   color: var(--color-danger);
   background: var(--color-danger-soft);
-  border-radius: var(--radius-md);
-  padding: 6px 8px;
 }
 
 .admin-login-info {
-  margin-top: 6px;
-  font-size: 13px;
   color: var(--color-success);
   background: var(--color-success-soft);
-  border-radius: var(--radius-md);
-  padding: 6px 8px;
 }
 
+/* ================= FOOTNOTE ================= */
+
 .admin-login-footnote {
-  margin-top: var(--space-4);
-  font-size: 11px;
+  margin-top: var(--space-3);
+
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
+
   text-align: center;
 }
 
-/* Responsive */
+/* ================= RESPONSIVE ================= */
 
 @media (max-width: 480px) {
   .admin-login-box {
-    padding: var(--space-4) var(--space-3);
+    padding: var(--space-4);
     border-radius: var(--radius-lg);
   }
 }
