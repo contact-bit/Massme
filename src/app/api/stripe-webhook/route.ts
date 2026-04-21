@@ -574,10 +574,13 @@ export async function POST(req: Request) {
     const afterSnap = await ref.get();
     const after = afterSnap.exists ? (afterSnap.data() as any) : savedOrder;
 
-    if (after?.invoiceEmail?.status === "sent") {
-      console.log("[stripe/webhook] invoice already sent, skip", orderId);
-      return NextResponse.json({ received: true });
-    }
+
+    
+
+if (after?.emails?.sent && after?.invoiceEmail?.status === "sent") {
+  console.log("📧 Email déjà envoyé confirmé");
+  return NextResponse.json({ received: true });
+}
 
     const emailForInvoice = normalizeEmail(after?.email) || customerEmail;
     if (!emailForInvoice) {
