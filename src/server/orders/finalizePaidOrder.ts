@@ -3,7 +3,7 @@ import "server-only";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { scheduleReviewEmailForOrder } from "@/server/reviewEmailScheduler";
-import { sendOrderEmails } from "@/lib/mailer"; // ✅ AJOUT
+import { sendOrderEmails } from "@/lib/mailer";
 
 type FinalizePaidOrderInput = {
   orderId: string;
@@ -12,6 +12,8 @@ type FinalizePaidOrderInput = {
   locale?: string | null;
   payment: Record<string, any>;
 };
+
+type SupportedLocale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
 function normalizeEmail(v: unknown): string | null {
   const e = typeof v === "string" ? v.trim().toLowerCase() : "";
@@ -22,6 +24,14 @@ function normalizeEmail(v: unknown): string | null {
 function normalizeLocale(v: unknown): string {
   const s = typeof v === "string" ? v.trim().toLowerCase() : "";
   return s || "fr";
+}
+
+// ✅ SAFE LOCALE (IMPORTANT)
+function toSupportedLocale(locale: string): SupportedLocale {
+  const allowed: SupportedLocale[] = ["fr", "en", "es", "de", "it", "nl"];
+  return allowed.includes(locale as SupportedLocale)
+    ? (locale as SupportedLocale)
+    : "fr";
 }
 
 function shouldSkipReviewScheduling(reviewStatus: unknown) {
@@ -56,7 +66,8 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
     normalizeEmail(order?.customer_email);
 
   const email = normalizeEmail(input.email) || existingEmail || null;
-  const locale = normalizeLocale(input.locale || order?.locale || "fr");
+  const rawLocale = normalizeLocale(input.locale || order?.locale || "fr");
+  const safeLocale = toSupportedLocale(rawLocale); // ✅ FIX ICI
 
   const currentOrderStatus = String(order?.status || "").toLowerCase();
   const currentPaymentStatus = String(order?.payment?.status || "").toLowerCase();
@@ -67,19 +78,11 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
     currentPaymentStatus === "paid";
 
   const orderNumber =
-    typeof order?.orderNumber === "string" && order.orderNumber.trim().length > 0
+    typeof order?.orderNumber === "string" && order.orderNumber.trim()
       ? order.orderNumber.trim()
-      : typeof order?.invoiceNumber === "string" && order.invoiceNumber.trim().length > 0
+      : typeof order?.invoiceNumber === "string" && order.invoiceNumber.trim()
       ? order.invoiceNumber.trim()
       : null;
-
-  console.log("FINALIZE DEBUG", {
-    orderId,
-    provider,
-    orderNumber,
-    currentOrderStatus,
-    currentPaymentStatus,
-  });
 
   /* ================= UPDATE ORDER ================= */
 
@@ -87,7 +90,7 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
     {
       status: "paid",
       paidAt: order?.paidAt || FieldValue.serverTimestamp(),
-      locale,
+      locale: safeLocale,
       ...(email ? { email } : {}),
       ...(orderNumber ? { orderNumber } : {}),
       payment: {
@@ -103,7 +106,7 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
     { merge: true }
   );
 
-  /* ================= EMAILS (FACTURE + ADMIN + LOGISTIQUE) ================= */
+  /* ================= EMAILS ================= */
 
   let emailResult: any = null;
 
@@ -123,7 +126,7 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
           provider,
           created_at: order?.createdAt || new Date(),
           orderData: order,
-          locale,
+          locale: safeLocale, // ✅ FIX ICI
           orderNumber: orderNumber || orderId,
         },
         clientEmail: email,
@@ -144,8 +147,6 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
       );
     } catch (err: any) {
       const message = String(err?.message || err);
-
-      console.error("EMAIL ERROR", message);
 
       await ref.set(
         {
@@ -168,37 +169,20 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
   /* ================= REVIEW EMAIL ================= */
 
   let reviewResult: any = null;
-  let reviewSkippedReason: string | null = null;
 
-  if (shouldSkipReviewScheduling(currentReviewStatus)) {
-    reviewSkippedReason = `already_${currentReviewStatus}`;
-    reviewResult = {
-      ok: true,
-      skipped: true,
-      reason: reviewSkippedReason,
-    };
-  } else {
+  if (!shouldSkipReviewScheduling(currentReviewStatus)) {
     try {
       reviewResult = await scheduleReviewEmailForOrder(orderId);
     } catch (err: any) {
-      const message = String(err?.message || err);
-
       await ref.set(
         {
-          "reviewEmail.lastError": message,
+          "reviewEmail.lastError": String(err?.message || err),
           "reviewEmail.lastErrorAt": FieldValue.serverTimestamp(),
         },
         { merge: true }
       );
-
-      reviewResult = {
-        ok: false,
-        error: message,
-      };
     }
   }
-
-  /* ================= RETURN ================= */
 
   return {
     ok: true,
@@ -206,7 +190,7 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
     orderId,
     orderNumber,
     email,
-    locale,
+    locale: safeLocale,
     provider,
     emailResult,
     reviewResult,
