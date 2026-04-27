@@ -3,6 +3,7 @@ import "server-only";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { scheduleReviewEmailForOrder } from "@/server/reviewEmailScheduler";
+import { sendOrderEmails } from "@/lib/mailer"; // ✅ AJOUT
 
 type FinalizePaidOrderInput = {
   orderId: string;
@@ -76,11 +77,11 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
     orderId,
     provider,
     orderNumber,
-    invoiceNumber: order?.invoiceNumber ?? null,
     currentOrderStatus,
     currentPaymentStatus,
-    currentReviewStatus,
   });
+
+  /* ================= UPDATE ORDER ================= */
 
   await ref.set(
     {
@@ -98,19 +99,73 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
       updatedAt: FieldValue.serverTimestamp(),
       "payment.finalizedAt": FieldValue.serverTimestamp(),
       "payment.finalizedProvider": provider,
-
-      debug: {
-        ...(order?.debug || {}),
-        finalizePaidOrderAt: FieldValue.serverTimestamp(),
-        finalizePaidOrderProvider: provider,
-        finalizePaidOrderAlreadyPaid: alreadyPaid,
-        finalizePaidOrderReviewStatusBefore: currentReviewStatus || null,
-        finalizePaidOrderOrderNumber: orderNumber,
-        finalizePaidOrderInvoiceNumber: order?.invoiceNumber ?? null,
-      },
     },
     { merge: true }
   );
+
+  /* ================= EMAILS (FACTURE + ADMIN + LOGISTIQUE) ================= */
+
+  let emailResult: any = null;
+
+  if (email && !alreadyPaid) {
+    try {
+      const totalCents = Math.round(
+        Number(order?.totals?.totalTTC ?? order?.amount_total ?? 0) * 100
+      );
+
+      emailResult = await sendOrderEmails({
+        order: {
+          id: orderId,
+          amount_total: totalCents,
+          currency: (order?.currency || "EUR").toLowerCase(),
+          customer_email: email,
+          payment_status: "paid",
+          provider,
+          created_at: order?.createdAt || new Date(),
+          orderData: order,
+          locale,
+          orderNumber: orderNumber || orderId,
+        },
+        clientEmail: email,
+      });
+
+      await ref.set(
+        {
+          emails: {
+            sent: true,
+            sentAt: FieldValue.serverTimestamp(),
+          },
+          invoiceEmail: {
+            status: "sent",
+            sentAt: FieldValue.serverTimestamp(),
+          },
+        },
+        { merge: true }
+      );
+    } catch (err: any) {
+      const message = String(err?.message || err);
+
+      console.error("EMAIL ERROR", message);
+
+      await ref.set(
+        {
+          emails: {
+            sent: false,
+            lastError: message,
+            lastErrorAt: FieldValue.serverTimestamp(),
+          },
+          invoiceEmail: {
+            status: "error",
+            lastError: message,
+            lastErrorAt: FieldValue.serverTimestamp(),
+          },
+        },
+        { merge: true }
+      );
+    }
+  }
+
+  /* ================= REVIEW EMAIL ================= */
 
   let reviewResult: any = null;
   let reviewSkippedReason: string | null = null;
@@ -132,7 +187,6 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
         {
           "reviewEmail.lastError": message,
           "reviewEmail.lastErrorAt": FieldValue.serverTimestamp(),
-          "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
         },
         { merge: true }
       );
@@ -144,12 +198,7 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
     }
   }
 
-  await ref.set(
-    {
-      "debug.finalizePaidOrderReviewSkippedReason": reviewSkippedReason,
-    },
-    { merge: true }
-  );
+  /* ================= RETURN ================= */
 
   return {
     ok: true,
@@ -159,6 +208,7 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
     email,
     locale,
     provider,
+    emailResult,
     reviewResult,
   };
 }
