@@ -148,7 +148,7 @@ export async function POST(req: Request) {
 `;
 
     await resend.emails.send({
-      from: "Massme • Logistique <contact@hdconnects.com>",
+      from: "Vitrectomed • Logistique <contact@hdconnects.com>",
       to: process.env.LOGISTICS_EMAIL!,
       subject: `📦 Préparer la commande #${orderNumber}`,
       html: htmlTemplate,

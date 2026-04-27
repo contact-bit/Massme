@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     const t = EMAIL_CONTENT[locale as Locale] ?? EMAIL_CONTENT.fr;
 
     await resend.emails.send({
-      from: "Massme • Contact <contact@hdconnects.com>",
+      from: "Vitrectomed • Contact <contact@hdconnects.com>",
       to: ADMIN_EMAIL,
       replyTo: email,
       subject: t.subject,

@@ -411,7 +411,7 @@ export async function generateInvoicePDF(
     "TVA : FR52831588926",
     "",
     "Email : contact@hdconnects.com",
-    "Site : www.ocularest.fr",
+    "Site : www.vitrectomed.com",
   ];
   for (const line of companyLines) {
     if (!line) {

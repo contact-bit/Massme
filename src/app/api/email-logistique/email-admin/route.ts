@@ -167,7 +167,7 @@ export async function POST(req: Request) {
 `;
 
     await resend.emails.send({
-      from: "Massme • Orders <contact@hdconnects.com>",
+      from: "Vitrectomed • Orders <contact@hdconnects.com>",
       to: process.env.ADMIN_EMAIL!,
       subject: `🛒 Nouvelle commande – #${orderNumber}`,
       html: htmlTemplate,
