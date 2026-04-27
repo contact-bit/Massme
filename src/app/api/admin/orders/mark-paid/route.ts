@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { dbAdmin } from "@/lib/firebase.admin";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 
 export async function POST(req: Request) {
@@ -9,9 +10,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Missing orderId" });
     }
 
+    const ref = dbAdmin.collection("orders").doc(orderId);
+    const snap = await ref.get();
+
+    if (!snap.exists) {
+      return NextResponse.json({ ok: false, error: "Order not found" });
+    }
+
+    const order = snap.data();
+
     const result = await finalizePaidOrder({
       orderId,
       provider: "bank_transfer",
+      email: order?.email || null, // 🔥 IMPORTANT
+      locale: order?.locale || "fr", // 🔥 IMPORTANT
       payment: {
         method: "bank_transfer",
         manual: true,
