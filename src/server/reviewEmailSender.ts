@@ -242,17 +242,20 @@ export async function sendReviewEmailNow(
   }
 
 /* =========================================================
-   URL (SAFE — NO PHISHING FLAGS)
+   URL (COMPATIBLE API + FRONT)
 ========================================================= */
 
 const reviewBase =
   `${baseUrl}/${locale}/review` +
-  `?token=${encodeURIComponent(token)}`;
+  `?order_id=${encodeURIComponent(orderId)}` +
+  `&token=${encodeURIComponent(token)}` +
+  `&email=${encodeURIComponent(email)}`;
 
-// ⭐ version clean (évite params suspects type "rating")
+// ⭐ IMPORTANT: garder "rating" (ton front l'utilise déjà)
 const stars = [1, 2, 3, 4, 5].map(
-  (n) => `${reviewBase}&r=${n}`
+  (n) => `${reviewBase}&rating=${n}`
 );
+
 
   /* =========================================================
      STATUS SENDING
