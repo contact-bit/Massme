@@ -30,8 +30,6 @@ function pickFirst<T>(...values: T[]): T | undefined {
   return undefined;
 }
 
-/* ================= SHIPSTATION ================= */
-
 function buildShipStationBody(orderData: any, orderId: string) {
   const orderNumber =
     asString(
@@ -39,7 +37,17 @@ function buildShipStationBody(orderData: any, orderId: string) {
       orderId
     ) || orderId;
 
-  const orderDate = new Date().toISOString();
+  const orderDate = (() => {
+    const d = pickFirst(
+      orderData?.createdAt,
+      orderData?.created_at,
+      orderData?.created
+    );
+    if ((d as any)?.toDate) return (d as any).toDate().toISOString();
+    if (typeof d === "string") return d;
+    if (d instanceof Date) return d.toISOString();
+    return new Date().toISOString();
+  })();
 
   const customerEmail =
     normalizeEmail(orderData?.email) ||
@@ -47,23 +55,57 @@ function buildShipStationBody(orderData: any, orderId: string) {
     normalizeEmail(orderData?.customer_email) ||
     undefined;
 
-  const items = Array.isArray(orderData?.items)
-    ? orderData.items.map((it: any) => ({
-        name: it?.name || "Produit",
-        quantity: Math.max(1, Number(it?.quantity || 1)),
-        unitPrice: Number(it?.price || it?.priceTTC || 0),
-      }))
-    : [];
+  const ship =
+    pickFirst(
+      orderData?.shippingAddress,
+      orderData?.shippingCustomer,
+      orderData?.shipping_address,
+      orderData?.shipping?.address,
+      orderData?.shipTo
+    ) || {};
 
-  if (!items.length) {
-    throw new Error("ShipStation payload has no items");
+  const bill =
+    pickFirst(
+      orderData?.billingAddress,
+      orderData?.billingCustomer,
+      orderData?.billing_address,
+      orderData?.billing?.address,
+      orderData?.billTo
+    ) || ship || {};
+
+  const billTo = {
+    name: `${bill?.firstName || ""} ${bill?.lastName || ""}`.trim() || "Customer",
+    street1: bill?.address1 || bill?.street || "",
+    city: bill?.city || "",
+    postalCode: bill?.postalCode || "",
+    country: bill?.country || "FR",
+  };
+
+  const shipTo = {
+    name: `${ship?.firstName || ""} ${ship?.lastName || ""}`.trim() || "Customer",
+    street1: ship?.address1 || ship?.street || "",
+    city: ship?.city || "",
+    postalCode: ship?.postalCode || "",
+    country: ship?.country || "FR",
+  };
+
+  if (!shipTo.street1 || !shipTo.city || !shipTo.postalCode) {
+    throw new Error("ShipTo incomplete");
   }
+
+  const items = (orderData?.items || []).map((it: any) => ({
+    name: it?.name || "Produit",
+    quantity: Math.max(1, Number(it?.quantity || 1)),
+    unitPrice: Number(it?.price || it?.priceTTC || 0),
+  }));
 
   return {
     orderNumber,
     orderDate,
-    orderStatus: "awaiting_shipment",
+    orderStatus: "awaiting_shipment" as const,
     customerEmail,
+    billTo,
+    shipTo,
     items,
   };
 }
@@ -77,10 +119,6 @@ export async function POST(
   try {
     const { id } = await context.params;
 
-    if (!id) {
-      return NextResponse.json({ ok: false, error: "Missing id" }, { status: 400 });
-    }
-
     const orderRef = dbAdmin.collection("orders").doc(id);
     const snap = await orderRef.get();
 
@@ -90,27 +128,17 @@ export async function POST(
 
     const order = snap.data() as any;
 
-    /* ================= ALREADY PAID ================= */
-
     const alreadyPaid =
       order?.paymentStatus === "paid" ||
       order?.payment?.status === "paid" ||
       order?.status === "paid";
 
     if (alreadyPaid) {
-      return NextResponse.json({
-        ok: true,
-        alreadyPaid: true,
-        orderId: id,
-      });
+      return NextResponse.json({ ok: true, alreadyPaid: true });
     }
-
-    /* ================= EMAIL ================= */
 
     const customerEmail =
       normalizeEmail(order?.email) ||
-      normalizeEmail(order?.customerEmail) ||
-      normalizeEmail(order?.customer_email) ||
       normalizeEmail(order?.billingCustomer?.email) ||
       normalizeEmail(order?.shippingCustomer?.email) ||
       null;
@@ -119,17 +147,13 @@ export async function POST(
 
     await orderRef.set(
       {
-        updatedAt: new Date(),
         status: "paid",
-        paidAt: new Date(),
         paymentStatus: "paid",
+        paidAt: new Date(),
         payment: {
           ...(order?.payment || {}),
-          provider: "bank_transfer",
           status: "paid",
-          validationMode: "manual",
           validatedAt: new Date(),
-          validatedBy: "admin",
         },
         bankTransfer: {
           ...(order?.bankTransfer || {}),
@@ -142,97 +166,55 @@ export async function POST(
 
     /* ================= FINALIZE (EMAILS ICI) ================= */
 
-    let finalizeResult: any = null;
+    let finalizeResult = null;
 
     try {
-      console.log("🔥 FINALIZE BANK TRANSFER", id);
-
       finalizeResult = await finalizePaidOrder({
         orderId: id,
         provider: "bank_transfer",
         email: customerEmail,
         locale: order?.locale || "fr",
-        payment: {
-          manuallyValidated: true,
-        },
+        payment: { manuallyValidated: true },
       });
-
-      await orderRef.set(
-        {
-          "debug.bankTransferFinalizeAt": new Date(),
-          "debug.bankTransferFinalizeResult": finalizeResult ?? null,
-        },
-        { merge: true }
-      );
-    } catch (err: any) {
-      console.error("❌ FINALIZE ERROR", err);
-
-      await orderRef.set(
-        {
-          "debug.bankTransferFinalizeErrorAt": new Date(),
-          "debug.bankTransferFinalizeError": String(err?.message || err),
-        },
-        { merge: true }
-      );
+    } catch (e) {
+      console.error("FINALIZE ERROR", e);
     }
 
     /* ================= SHIPSTATION ================= */
 
     let shipstationPushed = false;
-    let shipstationError: string | null = null;
 
     try {
-      const currentSnap = await orderRef.get();
-      const currentOrder = currentSnap.data() as any;
+      const current = (await orderRef.get()).data();
 
-      if (!currentOrder?.shipstation?.pushedAt) {
-        const ssBody = buildShipStationBody(currentOrder, id);
-        const ssOrder = await createOrUpdateOrder(ssBody);
+      if (!current?.shipstation?.pushedAt) {
+        const body = buildShipStationBody(current, id);
+        const res = await createOrUpdateOrder(body);
 
         await orderRef.set(
           {
             shipstation: {
               pushedAt: new Date(),
-              orderNumber: ssBody.orderNumber,
-              response: ssOrder ?? null,
+              response: res,
             },
           },
           { merge: true }
         );
-
-        shipstationPushed = true;
-      } else {
-        shipstationPushed = true;
       }
-    } catch (err: any) {
-      shipstationError = String(err?.message || err);
 
-      await orderRef.set(
-        {
-          shipstation: {
-            pushedAt: null,
-            lastErrorAt: new Date(),
-            lastError: shipstationError,
-          },
-        },
-        { merge: true }
-      );
+      shipstationPushed = true;
+    } catch (e) {
+      console.error("SHIPSTATION ERROR", e);
     }
 
     return NextResponse.json({
       ok: true,
-      orderId: id,
-      shipstationPushed,
-      shipstationError,
       finalizeResult,
+      shipstationPushed,
     });
 
   } catch (err: any) {
-    console.error("[validate-bank-transfer] error:", err);
-
-    return NextResponse.json(
-      { ok: false, error: err?.message || "Validation failed" },
-      { status: 500 }
-    );
+    console.error(err);
+    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
 }
