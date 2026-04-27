@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { assertAdmin } from "@/server/adminAuth";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 import { createOrUpdateOrder } from "@/server/shipstation/client";
 
@@ -12,6 +13,59 @@ function normalizeEmail(v: unknown): string | null {
   const e = typeof v === "string" ? v.trim().toLowerCase() : "";
   if (!e || !e.includes("@")) return null;
   return e;
+}
+
+function asString(v: unknown, fallback = ""): string {
+  return typeof v === "string" ? v : fallback;
+}
+
+function isNonEmptyString(v: unknown): v is string {
+  return typeof v === "string" && v.trim().length > 0;
+}
+
+function pickFirst<T>(...values: T[]): T | undefined {
+  for (const v of values) {
+    if (v !== undefined && v !== null) return v;
+  }
+  return undefined;
+}
+
+/* ================= SHIPSTATION ================= */
+
+function buildShipStationBody(orderData: any, orderId: string) {
+  const orderNumber =
+    asString(
+      pickFirst(orderData?.orderNumber, orderData?.number, orderData?.id),
+      orderId
+    ) || orderId;
+
+  const orderDate = new Date().toISOString();
+
+  const customerEmail =
+    normalizeEmail(orderData?.email) ||
+    normalizeEmail(orderData?.customerEmail) ||
+    normalizeEmail(orderData?.customer_email) ||
+    undefined;
+
+  const items = Array.isArray(orderData?.items)
+    ? orderData.items.map((it: any) => ({
+        name: it?.name || "Produit",
+        quantity: Math.max(1, Number(it?.quantity || 1)),
+        unitPrice: Number(it?.price || it?.priceTTC || 0),
+      }))
+    : [];
+
+  if (!items.length) {
+    throw new Error("ShipStation payload has no items");
+  }
+
+  return {
+    orderNumber,
+    orderDate,
+    orderStatus: "awaiting_shipment",
+    customerEmail,
+    items,
+  };
 }
 
 /* ================= ROUTE ================= */
@@ -61,7 +115,7 @@ export async function POST(
       normalizeEmail(order?.shippingCustomer?.email) ||
       null;
 
-    /* ================= UPDATE ORDER ================= */
+    /* ================= UPDATE ================= */
 
     await orderRef.set(
       {
@@ -69,7 +123,6 @@ export async function POST(
         status: "paid",
         paidAt: new Date(),
         paymentStatus: "paid",
-
         payment: {
           ...(order?.payment || {}),
           provider: "bank_transfer",
@@ -78,7 +131,6 @@ export async function POST(
           validatedAt: new Date(),
           validatedBy: "admin",
         },
-
         bankTransfer: {
           ...(order?.bankTransfer || {}),
           paymentConfirmedByAdmin: true,
@@ -88,7 +140,7 @@ export async function POST(
       { merge: true }
     );
 
-    /* ================= FINALIZE (🔥 EMAILS ICI) ================= */
+    /* ================= FINALIZE (EMAILS ICI) ================= */
 
     let finalizeResult: any = null;
 
@@ -134,28 +186,24 @@ export async function POST(
       const currentOrder = currentSnap.data() as any;
 
       if (!currentOrder?.shipstation?.pushedAt) {
-        const ssBody = {
-          orderNumber: currentOrder?.orderNumber || id,
-          orderDate: new Date().toISOString(),
-          orderStatus: "awaiting_shipment",
-          customerEmail: currentOrder?.email,
-          items: currentOrder?.items || [],
-        };
-
+        const ssBody = buildShipStationBody(currentOrder, id);
         const ssOrder = await createOrUpdateOrder(ssBody);
 
         await orderRef.set(
           {
             shipstation: {
               pushedAt: new Date(),
+              orderNumber: ssBody.orderNumber,
               response: ssOrder ?? null,
             },
           },
           { merge: true }
         );
-      }
 
-      shipstationPushed = true;
+        shipstationPushed = true;
+      } else {
+        shipstationPushed = true;
+      }
     } catch (err: any) {
       shipstationError = String(err?.message || err);
 
@@ -170,8 +218,6 @@ export async function POST(
         { merge: true }
       );
     }
-
-    /* ================= RESPONSE ================= */
 
     return NextResponse.json({
       ok: true,
