@@ -1,8 +1,9 @@
-// src/app/(public)/[locale]/review/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useParams, useRouter } from "next/navigation";
+
+/* ================= HELPERS ================= */
 
 function getErrorMessage(error: string | null, locale: string) {
   const isFr = locale === "fr";
@@ -43,6 +44,30 @@ function isValidRating(value: number) {
   return Number.isInteger(value) && value >= 1 && value <= 5;
 }
 
+/* 🔥 FIX CRITIQUE → base64url decode */
+function decodeToken(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+
+    if (!base64Url) return null;
+
+    const base64 = base64Url
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const padded = base64.padEnd(
+      base64.length + (4 - (base64.length % 4)) % 4,
+      "="
+    );
+
+    return JSON.parse(atob(padded));
+  } catch {
+    return null;
+  }
+}
+
+/* ================= PAGE ================= */
+
 export default function ReviewPage() {
   const params = useParams<{ locale: string }>();
   const locale = params.locale || "fr";
@@ -52,9 +77,11 @@ export default function ReviewPage() {
 
   const token = (sp.get("token") || "").trim();
 
+  const ratingFromUrl = Number.parseInt(sp.get("rating") || "", 10);
+
   const [orderId, setOrderId] = useState("");
   const [email, setEmail] = useState("");
-  const [rating, setRating] = useState<number>(5);
+  const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -63,7 +90,7 @@ export default function ReviewPage() {
 
   const isFr = locale === "fr";
 
-  /* ================= TOKEN DECODE ================= */
+  /* ================= TOKEN ================= */
 
   useEffect(() => {
     if (!token) {
@@ -71,26 +98,26 @@ export default function ReviewPage() {
       return;
     }
 
-    try {
-      const payloadBase64 = token.split(".")[1];
-      const decoded = JSON.parse(atob(payloadBase64));
+    const decoded = decodeToken(token);
 
-      if (!decoded?.orderId || !decoded?.email) {
-        setError("token_invalid");
-        return;
-      }
-
-      setOrderId(decoded.orderId);
-      setEmail(decoded.email);
-
-      if (decoded?.rating && isValidRating(decoded.rating)) {
-        setRating(decoded.rating);
-      }
-    } catch (e) {
-      console.error("TOKEN ERROR", e);
+    if (!decoded?.orderId || !decoded?.email) {
       setError("token_invalid");
+      return;
     }
-  }, [token]);
+
+    // 🔥 expiration check
+    if (decoded?.exp && Date.now() > decoded.exp * 1000) {
+      setError("token_invalid");
+      return;
+    }
+
+    setOrderId(decoded.orderId);
+    setEmail(decoded.email);
+
+    if (isValidRating(ratingFromUrl)) {
+      setRating(ratingFromUrl);
+    }
+  }, [token, ratingFromUrl]);
 
   /* ================= TEXT ================= */
 
