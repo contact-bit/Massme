@@ -149,11 +149,7 @@ export default function OrdersTable({
                         disabled={!!deleting[o.id]}
                       />
 
-                      <ActionIconButton
-                        title="Marquer comme payé"
-                        onClick={() => onMarkAsPaid(o.id)}
-                        icon={"💳"}
-                      />
+                      
                     </div>
                   </td>
                 </tr>
