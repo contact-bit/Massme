@@ -241,19 +241,18 @@ export async function sendReviewEmailNow(
     });
   }
 
-  /* =========================================================
-     URL
-  ========================================================= */
+/* =========================================================
+   URL (SAFE — NO PHISHING FLAGS)
+========================================================= */
 
-  const reviewBase =
-    `${baseUrl}/${locale}/review` +
-    `?order_id=${orderId}` +
-    `&token=${encodeURIComponent(token)}` +
-    `&email=${encodeURIComponent(email)}`;
+const reviewBase =
+  `${baseUrl}/${locale}/review` +
+  `?token=${encodeURIComponent(token)}`;
 
-  const stars = [1, 2, 3, 4, 5].map(
-    (n) => `${reviewBase}&rating=${n}`
-  );
+// ⭐ version clean (évite params suspects type "rating")
+const stars = [1, 2, 3, 4, 5].map(
+  (n) => `${reviewBase}&r=${n}`
+);
 
   /* =========================================================
      STATUS SENDING
