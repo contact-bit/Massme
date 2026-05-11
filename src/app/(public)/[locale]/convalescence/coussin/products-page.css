@@ -1,0 +1,897 @@
+/* =========================================================
+   VITRECTOMED — PRODUCTS PAGE
+   ULTRA PREMIUM MEDICAL EXPERIENCE
+========================================================= */
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+:root {
+  --vm-bg:
+    #050816;
+
+  --vm-bg-soft:
+    #09111f;
+
+  --vm-card:
+    rgba(14, 20, 34, 0.72);
+
+  --vm-card-strong:
+    rgba(12, 18, 30, 0.92);
+
+  --vm-border:
+    rgba(255,255,255,.05);
+
+  --vm-border-strong:
+    rgba(125,180,255,.14);
+
+  --vm-title:
+    #ffffff;
+
+  --vm-text:
+    rgba(255,255,255,.84);
+
+  --vm-text-soft:
+    rgba(255,255,255,.62);
+
+  --vm-text-muted:
+    rgba(255,255,255,.42);
+
+  --vm-primary:
+    #7db4ff;
+
+  --vm-primary-strong:
+    #4f8cff;
+
+  --vm-primary-soft:
+    rgba(125,180,255,.12);
+
+  --vm-radius:
+    28px;
+
+  --vm-radius-large:
+    42px;
+
+  --vm-shadow:
+    0 40px 120px
+      rgba(0,0,0,.42);
+
+  --vm-shadow-soft:
+    0 18px 44px
+      rgba(0,0,0,.22);
+
+  --vm-transition:
+    .4s cubic-bezier(.16,1,.3,1);
+
+  --vm-container:
+    1380px;
+
+  --vm-content:
+    1080px;
+}
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.products-page-shell {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(79,140,255,.10),
+      transparent 24%
+    ),
+
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(125,180,255,.08),
+      transparent 18%
+    ),
+
+    radial-gradient(
+      circle at bottom right,
+      rgba(79,140,255,.08),
+      transparent 22%
+    ),
+
+    linear-gradient(
+      180deg,
+      #09111f 0%,
+      #050816 100%
+    );
+
+  color:
+    var(--vm-text);
+
+  -webkit-font-smoothing:
+    antialiased;
+
+  text-rendering:
+    optimizeLegibility;
+}
+
+.products-page-shell::before {
+  content: "";
+
+  position: fixed;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,.02),
+      transparent 20%
+    );
+
+  pointer-events: none;
+
+  z-index: 0;
+}
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.products-hero {
+  position: relative;
+
+  z-index: 2;
+
+  padding:
+    clamp(7rem, 10vw, 10rem)
+    2rem
+    clamp(4rem, 6vw, 6rem);
+}
+
+.products-hero__container {
+  max-width:
+    var(--vm-container);
+
+  margin:
+    0 auto;
+}
+
+.products-hero__grid {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    420px;
+
+  gap:
+    4rem;
+
+  align-items:
+    center;
+
+  padding:
+    clamp(2rem, 4vw, 4rem);
+
+  border-radius:
+    var(--vm-radius-large);
+
+  overflow:
+    hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,22,38,.78),
+      rgba(8,13,24,.94)
+    );
+
+  border:
+    1px solid
+    var(--vm-border);
+
+  backdrop-filter:
+    blur(28px);
+
+  box-shadow:
+    var(--vm-shadow);
+}
+
+.products-hero__grid::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(125,180,255,.12),
+      transparent 34%
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   HERO CONTENT
+========================================================= */
+
+.products-hero__content {
+  position: relative;
+
+  z-index: 2;
+
+  max-width:
+    760px;
+}
+
+.products-eyebrow {
+  display: inline-flex;
+
+  align-items: center;
+
+  min-height:
+    42px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.03);
+
+  border:
+    1px solid
+    rgba(255,255,255,.06);
+
+  color:
+    var(--vm-primary);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .16em;
+
+  text-transform:
+    uppercase;
+}
+
+.products-hero__title {
+  margin:
+    2rem 0 0;
+
+  color:
+    white;
+
+  font-size:
+    clamp(
+      4rem,
+      8vw,
+      7rem
+    );
+
+  line-height:
+    .88;
+
+  letter-spacing:
+    -.08em;
+
+  font-weight:
+    950;
+
+  text-wrap:
+    balance;
+
+  max-width:
+    8ch;
+}
+
+.products-hero__intro {
+  margin-top:
+    2.4rem;
+
+  color:
+    rgba(255,255,255,.9);
+
+  font-size:
+    clamp(
+      1.12rem,
+      1.5vw,
+      1.38rem
+    );
+
+  line-height:
+    1.95;
+
+  font-weight:
+    500;
+
+  max-width:
+    60ch;
+}
+
+.products-hero__description {
+  margin-top:
+    1.3rem;
+
+  color:
+    var(--vm-text-soft);
+
+  font-size:
+    1.03rem;
+
+  line-height:
+    2;
+
+  max-width:
+    65ch;
+}
+
+/* =========================================================
+   HERO BADGES
+========================================================= */
+
+.products-hero__badges {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0,1fr));
+
+  gap:
+    1rem;
+
+  margin-top:
+    3rem;
+}
+
+.hero-badge-card {
+  padding:
+    1.3rem;
+
+  border-radius:
+    24px;
+
+  background:
+    rgba(255,255,255,.025);
+
+  border:
+    1px solid
+    rgba(255,255,255,.05);
+
+  transition:
+    transform var(--vm-transition),
+    background var(--vm-transition),
+    border-color var(--vm-transition);
+}
+
+.hero-badge-card:hover {
+  transform:
+    translateY(-4px);
+
+  background:
+    rgba(255,255,255,.04);
+
+  border-color:
+    rgba(125,180,255,.12);
+}
+
+.hero-badge-card strong {
+  display: block;
+
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  margin-bottom:
+    .55rem;
+
+  font-weight:
+    700;
+}
+
+.hero-badge-card span {
+  color:
+    var(--vm-text-soft);
+
+  font-size:
+    .84rem;
+
+  line-height:
+    1.7;
+}
+
+/* =========================================================
+   HERO PANEL
+========================================================= */
+
+.products-hero__panel {
+  position: relative;
+}
+
+.products-hero__panel-glow {
+  position: absolute;
+
+  inset:
+    -80px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(79,140,255,.18),
+      transparent 70%
+    );
+
+  filter:
+    blur(50px);
+
+  pointer-events: none;
+}
+
+.products-hero__panel-card {
+  position: relative;
+
+  z-index: 2;
+
+  padding:
+    1.6rem;
+
+  border-radius:
+    32px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(18,26,42,.92),
+      rgba(10,15,28,.96)
+    );
+
+  border:
+    1px solid
+    rgba(255,255,255,.05);
+
+  backdrop-filter:
+    blur(22px);
+
+  box-shadow:
+    var(--vm-shadow-soft);
+}
+
+.hero-panel-top {
+  display: flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    .8rem;
+}
+
+.hero-panel-top span {
+  min-height:
+    44px;
+
+  display: flex;
+
+  align-items:
+    center;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    16px;
+
+  background:
+    rgba(255,255,255,.03);
+
+  border:
+    1px solid
+    rgba(255,255,255,.05);
+
+  color:
+    rgba(255,255,255,.84);
+
+  font-size:
+    .82rem;
+
+  font-weight:
+    600;
+}
+
+.hero-panel-body {
+  display: grid;
+
+  gap:
+    1rem;
+
+  margin-top:
+    1rem;
+}
+
+.hero-panel-line {
+  height:
+    84px;
+
+  border-radius:
+    22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.04),
+      rgba(255,255,255,.015)
+    );
+
+  border:
+    1px solid
+    rgba(255,255,255,.05);
+}
+
+.hero-panel-line.short {
+  height:
+    64px;
+}
+
+.hero-panel-footer {
+  margin-top:
+    1rem;
+
+  padding-top:
+    1rem;
+
+  border-top:
+    1px solid
+    rgba(255,255,255,.05);
+
+  color:
+    var(--vm-text-muted);
+
+  font-size:
+    .78rem;
+
+  line-height:
+    1.8;
+}
+
+/* =========================================================
+   PRODUCTS SECTION
+========================================================= */
+
+.products-section {
+  position: relative;
+
+  z-index: 2;
+
+  padding:
+    0 2rem 4rem;
+}
+
+.products-section__container {
+  max-width:
+    var(--vm-container);
+
+  margin:
+    0 auto;
+}
+
+/* =========================================================
+   SEO
+========================================================= */
+
+.products-seo {
+  position: relative;
+
+  z-index: 2;
+
+  padding:
+    3rem 2rem 7rem;
+}
+
+.products-seo__container {
+  max-width:
+    var(--vm-content);
+
+  margin:
+    0 auto;
+}
+
+.seo-block + .seo-block {
+  margin-top:
+    5rem;
+}
+
+/* =========================================================
+   SEO HEADER
+========================================================= */
+
+.seo-block__eyebrow {
+  display: inline-flex;
+
+  align-items: center;
+
+  min-height:
+    38px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.03);
+
+  border:
+    1px solid
+    rgba(255,255,255,.05);
+
+  color:
+    var(--vm-primary);
+
+  font-size:
+    .7rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .14em;
+
+  text-transform:
+    uppercase;
+
+  margin-bottom:
+    1.3rem;
+}
+
+.seo-block h2 {
+  margin: 0;
+
+  color:
+    white;
+
+  font-size:
+    clamp(
+      2.6rem,
+      5vw,
+      4.5rem
+    );
+
+  line-height:
+    .95;
+
+  letter-spacing:
+    -.07em;
+
+  font-weight:
+    900;
+
+  text-wrap:
+    balance;
+
+  max-width:
+    14ch;
+}
+
+/* =========================================================
+   SEO CARD
+========================================================= */
+
+.seo-card {
+  position: relative;
+
+  margin-top:
+    2rem;
+
+  padding:
+    clamp(1.8rem, 4vw, 3rem);
+
+  border-radius:
+    32px;
+
+  overflow:
+    hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(14,22,38,.74),
+      rgba(10,16,28,.94)
+    );
+
+  border:
+    1px solid
+    rgba(255,255,255,.05);
+
+  backdrop-filter:
+    blur(20px);
+}
+
+.seo-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(125,180,255,.08),
+      transparent 36%
+    );
+
+  pointer-events: none;
+}
+
+.seo-card p {
+  position: relative;
+
+  z-index: 2;
+
+  margin:
+    0 0 1.8rem;
+
+  color:
+    var(--vm-text-soft);
+
+  font-size:
+    1.05rem;
+
+  line-height:
+    2;
+}
+
+.seo-card p:last-child {
+  margin-bottom:
+    0;
+}
+
+/* =========================================================
+   BENEFITS
+========================================================= */
+
+.benefits-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0,1fr));
+
+  gap:
+    1rem;
+
+  margin-top:
+    1.5rem;
+}
+
+.benefit-card {
+  padding:
+    1.6rem;
+
+  border-radius:
+    26px;
+
+  background:
+    rgba(255,255,255,.025);
+
+  border:
+    1px solid
+    rgba(255,255,255,.05);
+
+  transition:
+    transform var(--vm-transition),
+    background var(--vm-transition),
+    border-color var(--vm-transition);
+}
+
+.benefit-card:hover {
+  transform:
+    translateY(-4px);
+
+  background:
+    rgba(255,255,255,.04);
+
+  border-color:
+    rgba(125,180,255,.12);
+}
+
+.benefit-card h3 {
+  margin:
+    0 0 .8rem;
+
+  color:
+    white;
+
+  font-size:
+    1.1rem;
+
+  line-height:
+    1.3;
+
+  font-weight:
+    700;
+}
+
+.benefit-card p {
+  margin: 0;
+
+  color:
+    var(--vm-text-soft);
+
+  font-size:
+    .95rem;
+
+  line-height:
+    1.9;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+  .products-hero__grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .products-hero__panel {
+    display: none;
+  }
+
+  .products-hero__badges,
+  .benefits-grid {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .products-hero,
+  .products-section,
+  .products-seo {
+    padding-inline:
+      1.2rem;
+  }
+
+  .products-hero__grid,
+  .seo-card {
+    border-radius:
+      28px;
+  }
+
+  .products-hero__title,
+  .seo-block h2 {
+    line-height:
+      .92;
+  }
+
+  .products-hero__intro,
+  .products-hero__description,
+  .seo-card p {
+    font-size:
+      1rem;
+
+    line-height:
+      1.95;
+  }
+
+  .products-hero__badges {
+    margin-top:
+      2rem;
+  }
+}

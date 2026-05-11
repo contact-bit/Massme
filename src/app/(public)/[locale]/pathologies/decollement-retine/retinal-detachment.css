@@ -1,0 +1,330 @@
+.retinal-page {
+  width: 100%;
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(56, 189, 248, 0.08),
+      transparent 40%
+    ),
+    #050816;
+
+  color: #f8fafc;
+}
+
+/* =========================================
+   CONTAINER
+========================================= */
+
+.retinal-container {
+  width: 100%;
+  max-width: 1100px;
+
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* =========================================
+   HERO
+========================================= */
+
+.retinal-hero {
+  padding:
+    140px
+    0
+    90px;
+}
+
+.retinal-badge {
+  display: inline-flex;
+
+  padding:
+    10px
+    18px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.12);
+
+  border-radius: 999px;
+
+  background:
+    rgba(255, 255, 255, 0.04);
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  color: #7dd3fc;
+
+  margin-bottom: 26px;
+}
+
+.retinal-title {
+  max-width: 900px;
+
+  font-size: clamp(
+    2.7rem,
+    6vw,
+    5rem
+  );
+
+  line-height: 1.04;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+
+  margin-bottom: 32px;
+}
+
+.retinal-intro {
+  max-width: 860px;
+
+  font-size: 1.3rem;
+  line-height: 1.8;
+  font-weight: 600;
+
+  color: #e2e8f0;
+
+  margin-bottom: 24px;
+}
+
+.retinal-description {
+  max-width: 860px;
+
+  font-size: 1.1rem;
+  line-height: 1.9;
+
+  color: #cbd5e1;
+
+  margin-bottom: 18px;
+}
+
+/* =========================================
+   CTA
+========================================= */
+
+.retinal-cta-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(260px, 1fr)
+    );
+
+  gap: 18px;
+
+  margin-top: 50px;
+}
+
+.retinal-card {
+  position: relative;
+
+  overflow: hidden;
+
+  padding: 28px;
+
+  border-radius: 26px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.08);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15, 23, 42, 0.95),
+      rgba(15, 23, 42, 0.7)
+    );
+
+  color: white;
+  text-decoration: none;
+
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease,
+    background 0.3s ease;
+}
+
+.retinal-card:hover {
+  transform:
+    translateY(-5px);
+
+  border-color:
+    rgba(125, 211, 252, 0.5);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(14, 165, 233, 0.18),
+      rgba(15, 23, 42, 0.95)
+    );
+}
+
+.retinal-card span {
+  font-size: 1.05rem;
+  font-weight: 700;
+
+  line-height: 1.5;
+}
+
+/* =========================================
+   CONTENT SECTIONS
+========================================= */
+
+.retinal-section {
+  padding:
+    90px
+    0;
+
+  border-top: 1px solid
+    rgba(255, 255, 255, 0.06);
+}
+
+.retinal-section-alt {
+  background:
+    rgba(255, 255, 255, 0.02);
+}
+
+.retinal-section h2 {
+  font-size: clamp(
+    2rem,
+    4vw,
+    3rem
+  );
+
+  line-height: 1.15;
+  font-weight: 800;
+
+  margin-bottom: 34px;
+
+  color: #f8fafc;
+}
+
+.retinal-section h3 {
+  font-size: clamp(
+    1.4rem,
+    2vw,
+    1.9rem
+  );
+
+  font-weight: 700;
+
+  margin-top: 50px;
+  margin-bottom: 24px;
+
+  color: #7dd3fc;
+}
+
+.retinal-section p {
+  font-size: 1.08rem;
+
+  line-height: 1.95;
+
+  color: #cbd5e1;
+
+  margin-bottom: 22px;
+}
+
+/* =========================================
+   LISTS
+========================================= */
+
+.retinal-list,
+.retinal-ordered-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+
+  padding-left: 24px;
+
+  margin:
+    30px
+    0;
+}
+
+.retinal-list li,
+.retinal-ordered-list li {
+  color: #e2e8f0;
+
+  line-height: 1.8;
+
+  font-size: 1.04rem;
+}
+
+/* =========================================
+   TABLE
+========================================= */
+
+.retinal-table {
+  margin-top: 40px;
+
+  border-radius: 24px;
+
+  overflow: hidden;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.08);
+}
+
+.retinal-table-row {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 20px;
+
+  padding:
+    20px
+    24px;
+
+  background:
+    rgba(15, 23, 42, 0.7);
+
+  border-bottom: 1px solid
+    rgba(255, 255, 255, 0.06);
+}
+
+.retinal-table-head {
+  background:
+    rgba(14, 165, 233, 0.18);
+
+  font-weight: 700;
+
+  color: white;
+}
+
+.retinal-table-row span {
+  line-height: 1.7;
+
+  color: #e2e8f0;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+  .retinal-hero {
+    padding:
+      120px
+      0
+      70px;
+  }
+
+  .retinal-title {
+    font-size: 2.4rem;
+  }
+
+  .retinal-intro {
+    font-size: 1.12rem;
+  }
+
+  .retinal-section {
+    padding:
+      70px
+      0;
+  }
+
+  .retinal-table-row {
+    grid-template-columns: 1fr;
+  }
+}

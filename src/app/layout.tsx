@@ -19,7 +19,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           transition: "background 0.25s ease-out",
         }}
       >
-        <MouseGradient />
         {children}
       </body>
     </html>

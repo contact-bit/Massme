@@ -1,89 +1,341 @@
-/* -----------------------------------------
-   BUTTONS — MassMe Design (Style C)
------------------------------------------- */
+/* =========================================================
+   BUTTONS — VITRECTOMED DESIGN SYSTEM
+   Editorial Medical Premium UI
+========================================================= */
+
+:root {
+  --btn-height: 48px;
+  --btn-height-sm: 40px;
+  --btn-height-lg: 56px;
+
+  --btn-radius: 14px;
+  --btn-radius-lg: 18px;
+
+  --btn-font-size: 0.95rem;
+  --btn-font-size-sm: 0.88rem;
+  --btn-font-size-lg: 1rem;
+
+  --btn-transition: 0.2s ease;
+
+  --btn-shadow:
+    0 10px 24px rgba(37, 99, 235, 0.14);
+
+  --btn-shadow-hover:
+    0 16px 32px rgba(37, 99, 235, 0.2);
+
+  --btn-shadow-soft:
+    0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+/* =========================================================
+   BASE BUTTON
+========================================================= */
 
 .btn {
+  position: relative;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: var(--radius-md);
+  gap: 0.55rem;
+
+  min-height: var(--btn-height);
+
+  padding: 0 1.2rem;
+
   border: 1px solid transparent;
-  font-family: var(--font-main);
-  font-size: 0.95rem;
-  font-weight: 500;
+  border-radius: var(--btn-radius);
+
+  outline: none;
+
   cursor: pointer;
+
+  user-select: none;
+
   text-decoration: none;
-  line-height: 1.2;
+
+  font-family: var(--font-main);
+
+  font-size: var(--btn-font-size);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+
+  white-space: nowrap;
+
   transition:
-    background-color var(--transition-fast),
-    color var(--transition-fast),
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    transform var(--transition-fast);
+    background var(--btn-transition),
+    color var(--btn-transition),
+    border-color var(--btn-transition),
+    box-shadow var(--btn-transition),
+    transform var(--btn-transition),
+    opacity var(--btn-transition);
 }
 
-/* Bouton principal */
+/* =========================================================
+   FOCUS ACCESSIBILITY
+========================================================= */
+
+.btn:focus-visible {
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+/* =========================================================
+   PRIMARY
+========================================================= */
+
 .btn-primary {
-  background-color: var(--color-primary);
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #1d4ed8
+  );
+
   color: #ffffff;
-  box-shadow: var(--shadow-sm);
+
+  border-color: transparent;
+
+  box-shadow:
+    var(--btn-shadow),
+    inset 0 1px 0
+      rgba(255, 255, 255, 0.12);
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-dark);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+
+  box-shadow:
+    var(--btn-shadow-hover),
+    inset 0 1px 0
+      rgba(255, 255, 255, 0.14);
 }
 
-/* Bouton secondaire (gris clair) */
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   SECONDARY
+========================================================= */
+
 .btn-secondary {
-  background-color: var(--color-bg-alt);
-  color: var(--color-text);
-  border-color: #e5e7eb;
+  background: #ffffff;
+
+  color: #0f172a;
+
+  border-color: rgba(226, 232, 240, 1);
+
+  box-shadow: var(--btn-shadow-soft);
 }
 
 .btn-secondary:hover {
-  background-color: #e5e7eb;
+  background: rgba(248, 250, 252, 1);
+
+  border-color:
+    rgba(203, 213, 225, 1);
+
+  transform: translateY(-1px);
 }
 
-/* Bouton "ghost" (fond transparent) */
+/* =========================================================
+   GHOST
+========================================================= */
+
 .btn-ghost {
-  background-color: transparent;
-  color: var(--color-text);
+  background: transparent;
+
+  color: #334155;
+
   border-color: transparent;
 }
 
 .btn-ghost:hover {
-  background-color: rgba(15, 23, 42, 0.04);
+  background: rgba(37, 99, 235, 0.06);
+
+  color: #2563eb;
 }
 
-/* Bouton danger */
+/* =========================================================
+   OUTLINE
+========================================================= */
+
+.btn-outline {
+  background: transparent;
+
+  color: #2563eb;
+
+  border-color:
+    rgba(37, 99, 235, 0.18);
+}
+
+.btn-outline:hover {
+  background: rgba(37, 99, 235, 0.06);
+
+  border-color:
+    rgba(37, 99, 235, 0.28);
+}
+
+/* =========================================================
+   DANGER
+========================================================= */
+
 .btn-danger {
-  background-color: var(--color-danger);
-  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    #ef4444,
+    #dc2626
+  );
+
+  color: white;
+
+  box-shadow:
+    0 10px 24px
+    rgba(239, 68, 68, 0.16);
 }
 
 .btn-danger:hover {
-  background-color: #dc2626;
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 16px 30px
+    rgba(239, 68, 68, 0.22);
 }
 
-/* Pleine largeur (utile sur mobile, checkout, etc.) */
+/* =========================================================
+   SUCCESS
+========================================================= */
+
+.btn-success {
+  background: linear-gradient(
+    135deg,
+    #16a34a,
+    #15803d
+  );
+
+  color: white;
+
+  box-shadow:
+    0 10px 24px
+    rgba(22, 163, 74, 0.16);
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 16px 30px
+    rgba(22, 163, 74, 0.22);
+}
+
+/* =========================================================
+   SIZES
+========================================================= */
+
+.btn-sm {
+  min-height: var(--btn-height-sm);
+
+  padding: 0 0.95rem;
+
+  border-radius: 12px;
+
+  font-size: var(--btn-font-size-sm);
+}
+
+.btn-lg {
+  min-height: var(--btn-height-lg);
+
+  padding: 0 1.5rem;
+
+  border-radius: var(--btn-radius-lg);
+
+  font-size: var(--btn-font-size-lg);
+
+  font-weight: 700;
+}
+
+/* =========================================================
+   WIDTH
+========================================================= */
+
 .btn-full {
   width: 100%;
 }
 
-/* Version petite */
-.btn-sm {
-  padding: 0.4rem 0.85rem;
-  font-size: 0.85rem;
+/* =========================================================
+   ICONS
+========================================================= */
+
+.btn svg {
+  width: 18px;
+  height: 18px;
+
+  flex-shrink: 0;
 }
 
-/* Version grande */
-.btn-lg {
-  padding: 0.8rem 1.6rem;
-  font-size: 1.05rem;
+/* =========================================================
+   DISABLED
+========================================================= */
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.55;
+
+  pointer-events: none;
+
+  cursor: not-allowed;
+
+  transform: none !important;
+
+  box-shadow: none !important;
 }
 
-/* Icône + texte : déjà géré par .btn (gap) */
+/* =========================================================
+   LOADING
+========================================================= */
+
+.btn-loading {
+  pointer-events: none;
+
+  opacity: 0.9;
+}
+
+.btn-loading::after {
+  content: "";
+
+  width: 16px;
+  height: 16px;
+
+  border-radius: 999px;
+
+  border: 2px solid
+    rgba(255, 255, 255, 0.4);
+
+  border-top-color: white;
+
+  animation: buttonSpin 0.7s linear infinite;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+  .btn {
+    width: 100%;
+  }
+
+  .btn-inline-mobile {
+    width: auto;
+  }
+}
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
+@keyframes buttonSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
