@@ -1,0 +1,317 @@
+:root {
+  /* =========================================================
+     VITRECTOMED — DESIGN TOKENS
+     PREMIUM MEDTECH / CINEMATIC MEDICAL UI
+  ========================================================= */
+
+  /* =========================================================
+     COLORS — CORE
+  ========================================================= */
+
+  --color-bg:
+    #040712;
+
+  --color-bg-soft:
+    #07101d;
+
+  --color-surface:
+    rgba(13, 23, 38, 0.82);
+
+  --color-surface-solid:
+    #0d1726;
+
+  --color-surface-soft:
+    rgba(17, 27, 39, 0.92);
+
+  --color-surface-hover:
+    #132338;
+
+  --color-card:
+    linear-gradient(
+      180deg,
+      rgba(15, 24, 38, 0.92),
+      rgba(10, 16, 28, 0.96)
+    );
+
+  /* =========================================================
+     BORDERS
+  ========================================================= */
+
+  --color-border:
+    rgba(255,255,255,.08);
+
+  --color-border-strong:
+    rgba(255,255,255,.14);
+
+  --color-border-accent:
+    rgba(0,208,255,.22);
+
+  /* =========================================================
+     BRAND COLORS
+  ========================================================= */
+
+  --color-primary:
+    #00d0ff;
+
+  --color-primary-hover:
+    #4de3ff;
+
+  --color-secondary:
+    #2f6bff;
+
+  --color-accent:
+    #8b5cf6;
+
+  --color-success:
+    #12d18e;
+
+  --color-warning:
+    #ffb020;
+
+  --color-danger:
+    #ff5c7a;
+
+  /* =========================================================
+     TEXT
+  ========================================================= */
+
+  --color-text:
+    #f5f7fb;
+
+  --color-text-soft:
+    #c7d2e3;
+
+  --color-text-muted:
+    #7f8ca3;
+
+  --color-text-disabled:
+    #566173;
+
+  /* =========================================================
+     GRADIENTS
+  ========================================================= */
+
+  --gradient-primary:
+    linear-gradient(
+      135deg,
+      #00d0ff,
+      #2f6bff
+    );
+
+  --gradient-secondary:
+    linear-gradient(
+      135deg,
+      #00d0ff,
+      #8b5cf6
+    );
+
+  --gradient-surface:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.92),
+      rgba(8,12,20,.98)
+    );
+
+  --gradient-glow:
+    radial-gradient(
+      circle at center,
+      rgba(0,208,255,.18),
+      transparent 70%
+    );
+
+  --gradient-hero:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.16),
+      rgba(47,107,255,.10),
+      rgba(139,92,246,.08)
+    );
+
+  /* =========================================================
+     TYPOGRAPHY
+  ========================================================= */
+
+  --font-family-base:
+    "Inter",
+    "Plus Jakarta Sans",
+    sans-serif;
+
+  --font-size-xs:
+    0.75rem;
+
+  --font-size-sm:
+    0.875rem;
+
+  --font-size-base:
+    1rem;
+
+  --font-size-lg:
+    1.125rem;
+
+  --font-size-xl:
+    1.5rem;
+
+  --font-size-2xl:
+    2rem;
+
+  --font-size-3xl:
+    3rem;
+
+  --font-size-hero:
+    clamp(3.5rem, 7vw, 6.5rem);
+
+  --line-height-tight:
+    1.05;
+
+  --line-height-base:
+    1.7;
+
+  --line-height-relaxed:
+    1.9;
+
+  /* =========================================================
+     FONT WEIGHTS
+  ========================================================= */
+
+  --font-light:
+    300;
+
+  --font-regular:
+    400;
+
+  --font-medium:
+    500;
+
+  --font-semibold:
+    600;
+
+  --font-bold:
+    700;
+
+  /* =========================================================
+     SPACING
+  ========================================================= */
+
+  --space-1:
+    0.25rem;
+
+  --space-2:
+    0.5rem;
+
+  --space-3:
+    0.75rem;
+
+  --space-4:
+    1rem;
+
+  --space-5:
+    1.5rem;
+
+  --space-6:
+    2rem;
+
+  --space-7:
+    3rem;
+
+  --space-8:
+    5rem;
+
+  --space-9:
+    7rem;
+
+  --space-10:
+    10rem;
+
+  /* =========================================================
+     RADIUS
+  ========================================================= */
+
+  --radius-xs:
+    10px;
+
+  --radius-sm:
+    14px;
+
+  --radius-md:
+    20px;
+
+  --radius-lg:
+    28px;
+
+  --radius-xl:
+    40px;
+
+  --radius-full:
+    999px;
+
+  /* =========================================================
+     SHADOWS
+  ========================================================= */
+
+  --shadow-sm:
+    0 4px 12px rgba(0,0,0,.18);
+
+  --shadow-md:
+    0 12px 30px rgba(0,0,0,.28);
+
+  --shadow-lg:
+    0 30px 80px rgba(0,0,0,.42);
+
+  --shadow-glow:
+    0 0 40px rgba(0,208,255,.18);
+
+  --shadow-glow-strong:
+    0 0 80px rgba(0,208,255,.28);
+
+  /* =========================================================
+     BLUR
+  ========================================================= */
+
+  --blur-sm:
+    8px;
+
+  --blur-md:
+    18px;
+
+  --blur-lg:
+    30px;
+
+  /* =========================================================
+     LAYOUT
+  ========================================================= */
+
+  --container-xl:
+    1480px;
+
+  --container-lg:
+    1280px;
+
+  --container-md:
+    1080px;
+
+  --navbar-height:
+    92px;
+
+  /* =========================================================
+     TRANSITIONS
+  ========================================================= */
+
+  --transition-base:
+    0.35s cubic-bezier(.16,1,.3,1);
+
+  --transition-slow:
+    0.6s cubic-bezier(.16,1,.3,1);
+
+  /* =========================================================
+     Z INDEX
+  ========================================================= */
+
+  --z-navbar:
+    1000;
+
+  --z-overlay:
+    1100;
+
+  --z-modal:
+    1200;
+}

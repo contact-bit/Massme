@@ -1,322 +1,635 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams, useParams, useRouter } from "next/navigation";
+import "./review.css";
 
-/* ================= HELPERS ================= */
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-function getErrorMessage(error: string | null, locale: string) {
-  const isFr = locale === "fr";
+import {
+  useParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function getErrorMessage(
+  error: string | null,
+  locale: string
+) {
+  const isFr =
+    locale === "fr";
 
   switch (error) {
     case "token_missing":
-      return isFr ? "Le lien est incomplet." : "The link is incomplete.";
+      return isFr
+        ? "Le lien est incomplet."
+        : "The link is incomplete.";
+
     case "token_invalid":
       return isFr
         ? "Le lien d’avis est invalide ou expiré."
         : "The review link is invalid or expired.";
+
     case "rating_invalid":
       return isFr
         ? "Merci de sélectionner une note valide."
         : "Please select a valid rating.";
+
     case "comment_invalid":
       return isFr
-        ? "Merci d’écrire un commentaire un peu plus détaillé."
-        : "Please write a slightly more detailed comment.";
+        ? "Merci d’écrire un commentaire plus détaillé."
+        : "Please write a more detailed comment.";
+
     case "review_already_exists":
       return isFr
         ? "Un avis a déjà été envoyé pour cette commande."
         : "A review has already been submitted for this order.";
+
     case "network_error":
       return isFr
         ? "Erreur réseau. Réessaie dans un instant."
         : "Network error. Please try again in a moment.";
+
     case "server_error":
       return isFr
         ? "Une erreur serveur est survenue."
         : "A server error occurred.";
+
     default:
-      return isFr ? "Une erreur est survenue." : "An error occurred.";
+      return isFr
+        ? "Une erreur est survenue."
+        : "An error occurred.";
   }
 }
 
-function isValidRating(value: number) {
-  return Number.isInteger(value) && value >= 1 && value <= 5;
+function isValidRating(
+  value: number
+) {
+  return (
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 5
+  );
 }
 
-/* 🔥 FIX CRITIQUE → base64url decode */
-function decodeToken(token: string) {
+/* =====================================================
+   TOKEN DECODER
+===================================================== */
+
+function decodeToken(
+  token: string
+) {
   try {
-    const base64Url = token.split(".")[1];
+    const base64Url =
+      token.split(".")[1];
 
-    if (!base64Url) return null;
+    if (!base64Url) {
+      return null;
+    }
 
-    const base64 = base64Url
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
+    const base64 =
+      base64Url
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
 
-    const padded = base64.padEnd(
-      base64.length + (4 - (base64.length % 4)) % 4,
-      "="
+    const padded =
+      base64.padEnd(
+        base64.length +
+          ((4 -
+            (base64.length %
+              4)) %
+            4),
+        "="
+      );
+
+    return JSON.parse(
+      atob(padded)
     );
-
-    return JSON.parse(atob(padded));
   } catch {
     return null;
   }
 }
 
-/* ================= PAGE ================= */
+/* =====================================================
+   PAGE
+===================================================== */
 
 export default function ReviewPage() {
-  const params = useParams<{ locale: string }>();
-  const locale = params.locale || "fr";
+  const params =
+    useParams<{
+      locale: string;
+    }>();
 
-  const sp = useSearchParams();
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const token = (sp.get("token") || "").trim();
+  const searchParams =
+    useSearchParams();
 
-  const ratingFromUrl = Number.parseInt(sp.get("rating") || "", 10);
+  const locale =
+    params.locale || "fr";
 
-  const [orderId, setOrderId] = useState("");
-  const [email, setEmail] = useState("");
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
+  const isFr =
+    locale === "fr";
 
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const token = (
+    searchParams.get(
+      "token"
+    ) || ""
+  ).trim();
 
-  const isFr = locale === "fr";
+  const ratingFromUrl =
+    Number.parseInt(
+      searchParams.get(
+        "rating"
+      ) || "",
+      10
+    );
 
-  /* ================= TOKEN ================= */
+  /* =====================================================
+     STATES
+  ===================================================== */
+
+  const [
+    orderId,
+    setOrderId,
+  ] = useState("");
+
+  const [
+    email,
+    setEmail,
+  ] = useState("");
+
+  const [
+    rating,
+    setRating,
+  ] = useState(5);
+
+  const [
+    comment,
+    setComment,
+  ] = useState("");
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
+
+  const [
+    done,
+    setDone,
+  ] = useState(false);
+
+  const [
+    error,
+    setError,
+  ] = useState<
+    string | null
+  >(null);
+
+  /* =====================================================
+     TEXTS
+  ===================================================== */
+
+  const texts =
+    useMemo(
+      () => ({
+        eyebrow: "VitrectoMed",
+
+        title: isFr
+          ? "Laisser un avis"
+          : "Leave a review",
+
+        subtitle: isFr
+          ? "Merci pour votre commande. Votre retour aide les futurs patients et améliore continuellement l’expérience VitrectoMed."
+          : "Thank you for your order. Your feedback helps future patients and continuously improves the VitrectoMed experience.",
+
+        placeholder: isFr
+          ? "Décris ton expérience avec le produit, le confort, la livraison ou la récupération…"
+          : "Describe your experience with the product, comfort, shipping or recovery…",
+
+        submit: isFr
+          ? "Envoyer mon avis"
+          : "Submit my review",
+
+        sending: isFr
+          ? "Envoi en cours…"
+          : "Sending…",
+
+        moderation: isFr
+          ? "Les avis peuvent être modérés avant publication."
+          : "Reviews may be moderated before publication.",
+
+        successTitle: isFr
+          ? "Merci 🙏"
+          : "Thank you 🙏",
+
+        successText: isFr
+          ? "Ton avis a bien été envoyé."
+          : "Your review has been submitted.",
+
+        successHint: isFr
+          ? "Merci d’avoir partagé ton expérience."
+          : "Thank you for sharing your experience.",
+
+        invalidTitle: isFr
+          ? "Lien invalide"
+          : "Invalid link",
+
+        backHome: isFr
+          ? "Retour à l’accueil"
+          : "Back to home",
+      }),
+      [isFr]
+    );
+
+  /* =====================================================
+     TOKEN VALIDATION
+  ===================================================== */
 
   useEffect(() => {
     if (!token) {
-      setError("token_missing");
+      setError(
+        "token_missing"
+      );
+
       return;
     }
 
-    const decoded = decodeToken(token);
+    const decoded =
+      decodeToken(token);
 
-    if (!decoded?.orderId || !decoded?.email) {
-      setError("token_invalid");
+    if (
+      !decoded?.orderId ||
+      !decoded?.email
+    ) {
+      setError(
+        "token_invalid"
+      );
+
       return;
     }
 
-    // 🔥 expiration check
-    if (decoded?.exp && Date.now() > decoded.exp * 1000) {
-      setError("token_invalid");
+    if (
+      decoded?.exp &&
+      Date.now() >
+        decoded.exp * 1000
+    ) {
+      setError(
+        "token_invalid"
+      );
+
       return;
     }
 
-    setOrderId(decoded.orderId);
-    setEmail(decoded.email);
-
-    if (isValidRating(ratingFromUrl)) {
-      setRating(ratingFromUrl);
-    }
-  }, [token, ratingFromUrl]);
-
-  /* ================= TEXT ================= */
-
-  const title = isFr ? "Laisser un avis" : "Leave a review";
-  const subtitle = isFr
-    ? "Merci pour votre commande. Votre retour nous aide vraiment."
-    : "Thank you for your order. Your feedback really helps us.";
-
-  const successTitle = isFr ? "Merci 🙏" : "Thank you 🙏";
-  const successText = isFr
-    ? "Ton avis a bien été envoyé. Il sera publié après validation."
-    : "Your review has been submitted and will be published after moderation.";
-
-  const successHint = isFr
-    ? "Merci d’avoir pris quelques secondes pour partager ton expérience."
-    : "Thank you for taking a few seconds to share your experience.";
-
-  const commentPlaceholder = isFr
-    ? "Ajoute un commentaire…"
-    : "Add a comment…";
-
-  const submitLabel = isFr ? "Envoyer mon avis" : "Submit my review";
-  const sendingLabel = isFr ? "Envoi…" : "Sending…";
-  const backHomeLabel = isFr ? "Retour à l’accueil" : "Back to home";
-
-  const moderationText = isFr
-    ? "Les avis peuvent être modérés."
-    : "Reviews may be moderated.";
-
-  /* ================= VALIDATION ================= */
-
-  const canSubmit = useMemo(() => {
-    return (
-      !!orderId &&
-      !!token &&
-      isValidRating(rating) &&
-      comment.trim().length >= 3
+    setOrderId(
+      decoded.orderId
     );
-  }, [orderId, token, rating, comment]);
 
-  /* ================= SUBMIT ================= */
+    setEmail(
+      decoded.email
+    );
+
+    if (
+      isValidRating(
+        ratingFromUrl
+      )
+    ) {
+      setRating(
+        ratingFromUrl
+      );
+    }
+  }, [
+    token,
+    ratingFromUrl,
+  ]);
+
+  /* =====================================================
+     VALIDATION
+  ===================================================== */
+
+  const canSubmit =
+    useMemo(() => {
+      return (
+        !!orderId &&
+        !!email &&
+        !!token &&
+        isValidRating(
+          rating
+        ) &&
+        comment.trim()
+          .length >= 3
+      );
+    }, [
+      orderId,
+      email,
+      token,
+      rating,
+      comment,
+    ]);
+
+  /* =====================================================
+     SUBMIT
+  ===================================================== */
 
   async function onSubmit() {
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      return;
+    }
 
-    setError(null);
     setLoading(true);
+    setError(null);
 
     try {
-      const res = await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId,
-          token,
-          email,
-          rating,
-          comment,
-          locale,
-        }),
-      });
+      const response =
+        await fetch(
+          "/api/reviews",
+          {
+            method: "POST",
 
-      const json = await res.json().catch(() => null);
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-      if (!res.ok || !json?.ok) {
-        setError(json?.error || "server_error");
+            body: JSON.stringify(
+              {
+                orderId,
+                token,
+                email,
+                rating,
+                comment,
+                locale,
+              }
+            ),
+          }
+        );
+
+      const json =
+        await response
+          .json()
+          .catch(
+            () => null
+          );
+
+      if (
+        !response.ok ||
+        !json?.ok
+      ) {
+        setError(
+          json?.error ||
+            "server_error"
+        );
+
         return;
       }
 
       setDone(true);
     } catch {
-      setError("network_error");
+      setError(
+        "network_error"
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  /* ================= SUCCESS ================= */
+  /* =====================================================
+     SUCCESS
+  ===================================================== */
 
   if (done) {
     return (
-      <div style={container}>
-        <div style={card}>
-          <h1>{successTitle}</h1>
-          <p>{successText}</p>
-          <p style={{ color: "#666" }}>{successHint}</p>
+      <main className="review-page">
 
-          <button onClick={() => router.push(`/${locale}`)} style={btnPrimary}>
-            {backHomeLabel}
-          </button>
-        </div>
-      </div>
+        <section className="review-card review-success-card">
+
+          <div className="review-success">
+
+            <div className="review-eyebrow">
+              VitrectoMed
+            </div>
+
+            <h1 className="review-title">
+              {
+                texts.successTitle
+              }
+            </h1>
+
+            <p className="review-subtitle">
+              {
+                texts.successText
+              }
+            </p>
+
+            <p className="review-footnote">
+              {
+                texts.successHint
+              }
+            </p>
+
+            <div className="review-actions">
+
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(
+                    `/${locale}`
+                  )
+                }
+                className="review-btn-primary"
+              >
+                {
+                  texts.backHome
+                }
+              </button>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
     );
   }
 
-  /* ================= ERROR ================= */
+  /* =====================================================
+     INVALID TOKEN
+  ===================================================== */
 
-  if (error === "token_missing" || error === "token_invalid") {
+  if (
+    error ===
+      "token_missing" ||
+    error ===
+      "token_invalid"
+  ) {
     return (
-      <div style={container}>
-        <div style={card}>
-          <h1>{isFr ? "Lien invalide" : "Invalid link"}</h1>
-          <p>{getErrorMessage(error, locale)}</p>
-        </div>
-      </div>
+      <main className="review-page">
+
+        <section className="review-card">
+
+          <div className="review-content">
+
+            <div className="review-eyebrow">
+              VitrectoMed
+            </div>
+
+            <h1 className="review-title">
+              {
+                texts.invalidTitle
+              }
+            </h1>
+
+            <p className="review-subtitle">
+              {getErrorMessage(
+                error,
+                locale
+              )}
+            </p>
+
+          </div>
+
+        </section>
+
+      </main>
     );
   }
 
-  /* ================= UI ================= */
+  /* =====================================================
+     RENDER
+  ===================================================== */
 
   return (
-    <div style={container}>
-      <div style={card}>
-        <h1>{title}</h1>
-        <p style={{ color: "#666" }}>{subtitle}</p>
+    <main className="review-page">
 
-        <div style={{ marginTop: 20 }}>
-          {[1, 2, 3, 4, 5].map((n) => (
+      <section className="review-card">
+
+        <div className="review-content">
+
+          <div className="review-eyebrow">
+            {
+              texts.eyebrow
+            }
+          </div>
+
+          <h1 className="review-title">
+            {texts.title}
+          </h1>
+
+          <p className="review-subtitle">
+            {
+              texts.subtitle
+            }
+          </p>
+
+          {/* =====================================================
+              STARS
+          ===================================================== */}
+
+          <div className="review-stars">
+
+            {[1, 2, 3, 4, 5].map(
+              (star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() =>
+                    setRating(
+                      star
+                    )
+                  }
+                  className={`review-star ${
+                    star <=
+                    rating
+                      ? "active"
+                      : ""
+                  }`}
+                  aria-label={`Rate ${star}`}
+                >
+                  ★
+                </button>
+              )
+            )}
+
+          </div>
+
+          {/* =====================================================
+              COMMENT
+          ===================================================== */}
+
+          <textarea
+            value={comment}
+            onChange={(
+              e
+            ) =>
+              setComment(
+                e.target.value
+              )
+            }
+            placeholder={
+              texts.placeholder
+            }
+            className="review-textarea"
+          />
+
+          {/* =====================================================
+              ERROR
+          ===================================================== */}
+
+          {error && (
+            <p className="review-error">
+              {getErrorMessage(
+                error,
+                locale
+              )}
+            </p>
+          )}
+
+          {/* =====================================================
+              ACTIONS
+          ===================================================== */}
+
+          <div className="review-actions">
+
             <button
-              key={n}
-              onClick={() => setRating(n)}
-              style={{
-                fontSize: 24,
-                marginRight: 8,
-                background: n <= rating ? "#111" : "#fff",
-                color: n <= rating ? "#fff" : "#111",
-                border: "1px solid #ddd",
-                borderRadius: 10,
-                padding: 10,
-                cursor: "pointer",
-              }}
+              type="button"
+              disabled={
+                !canSubmit ||
+                loading
+              }
+              onClick={
+                onSubmit
+              }
+              className="review-btn-primary"
             >
-              ★
+              {loading
+                ? texts.sending
+                : texts.submit}
             </button>
-          ))}
+
+          </div>
+
+          {/* =====================================================
+              FOOTNOTE
+          ===================================================== */}
+
+          <p className="review-footnote">
+            {
+              texts.moderation
+            }
+          </p>
+
         </div>
 
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder={commentPlaceholder}
-          rows={5}
-          style={{
-            width: "100%",
-            marginTop: 20,
-            padding: 12,
-            borderRadius: 10,
-            border: "1px solid #ddd",
-          }}
-        />
+      </section>
 
-        {error && (
-          <p style={{ color: "crimson" }}>
-            {getErrorMessage(error, locale)}
-          </p>
-        )}
-
-        <button
-          disabled={!canSubmit || loading}
-          onClick={onSubmit}
-          style={btnPrimary}
-        >
-          {loading ? sendingLabel : submitLabel}
-        </button>
-
-        <p style={{ fontSize: 12, color: "#777", marginTop: 10 }}>
-          {moderationText}
-        </p>
-      </div>
-    </div>
+    </main>
   );
 }
-
-/* ================= STYLES ================= */
-
-const container = {
-  minHeight: "70vh",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: 16,
-  background: "#f7f7f7",
-};
-
-const card = {
-  width: "100%",
-  maxWidth: 720,
-  background: "#fff",
-  border: "1px solid #eaeaea",
-  borderRadius: 20,
-  padding: 24,
-};
-
-const btnPrimary = {
-  marginTop: 20,
-  padding: "12px 16px",
-  borderRadius: 10,
-  border: "1px solid #111",
-  background: "#111",
-  color: "#fff",
-  cursor: "pointer",
-};

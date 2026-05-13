@@ -1,0 +1,416 @@
+/* =========================================================
+   VITRECTOMED — EFFECTS SYSTEM
+   CINEMATIC MEDTECH UI
+========================================================= */
+
+/* =========================================================
+   TRANSITIONS
+========================================================= */
+
+.transition-base {
+  transition:
+    all var(--transition-base);
+}
+
+.transition-slow {
+  transition:
+    all var(--transition-slow);
+}
+
+/* =========================================================
+   HOVER LIFT
+========================================================= */
+
+.hover-lift {
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    border-color var(--transition-base),
+    background var(--transition-base);
+}
+
+.hover-lift:hover {
+  transform:
+    translateY(-6px);
+
+  box-shadow:
+    var(--shadow-lg);
+
+  border-color:
+    rgba(255,255,255,.12);
+}
+
+/* =========================================================
+   HOVER GLOW
+========================================================= */
+
+.hover-glow {
+  position: relative;
+
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.hover-glow:hover {
+  transform:
+    translateY(-4px);
+
+  box-shadow:
+    0 0 40px rgba(0,208,255,.16);
+}
+
+/* =========================================================
+   HOVER BORDER
+========================================================= */
+
+.hover-border {
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base);
+}
+
+.hover-border:hover {
+  border-color:
+    rgba(0,208,255,.22);
+
+  background:
+    rgba(255,255,255,.02);
+}
+
+/* =========================================================
+   SOFT BACKGROUND
+========================================================= */
+
+.bg-soft {
+  background:
+    rgba(255,255,255,.02);
+}
+
+/* =========================================================
+   GRADIENT BACKGROUND
+========================================================= */
+
+.bg-gradient {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.96),
+      rgba(5,8,14,1)
+    );
+}
+
+/* =========================================================
+   MEDICAL BACKGROUND
+========================================================= */
+
+.bg-medical {
+  position: relative;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.08),
+      rgba(47,107,255,.04),
+      rgba(139,92,246,.03)
+    );
+}
+
+/* =========================================================
+   HERO GLOW
+========================================================= */
+
+.hero-glow {
+  position: relative;
+}
+
+.hero-glow::before {
+  content: "";
+
+  position: absolute;
+
+  top: -20%;
+
+  left: 50%;
+
+  transform:
+    translateX(-50%);
+
+  width:
+    900px;
+
+  height:
+    900px;
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.16),
+      transparent 70%
+    );
+
+  filter:
+    blur(80px);
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.divider-top {
+  position: relative;
+}
+
+.divider-top::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+
+  left: 50%;
+
+  transform:
+    translateX(-50%);
+
+  width:
+    min(100%, 1200px);
+
+  height:
+    1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.08),
+      transparent
+    );
+}
+
+/* =========================================================
+   GLASS
+========================================================= */
+
+.glass {
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(var(--blur-md));
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* =========================================================
+   GLASS STRONG
+========================================================= */
+
+.glass-strong {
+  background:
+    rgba(12,18,28,.72);
+
+  backdrop-filter:
+    blur(var(--blur-lg));
+
+  border:
+    1px solid rgba(255,255,255,.10);
+
+  box-shadow:
+    var(--shadow-lg);
+}
+
+/* =========================================================
+   TEXT GRADIENT
+========================================================= */
+
+.text-gradient {
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-primary),
+      var(--color-secondary),
+      var(--color-accent)
+    );
+
+  -webkit-background-clip:
+    text;
+
+  -webkit-text-fill-color:
+    transparent;
+
+  background-clip:
+    text;
+}
+
+/* =========================================================
+   IMAGE OVERLAY
+========================================================= */
+
+.image-overlay {
+  position: relative;
+
+  overflow: hidden;
+}
+
+.image-overlay::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(4,7,18,.85),
+      rgba(4,7,18,.25),
+      transparent
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   NOISE
+========================================================= */
+
+.noise {
+  position: relative;
+}
+
+.noise::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .025;
+
+  pointer-events: none;
+
+  background-image:
+    radial-gradient(
+      rgba(255,255,255,.35) .7px,
+      transparent .7px
+    );
+
+  background-size:
+    22px 22px;
+}
+
+/* =========================================================
+   GRID OVERLAY
+========================================================= */
+
+.grid-overlay {
+  position: relative;
+}
+
+.grid-overlay::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,.03) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,.03) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    80px 80px;
+
+  mask-image:
+    radial-gradient(
+      circle at center,
+      black,
+      transparent 90%
+    );
+
+  pointer-events: none;
+
+  opacity: .25;
+}
+
+/* =========================================================
+   CYAN GLOW
+========================================================= */
+
+.glow-cyan {
+  box-shadow:
+    0 0 50px rgba(0,208,255,.18);
+}
+
+/* =========================================================
+   PURPLE GLOW
+========================================================= */
+
+.glow-purple {
+  box-shadow:
+    0 0 50px rgba(139,92,246,.18);
+}
+
+/* =========================================================
+   BLUR ORB
+========================================================= */
+
+.blur-orb {
+  position: absolute;
+
+  width: 420px;
+
+  height: 420px;
+
+  border-radius: 50%;
+
+  filter: blur(80px);
+
+  opacity: .22;
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+.blur-orb.cyan {
+  background:
+    rgba(0,208,255,.45);
+}
+
+.blur-orb.purple {
+  background:
+    rgba(139,92,246,.35);
+}
+
+/* =========================================================
+   FADE MASK
+========================================================= */
+
+.fade-bottom {
+  mask-image:
+    linear-gradient(
+      to bottom,
+      black 75%,
+      transparent 100%
+    );
+}

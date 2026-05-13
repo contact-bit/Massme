@@ -1,100 +1,352 @@
-/* ================================
-   SHIPPING FORM – ADMIN
-================================ */
+/* =========================================================
+   VITRECTOMED — SHIPPING FORM
+   PREMIUM MEDTECH ADMIN UI
+========================================================= */
+
+/* =========================================================
+   FORM CONTAINER
+========================================================= */
 
 .shipping-form {
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
-  max-width: 520px;
+  position: relative;
+
+  overflow: hidden;
+
+  isolation: isolate;
+
+  width: 100%;
+
+  max-width: 560px;
+
+  padding:
+    1.6rem;
+
+  border-radius:
+    calc(var(--radius-xl) - 4px);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.88),
+      rgba(8,13,22,.96)
+    );
+
+  backdrop-filter:
+    blur(var(--blur-md));
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.34),
+    0 0 0 1px rgba(255,255,255,.02);
 }
 
+/* =========================================================
+   GLOW
+========================================================= */
+
+.shipping-form::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.06),
+      transparent 45%,
+      rgba(139,92,246,.04)
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
 .shipping-form-header {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 12px;
+  position: relative;
+
+  z-index: 2;
+
+  margin-bottom:
+    1.2rem;
+
+  color:
+    var(--color-text-muted);
+
+  font-size:
+    .88rem;
+
+  line-height:
+    1.7;
 }
 
 .shipping-form-header strong {
-  color: #111827;
+  color:
+    var(--color-text);
+
+  font-weight:
+    700;
 }
 
-/* ----------------
-   Inputs
----------------- */
+/* =========================================================
+   INPUTS
+========================================================= */
 
 .shipping-input,
 .shipping-select {
   width: 100%;
-  height: 44px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #f9fafb;
-  font-size: 14px;
-  transition: all 0.15s ease;
+
+  min-height:
+    54px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    var(--radius-lg);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    rgba(255,255,255,.03);
+
+  backdrop-filter:
+    blur(var(--blur-sm));
+
+  color:
+    var(--color-text);
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    500;
+
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
 }
 
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
 .shipping-input::placeholder {
-  color: #9ca3af;
+  color:
+    var(--color-text-muted);
 }
+
+/* =========================================================
+   FOCUS
+========================================================= */
 
 .shipping-input:focus,
 .shipping-select:focus {
   outline: none;
-  border-color: #2563eb;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+
+  border-color:
+    rgba(0,208,255,.22);
+
+  background:
+    rgba(255,255,255,.04);
+
+  box-shadow:
+    0 0 0 4px rgba(0,208,255,.08),
+    0 0 24px rgba(0,208,255,.08);
 }
 
-.shipping-input[disabled] {
-  background: #f3f4f6;
+/* =========================================================
+   DISABLED
+========================================================= */
+
+.shipping-input[disabled],
+.shipping-select[disabled] {
+  opacity: .55;
+
   cursor: not-allowed;
+
+  background:
+    rgba(255,255,255,.02);
 }
 
-/* ----------------
-   Layout
----------------- */
+/* =========================================================
+   LAYOUT
+========================================================= */
 
 .shipping-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap:
+    1rem;
 }
 
 .shipping-col {
   display: flex;
+
   flex-direction: column;
-  gap: 10px;
+
+  gap:
+    .9rem;
 }
 
-/* ----------------
-   Button
----------------- */
+/* =========================================================
+   SUBMIT BUTTON
+========================================================= */
 
 .shipping-submit {
-  margin-top: 8px;
-  height: 46px;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, #2563eb, #1e40af);
-  color: white;
-  font-weight: 600;
-  font-size: 15px;
+  position: relative;
+
+  overflow: hidden;
+
+  isolation: isolate;
+
+  margin-top:
+    .5rem;
+
+  min-height:
+    56px;
+
+  padding:
+    0 1.5rem;
+
+  border-radius:
+    var(--radius-full);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-primary),
+      var(--color-secondary)
+    );
+
+  color:
+    white;
+
+  font-size:
+    .94rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    -.01em;
+
   cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+
+  box-shadow:
+    0 14px 34px rgba(0,208,255,.18),
+    0 0 40px rgba(0,208,255,.08);
+
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    filter var(--transition-base),
+    opacity var(--transition-base);
 }
+
+/* =========================================================
+   SHINE
+========================================================= */
+
+.shipping-submit::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent 20%,
+      rgba(255,255,255,.22) 50%,
+      transparent 80%
+    );
+
+  transform:
+    translateX(-120%);
+
+  transition:
+    transform .9s cubic-bezier(.16,1,.3,1);
+}
+
+.shipping-submit:hover::before {
+  transform:
+    translateX(120%);
+}
+
+/* =========================================================
+   BUTTON HOVER
+========================================================= */
 
 .shipping-submit:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+  transform:
+    translateY(-2px);
+
+  filter:
+    brightness(1.03);
+
+  box-shadow:
+    0 20px 48px rgba(0,208,255,.24),
+    0 0 60px rgba(0,208,255,.14);
 }
 
+/* =========================================================
+   BUTTON ACTIVE
+========================================================= */
+
+.shipping-submit:active {
+  transform:
+    translateY(0)
+    scale(.985);
+}
+
+/* =========================================================
+   BUTTON DISABLED
+========================================================= */
+
 .shipping-submit:disabled {
-  opacity: 0.6;
+  opacity: .55;
+
   cursor: not-allowed;
+
   transform: none;
+
   box-shadow: none;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .shipping-form {
+    padding:
+      1.2rem;
+  }
+
+  .shipping-row {
+    grid-template-columns:
+      1fr;
+  }
+
+  .shipping-submit {
+    width: 100%;
+  }
 }

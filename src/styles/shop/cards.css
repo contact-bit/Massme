@@ -1,0 +1,368 @@
+/* =========================================================
+   VITRECTOMED — CARD SYSTEM
+   PREMIUM MEDTECH UI
+========================================================= */
+
+/* =========================================================
+   BASE CARD
+========================================================= */
+
+.card {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius:
+    var(--radius-xl);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.88),
+      rgba(8,13,22,.96)
+    );
+
+  backdrop-filter:
+    blur(var(--blur-md));
+
+  box-shadow:
+    var(--shadow-md);
+
+  isolation: isolate;
+
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    background var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+/* =========================================================
+   CARD GLOW
+========================================================= */
+
+.card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.04),
+      transparent 40%,
+      rgba(0,208,255,.03)
+    );
+
+  pointer-events: none;
+
+  opacity: .8;
+}
+
+/* =========================================================
+   CARD HOVER
+========================================================= */
+
+.card:hover {
+  transform:
+    translateY(-6px);
+
+  border-color:
+    rgba(0,208,255,.18);
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.45),
+    0 0 40px rgba(0,208,255,.10);
+}
+
+/* =========================================================
+   SOFT CARD
+========================================================= */
+
+.card-soft {
+  background:
+    rgba(255,255,255,.03);
+}
+
+/* =========================================================
+   LARGE CONTENT CARD
+========================================================= */
+
+.card-content {
+  position: relative;
+
+  z-index: 2;
+
+  padding:
+    clamp(1.6rem, 3vw, 3rem);
+}
+
+/* =========================================================
+   HERO CARD
+========================================================= */
+
+.card-hero {
+  padding:
+    clamp(2rem, 5vw, 4.5rem);
+
+  border-radius:
+    calc(var(--radius-xl) + 6px);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(16,25,40,.95),
+      rgba(7,11,19,.98)
+    );
+
+  box-shadow:
+    var(--shadow-lg);
+}
+
+/* =========================================================
+   OUTLINE CARD
+========================================================= */
+
+.card-outline {
+  background:
+    transparent;
+
+  border:
+    1px solid rgba(255,255,255,.10);
+}
+
+/* =========================================================
+   HIGHLIGHT CARD
+========================================================= */
+
+.card-highlight {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.12),
+      rgba(47,107,255,.05),
+      rgba(139,92,246,.04)
+    );
+
+  border:
+    1px solid rgba(0,208,255,.18);
+
+  box-shadow:
+    0 0 40px rgba(0,208,255,.08);
+}
+
+/* =========================================================
+   INFO CARD
+========================================================= */
+
+.card-info {
+  display: flex;
+
+  flex-direction: column;
+
+  gap:
+    1.2rem;
+
+  min-height: 100%;
+}
+
+/* =========================================================
+   MINI CARD
+========================================================= */
+
+.card-mini {
+  padding:
+    1.3rem;
+
+  border-radius:
+    var(--radius-lg);
+}
+
+/* =========================================================
+   CTA CARD
+========================================================= */
+
+.card-cta {
+  position: relative;
+
+  overflow: hidden;
+
+  padding:
+    clamp(2.2rem, 5vw, 5rem);
+
+  border-radius:
+    calc(var(--radius-xl) + 8px);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.14),
+      rgba(47,107,255,.08),
+      rgba(139,92,246,.06)
+    );
+
+  border:
+    1px solid rgba(0,208,255,.18);
+
+  box-shadow:
+    0 20px 80px rgba(0,0,0,.45),
+    0 0 60px rgba(0,208,255,.10);
+}
+
+/* Glow */
+
+.card-cta::before {
+  content: "";
+
+  position: absolute;
+
+  top: -30%;
+
+  right: -10%;
+
+  width: 340px;
+
+  height: 340px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.22),
+      transparent 70%
+    );
+
+  filter:
+    blur(40px);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   GLASS CARD
+========================================================= */
+
+.card-glass {
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(var(--blur-lg));
+}
+
+/* =========================================================
+   PRODUCT CARD
+========================================================= */
+
+.card-product {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 1.5rem;
+
+  height: 100%;
+}
+
+/* =========================================================
+   FEATURE CARD
+========================================================= */
+
+.card-feature {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 1.4rem;
+
+  padding:
+    clamp(1.6rem, 3vw, 2.4rem);
+}
+
+/* =========================================================
+   TESTIMONIAL CARD
+========================================================= */
+
+.card-testimonial {
+  padding:
+    clamp(1.8rem, 3vw, 2.8rem);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(17,25,40,.94),
+      rgba(8,13,22,.98)
+    );
+}
+
+/* =========================================================
+   CARD BADGE
+========================================================= */
+
+.card-badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 36px;
+
+  padding:
+    0 .95rem;
+
+  border-radius:
+    var(--radius-full);
+
+  background:
+    rgba(0,208,255,.10);
+
+  border:
+    1px solid rgba(0,208,255,.16);
+
+  color:
+    var(--color-primary);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .12em;
+
+  text-transform:
+    uppercase;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .card:hover {
+    transform:
+      translateY(-3px);
+  }
+
+  .card-content,
+  .card-feature,
+  .card-testimonial {
+    padding:
+      1.4rem;
+  }
+
+  .card-hero,
+  .card-cta {
+    padding:
+      2rem 1.5rem;
+  }
+}

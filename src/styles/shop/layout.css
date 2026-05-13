@@ -1,0 +1,371 @@
+/* =========================================================
+   VITRECTOMED — LAYOUT SYSTEM
+   PREMIUM MEDTECH / CINEMATIC UI
+========================================================= */
+
+/* =========================================================
+   CONTAINERS
+========================================================= */
+
+.container-xl,
+.container-lg,
+.container-md {
+  width: 100%;
+
+  margin-inline: auto;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+.container-xl {
+  max-width:
+    var(--container-xl);
+
+  padding-inline:
+    clamp(1.5rem, 4vw, 3rem);
+}
+
+.container-lg {
+  max-width:
+    var(--container-lg);
+
+  padding-inline:
+    clamp(1.5rem, 4vw, 3rem);
+}
+
+.container-md {
+  max-width:
+    var(--container-md);
+
+  padding-inline:
+    clamp(1.25rem, 3vw, 2.2rem);
+}
+
+/* =========================================================
+   SECTIONS
+========================================================= */
+
+.section {
+  position: relative;
+
+  padding-block:
+    clamp(6rem, 10vw, 10rem);
+
+  overflow: hidden;
+
+  isolation: isolate;
+}
+
+.section-sm {
+  padding-block:
+    clamp(4rem, 6vw, 6rem);
+}
+
+.section-lg {
+  padding-block:
+    clamp(8rem, 12vw, 13rem);
+}
+
+/* =========================================================
+   SECTION BACKGROUND VARIANTS
+========================================================= */
+
+.section-alt {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.015),
+      rgba(255,255,255,.03)
+    );
+
+  border-block:
+    1px solid rgba(255,255,255,.04);
+}
+
+/* =========================================================
+   SECTION GLOW
+========================================================= */
+
+.section-glow::before {
+  content: "";
+
+  position: absolute;
+
+  inset: auto;
+
+  top: -120px;
+
+  left: 50%;
+
+  transform:
+    translateX(-50%);
+
+  width:
+    700px;
+
+  height:
+    700px;
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.12),
+      transparent 70%
+    );
+
+  filter:
+    blur(60px);
+
+  pointer-events:
+    none;
+
+  z-index: -1;
+}
+
+/* =========================================================
+   SECTION HEADER
+========================================================= */
+
+.section-header {
+  position: relative;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 1.4rem;
+
+  margin-bottom:
+    clamp(3rem, 7vw, 6rem);
+
+  max-width:
+    920px;
+}
+
+.section-header-center {
+  align-items: center;
+
+  text-align: center;
+
+  margin-inline: auto;
+}
+
+/* =========================================================
+   STACKS
+========================================================= */
+
+.stack-xs,
+.stack-sm,
+.stack-md,
+.stack-lg,
+.stack-xl {
+  display: flex;
+
+  flex-direction: column;
+}
+
+.stack-xs {
+  gap: .6rem;
+}
+
+.stack-sm {
+  gap: 1rem;
+}
+
+.stack-md {
+  gap: 1.8rem;
+}
+
+.stack-lg {
+  gap: 3rem;
+}
+
+.stack-xl {
+  gap: 5rem;
+}
+
+/* =========================================================
+   GRID SYSTEM
+========================================================= */
+
+.grid-2,
+.grid-3,
+.grid-4 {
+  display: grid;
+
+  align-items: stretch;
+}
+
+.grid-2 {
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap:
+    clamp(1.5rem, 3vw, 3rem);
+}
+
+.grid-3 {
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap:
+    clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.grid-4 {
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap:
+    clamp(1rem, 2vw, 2rem);
+}
+
+/* =========================================================
+   HERO GRID
+========================================================= */
+
+.hero-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(420px, 620px);
+
+  align-items: center;
+
+  gap:
+    clamp(3rem, 7vw, 8rem);
+
+  min-height:
+    calc(100vh - var(--navbar-height));
+}
+
+/* =========================================================
+   SPLIT GRID
+========================================================= */
+
+.split-grid {
+  display: grid;
+
+  grid-template-columns:
+    1.1fr .9fr;
+
+  gap:
+    clamp(2rem, 6vw, 7rem);
+
+  align-items: center;
+}
+
+/* =========================================================
+   AUTO GRID
+========================================================= */
+
+.grid-auto {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(280px, 1fr)
+    );
+
+  gap:
+    clamp(1.25rem, 2vw, 2rem);
+}
+
+/* =========================================================
+   FLEX HELPERS
+========================================================= */
+
+.flex-between {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 1.5rem;
+}
+
+.flex-center {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+/* =========================================================
+   DIVIDERS
+========================================================= */
+
+.divider {
+  width: 100%;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.08),
+      transparent
+    );
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+
+  .hero-grid,
+  .split-grid {
+    grid-template-columns: 1fr;
+
+    min-height: auto;
+  }
+}
+
+@media (max-width: 980px) {
+
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .container-xl,
+  .container-lg,
+  .container-md {
+    padding-inline:
+      1.1rem;
+  }
+
+  .section {
+    padding-block:
+      4.5rem;
+  }
+
+  .section-lg {
+    padding-block:
+      6rem;
+  }
+
+  .section-header {
+    margin-bottom:
+      3rem;
+  }
+
+  .stack-xl {
+    gap: 3rem;
+  }
+}

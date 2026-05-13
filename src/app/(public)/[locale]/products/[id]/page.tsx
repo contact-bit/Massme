@@ -2,14 +2,33 @@
 
 import "./product-detail.css";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
+
 import Image from "next/image";
-import { doc, getDoc } from "firebase/firestore";
+
+import {
+  doc,
+  getDoc,
+} from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
+
 import { useCart } from "@/context/CartContext";
-import { MARKET_BY_LOCALE, Locale, Market } from "@/lib/market";
+
+import {
+  MARKET_BY_LOCALE,
+  Locale,
+  Market,
+} from "@/lib/market";
 
 /* =====================================================
    TYPES
@@ -22,86 +41,391 @@ type RawVAT = {
 
 type Product = {
   id: string;
-  name: Partial<Record<Locale, string>>;
-  description?: Partial<Record<Locale, string>>;
+
+  name:
+    Partial<
+      Record<
+        Locale,
+        string
+      >
+    >;
+
+  description?:
+    Partial<
+      Record<
+        Locale,
+        string
+      >
+    >;
+
   imageUrl?: string;
+
   isActive?: boolean;
 
   markets?: string[];
-  pricesByMarket?: Record<string, number>;
-  vatByMarket?: Record<string, RawVAT>;
+
+  pricesByMarket?:
+    Record<string, number>;
+
+  vatByMarket?:
+    Record<
+      string,
+      RawVAT
+    >;
 };
 
 /* =====================================================
    TRANSLATIONS
 ===================================================== */
 
-const TRANSLATIONS: Record<
-  Locale,
-  {
-    loading: string;
-    notFound: string;
-    priceExclTax: string;
-    vat: string;
-    priceInclTax: string;
-    addToCart: string;
-  }
-> = {
+const TRANSLATIONS:
+  Record<
+    Locale,
+    {
+      loading: string;
+      notFound: string;
+      addToCart: string;
+      added: string;
+      priceExclTax: string;
+      vat: string;
+      priceInclTax: string;
+      recoveryTitle: string;
+      recoveryText: string;
+      badge1: string;
+      badge2: string;
+      badge3: string;
+      trust1: string;
+      trust2: string;
+      trust3: string;
+    }
+  > = {
   fr: {
-    loading: "Chargement…",
-    notFound: "Produit introuvable.",
-    priceExclTax: "Prix HT",
-    vat: "TVA",
-    priceInclTax: "Prix TTC",
-    addToCart: "Ajouter au panier 🛒",
+    loading:
+      "Chargement…",
+
+    notFound:
+      "Produit introuvable.",
+
+    addToCart:
+      "Ajouter au panier",
+
+    added:
+      "Ajouté au panier",
+
+    priceExclTax:
+      "Prix HT",
+
+    vat:
+      "TVA",
+
+    priceInclTax:
+      "Prix TTC",
+
+    recoveryTitle:
+      "Pensé pour la récupération après vitrectomie",
+
+    recoveryText:
+      "Conçu pour améliorer le confort durant les longues périodes de position ventrale recommandées après certaines interventions rétiniennes.",
+
+    badge1:
+      "Confort médical premium",
+
+    badge2:
+      "Position ventrale",
+
+    badge3:
+      "Livraison rapide Europe",
+
+    trust1:
+      "Conçu pour la récupération rétinienne",
+
+    trust2:
+      "Confort cervical & dorsal optimisé",
+
+    trust3:
+      "Expédition rapide",
   },
+
   en: {
-    loading: "Loading…",
-    notFound: "Product not found.",
-    priceExclTax: "Price excl. tax",
-    vat: "VAT",
-    priceInclTax: "Price incl. tax",
-    addToCart: "Add to cart 🛒",
+    loading:
+      "Loading…",
+
+    notFound:
+      "Product not found.",
+
+    addToCart:
+      "Add to cart",
+
+    added:
+      "Added to cart",
+
+    priceExclTax:
+      "Price excl. tax",
+
+    vat:
+      "VAT",
+
+    priceInclTax:
+      "Price incl. tax",
+
+    recoveryTitle:
+      "Designed for post-vitrectomy recovery",
+
+    recoveryText:
+      "Designed to improve comfort during long face-down recovery periods after retinal surgery.",
+
+    badge1:
+      "Premium medical comfort",
+
+    badge2:
+      "Face-down support",
+
+    badge3:
+      "Fast Europe shipping",
+
+    trust1:
+      "Designed for retinal recovery",
+
+    trust2:
+      "Optimized neck & back comfort",
+
+    trust3:
+      "Fast shipping",
   },
+
   es: {
-    loading: "Cargando…",
-    notFound: "Producto no encontrado.",
-    priceExclTax: "Precio sin IVA",
-    vat: "IVA",
-    priceInclTax: "Precio con IVA",
-    addToCart: "Añadir al carrito 🛒",
+    loading:
+      "Cargando…",
+
+    notFound:
+      "Producto no encontrado.",
+
+    addToCart:
+      "Añadir al carrito",
+
+    added:
+      "Añadido al carrito",
+
+    priceExclTax:
+      "Precio sin IVA",
+
+    vat:
+      "IVA",
+
+    priceInclTax:
+      "Precio con IVA",
+
+    recoveryTitle:
+      "Diseñado para la recuperación tras vitrectomía",
+
+    recoveryText:
+      "Diseñado para mejorar la comodidad durante largos periodos de recuperación boca abajo.",
+
+    badge1:
+      "Confort médico premium",
+
+    badge2:
+      "Soporte boca abajo",
+
+    badge3:
+      "Envío rápido Europa",
+
+    trust1:
+      "Diseñado para recuperación retinal",
+
+    trust2:
+      "Confort cervical optimizado",
+
+    trust3:
+      "Envío rápido",
   },
+
   de: {
-    loading: "Wird geladen…",
-    notFound: "Produkt nicht gefunden.",
-    priceExclTax: "Preis ohne MwSt",
-    vat: "MwSt",
-    priceInclTax: "Preis inkl. MwSt",
-    addToCart: "In den Warenkorb 🛒",
+    loading:
+      "Wird geladen…",
+
+    notFound:
+      "Produkt nicht gefunden.",
+
+    addToCart:
+      "In den Warenkorb",
+
+    added:
+      "Zum Warenkorb hinzugefügt",
+
+    priceExclTax:
+      "Preis ohne MwSt",
+
+    vat:
+      "MwSt",
+
+    priceInclTax:
+      "Preis inkl. MwSt",
+
+    recoveryTitle:
+      "Für die Erholung nach der Vitrektomie entwickelt",
+
+    recoveryText:
+      "Entwickelt für mehr Komfort während langer Bauchlagephasen.",
+
+    badge1:
+      "Premium medizinischer Komfort",
+
+    badge2:
+      "Bauchlage Unterstützung",
+
+    badge3:
+      "Schneller Europa Versand",
+
+    trust1:
+      "Für Netzhaut-Genesung entwickelt",
+
+    trust2:
+      "Optimierter Nackenkomfort",
+
+    trust3:
+      "Schneller Versand",
   },
+
   it: {
-    loading: "Caricamento…",
-    notFound: "Prodotto non trovato.",
-    priceExclTax: "Prezzo IVA esclusa",
-    vat: "IVA",
-    priceInclTax: "Prezzo IVA inclusa",
-    addToCart: "Aggiungi al carrello 🛒",
+    loading:
+      "Caricamento…",
+
+    notFound:
+      "Prodotto non trovato.",
+
+    addToCart:
+      "Aggiungi al carrello",
+
+    added:
+      "Aggiunto al carrello",
+
+    priceExclTax:
+      "Prezzo IVA esclusa",
+
+    vat:
+      "IVA",
+
+    priceInclTax:
+      "Prezzo IVA inclusa",
+
+    recoveryTitle:
+      "Pensato per il recupero dopo vitrectomia",
+
+    recoveryText:
+      "Progettato per migliorare il comfort durante lunghi periodi in posizione prona.",
+
+    badge1:
+      "Comfort medico premium",
+
+    badge2:
+      "Supporto posizione prona",
+
+    badge3:
+      "Spedizione rapida Europa",
+
+    trust1:
+      "Pensato per recupero retinico",
+
+    trust2:
+      "Comfort cervicale migliorato",
+
+    trust3:
+      "Spedizione rapida",
   },
+
   nl: {
-    loading: "Laden…",
-    notFound: "Product niet gevonden.",
-    priceExclTax: "Prijs excl. BTW",
-    vat: "BTW",
-    priceInclTax: "Prijs incl. BTW",
-    addToCart: "Toevoegen aan winkelwagen 🛒",
+    loading:
+      "Laden…",
+
+    notFound:
+      "Product niet gevonden.",
+
+    addToCart:
+      "Toevoegen aan winkelwagen",
+
+    added:
+      "Toegevoegd aan winkelwagen",
+
+    priceExclTax:
+      "Prijs excl. BTW",
+
+    vat:
+      "BTW",
+
+    priceInclTax:
+      "Prijs incl. BTW",
+
+    recoveryTitle:
+      "Ontworpen voor herstel na vitrectomie",
+
+    recoveryText:
+      "Ontworpen om meer comfort te bieden tijdens langdurige herstelperiodes.",
+
+    badge1:
+      "Premium medisch comfort",
+
+    badge2:
+      "Buiklig ondersteuning",
+
+    badge3:
+      "Snelle levering Europa",
+
+    trust1:
+      "Ontworpen voor retina herstel",
+
+    trust2:
+      "Geoptimaliseerd nekcomfort",
+
+    trust3:
+      "Snelle verzending",
   },
+
   pt: {
-    loading: "A carregar…",
-    notFound: "Produto não encontrado.",
-    priceExclTax: "Preço sem IVA",
-    vat: "IVA",
-    priceInclTax: "Preço com IVA",
-    addToCart: "Adicionar ao carrinho 🛒",
+    loading:
+      "A carregar…",
+
+    notFound:
+      "Produto não encontrado.",
+
+    addToCart:
+      "Adicionar ao carrinho",
+
+    added:
+      "Adicionado ao carrinho",
+
+    priceExclTax:
+      "Preço sem IVA",
+
+    vat:
+      "IVA",
+
+    priceInclTax:
+      "Preço com IVA",
+
+    recoveryTitle:
+      "Concebido para recuperação pós-vitrectomia",
+
+    recoveryText:
+      "Concebido para melhorar o conforto durante longos períodos de recuperação.",
+
+    badge1:
+      "Conforto médico premium",
+
+    badge2:
+      "Suporte posição ventral",
+
+    badge3:
+      "Envio rápido Europa",
+
+    trust1:
+      "Concebido para recuperação retinal",
+
+    trust2:
+      "Conforto cervical otimizado",
+
+    trust3:
+      "Envio rápido",
   },
 };
 
@@ -110,54 +434,148 @@ const TRANSLATIONS: Record<
 ===================================================== */
 
 function pickLocaleValue(
-  obj: Partial<Record<Locale, string>> | undefined,
+  obj:
+    | Partial<
+        Record<
+          Locale,
+          string
+        >
+      >
+    | undefined,
+
   locale: Locale
 ) {
-  return obj?.[locale] || obj?.fr || "";
+  return (
+    obj?.[locale] ||
+    obj?.fr ||
+    ""
+  );
 }
 
-function round2(n: number) {
-  return Math.round((n + Number.EPSILON) * 100) / 100;
+function round2(
+  n: number
+) {
+  return (
+    Math.round(
+      (
+        n +
+        Number.EPSILON
+      ) * 100
+    ) / 100
+  );
 }
 
-function normalizeMarketKey(key: string): Market | null {
-  const k = key.trim().toUpperCase();
-  const allowed: Market[] = ["FR", "IT", "DE", "ES", "NL", "PT", "BE", "CH"];
-  return allowed.includes(k as Market) ? (k as Market) : null;
+function normalizeMarketKey(
+  key: string
+): Market | null {
+  const k =
+    key
+      .trim()
+      .toUpperCase();
+
+  const allowed:
+    Market[] = [
+    "FR",
+    "IT",
+    "DE",
+    "ES",
+    "NL",
+    "PT",
+    "BE",
+    "CH",
+  ];
+
+  return allowed.includes(
+    k as Market
+  )
+    ? (k as Market)
+    : null;
 }
 
 function getVATForMarket(
-  vatByMarket: Record<string, RawVAT> | undefined,
+  vatByMarket:
+    | Record<
+        string,
+        RawVAT
+      >
+    | undefined,
+
   market: Market
-): { enabled: boolean; rate: number } {
-  if (!vatByMarket) return { enabled: false, rate: 0 };
+) {
+  if (!vatByMarket) {
+    return {
+      enabled: false,
+      rate: 0,
+    };
+  }
 
-  for (const [key, value] of Object.entries(vatByMarket)) {
-    const normalized = normalizeMarketKey(key);
-    if (normalized === market) {
-      const enabled = value?.enabled === true;
-      const rate =
-        typeof value?.rate === "number" && value.rate > 0 ? value.rate : 0;
+  for (const [
+    key,
+    value,
+  ] of Object.entries(
+    vatByMarket
+  )) {
+    const normalized =
+      normalizeMarketKey(
+        key
+      );
 
+    if (
+      normalized ===
+      market
+    ) {
       return {
-        enabled: enabled && rate > 0,
-        rate,
+        enabled:
+          value?.enabled ===
+            true &&
+          typeof value?.rate ===
+            "number",
+
+        rate:
+          value?.rate || 0,
       };
     }
   }
 
-  return { enabled: false, rate: 0 };
+  return {
+    enabled: false,
+    rate: 0,
+  };
 }
 
 function getPriceForMarket(
-  pricesByMarket: Record<string, number> | undefined,
-  market: Market
-): number {
-  if (!pricesByMarket) return 0;
+  pricesByMarket:
+    | Record<
+        string,
+        number
+      >
+    | undefined,
 
-  for (const [key, value] of Object.entries(pricesByMarket)) {
-    const normalized = normalizeMarketKey(key);
-    if (normalized === market && typeof value === "number") {
+  market: Market
+) {
+  if (
+    !pricesByMarket
+  ) {
+    return 0;
+  }
+
+  for (const [
+    key,
+    value,
+  ] of Object.entries(
+    pricesByMarket
+  )) {
+    const normalized =
+      normalizeMarketKey(
+        key
+      );
+
+    if (
+      normalized ===
+        market &&
+      typeof value ===
+        "number"
+    ) {
       return value;
     }
   }
@@ -170,41 +588,130 @@ function getPriceForMarket(
 ===================================================== */
 
 export default function ProductPage() {
-  const params = useParams() as {
-    locale?: Locale;
-    id?: string;
-  };
+  const params =
+    useParams() as {
+      locale?: Locale;
+      id?: string;
+    };
 
-  const locale: Locale = params.locale ?? "fr";
-  const productId = params.id;
+  const router =
+    useRouter();
 
-  const market: Market = MARKET_BY_LOCALE[locale];
-  const t = TRANSLATIONS[locale];
+  const locale:
+    Locale =
+    params.locale ?? "fr";
 
-  const { addItem } = useCart();
+  const productId =
+    params.id;
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const market:
+    Market =
+    MARKET_BY_LOCALE[
+      locale
+    ];
 
-  /* ---------------- FETCH PRODUCT ---------------- */
+  const t =
+    TRANSLATIONS[
+      locale
+    ];
+
+  const { addItem } =
+    useCart();
+
+  const [
+    product,
+    setProduct,
+  ] = useState<
+    Product | null
+  >(null);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    added,
+    setAdded,
+  ] = useState(false);
+
+  /* =====================================================
+     MEMOS
+  ===================================================== */
+
+  const badges =
+    useMemo(
+      () => [
+        t.badge1,
+        t.badge2,
+        t.badge3,
+      ],
+      [t]
+    );
+
+  const trustPoints =
+    useMemo(
+      () => [
+        t.trust1,
+        t.trust2,
+        t.trust3,
+      ],
+      [t]
+    );
+
+  /* =====================================================
+     FETCH
+  ===================================================== */
+
   useEffect(() => {
-    if (!productId) return;
-
-    getDoc(doc(db, "products", productId)).then((snap) => {
-      if (snap.exists()) {
-        setProduct({
-          id: snap.id,
-          ...(snap.data() as any),
-        });
-      }
+    if (!productId) {
       setLoading(false);
-    });
+      return;
+    }
+
+    async function loadProduct() {
+      try {
+        const snap =
+          await getDoc(
+            doc(
+              db,
+              "products",
+              productId
+            )
+          );
+
+        if (
+          snap.exists()
+        ) {
+          setProduct({
+            id: snap.id,
+            ...(snap.data() as any),
+          });
+        }
+      } catch (
+        error
+      ) {
+        console.error(
+          error
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProduct();
   }, [productId]);
+
+  /* =====================================================
+     STATES
+  ===================================================== */
 
   if (loading) {
     return (
       <main className="product-detail-page">
-        <p className="product-detail-loading">{t.loading}</p>
+        <div className="product-loading">
+          {t.loading}
+        </div>
       </main>
     );
   }
@@ -212,90 +719,286 @@ export default function ProductPage() {
   if (!product) {
     return (
       <main className="product-detail-page">
-        <p className="product-detail-loading">{t.notFound}</p>
+        <div className="product-loading">
+          {t.notFound}
+        </div>
       </main>
     );
   }
 
-  /* ---------------- DATA ---------------- */
-  const name = pickLocaleValue(product.name, locale);
-  const desc = pickLocaleValue(product.description, locale);
+  /* =====================================================
+     DATA
+  ===================================================== */
 
-  const priceHT = getPriceForMarket(product.pricesByMarket, market);
-  const vat = getVATForMarket(product.vatByMarket, market);
+  const name =
+    pickLocaleValue(
+      product.name,
+      locale
+    );
 
-  const vatAmount = vat.enabled ? round2((priceHT * vat.rate) / 100) : 0;
-  const priceTTC = round2(priceHT + vatAmount);
+  const desc =
+    pickLocaleValue(
+      product.description,
+      locale
+    );
 
-  /* ---------------- ADD TO CART ---------------- */
-  const addToCart = () => {
+  const priceHT =
+    getPriceForMarket(
+      product.pricesByMarket,
+      market
+    );
+
+  const vat =
+    getVATForMarket(
+      product.vatByMarket,
+      market
+    );
+
+  const vatAmount =
+    vat.enabled
+      ? round2(
+          (
+            priceHT *
+            vat.rate
+          ) / 100
+        )
+      : 0;
+
+  const priceTTC =
+    round2(
+      priceHT +
+        vatAmount
+    );
+
+  /* =====================================================
+     CART
+  ===================================================== */
+
+  function handleAddToCart() {
     addItem({
       id: product.id,
+
       name,
-      priceHT,
+
       quantity: 1,
-      imageUrl: product.imageUrl,
-      description: desc,
+
+      imageUrl:
+        product.imageUrl,
+
+      description:
+        desc,
+
+      priceHT,
+
       vat: {
-        enabled: vat.enabled,
-        rate: vat.rate,
+        enabled:
+          vat.enabled,
+
+        rate:
+          vat.rate,
       },
     });
-  };
 
-  /* ---------------- RENDER ---------------- */
+    setAdded(true);
+
+    setTimeout(() => {
+      router.push(
+        `/${locale}/checkout`
+      );
+    }, 500);
+  }
+
+  /* =====================================================
+     RENDER
+  ===================================================== */
+
   return (
     <main className="product-detail-page">
-      <div className="product-detail-container">
-        <section className="product-detail-grid">
+
+      <section className="product-hero">
+
+        <div className="product-hero__grid">
+
           {/* IMAGE */}
-          <div className="product-detail-image-wrapper">
-            <Image
-              src={product.imageUrl || "/placeholder.jpg"}
-              alt={name}
-              fill
-              className="product-detail-image"
-            />
+
+          <div className="product-visual">
+
+            <div className="product-visual__ambient" />
+
+            <div className="product-image-shell">
+
+              <Image
+                src={
+                  product.imageUrl ||
+                  "/placeholder.jpg"
+                }
+
+                alt={name}
+
+                width={700}
+                height={700}
+
+                priority
+
+                className="product-image"
+              />
+            </div>
           </div>
 
-          {/* CONTENU */}
-          <div className="product-detail-content">
-            <p className="product-detail-eyebrow">
-              VitrectoMed · Vitrectomy support
+          {/* CONTENT */}
+
+          <div className="product-content">
+
+            <div className="product-eyebrow">
+              VitrectoMed
+            </div>
+
+            <h1 className="product-title">
+              {name}
+            </h1>
+
+            <p className="product-recovery">
+              {
+                t.recoveryTitle
+              }
             </p>
-            <h1 className="product-detail-title">{name}</h1>
 
             {desc && (
-              <p className="product-detail-description">{desc}</p>
+              <p className="product-description">
+                {desc}
+              </p>
             )}
 
-            <div className="product-detail-price-row">
-              <p>
-                {t.priceExclTax} : <strong>{priceHT.toFixed(2)} €</strong>
-              </p>
+            {/* BADGES */}
+
+            <div className="product-badges">
+
+              {badges.map(
+                (
+                  badge
+                ) => (
+                  <div
+                    key={
+                      badge
+                    }
+
+                    className="product-badge"
+                  >
+                    {badge}
+                  </div>
+                )
+              )}
+
+            </div>
+
+            {/* TRUST */}
+
+            <div className="product-trust">
+
+              {trustPoints.map(
+                (
+                  item
+                ) => (
+                  <div
+                    key={
+                      item
+                    }
+
+                    className="product-trust-item"
+                  >
+                    <span />
+                    {item}
+                  </div>
+                )
+              )}
+
+            </div>
+
+            {/* PRICE */}
+
+            <div className="product-price-card">
+
+              <div className="product-price-row">
+                <span>
+                  {
+                    t.priceExclTax
+                  }
+                </span>
+
+                <strong>
+                  {priceHT.toFixed(
+                    2
+                  )} €
+                </strong>
+              </div>
 
               {vat.enabled && (
-                <>
-                  <p>
-                    {t.vat} ({vat.rate}%) :{" "}
-                    <strong>{vatAmount.toFixed(2)} €</strong>
-                  </p>
+                <div className="product-price-row">
+                  <span>
+                    {t.vat} (
+                    {
+                      vat.rate
+                    }
+                    %)
+                  </span>
 
-                  <p className="product-detail-price-ttc">
-                    {t.priceInclTax} : {priceTTC.toFixed(2)} €
-                  </p>
-                </>
+                  <strong>
+                    {vatAmount.toFixed(
+                      2
+                    )} €
+                  </strong>
+                </div>
               )}
+
+              <div className="product-price-total">
+                <span>
+                  {
+                    t.priceInclTax
+                  }
+                </span>
+
+                <strong>
+                  {priceTTC.toFixed(
+                    2
+                  )} €
+                </strong>
+              </div>
+
             </div>
 
-            <div className="product-detail-actions">
-              <button className="btn-primary" onClick={addToCart}>
-                {t.addToCart}
+            {/* CTA */}
+
+            <div className="product-actions">
+
+              <button
+                type="button"
+
+                onClick={
+                  handleAddToCart
+                }
+
+                className="product-btn-primary"
+              >
+                {
+                  added
+                    ? t.added
+                    : t.addToCart
+                }
               </button>
+
             </div>
+
+            {/* FOOTNOTE */}
+
+            <p className="product-footnote">
+              {
+                t.recoveryText
+              }
+            </p>
+
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }

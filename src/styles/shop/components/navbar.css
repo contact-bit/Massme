@@ -1,96 +1,14 @@
 /* =========================================================
-   VITRECTOMED — ELITE DARK MEDICAL NAVBAR
-   PREMIUM BLUE MEDICAL EDITION
+   VITRECTOMED — MASTER PREMIUM NAVBAR
+   CINEMATIC MEDTECH EXPERIENCE
 ========================================================= */
 
 /* =========================================================
-   ROOT TOKENS
+   NAVBAR ROOT
 ========================================================= */
 
 :root {
   --vm-navbar-height: 84px;
-
-  /* BACKGROUNDS */
-
-  --vm-bg:
-    rgba(6, 16, 30, 0.9);
-
-  --vm-bg-solid:
-    #08111f;
-
-  --vm-surface:
-    rgba(13, 24, 42, 0.96);
-
-  --vm-surface-2:
-    rgba(18, 32, 56, 0.94);
-
-  /* BORDERS */
-
-  --vm-border:
-    rgba(125, 166, 220, 0.12);
-
-  --vm-border-strong:
-    rgba(125, 166, 220, 0.2);
-
-  /* TEXT */
-
-  --vm-text:
-    #edf5ff;
-
-  --vm-text-soft:
-    #dbe7f5;
-
-  --vm-text-muted:
-    #8da6c2;
-
-  /* PRIMARY */
-
-  --vm-primary:
-    #60a5fa;
-
-  --vm-primary-hover:
-    #93c5fd;
-
-  --vm-primary-soft:
-    rgba(96, 165, 250, 0.14);
-
-  /* HOVERS */
-
-  --vm-hover:
-    rgba(96, 165, 250, 0.1);
-
-  --vm-hover-strong:
-    rgba(96, 165, 250, 0.16);
-
-  /* SHADOWS */
-
-  --vm-glow:
-    0 0 0 1px
-      rgba(96, 165, 250, 0.14),
-    0 16px 42px
-      rgba(37, 99, 235, 0.2);
-
-  --vm-shadow:
-    0 18px 44px
-      rgba(0, 0, 0, 0.34);
-
-  --vm-dropdown-shadow:
-    0 32px 74px
-      rgba(0, 0, 0, 0.45);
-
-  /* TRANSITIONS */
-
-  --vm-transition-fast:
-    0.16s ease;
-
-  --vm-transition:
-    0.24s ease;
-
-  --vm-radius:
-    18px;
-
-  --vm-radius-large:
-    24px;
 }
 
 /* =========================================================
@@ -113,26 +31,108 @@
 .vm-navbar {
   position: sticky;
 
-  top: 0;
+  top: 1rem;
 
-  z-index: 999;
+  z-index: 1400;
 
-  width: 100%;
+  width:
+    calc(100% - 2rem);
+
+  max-width:
+    1480px;
+
+  margin:
+    0 auto;
+
+  border-radius:
+    30px;
+
+  overflow: hidden;
+
+  isolation: isolate;
 
   background:
     linear-gradient(
       180deg,
-      rgba(8, 17, 31, 0.96),
-      rgba(6, 16, 30, 0.92)
+      rgba(10,16,28,.82),
+      rgba(7,12,22,.92)
     );
 
-  backdrop-filter: blur(18px);
+  backdrop-filter:
+    blur(26px)
+    saturate(180%);
 
-  border-bottom:
-    1px solid var(--vm-border);
+  border:
+    1px solid rgba(255,255,255,.08);
 
   box-shadow:
-    var(--vm-shadow);
+    0 10px 40px rgba(0,0,0,.32),
+    0 0 0 1px rgba(255,255,255,.02);
+}
+
+/* =========================================================
+   NAVBAR GLOW
+========================================================= */
+
+.vm-navbar::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.08),
+      transparent 35%,
+      rgba(139,92,246,.05)
+    );
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+/* =========================================================
+   NAVBAR BORDER LIGHT
+========================================================= */
+
+.vm-navbar::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: inherit;
+
+  padding: 1px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.10),
+      rgba(255,255,255,.02),
+      rgba(0,208,255,.10)
+    );
+
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+
+  mask-composite: exclude;
+
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+
+  -webkit-mask-composite:
+    xor;
+
+  pointer-events: none;
 }
 
 /* =========================================================
@@ -142,14 +142,11 @@
 .vm-navbar__inner {
   width: 100%;
 
-  max-width: 1480px;
-
   min-height:
     var(--vm-navbar-height);
 
-  margin: 0 auto;
-
-  padding: 0 1.5rem;
+  padding:
+    0 1.6rem;
 
   display: flex;
 
@@ -157,7 +154,7 @@
 
   justify-content: space-between;
 
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 /* =========================================================
@@ -172,7 +169,7 @@
 }
 
 .vm-navbar__right {
-  gap: 0.75rem;
+  gap: .8rem;
 
   flex-shrink: 0;
 }
@@ -186,39 +183,38 @@
 
   align-items: center;
 
-  justify-content: center;
+  gap: 1rem;
 
   text-decoration: none;
 }
 
 .vm-navbar__logo-image {
-  width: 54px;
+  width: 56px;
 
-  height: 54px;
+  height: 56px;
 
   object-fit: contain;
 
+  border-radius: 18px;
+
   filter:
     drop-shadow(
-      0 10px 24px
-        rgba(59, 130, 246, 0.22)
+      0 10px 30px rgba(0,208,255,.18)
     );
 
   transition:
-    transform
-      var(--vm-transition-fast),
-    filter
-      var(--vm-transition-fast);
+    transform .3s ease,
+    filter .3s ease;
 }
 
 .vm-navbar__logo:hover
-  .vm-navbar__logo-image {
-  transform: scale(1.04);
+.vm-navbar__logo-image {
+  transform:
+    scale(1.05);
 
   filter:
     drop-shadow(
-      0 14px 30px
-        rgba(96, 165, 250, 0.32)
+      0 16px 40px rgba(0,208,255,.28)
     );
 }
 
@@ -237,7 +233,7 @@
 
   justify-content: center;
 
-  gap: 0.2rem;
+  gap: .3rem;
 }
 
 @media (min-width: 1240px) {
@@ -260,70 +256,81 @@
 
   justify-content: center;
 
-  min-height: 46px;
+  min-height: 48px;
 
-  padding: 0 1rem;
+  padding:
+    0 1.15rem;
 
-  border: none;
+  border:
+    1px solid transparent;
 
-  border-radius: 14px;
+  border-radius:
+    16px;
 
-  background: transparent;
+  background:
+    transparent;
 
   cursor: pointer;
 
-  text-decoration: none;
-
   white-space: nowrap;
 
-  font-family: var(--font-main);
+  text-decoration: none;
 
-  font-size: 0.92rem;
+  color:
+    var(--color-text-soft);
 
-  font-weight: 600;
+  font-size:
+    .92rem;
 
-  letter-spacing: -0.01em;
+  font-weight:
+    620;
 
-  color: var(--vm-text-soft);
+  letter-spacing:
+    -.01em;
 
   transition:
-    background
-      var(--vm-transition-fast),
-    color
-      var(--vm-transition-fast),
-    transform
-      var(--vm-transition-fast),
-    box-shadow
-      var(--vm-transition-fast);
-}
-
-.vm-navbar__link:hover,
-.vm-navbar__trigger:hover {
-  color: white;
-
-  background:
-    var(--vm-hover);
-
-  box-shadow:
-    inset 0 0 0 1px
-      rgba(96, 165, 250, 0.08);
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 /* =========================================================
-   ACTIVE LINK
+   LINK HOVER
+========================================================= */
+
+.vm-navbar__link:hover,
+.vm-navbar__trigger:hover {
+  color:
+    white;
+
+  background:
+    rgba(255,255,255,.04);
+
+  border-color:
+    rgba(255,255,255,.06);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* =========================================================
+   ACTIVE
 ========================================================= */
 
 .vm-navbar__link--active {
-  color: white;
+  color:
+    white;
 
   background:
-    rgba(96, 165, 250, 0.12);
+    rgba(0,208,255,.10);
+
+  border-color:
+    rgba(0,208,255,.14);
 
   box-shadow:
-    inset 0 0 0 1px
-      rgba(96, 165, 250, 0.16),
-    0 8px 22px
-      rgba(37, 99, 235, 0.14);
+    0 0 24px rgba(0,208,255,.10);
 }
 
 /* =========================================================
@@ -339,7 +346,7 @@
 }
 
 /* =========================================================
-   DROPDOWN ARROW
+   TRIGGER ARROW
 ========================================================= */
 
 .vm-navbar__trigger::after {
@@ -349,7 +356,7 @@
 
   height: 5px;
 
-  margin-left: 0.55rem;
+  margin-left: .55rem;
 
   border-right:
     1.5px solid currentColor;
@@ -361,7 +368,7 @@
     rotate(45deg)
     translateY(-1px);
 
-  opacity: 0.72;
+  opacity: .72;
 }
 
 /* =========================================================
@@ -371,59 +378,44 @@
 .vm-navbar__dropdown {
   position: absolute;
 
-  top: calc(100% + 14px);
+  top:
+    calc(100% + 16px);
 
   left: 0;
 
-  width: 340px;
+  width: 360px;
 
   max-height: 72vh;
 
   overflow-y: auto;
 
-  padding: 0.7rem;
+  padding:
+    .8rem;
 
-  border-radius: 26px;
+  border-radius:
+    28px;
 
   background:
     linear-gradient(
       180deg,
-      rgba(13, 24, 42, 0.98),
-      rgba(9, 18, 32, 0.98)
+      rgba(15,24,38,.96),
+      rgba(8,13,22,.98)
     );
 
-  backdrop-filter: blur(20px);
+  backdrop-filter:
+    blur(30px);
 
   border:
-    1px solid
-    rgba(125, 166, 220, 0.12);
+    1px solid rgba(255,255,255,.08);
 
   box-shadow:
-    var(--vm-dropdown-shadow);
-
-  z-index: 1200;
+    0 30px 80px rgba(0,0,0,.55),
+    0 0 0 1px rgba(255,255,255,.03);
 
   animation:
-    vmDropdownIn 0.18s ease;
+    vmDropdownIn .2s ease;
 
-  scrollbar-width: thin;
-
-  scrollbar-color:
-    rgba(96, 165, 250, 0.35)
-    transparent;
-}
-
-.vm-navbar__dropdown::-webkit-scrollbar,
-.vm-navbar__lang-dropdown::-webkit-scrollbar {
-  width: 6px;
-}
-
-.vm-navbar__dropdown::-webkit-scrollbar-thumb,
-.vm-navbar__lang-dropdown::-webkit-scrollbar-thumb {
-  background:
-    rgba(96, 165, 250, 0.3);
-
-  border-radius: 999px;
+  z-index: 1200;
 }
 
 /* =========================================================
@@ -437,40 +429,47 @@
 
   width: 100%;
 
-  min-height: 58px;
+  min-height: 60px;
 
-  padding: 0.95rem 1rem;
+  padding:
+    1rem 1rem;
 
-  border-radius: 18px;
+  border-radius:
+    18px;
 
   text-decoration: none;
 
-  font-family: var(--font-main);
+  color:
+    var(--color-text-soft);
 
-  font-size: 0.93rem;
+  font-size:
+    .94rem;
 
-  font-weight: 600;
+  font-weight:
+    600;
 
-  line-height: 1.35;
-
-  color: #e3eefc;
+  line-height:
+    1.4;
 
   transition:
-    background
-      var(--vm-transition-fast),
-    color
-      var(--vm-transition-fast),
-    transform
-      var(--vm-transition-fast);
+    background var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base),
+    border-color var(--transition-base);
 }
 
 .vm-navbar__dropdown-link:hover {
   background:
-    rgba(96, 165, 250, 0.1);
+    rgba(255,255,255,.04);
 
-  color: white;
+  color:
+    white;
 
-  transform: translateX(2px);
+  transform:
+    translateX(3px);
+
+  border-color:
+    rgba(0,208,255,.12);
 }
 
 /* =========================================================
@@ -478,60 +477,94 @@
 ========================================================= */
 
 .vm-navbar__cta {
+  position: relative;
+
+  overflow: hidden;
+
   display: none;
 
   align-items: center;
 
   justify-content: center;
 
-  min-height: 48px;
+  min-height: 50px;
 
-  padding: 0 1.25rem;
+  padding:
+    0 1.4rem;
 
-  border-radius: 18px;
+  border-radius:
+    18px;
 
   background:
     linear-gradient(
       135deg,
-      #2563eb,
-      #60a5fa
+      var(--color-primary),
+      var(--color-secondary)
     );
 
-  color: white;
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  color:
+    white;
 
   text-decoration: none;
 
   white-space: nowrap;
 
-  font-family: var(--font-main);
+  font-size:
+    .92rem;
 
-  font-size: 0.92rem;
+  font-weight:
+    700;
 
-  font-weight: 700;
-
-  letter-spacing: -0.01em;
+  letter-spacing:
+    -.01em;
 
   box-shadow:
-    0 18px 38px
-      rgba(37, 99, 235, 0.26);
+    0 16px 40px rgba(0,208,255,.20),
+    0 0 40px rgba(0,208,255,.10);
 
   transition:
-    transform
-      var(--vm-transition-fast),
-    box-shadow
-      var(--vm-transition-fast),
-    filter
-      var(--vm-transition-fast);
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    filter var(--transition-base);
+}
+
+.vm-navbar__cta::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent 20%,
+      rgba(255,255,255,.24) 50%,
+      transparent 80%
+    );
+
+  transform:
+    translateX(-120%);
+
+  transition:
+    transform .9s cubic-bezier(.16,1,.3,1);
+}
+
+.vm-navbar__cta:hover::before {
+  transform:
+    translateX(120%);
 }
 
 .vm-navbar__cta:hover {
-  transform: translateY(-1px);
-
-  filter: brightness(1.04);
+  transform:
+    translateY(-2px);
 
   box-shadow:
-    0 24px 52px
-      rgba(37, 99, 235, 0.34);
+    0 22px 54px rgba(0,208,255,.28),
+    0 0 60px rgba(0,208,255,.16);
 }
 
 @media (min-width: 768px) {
@@ -541,7 +574,7 @@
 }
 
 /* =========================================================
-   LANGUAGE + BURGER
+   LANG + BURGER
 ========================================================= */
 
 .vm-navbar__lang {
@@ -550,18 +583,21 @@
 
 .vm-navbar__lang-button,
 .vm-navbar__burger {
-  width: 48px;
+  width: 50px;
 
-  height: 48px;
+  height: 50px;
+
+  border-radius:
+    16px;
 
   border:
-    1px solid
-    rgba(125, 166, 220, 0.14);
-
-  border-radius: 16px;
+    1px solid rgba(255,255,255,.08);
 
   background:
-    rgba(16, 29, 50, 0.96);
+    rgba(255,255,255,.03);
+
+  backdrop-filter:
+    blur(18px);
 
   display: inline-flex;
 
@@ -569,78 +605,74 @@
 
   justify-content: center;
 
+  color:
+    white;
+
   cursor: pointer;
 
-  color: white;
-
   transition:
-    background
-      var(--vm-transition-fast),
-    border-color
-      var(--vm-transition-fast),
-    box-shadow
-      var(--vm-transition-fast),
-    transform
-      var(--vm-transition-fast);
+    background var(--transition-base),
+    border-color var(--transition-base),
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .vm-navbar__lang-button:hover,
 .vm-navbar__burger:hover {
   background:
-    rgba(23, 40, 68, 1);
+    rgba(255,255,255,.05);
 
   border-color:
-    rgba(96, 165, 250, 0.24);
+    rgba(0,208,255,.16);
 
   box-shadow:
-    var(--vm-glow);
+    0 0 24px rgba(0,208,255,.10);
 }
 
 /* =========================================================
-   LANGUAGE DROPDOWN
+   LANG DROPDOWN
 ========================================================= */
 
 .vm-navbar__lang-dropdown {
   position: absolute;
 
-  top: calc(100% + 14px);
+  top:
+    calc(100% + 14px);
 
   right: 0;
 
   width: 220px;
 
-  max-height: 280px;
+  padding:
+    .6rem;
 
-  overflow-y: auto;
-
-  padding: 0.55rem;
-
-  border-radius: 22px;
+  border-radius:
+    24px;
 
   background:
     linear-gradient(
       180deg,
-      rgba(13, 24, 42, 0.98),
-      rgba(9, 18, 32, 0.98)
+      rgba(15,24,38,.96),
+      rgba(8,13,22,.98)
     );
 
-  backdrop-filter: blur(20px);
+  backdrop-filter:
+    blur(26px);
 
   border:
-    1px solid
-    rgba(125, 166, 220, 0.12);
+    1px solid rgba(255,255,255,.08);
 
   box-shadow:
-    var(--vm-dropdown-shadow);
-
-  z-index: 1300;
+    0 30px 80px rgba(0,0,0,.50);
 
   animation:
-    vmDropdownIn 0.18s ease;
+    vmDropdownIn .2s ease;
+
+  z-index: 1300;
 }
 
 /* =========================================================
-   LANGUAGE ITEM
+   LANG ITEM
 ========================================================= */
 
 .vm-navbar__lang-item {
@@ -648,42 +680,44 @@
 
   align-items: center;
 
-  gap: 0.75rem;
+  gap: .75rem;
 
   width: 100%;
 
-  min-height: 46px;
+  min-height: 48px;
 
-  padding: 0 0.9rem;
+  padding:
+    0 .9rem;
 
-  border-radius: 14px;
+  border-radius:
+    16px;
 
   text-decoration: none;
 
-  font-family: var(--font-main);
+  color:
+    var(--color-text-soft);
 
-  font-size: 0.92rem;
+  font-size:
+    .92rem;
 
-  font-weight: 600;
-
-  color: var(--vm-text-soft);
+  font-weight:
+    600;
 
   transition:
-    background
-      var(--vm-transition-fast),
-    color
-      var(--vm-transition-fast),
-    transform
-      var(--vm-transition-fast);
+    background var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
 }
 
 .vm-navbar__lang-item:hover {
   background:
-    rgba(96, 165, 250, 0.1);
+    rgba(255,255,255,.04);
 
-  color: white;
+  color:
+    white;
 
-  transform: translateX(2px);
+  transform:
+    translateX(2px);
 }
 
 /* =========================================================
@@ -701,9 +735,11 @@
 
   height: 2px;
 
-  border-radius: 999px;
+  border-radius:
+    999px;
 
-  background: white;
+  background:
+    white;
 }
 
 @media (min-width: 1240px) {
@@ -717,25 +753,21 @@
 ========================================================= */
 
 .vm-mobile-menu {
-  padding: 1rem;
+  padding:
+    1rem;
 
   background:
     linear-gradient(
       180deg,
-      rgba(7, 15, 28, 0.99),
-      rgba(5, 11, 20, 1)
+      rgba(10,16,28,.98),
+      rgba(5,8,14,1)
     );
 
   border-top:
-    1px solid
-    rgba(125, 166, 220, 0.08);
-
-  box-shadow:
-    0 24px 64px
-      rgba(0, 0, 0, 0.46);
+    1px solid rgba(255,255,255,.06);
 
   animation:
-    vmDropdownIn 0.18s ease;
+    vmDropdownIn .2s ease;
 }
 
 @media (min-width: 1240px) {
@@ -749,7 +781,8 @@
 ========================================================= */
 
 .vm-mobile-dropdown {
-  margin-bottom: 0.25rem;
+  margin-bottom:
+    .3rem;
 }
 
 .vm-mobile-dropdown__trigger {
@@ -757,13 +790,16 @@
 
   min-height: 58px;
 
-  padding: 0 1rem;
+  padding:
+    0 1rem;
 
   border: none;
 
-  border-radius: 18px;
+  border-radius:
+    18px;
 
-  background: transparent;
+  background:
+    transparent;
 
   display: flex;
 
@@ -771,47 +807,39 @@
 
   justify-content: space-between;
 
+  color:
+    white;
+
   cursor: pointer;
 
-  font-family: var(--font-main);
+  font-size:
+    1rem;
 
-  font-size: 1rem;
-
-  font-weight: 700;
-
-  color: #f4f8ff;
+  font-weight:
+    700;
 
   transition:
-    background
-      var(--vm-transition-fast),
-    color
-      var(--vm-transition-fast);
+    background var(--transition-base);
 }
 
 .vm-mobile-dropdown__trigger:hover {
   background:
-    rgba(96, 165, 250, 0.08);
+    rgba(255,255,255,.04);
 }
 
 .vm-mobile-dropdown__trigger svg {
-  width: 18px;
-
-  height: 18px;
-
-  color: #93c5fd;
-
   transition:
-    transform
-      var(--vm-transition-fast);
+    transform var(--transition-base);
 }
 
 .vm-mobile-dropdown--open
-  .vm-mobile-dropdown__trigger svg {
-  transform: rotate(180deg);
+.vm-mobile-dropdown__trigger svg {
+  transform:
+    rotate(180deg);
 }
 
 /* =========================================================
-   MOBILE DROPDOWN CONTENT
+   MOBILE CONTENT
 ========================================================= */
 
 .vm-mobile-dropdown__content {
@@ -819,22 +847,19 @@
 
   flex-direction: column;
 
-  gap: 0.35rem;
+  gap: .4rem;
 
-  margin-top: 0.4rem;
+  margin-top:
+    .5rem;
 
   padding:
-    0.45rem
-    0.45rem
-    0.45rem
-    0.8rem;
+    .5rem .5rem .5rem .8rem;
 
   border-left:
-    1px solid
-    rgba(96, 165, 250, 0.16);
+    1px solid rgba(0,208,255,.16);
 
   animation:
-    vmDropdownIn 0.18s ease;
+    vmDropdownIn .2s ease;
 }
 
 /* =========================================================
@@ -849,50 +874,41 @@
 
   width: 100%;
 
-  min-height: 54px;
+  min-height: 56px;
 
-  padding: 0 1rem;
+  padding:
+    0 1rem;
 
-  border-radius: 16px;
+  border-radius:
+    16px;
 
   text-decoration: none;
 
-  font-family: var(--font-main);
+  color:
+    var(--color-text-soft);
 
-  font-size: 0.97rem;
+  font-size:
+    .96rem;
 
-  font-weight: 600;
-
-  color: #dbe7f5;
+  font-weight:
+    600;
 
   transition:
-    background
-      var(--vm-transition-fast),
-    color
-      var(--vm-transition-fast),
-    transform
-      var(--vm-transition-fast);
+    background var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
 }
 
 .vm-mobile-menu__link:hover,
 .vm-mobile-menu__language:hover {
   background:
-    rgba(96, 165, 250, 0.1);
+    rgba(255,255,255,.04);
 
-  color: white;
+  color:
+    white;
 
-  transform: translateX(2px);
-}
-
-/* =========================================================
-   MOBILE SUBLINKS
-========================================================= */
-
-.vm-mobile-dropdown__content
-  .vm-mobile-menu__link {
-  color: #edf5ff;
-
-  font-size: 0.95rem;
+  transform:
+    translateX(2px);
 }
 
 /* =========================================================
@@ -900,7 +916,12 @@
 ========================================================= */
 
 .vm-mobile-menu__cta {
-  margin-top: 1rem;
+  position: relative;
+
+  overflow: hidden;
+
+  margin-top:
+    1rem;
 
   display: flex;
 
@@ -912,65 +933,66 @@
 
   min-height: 60px;
 
-  padding: 0 1rem;
-
-  border-radius: 22px;
+  border-radius:
+    22px;
 
   background:
     linear-gradient(
       135deg,
-      #2563eb,
-      #60a5fa
+      var(--color-primary),
+      var(--color-secondary)
     );
 
-  color: white;
+  color:
+    white;
 
   text-decoration: none;
 
-  font-size: 1rem;
+  font-size:
+    1rem;
 
-  font-weight: 700;
+  font-weight:
+    700;
 
   box-shadow:
-    0 22px 48px
-      rgba(37, 99, 235, 0.3);
+    0 20px 50px rgba(0,208,255,.22);
 
   transition:
-    transform
-      var(--vm-transition-fast),
-    box-shadow
-      var(--vm-transition-fast);
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .vm-mobile-menu__cta:hover {
-  transform: translateY(-1px);
+  transform:
+    translateY(-2px);
 
   box-shadow:
-    0 28px 60px
-      rgba(37, 99, 235, 0.38);
+    0 28px 70px rgba(0,208,255,.30);
 }
 
 /* =========================================================
-   MOBILE LANGUAGES
+   MOBILE LANGS
 ========================================================= */
 
 .vm-mobile-menu__languages {
-  margin-top: 1rem;
+  margin-top:
+    1rem;
 
-  padding: 0.65rem;
+  padding:
+    .7rem;
 
-  border-radius: 22px;
+  border-radius:
+    22px;
 
   background:
-    rgba(15, 23, 42, 0.92);
+    rgba(255,255,255,.03);
 
   border:
-    1px solid
-    rgba(125, 166, 220, 0.12);
+    1px solid rgba(255,255,255,.06);
 
   display: grid;
 
-  gap: 0.4rem;
+  gap: .4rem;
 }
 
 /* =========================================================
@@ -978,14 +1000,27 @@
 ========================================================= */
 
 @media (max-width: 640px) {
+
+  .vm-navbar {
+    width:
+      calc(100% - 1rem);
+
+    top:
+      .5rem;
+
+    border-radius:
+      24px;
+  }
+
   .vm-navbar__inner {
-    padding: 0 1rem;
+    padding:
+      0 1rem;
   }
 
   .vm-navbar__logo-image {
-    width: 48px;
+    width: 50px;
 
-    height: 48px;
+    height: 50px;
   }
 
   .vm-navbar__cta {
@@ -994,8 +1029,6 @@
 
   .vm-navbar__lang-dropdown {
     width: 200px;
-
-    max-height: 240px;
   }
 }
 
@@ -1004,12 +1037,13 @@
 ========================================================= */
 
 @keyframes vmDropdownIn {
+
   from {
     opacity: 0;
 
     transform:
       translateY(-8px)
-      scale(0.98);
+      scale(.98);
   }
 
   to {
@@ -1020,5 +1054,3 @@
       scale(1);
   }
 }
-
-

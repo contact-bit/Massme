@@ -1,430 +1,1041 @@
 /* =========================================================
-   VITRECTOMED — PAGE PRODUITS (MONOPRODUIT)
-   DIRECTION ARTISTIQUE : MEDICAL PREMIUM / DARK BLUE / HIGH TRUST
+   VITRECTOMED — PRODUCT EXPERIENCE
+   CINEMATIC / PREMIUM MEDTECH / APPLE-LIKE
+========================================================= */
+
+/* =========================================================
+   ROOT TOKENS
 ========================================================= */
 
 :root {
-  --vm-bg: #040914;
-  --vm-bg-2: #07111f;
-  --vm-surface: rgba(10, 20, 38, 0.78);
-  --vm-surface-strong: rgba(15, 28, 50, 0.96);
-  --vm-card: rgba(17, 31, 56, 0.74);
-  --vm-card-hover: rgba(22, 38, 68, 0.94);
-  --vm-border: rgba(125, 166, 220, 0.12);
-  --vm-border-strong: rgba(125, 166, 220, 0.22);
-  --vm-text: #f8fbff;
-  --vm-text-soft: #d9e8fb;
-  --vm-text-muted: #8da6c2;
-  --vm-title: #ffffff;
-  --vm-primary: #60a5fa;
-  --vm-primary-light: #93c5fd;
-  --vm-primary-strong: #2563eb;
-  --vm-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
-  --vm-shadow-soft: 0 14px 38px rgba(0, 0, 0, 0.24);
+  --vm-bg:
+    #040914;
+
+  --vm-bg-soft:
+    #09111f;
+
+  --vm-surface:
+    rgba(10,20,38,.78);
+
+  --vm-surface-strong:
+    rgba(15,28,50,.96);
+
+  --vm-card:
+    rgba(17,31,56,.74);
+
+  --vm-card-hover:
+    rgba(22,38,68,.94);
+
+  --vm-border:
+    rgba(125,166,220,.12);
+
+  --vm-border-strong:
+    rgba(125,166,220,.22);
+
+  --vm-title:
+    #ffffff;
+
+  --vm-text:
+    #f8fbff;
+
+  --vm-text-soft:
+    #d9e8fb;
+
+  --vm-text-muted:
+    #8da6c2;
+
+  --vm-primary:
+    #60a5fa;
+
+  --vm-primary-light:
+    #93c5fd;
+
+  --vm-primary-strong:
+    #2563eb;
+
+  --vm-shadow:
+    0 30px 90px rgba(0,0,0,.46);
+
+  --vm-shadow-soft:
+    0 18px 44px rgba(0,0,0,.26);
+
   --vm-glow:
-    0 0 0 1px rgba(96, 165, 250, 0.14),
-    0 18px 42px rgba(37, 99, 235, 0.24),
-    0 0 120px rgba(37, 99, 235, 0.12);
-  --vm-radius: 24px;
-  --vm-radius-large: 34px;
-  --vm-container: 1200px;
-  --vm-transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    0 0 0 1px rgba(96,165,250,.14),
+    0 18px 42px rgba(37,99,235,.24),
+    0 0 120px rgba(37,99,235,.12);
+
+  --vm-radius:
+    28px;
+
+  --vm-radius-large:
+    38px;
+
+  --vm-container:
+    1280px;
+
+  --vm-transition:
+    .34s cubic-bezier(.16,1,.3,1);
 }
 
-/* =========================
-   PAGE PRODUITS — Vitrectomed (monoproduit)
-========================= */
+/* =========================================================
+   PAGE
+========================================================= */
 
 .products-page {
   position: relative;
+
   width: 100%;
-  max-width: var(--vm-container);
-  margin: 0 auto;
-  padding: 80px 32px 96px;
-  color: var(--vm-text);
+
+  max-width:
+    var(--vm-container);
+
+  margin:
+    0 auto;
+
+  padding:
+    clamp(5rem, 8vw, 8rem)
+    clamp(1rem, 3vw, 2rem)
+    clamp(6rem, 8vw, 8rem);
+
+  color:
+    var(--vm-text);
+
+  isolation:
+    isolate;
 }
 
 .products-page::before {
   content: "";
-  position: absolute;
+
+  position: fixed;
+
   inset: 0;
+
   pointer-events: none;
+
   background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 24%),
-    radial-gradient(circle at 90% 20%, rgba(96, 165, 250, 0.06), transparent 22%);
-  opacity: 0.9;
+    radial-gradient(
+      circle at top left,
+      rgba(37,99,235,.10),
+      transparent 24%
+    ),
+
+    radial-gradient(
+      circle at top right,
+      rgba(96,165,250,.08),
+      transparent 22%
+    ),
+
+    radial-gradient(
+      circle at bottom center,
+      rgba(37,99,235,.06),
+      transparent 26%
+    );
+
+  z-index:
+    -2;
 }
 
-/* Wrapper de page */
+.products-page::after {
+  content: "";
+
+  position: fixed;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  opacity:
+    .18;
+
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,.02) 1px,
+      transparent 1px
+    ),
+
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,.02) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    72px 72px;
+
+  mask-image:
+    radial-gradient(
+      circle at center,
+      black,
+      transparent 90%
+    );
+
+  z-index:
+    -1;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
 .products-header {
   position: relative;
-  z-index: 1;
-  max-width: 880px;
-  margin: 0 auto 40px;
+
+  z-index: 2;
+
+  max-width:
+    900px;
+
+  margin:
+    0 auto
+    4rem;
 }
 
-/* Header */
 .products-eyebrow {
   display: inline-flex;
+
   align-items: center;
-  min-height: 34px;
-  padding: 0 0.9rem;
-  margin-bottom: 0.7rem;
-  border-radius: 999px;
-  background: rgba(96, 165, 250, 0.08);
-  border: 1px solid rgba(96, 165, 250, 0.16);
-  color: var(--vm-primary-light);
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  justify-content: center;
+
+  min-height:
+    42px;
+
+  padding:
+    0 1rem;
+
+  margin-bottom:
+    1rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(96,165,250,.08);
+
+  border:
+    1px solid rgba(96,165,250,.16);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    var(--vm-primary-light);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    .16em;
+
+  text-transform:
+    uppercase;
+
+  box-shadow:
+    0 0 40px rgba(96,165,250,.10);
 }
 
 .products-title {
-  margin: 0 0 0.75rem;
-  color: var(--vm-title);
-  font-size: clamp(2.2rem, 4vw, 3.4rem);
-  line-height: 1.08;
-  letter-spacing: -0.05em;
-  font-weight: 900;
-  text-wrap: balance;
+  margin:
+    0 0 1rem;
+
+  color:
+    var(--vm-title);
+
+  font-size:
+    clamp(3rem, 6vw, 5.2rem);
+
+  line-height:
+    .92;
+
+  letter-spacing:
+    -.08em;
+
+  font-weight:
+    950;
+
+  text-wrap:
+    balance;
+
+  max-width:
+    10ch;
+
+  text-shadow:
+    0 18px 40px rgba(37,99,235,.14);
 }
 
 .products-subtitle {
-  margin: 0;
-  max-width: 70ch;
-  font-size: 1rem;
-  line-height: 1.9;
-  color: var(--vm-text-muted);
+  margin:
+    0;
+
+  max-width:
+    68ch;
+
+  color:
+    var(--vm-text-soft);
+
+  font-size:
+    clamp(1rem, 1.4vw, 1.12rem);
+
+  line-height:
+    2;
 }
 
-/* Loading / empty */
+/* =========================================================
+   LOADING
+========================================================= */
+
 .products-loading {
   display: flex;
+
   align-items: center;
-  gap: 0.7rem;
-  margin-top: 1.5rem;
-  font-size: 0.95rem;
-  color: var(--vm-text-muted);
+
+  gap:
+    .9rem;
+
+  margin-top:
+    2rem;
+
+  color:
+    var(--vm-text-muted);
+
+  font-size:
+    .96rem;
 }
 
 .loader {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  border: 2px solid rgba(148, 163, 184, 0.35);
-  border-top-color: var(--vm-primary);
-  animation: spin 0.7s linear infinite;
+  width:
+    18px;
+
+  height:
+    18px;
+
+  border-radius:
+    999px;
+
+  border:
+    2px solid rgba(148,163,184,.28);
+
+  border-top-color:
+    var(--vm-primary);
+
+  animation:
+    spin .7s linear infinite;
 }
 
 @keyframes spin {
   to {
-    transform: rotate(360deg);
+    transform:
+      rotate(360deg);
   }
 }
 
 .products-empty {
-  margin-top: 2rem;
-  font-size: 0.95rem;
-  color: var(--vm-text-muted);
+  margin-top:
+    2rem;
+
+  color:
+    var(--vm-text-muted);
+
+  font-size:
+    .96rem;
 }
 
-/* =========================
-   CARD MONO-PRODUIT
-========================= */
+/* =========================================================
+   PRODUCT CARD
+========================================================= */
 
 .product-card {
   position: relative;
-  display: grid;
-  grid-template-columns: 1.05fr 1.15fr;
-  gap: 40px;
-  align-items: center;
 
-  padding: 40px 40px 48px;
-  border-radius: 32px;
-
-  background: linear-gradient(180deg, rgba(14, 24, 44, 0.82), rgba(9, 18, 32, 0.92));
-  border: 1px solid rgba(125, 166, 220, 0.1);
-  box-shadow: var(--vm-shadow);
-  backdrop-filter: blur(20px);
   overflow: hidden;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, .95fr)
+    minmax(0, 1.05fr);
+
+  gap:
+    clamp(2rem, 4vw, 4rem);
+
+  align-items:
+    center;
+
+  padding:
+    clamp(1.8rem, 4vw, 3rem);
+
+  border-radius:
+    var(--vm-radius-large);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(14,24,44,.82),
+      rgba(8,16,30,.96)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  backdrop-filter:
+    blur(24px);
+
+  box-shadow:
+    var(--vm-shadow);
+
+  isolation:
+    isolate;
 }
 
 .product-card::before {
   content: "";
+
   position: absolute;
+
   inset: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at top right, rgba(96, 165, 250, 0.08), transparent 40%);
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(96,165,250,.08),
+      transparent 40%
+    );
+
+  pointer-events:
+    none;
 }
 
-/* Mobile : une seule colonne */
-@media (max-width: 900px) {
-  .product-card {
-    grid-template-columns: 1fr;
-    padding: 28px 24px 32px;
-  }
+/* =========================================================
+   IMAGE
+========================================================= */
 
-  .products-page {
-    padding: 56px 20px 72px;
-  }
-}
-
-/* Image : taille maîtrisée, pas excessive */
 .product-img-wrapper {
   position: relative;
+
   width: 100%;
-  max-width: 460px;
-  height: 380px;
-  border-radius: 28px;
-  overflow: hidden;
-  background: radial-gradient(circle at top, rgba(96, 165, 250, 0.18) 0, rgba(15, 28, 50, 0.92) 45%, rgba(8, 16, 30, 0.98) 100%);
-  border: 1px solid rgba(125, 166, 220, 0.12);
-  box-shadow: var(--vm-shadow-soft);
+
+  max-width:
+    520px;
+
+  aspect-ratio:
+    1 / 1;
+
+  margin:
+    0 auto;
+
+  border-radius:
+    34px;
+
+  overflow:
+    hidden;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(96,165,250,.18),
+      rgba(15,28,50,.92) 46%,
+      rgba(8,16,30,.98) 100%
+    );
+
+  border:
+    1px solid rgba(125,166,220,.12);
+
+  box-shadow:
+    var(--vm-shadow-soft);
+}
+
+.product-img-wrapper::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.05),
+      transparent 26%
+    );
+
+  pointer-events:
+    none;
+
+  z-index:
+    2;
 }
 
 .product-img-wrapper::after {
   content: "";
+
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 28%);
+
+  inset:
+    -40px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(37,99,235,.18),
+      transparent 72%
+    );
+
+  filter:
+    blur(50px);
+
+  pointer-events:
+    none;
+
+  z-index:
+    -1;
 }
 
 .product-img {
-  object-fit: contain;
+  object-fit:
+    contain;
+
+  transform:
+    scale(.92);
+
+  transition:
+    transform .5s cubic-bezier(.16,1,.3,1);
 }
 
-/* Centre l'image si la colonne est plus large */
-@media (min-width: 900px) {
-  .product-img-wrapper {
-    margin-left: auto;
-    margin-right: auto;
-  }
+.product-card:hover .product-img {
+  transform:
+    scale(.96);
 }
 
-/* =========================
-   Colonne contenu
-========================= */
+/* =========================================================
+   BODY
+========================================================= */
 
 .product-body {
   position: relative;
-  z-index: 1;
+
+  z-index: 2;
+
   display: flex;
-  flex-direction: column;
-  gap: 0.95rem;
+
+  flex-direction:
+    column;
+
+  gap:
+    1rem;
 }
 
 .product-title {
-  margin: 0 0 0.4rem;
-  color: var(--vm-title);
-  font-size: clamp(1.9rem, 2.6vw, 2.6rem);
-  line-height: 1.08;
-  letter-spacing: -0.04em;
-  font-weight: 900;
+  margin:
+    0;
+
+  color:
+    white;
+
+  font-size:
+    clamp(2.1rem, 4vw, 3.4rem);
+
+  line-height:
+    .94;
+
+  letter-spacing:
+    -.06em;
+
+  font-weight:
+    950;
+
+  text-wrap:
+    balance;
 }
 
 .product-desc {
-  margin: 0;
-  font-size: 0.96rem;
-  line-height: 1.9;
-  color: var(--vm-text-muted);
+  margin:
+    0;
+
+  color:
+    var(--vm-text-soft);
+
+  font-size:
+    1rem;
+
+  line-height:
+    2;
 }
 
-/* Variantes */
-.product-variants-block {
-  margin-top: 0.45rem;
+/* =========================================================
+   VARIANTS
+========================================================= */
+
+.product-variants-block,
+.product-addon-block {
+  margin-top:
+    .3rem;
 }
 
-.product-variants-label {
-  margin: 0 0 0.5rem;
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: var(--vm-text-soft);
+.product-variants-label,
+.product-addon-label {
+  margin:
+    0 0 .7rem;
+
+  color:
+    var(--vm-text-soft);
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .02em;
 }
 
 .product-variants-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
+
+  flex-wrap:
+    wrap;
+
+  gap:
+    .7rem;
 }
 
 .variant-pill {
+  position: relative;
+
+  overflow: hidden;
+
   display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  border-radius: 999px;
-  border: 1px solid rgba(125, 166, 220, 0.18);
-  background: rgba(18, 32, 56, 0.72);
-  padding: 0.3rem 0.7rem;
-  font-size: 0.84rem;
-  color: var(--vm-text-soft);
-  cursor: pointer;
+
+  align-items:
+    center;
+
+  gap:
+    .65rem;
+
+  min-height:
+    52px;
+
+  padding:
+    .45rem
+    1rem
+    .45rem
+    .5rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(18,32,56,.72);
+
+  border:
+    1px solid rgba(125,166,220,.16);
+
+  color:
+    var(--vm-text-soft);
+
+  cursor:
+    pointer;
+
   transition:
-    background var(--vm-transition),
-    border-color var(--vm-transition),
     transform var(--vm-transition),
+    border-color var(--vm-transition),
+    background var(--vm-transition),
     box-shadow var(--vm-transition);
 }
 
 .variant-pill:hover {
-  border-color: rgba(96, 165, 250, 0.34);
-  transform: translateY(-1px);
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(96,165,250,.28);
+
+  background:
+    rgba(22,38,68,.92);
 }
 
 .variant-pill.active {
-  border-color: rgba(96, 165, 250, 0.34);
-  background: rgba(37, 99, 235, 0.14);
-  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.08);
+  border-color:
+    rgba(96,165,250,.38);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(37,99,235,.18),
+      rgba(10,20,38,.96)
+    );
+
+  box-shadow:
+    var(--vm-glow);
+
+  transform:
+    translateY(-2px);
+}
+
+.variant-pill.active::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius:
+    inherit;
+
+  padding:
+    1px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(96,165,250,.65),
+      rgba(37,99,235,.12)
+    );
+
+  -webkit-mask:
+    linear-gradient(#fff 0 0)
+    content-box,
+    linear-gradient(#fff 0 0);
+
+  -webkit-mask-composite:
+    xor;
+
+  mask-composite:
+    exclude;
+
+  pointer-events:
+    none;
 }
 
 .variant-thumb {
-  border-radius: 999px;
-  overflow: hidden;
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  width:
+    38px;
+
+  height:
+    38px;
+
+  border-radius:
+    999px;
+
+  overflow:
+    hidden;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  flex-shrink:
+    0;
 }
 
 .variant-label {
-  white-space: nowrap;
+  white-space:
+    nowrap;
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    600;
 }
 
-/* Addon */
-.product-addon-block {
-  margin-top: 0.45rem;
-}
-
-.product-addon-label {
-  margin: 0 0 0.4rem;
-  font-size: 0.86rem;
-  color: var(--vm-text-soft);
-}
-
-.product-addon-label span {
-  font-weight: 600;
-}
+/* =========================================================
+   ADDON TOGGLE
+========================================================= */
 
 .product-addon-toggle {
   display: inline-flex;
-  border-radius: 999px;
-  border: 1px solid rgba(125, 166, 220, 0.16);
-  overflow: hidden;
-  background: rgba(15, 28, 50, 0.78);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+
+  padding:
+    .3rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(15,28,50,.78);
+
+  border:
+    1px solid rgba(125,166,220,.16);
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.02);
 }
 
 .addon-pill {
-  border: none;
-  background: transparent;
-  padding: 0.35rem 0.95rem;
-  font-size: 0.84rem;
-  cursor: pointer;
-  color: var(--vm-text-muted);
-  transition: background var(--vm-transition), color var(--vm-transition);
+  border:
+    none;
+
+  background:
+    transparent;
+
+  min-height:
+    42px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    999px;
+
+  color:
+    var(--vm-text-muted);
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    700;
+
+  cursor:
+    pointer;
+
+  transition:
+    background var(--vm-transition),
+    color var(--vm-transition),
+    transform var(--vm-transition);
+}
+
+.addon-pill:hover {
+  color:
+    white;
 }
 
 .addon-pill.active {
-  background: linear-gradient(135deg, #2563eb, #60a5fa);
-  color: #ffffff;
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #60a5fa
+    );
+
+  color:
+    white;
+
+  box-shadow:
+    0 14px 34px rgba(37,99,235,.26);
 }
 
-/* Prix */
+/* =========================================================
+   PRICES
+========================================================= */
+
 .product-prices {
-  margin-top: 0.45rem;
-  font-size: 0.92rem;
-  color: var(--vm-text-soft);
+  margin-top:
+    .5rem;
+
+  padding-top:
+    1.2rem;
+
+  border-top:
+    1px solid rgba(255,255,255,.06);
 }
 
 .product-prices p {
-  margin: 0.16rem 0;
+  margin:
+    .3rem 0;
+
+  color:
+    var(--vm-text-soft);
+
+  font-size:
+    .95rem;
 }
 
 .price-ttc {
-  font-weight: 700;
-  color: var(--vm-title);
+  color:
+    white;
+
+  font-size:
+    1.35rem !important;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.03em;
 }
 
-/* Actions */
+/* =========================================================
+   ACTIONS
+========================================================= */
+
 .product-actions {
-  margin-top: 1.2rem;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
+
+  flex-wrap:
+    wrap;
+
+  gap:
+    .8rem;
+
+  margin-top:
+    1.5rem;
 }
 
 .btn {
+  position: relative;
+
+  overflow: hidden;
+
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  border-radius: 999px;
-  padding: 0.7rem 1.2rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  border: 1px solid transparent;
-  cursor: pointer;
-  text-decoration: none;
-  text-align: center;
-  white-space: nowrap;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  min-height:
+    54px;
+
+  padding:
+    0 1.4rem;
+
+  border-radius:
+    999px;
+
+  border:
+    1px solid transparent;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+
+  text-decoration:
+    none;
+
+  white-space:
+    nowrap;
+
   transition:
     transform var(--vm-transition),
     background var(--vm-transition),
     border-color var(--vm-transition),
     box-shadow var(--vm-transition),
-    color var(--vm-transition);
+    filter var(--vm-transition);
 }
 
 .btn:hover {
-  transform: translateY(-2px);
+  transform:
+    translateY(-2px);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #2563eb, #60a5fa);
-  border-color: rgba(96, 165, 250, 0.2);
-  color: #ffffff;
-  box-shadow: 0 18px 42px rgba(37, 99, 235, 0.28);
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #60a5fa
+    );
+
+  color:
+    white;
+
+  border-color:
+    rgba(96,165,250,.20);
+
+  box-shadow:
+    0 20px 44px rgba(37,99,235,.28);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 24px 54px rgba(37, 99, 235, 0.36);
+  filter:
+    brightness(1.04);
+
+  box-shadow:
+    0 26px 54px rgba(37,99,235,.34);
 }
 
 .btn-secondary {
-  background: rgba(18, 32, 56, 0.76);
-  border-color: rgba(125, 166, 220, 0.16);
-  color: var(--vm-text);
+  background:
+    rgba(18,32,56,.76);
+
+  border-color:
+    rgba(125,166,220,.16);
+
+  color:
+    var(--vm-text);
 }
 
 .btn-secondary:hover {
-  background: rgba(22, 38, 68, 0.94);
-  border-color: rgba(96, 165, 250, 0.24);
+  background:
+    rgba(22,38,68,.94);
+
+  border-color:
+    rgba(96,165,250,.24);
 }
 
-/* Mobile tweaks */
-@media (max-width: 640px) {
-  .products-title {
-    font-size: 1.8rem;
-  }
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
-  .product-title {
-    font-size: 1.6rem;
-    text-align: center;
-  }
+@media (max-width: 980px) {
 
-  .product-desc,
-  .product-prices,
-  .product-addon-block,
-  .product-variants-block {
-    text-align: left;
-  }
-
-  .product-actions {
-    justify-content: center;
+  .product-card {
+    grid-template-columns:
+      1fr;
   }
 
   .product-img-wrapper {
-    height: 320px;
+    max-width:
+      460px;
+  }
+}
+
+@media (max-width: 640px) {
+
+  .products-page {
+    padding:
+      4.5rem 1rem 6rem;
+  }
+
+  .products-title {
+    font-size:
+      2.2rem;
+  }
+
+  .products-subtitle,
+  .product-desc {
+    line-height:
+      1.9;
+  }
+
+  .product-card {
+    padding:
+      1.4rem;
+  }
+
+  .product-title {
+    font-size:
+      1.9rem;
+
+    text-align:
+      center;
+  }
+
+  .product-actions {
+    justify-content:
+      center;
+  }
+
+  .product-img-wrapper {
+    border-radius:
+      28px;
+  }
+
+  .variant-pill {
+    width:
+      100%;
+
+    justify-content:
+      flex-start;
   }
 }

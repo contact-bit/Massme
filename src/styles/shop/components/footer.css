@@ -1,0 +1,512 @@
+/* =========================================================
+   VITRECTOMED — PREMIUM FOOTER
+   CINEMATIC MEDTECH EXPERIENCE
+========================================================= */
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.footer {
+  position: relative;
+
+  overflow: hidden;
+
+  margin-top:
+    clamp(5rem, 10vw, 10rem);
+
+  border-top:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8,13,22,.96),
+      rgba(4,7,14,1)
+    );
+
+  color:
+    var(--color-text-soft);
+
+  flex-shrink: 0;
+
+  isolation: isolate;
+}
+
+/* =========================================================
+   BACKGROUND GLOW
+========================================================= */
+
+.footer::before {
+  content: "";
+
+  position: absolute;
+
+  top: -220px;
+
+  left: 50%;
+
+  transform:
+    translateX(-50%);
+
+  width:
+    900px;
+
+  height:
+    900px;
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.10),
+      transparent 70%
+    );
+
+  filter:
+    blur(90px);
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+/* =========================================================
+   GRID OVERLAY
+========================================================= */
+
+.footer::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,.02) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,.02) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    80px 80px;
+
+  opacity: .18;
+
+  mask-image:
+    radial-gradient(
+      circle at center,
+      black,
+      transparent 90%
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+
+.footer-container {
+  position: relative;
+
+  z-index: 2;
+
+  width:
+    min(92%, 1320px);
+
+  margin:
+    0 auto;
+
+  padding:
+    clamp(4rem, 8vw, 7rem)
+    0
+    3rem;
+
+  display: grid;
+
+  gap:
+    clamp(2rem, 5vw, 4rem);
+
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.footer-compact {
+  grid-template-columns:
+    1.7fr
+    1fr
+    1fr
+    1fr;
+
+  align-items: flex-start;
+
+  gap:
+    clamp(2rem, 4vw, 4rem);
+}
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.footer-brand {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 1.4rem;
+}
+
+.footer-brand img {
+  display: block;
+
+  width: 72px;
+
+  height: auto;
+
+  object-fit: contain;
+
+  filter:
+    drop-shadow(
+      0 10px 30px rgba(0,208,255,.18)
+    );
+}
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.footer-desc {
+  margin: 0;
+
+  max-width: 44ch;
+
+  color:
+    var(--color-text-soft);
+
+  font-size:
+    .96rem;
+
+  line-height:
+    1.9;
+}
+
+/* =========================================================
+   BADGES
+========================================================= */
+
+.footer-badges {
+  list-style: none;
+
+  padding: 0;
+
+  margin: 0;
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: .7rem;
+}
+
+.footer-badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 38px;
+
+  padding:
+    0 .95rem;
+
+  border-radius:
+    var(--radius-full);
+
+  background:
+    rgba(255,255,255,.04);
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  backdrop-filter:
+    blur(var(--blur-sm));
+
+  color:
+    var(--color-primary);
+
+  font-size:
+    .74rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+}
+
+/* =========================================================
+   COLUMNS
+========================================================= */
+
+.footer-col {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 1rem;
+}
+
+/* =========================================================
+   TITLES
+========================================================= */
+
+.footer-col h3 {
+  margin: 0;
+
+  color:
+    white;
+
+  font-size:
+    .78rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    .14em;
+
+  text-transform:
+    uppercase;
+
+  opacity: .92;
+}
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+.footer-links {
+  display: grid;
+
+  gap: .7rem;
+}
+
+.footer-links a {
+  position: relative;
+
+  width: fit-content;
+
+  color:
+    var(--color-text-muted);
+
+  text-decoration: none;
+
+  font-size:
+    .92rem;
+
+  line-height:
+    1.5;
+
+  transition:
+    color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.footer-links a:hover {
+  color:
+    white;
+
+  transform:
+    translateX(3px);
+}
+
+/* =========================================================
+   LIST
+========================================================= */
+
+.footer-list {
+  list-style: none;
+
+  padding: 0;
+
+  margin: 0;
+
+  display: grid;
+
+  gap: .7rem;
+}
+
+.footer-list li {
+  color:
+    var(--color-text-muted);
+
+  font-size:
+    .92rem;
+
+  line-height:
+    1.8;
+}
+
+.footer-list a {
+  color:
+    var(--color-text-soft);
+
+  text-decoration: none;
+
+  transition:
+    color var(--transition-base);
+}
+
+.footer-list a:hover {
+  color:
+    white;
+}
+
+/* =========================================================
+   SUBBAR
+========================================================= */
+
+.footer-subbar {
+  position: relative;
+
+  z-index: 2;
+
+  border-top:
+    1px solid rgba(255,255,255,.05);
+}
+
+/* =========================================================
+   SUBBAR INNER
+========================================================= */
+
+.footer-subbar-inner {
+  width:
+    min(92%, 1320px);
+
+  margin:
+    0 auto;
+
+  padding:
+    1rem 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 1rem;
+
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+   SUBBAR LINKS
+========================================================= */
+
+.footer-subbar-link {
+  color:
+    var(--color-text-muted);
+
+  text-decoration: none;
+
+  font-size:
+    .8rem;
+
+  transition:
+    color var(--transition-base),
+    opacity var(--transition-base);
+}
+
+.footer-subbar-link:hover {
+  color:
+    white;
+}
+
+/* =========================================================
+   BOTTOM
+========================================================= */
+
+.footer-bottom {
+  position: relative;
+
+  z-index: 2;
+
+  width:
+    min(92%, 1000px);
+
+  margin:
+    0 auto;
+
+  padding:
+    1rem 0 2.5rem;
+
+  text-align: center;
+
+  color:
+    var(--color-text-muted);
+
+  font-size:
+    .8rem;
+
+  line-height:
+    1.9;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1080px) {
+
+  .footer-compact {
+    grid-template-columns:
+      1.4fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .footer-container {
+    padding:
+      4rem 0 2rem;
+  }
+
+  .footer-compact {
+    grid-template-columns:
+      1fr;
+
+    gap:
+      2.5rem;
+  }
+
+  .footer-desc {
+    max-width:
+      100%;
+  }
+
+  .footer-subbar-inner {
+    justify-content:
+      flex-start;
+  }
+
+  .footer-bottom {
+    padding-bottom:
+      2rem;
+  }
+}

@@ -1,0 +1,531 @@
+/* =========================================================
+   BANK TRANSFER — VITRECTOMED MASTER
+   CINEMATIC / PREMIUM / CENTERED
+========================================================= */
+
+.bank-transfer-page {
+  position: relative;
+  z-index: 2;
+}
+
+.bank-transfer-section {
+  padding:
+    clamp(6rem, 8vw, 8rem)
+    0;
+}
+
+/* =========================================================
+   CONTAINER FIX
+========================================================= */
+
+.bank-transfer-section .container {
+  width: 100%;
+
+  max-width: 1280px;
+
+  margin: 0 auto;
+
+  padding-inline:
+    clamp(1.2rem, 3vw, 2rem);
+
+  display: flex;
+
+  justify-content: center;
+}
+
+/* =========================================================
+   WRAPPER
+========================================================= */
+
+.bank-transfer-wrapper {
+  position: relative;
+
+  width: 100%;
+
+  max-width: 920px;
+
+  margin-inline: auto;
+
+  padding:
+    clamp(2rem, 4vw, 4rem);
+
+  border-radius:
+    clamp(2rem, 3vw, 2.8rem);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10,16,28,.92),
+      rgba(4,8,16,.96)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.45);
+
+  backdrop-filter:
+    blur(20px);
+
+  overflow: hidden;
+
+  isolation: isolate;
+}
+
+.bank-transfer-wrapper::before {
+  content: "";
+
+  position: absolute;
+
+  top: -220px;
+  right: -180px;
+
+  width: 520px;
+  height: 520px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.14),
+      transparent 70%
+    );
+
+  filter: blur(30px);
+
+  pointer-events: none;
+}
+
+.bank-transfer-wrapper::after {
+  content: "";
+
+  position: absolute;
+
+  bottom: -180px;
+  left: -160px;
+
+  width: 420px;
+  height: 420px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(59,130,246,.12),
+      transparent 72%
+    );
+
+  filter: blur(30px);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.bank-transfer-header {
+  position: relative;
+  z-index: 2;
+
+  margin-bottom:
+    clamp(2rem, 4vw, 3rem);
+
+  text-align: center;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+}
+
+.bank-transfer-badge {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 42px;
+
+  padding:
+    0 1rem;
+
+  border-radius: 999px;
+
+  background:
+    rgba(0,208,255,.08);
+
+  border:
+    1px solid rgba(0,208,255,.14);
+
+  color:
+    #7dd3fc;
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .16em;
+
+  text-transform:
+    uppercase;
+
+  backdrop-filter:
+    blur(10px);
+
+  box-shadow:
+    0 0 30px rgba(0,208,255,.08);
+}
+
+.bank-transfer-title {
+  margin-top:
+    1.5rem;
+
+  color:
+    white;
+
+  font-size:
+    clamp(2.8rem, 6vw, 4.5rem);
+
+  line-height:
+    .95;
+
+  letter-spacing:
+    -.06em;
+
+  font-weight:
+    900;
+
+  max-width:
+    12ch;
+
+  text-wrap:
+    balance;
+}
+
+.bank-transfer-subtitle {
+  margin-top:
+    1.5rem;
+
+  max-width:
+    64ch;
+
+  text-align: center;
+
+  color:
+    rgba(203,213,225,.82);
+
+  font-size:
+    1.05rem;
+
+  line-height:
+    1.95;
+}
+
+/* =========================================================
+   ALERT
+========================================================= */
+
+.bank-alert {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+
+  padding:
+    1.4rem;
+
+  border-radius:
+    1.4rem;
+
+  background:
+    rgba(239,68,68,.08);
+
+  border:
+    1px solid rgba(239,68,68,.18);
+
+  color:
+    #fecaca;
+}
+
+/* =========================================================
+   PAYMENT CARD
+========================================================= */
+
+.bank-transfer-card {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: .2rem;
+
+  padding:
+    clamp(1.4rem, 3vw, 2rem);
+
+  border-radius:
+    2rem;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.04),
+      rgba(255,255,255,.02)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  backdrop-filter:
+    blur(16px);
+
+  box-shadow:
+    0 18px 44px rgba(0,0,0,.28);
+}
+
+/* =========================================================
+   ROW
+========================================================= */
+
+.bank-row {
+  display: grid;
+
+  grid-template-columns:
+    180px
+    minmax(0, 1fr)
+    auto;
+
+  gap:
+    1.2rem;
+
+  align-items: center;
+
+  padding:
+    1rem 0;
+}
+
+.bank-row-label {
+  color:
+    rgba(148,163,184,.78);
+
+  font-size:
+    .82rem;
+
+  font-weight:
+    600;
+
+  letter-spacing:
+    .02em;
+
+  text-transform:
+    uppercase;
+}
+
+.bank-row-value {
+  color:
+    white;
+
+  font-size:
+    1rem;
+
+  font-weight:
+    700;
+
+  line-height:
+    1.7;
+
+  overflow-wrap:
+    anywhere;
+}
+
+.bank-copy-btn {
+  min-height: 42px !important;
+
+  padding:
+    0 .95rem !important;
+
+  border-radius:
+    999px !important;
+
+  white-space:
+    nowrap;
+}
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.bank-divider {
+  width: 100%;
+
+  height: 1px;
+
+  margin:
+    .6rem 0;
+
+  background:
+    rgba(255,255,255,.08);
+}
+
+/* =========================================================
+   INFO CARDS
+========================================================= */
+
+.bank-transfer-info {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+
+  margin-top:
+    1.5rem;
+
+  padding:
+    clamp(1.4rem, 3vw, 2rem);
+
+  border-radius:
+    1.8rem;
+
+  background:
+    rgba(255,255,255,.03);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  backdrop-filter:
+    blur(14px);
+}
+
+.bank-transfer-info-primary {
+  background:
+    rgba(59,130,246,.07);
+
+  border:
+    1px solid rgba(59,130,246,.14);
+}
+
+.bank-transfer-info-title {
+  color:
+    white;
+
+  font-size:
+    1rem;
+
+  font-weight:
+    700;
+
+  margin-bottom:
+    .8rem;
+}
+
+.bank-transfer-info-text {
+  color:
+    rgba(203,213,225,.82);
+
+  line-height:
+    1.95;
+}
+
+.bank-transfer-help {
+  margin-top:
+    1rem;
+
+  color:
+    rgba(148,163,184,.78);
+
+  line-height:
+    1.8;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.bank-transfer-actions {
+  position: relative;
+  z-index: 2;
+
+  margin-top:
+    2.4rem;
+
+  display: flex;
+
+  justify-content: center;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 820px) {
+
+  .bank-transfer-wrapper {
+    padding:
+      1.5rem;
+
+    border-radius:
+      1.8rem;
+  }
+
+  .bank-transfer-title {
+    max-width:
+      100%;
+
+    font-size:
+      clamp(2.4rem, 12vw, 4rem);
+  }
+
+  .bank-transfer-subtitle {
+    text-align: left;
+  }
+
+  .bank-transfer-header {
+    align-items: flex-start;
+
+    text-align: left;
+  }
+
+  .bank-transfer-card {
+    border-radius:
+      1.6rem;
+  }
+
+  .bank-row {
+    grid-template-columns:
+      1fr;
+
+    gap:
+      .7rem;
+
+    align-items:
+      flex-start;
+  }
+
+  .bank-copy-btn {
+    width: fit-content;
+  }
+
+  .bank-transfer-info {
+    border-radius:
+      1.6rem;
+  }
+
+  .bank-transfer-actions {
+    justify-content: stretch;
+  }
+
+  .bank-transfer-actions .btn {
+    width: 100%;
+  }
+}

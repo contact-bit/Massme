@@ -1,24 +1,14 @@
 import type { ReactNode } from "react";
 
-import "@/styles/tokens.css";
-import "@/styles/themes.css";
-import "@/styles/utilities.css";
 
-import "@/styles/components/buttons.css";
-import "@/styles/components/navbar.css";
-import "@/styles/components/footer.css";
-import "@/styles/components/cartDrawer.css";
-import "@/styles/components/productCard.css";
-import "@/styles/components/productList.css";
+import "@/styles/shop/index.css";
 
-import "@/styles/pages/home.css";
-import "@/styles/pages/products.css";
-import "@/styles/pages/checkout.css";
-import "@/styles/pages/contact.css";
-import "@/styles/pages/success.css";
-import "@/styles/pages/blog.css";
-import "@/styles/pages/about.css";
-import "@/styles/pages/besoins.css";
+import "./home.css";
+import "./products/products.css";
+import "./checkout/checkout.css";
+import "./contact/contact.css";
+import "./success/success.css";
+import "./blog/blog.css";
 
 import { CartProvider } from "@/context/CartContext";
 import Navbar from "@/components/Navbar";

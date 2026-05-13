@@ -10,22 +10,18 @@
 .btn {
   position: relative;
 
-  overflow: hidden;
-
-  isolation: isolate;
-
   display: inline-flex;
 
   align-items: center;
 
   justify-content: center;
 
-  gap: .7rem;
+  gap: .8rem;
 
-  min-height: 56px;
+  min-height: 58px;
 
-  padding:
-    0 1.5rem;
+  padding-inline:
+    1.6rem;
 
   border-radius:
     var(--radius-full);
@@ -33,15 +29,13 @@
   border:
     1px solid transparent;
 
-  backdrop-filter:
-    blur(var(--blur-sm));
+  overflow: hidden;
+
+  isolation: isolate;
 
   text-decoration: none;
 
   white-space: nowrap;
-
-  font-family:
-    var(--font-family-base);
 
   font-size:
     .92rem;
@@ -56,6 +50,11 @@
     1;
 
   cursor: pointer;
+
+  user-select: none;
+
+  backdrop-filter:
+    blur(var(--blur-sm));
 
   transition:
     transform var(--transition-base),
@@ -99,6 +98,10 @@
     translateX(120%);
 }
 
+/* =========================================================
+   BUTTON CONTENT
+========================================================= */
+
 .btn > * {
   position: relative;
 
@@ -111,17 +114,16 @@
 
 .btn:hover {
   transform:
-    translateY(-2px);
+    translateY(-3px);
 }
 
 .btn:active {
   transform:
-    translateY(0)
-    scale(.985);
+    translateY(0);
 }
 
 /* =========================================================
-   PRIMARY
+   PRIMARY BUTTON
 ========================================================= */
 
 .btn-primary {
@@ -132,51 +134,54 @@
       var(--color-secondary)
     );
 
-  border:
-    1px solid rgba(255,255,255,.08);
-
   color:
     white;
-
-  box-shadow:
-    0 14px 34px rgba(0,208,255,.18),
-    0 0 40px rgba(0,208,255,.08);
-}
-
-.btn-primary:hover {
-  box-shadow:
-    0 18px 46px rgba(0,208,255,.24),
-    0 0 60px rgba(0,208,255,.14);
-}
-
-/* =========================================================
-   OUTLINE
-========================================================= */
-
-.btn-outline {
-  background:
-    rgba(255,255,255,.03);
 
   border:
     1px solid rgba(255,255,255,.10);
 
-  color:
-    var(--color-text);
+  box-shadow:
+    0 12px 30px rgba(0,208,255,.20),
+    0 0 40px rgba(0,208,255,.10);
 }
 
-.btn-outline:hover {
-  background:
-    rgba(255,255,255,.05);
-
-  border-color:
-    rgba(0,208,255,.16);
-
+.btn-primary:hover {
   box-shadow:
-    0 0 24px rgba(0,208,255,.08);
+    0 18px 40px rgba(0,208,255,.26),
+    0 0 60px rgba(0,208,255,.16);
 }
 
 /* =========================================================
-   SOFT
+   SECONDARY BUTTON
+========================================================= */
+
+.btn-secondary {
+  background:
+    rgba(255,255,255,.04);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  color:
+    var(--color-text);
+
+  backdrop-filter:
+    blur(var(--blur-md));
+}
+
+.btn-secondary:hover {
+  background:
+    rgba(255,255,255,.06);
+
+  border-color:
+    rgba(255,255,255,.14);
+
+  box-shadow:
+    var(--shadow-md);
+}
+
+/* =========================================================
+   SOFT BUTTON
 ========================================================= */
 
 .btn-soft {
@@ -196,10 +201,39 @@
 
   border-color:
     rgba(0,208,255,.20);
+
+  box-shadow:
+    0 0 30px rgba(0,208,255,.10);
 }
 
 /* =========================================================
-   GHOST
+   OUTLINE BUTTON
+========================================================= */
+
+.btn-outline {
+  background:
+    transparent;
+
+  border:
+    1px solid rgba(255,255,255,.12);
+
+  color:
+    var(--color-text);
+}
+
+.btn-outline:hover {
+  background:
+    rgba(255,255,255,.04);
+
+  border-color:
+    rgba(0,208,255,.22);
+
+  box-shadow:
+    0 0 24px rgba(0,208,255,.08);
+}
+
+/* =========================================================
+   GHOST BUTTON
 ========================================================= */
 
 .btn-ghost {
@@ -215,45 +249,72 @@
     rgba(255,255,255,.04);
 
   color:
-    white;
+    var(--color-text);
 }
 
 /* =========================================================
-   LARGE
+   LARGE BUTTON
 ========================================================= */
 
 .btn-lg {
   min-height:
-    64px;
+    66px;
 
-  padding:
-    0 2rem;
+  padding-inline:
+    2.2rem;
 
   font-size:
     1rem;
 }
 
 /* =========================================================
-   SMALL
+   SMALL BUTTON
 ========================================================= */
 
 .btn-sm {
   min-height:
-    44px;
+    46px;
 
-  padding:
-    0 1rem;
+  padding-inline:
+    1rem;
 
   font-size:
     .82rem;
 }
 
 /* =========================================================
-   FULL
+   FULL WIDTH
 ========================================================= */
 
 .btn-full {
   width: 100%;
+}
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.btn-icon {
+  transition:
+    transform var(--transition-base);
+}
+
+.btn:hover .btn-icon {
+  transform:
+    translateX(4px);
+}
+
+/* =========================================================
+   ICON ONLY
+========================================================= */
+
+.btn-icon-only {
+  width: 54px;
+
+  min-width: 54px;
+
+  padding:
+    0;
 }
 
 /* =========================================================
@@ -262,81 +323,54 @@
 
 .btn:disabled,
 .btn[aria-disabled="true"] {
-  opacity: .5;
+  opacity: .55;
 
   cursor: not-allowed;
 
   pointer-events: none;
-
-  transform: none !important;
 }
 
 /* =========================================================
-   SHIPPING PRICE
+   GROUP
 ========================================================= */
 
-.shipping-price-col {
+.btn-group {
   display: flex;
-
-  flex-direction: column;
-
-  align-items: flex-end;
-
-  gap: .25rem;
-
-  font-variant-numeric:
-    tabular-nums;
-}
-
-/* =========================================================
-   TTC
-========================================================= */
-
-.shipping-price-ttc {
-  color:
-    var(--color-text);
-
-  font-size:
-    .95rem;
-
-  font-weight:
-    650;
-}
-
-/* =========================================================
-   VAT BADGE
-========================================================= */
-
-.shipping-price-vat {
-  display: inline-flex;
 
   align-items: center;
 
-  justify-content: center;
+  gap: 1rem;
 
-  min-height: 22px;
+  flex-wrap: wrap;
+}
 
-  padding:
-    0 .5rem;
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
-  border-radius:
-    999px;
+@media (max-width: 768px) {
 
-  background:
-    rgba(0,208,255,.08);
+  .btn {
+    min-height:
+      54px;
 
-  border:
-    1px solid rgba(0,208,255,.12);
+    padding-inline:
+      1.25rem;
+  }
 
-  color:
-    var(--color-text-muted);
+  .btn-lg {
+    min-height:
+      60px;
 
-  font-size:
-    .68rem;
+    padding-inline:
+      1.6rem;
+  }
 
-  font-weight:
-    600;
+  .btn-group {
+    width: 100%;
+  }
 
-  line-height:
-    1;
+  .btn-group .btn {
+    width: 100%;
+  }
 }

@@ -1,0 +1,342 @@
+/* =========================================================
+   VITRECTOMED — FORM SYSTEM
+   PREMIUM MEDTECH UI
+========================================================= */
+
+/* =========================================================
+   FORM GROUP
+========================================================= */
+
+.form-group {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: .9rem;
+}
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+.form-label {
+  color:
+    var(--color-text);
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    600;
+
+  line-height:
+    1.4;
+
+  letter-spacing:
+    -.01em;
+}
+
+/* =========================================================
+   INPUT BASE
+========================================================= */
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+
+  min-height: 60px;
+
+  padding-inline:
+    1.2rem;
+
+  border-radius:
+    var(--radius-md);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    rgba(255,255,255,.025);
+
+  backdrop-filter:
+    blur(var(--blur-sm));
+
+  color:
+    var(--color-text);
+
+  font-size:
+    1rem;
+
+  font-weight:
+    400;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.03);
+
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.input:hover,
+.textarea:hover,
+.select:hover {
+  border-color:
+    rgba(255,255,255,.14);
+
+  background:
+    rgba(255,255,255,.035);
+}
+
+/* =========================================================
+   TEXTAREA
+========================================================= */
+
+.textarea {
+  min-height:
+    180px;
+
+  padding:
+    1.2rem;
+
+  resize:
+    vertical;
+
+  line-height:
+    1.8;
+}
+
+/* =========================================================
+   SELECT
+========================================================= */
+
+.select {
+  appearance: none;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.input::placeholder,
+.textarea::placeholder {
+  color:
+    var(--color-text-muted);
+
+  opacity:
+    .8;
+}
+
+/* =========================================================
+   FOCUS
+========================================================= */
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+
+  border-color:
+    rgba(0,208,255,.42);
+
+  background:
+    rgba(255,255,255,.04);
+
+  box-shadow:
+    0 0 0 4px rgba(0,208,255,.08),
+    0 0 30px rgba(0,208,255,.10);
+
+  transform:
+    translateY(-1px);
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.input-error {
+  border-color:
+    rgba(255,92,122,.45);
+}
+
+.input-error:focus {
+  box-shadow:
+    0 0 0 4px rgba(255,92,122,.10),
+    0 0 24px rgba(255,92,122,.12);
+}
+
+/* =========================================================
+   HELP TEXT
+========================================================= */
+
+.form-help {
+  color:
+    var(--color-text-muted);
+
+  font-size:
+    .9rem;
+
+  line-height:
+    1.7;
+}
+
+/* =========================================================
+   ERROR TEXT
+========================================================= */
+
+.form-error {
+  color:
+    var(--color-danger);
+
+  font-size:
+    .9rem;
+
+  font-weight:
+    500;
+}
+
+/* =========================================================
+   SUCCESS TEXT
+========================================================= */
+
+.form-success {
+  color:
+    var(--color-success);
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    500;
+}
+
+/* =========================================================
+   CHECKBOX / RADIO
+========================================================= */
+
+.form-check {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: .9rem;
+}
+
+.form-check input {
+  margin-top:
+    .2rem;
+}
+
+/* =========================================================
+   FORM CARD
+========================================================= */
+
+.form-card {
+  position: relative;
+
+  padding:
+    clamp(1.8rem, 4vw, 3rem);
+
+  border-radius:
+    var(--radius-xl);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.88),
+      rgba(9,14,24,.96)
+    );
+
+  backdrop-filter:
+    blur(var(--blur-lg));
+
+  box-shadow:
+    var(--shadow-lg);
+
+  overflow: hidden;
+
+  isolation: isolate;
+}
+
+/* Glow */
+
+.form-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,208,255,.08),
+      transparent 40%
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   FORM GRID
+========================================================= */
+
+.form-grid-2 {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap:
+    clamp(1rem, 2vw, 2rem);
+}
+
+/* =========================================================
+   INLINE ACTIONS
+========================================================= */
+
+.form-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 1rem;
+
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .form-grid-2 {
+    grid-template-columns:
+      1fr;
+  }
+
+  .input,
+  .textarea,
+  .select {
+    min-height:
+      56px;
+  }
+
+  .textarea {
+    min-height:
+      150px;
+  }
+}

@@ -1,74 +1,86 @@
 /* =========================================================
-   VITRECTOMED — PRODUCTS PAGE
-   ULTRA PREMIUM MEDICAL EXPERIENCE
+   VITRECTOMED — PRODUCTS PAGE OFFICIAL EXPERIENCE
+   ULTRA PREMIUM / MEDTECH / CINEMATIC
 ========================================================= */
 
 /* =========================================================
-   ROOT
+   ROOT TOKENS
 ========================================================= */
 
 :root {
   --vm-bg:
-    #050816;
+    #040712;
 
   --vm-bg-soft:
     #09111f;
 
-  --vm-card:
-    rgba(14, 20, 34, 0.72);
+  --vm-surface:
+    rgba(10,18,34,.78);
 
-  --vm-card-strong:
-    rgba(12, 18, 30, 0.92);
+  --vm-surface-strong:
+    rgba(10,20,38,.96);
+
+  --vm-card:
+    rgba(14,24,44,.74);
+
+  --vm-card-hover:
+    rgba(20,35,64,.94);
 
   --vm-border:
-    rgba(255,255,255,.05);
+    rgba(255,255,255,.06);
 
   --vm-border-strong:
-    rgba(125,180,255,.14);
+    rgba(96,165,250,.18);
 
   --vm-title:
     #ffffff;
 
   --vm-text:
-    rgba(255,255,255,.84);
+    rgba(255,255,255,.86);
 
   --vm-text-soft:
-    rgba(255,255,255,.62);
+    rgba(219,234,254,.76);
 
   --vm-text-muted:
-    rgba(255,255,255,.42);
+    rgba(148,163,184,.58);
 
   --vm-primary:
-    #7db4ff;
+    #60a5fa;
+
+  --vm-primary-light:
+    #93c5fd;
 
   --vm-primary-strong:
-    #4f8cff;
+    #2563eb;
 
   --vm-primary-soft:
-    rgba(125,180,255,.12);
+    rgba(96,165,250,.10);
 
   --vm-radius:
-    28px;
+    30px;
 
   --vm-radius-large:
-    42px;
+    44px;
 
   --vm-shadow:
-    0 40px 120px
-      rgba(0,0,0,.42);
+    0 40px 120px rgba(0,0,0,.44);
 
   --vm-shadow-soft:
-    0 18px 44px
-      rgba(0,0,0,.22);
+    0 24px 60px rgba(0,0,0,.24);
+
+  --vm-glow:
+    0 0 0 1px rgba(96,165,250,.12),
+    0 24px 60px rgba(37,99,235,.18),
+    0 0 120px rgba(37,99,235,.12);
 
   --vm-transition:
-    .4s cubic-bezier(.16,1,.3,1);
+    .42s cubic-bezier(.16,1,.3,1);
 
   --vm-container:
-    1380px;
+    1440px;
 
   --vm-content:
-    1080px;
+    1120px;
 }
 
 /* =========================================================
@@ -80,31 +92,32 @@
 
   overflow: hidden;
 
-  min-height: 100vh;
+  min-height:
+    100vh;
 
   background:
     radial-gradient(
       circle at top left,
-      rgba(79,140,255,.10),
+      rgba(37,99,235,.12),
+      transparent 26%
+    ),
+
+    radial-gradient(
+      circle at top right,
+      rgba(96,165,250,.10),
       transparent 24%
     ),
 
     radial-gradient(
-      circle at 85% 20%,
-      rgba(125,180,255,.08),
-      transparent 18%
-    ),
-
-    radial-gradient(
       circle at bottom right,
-      rgba(79,140,255,.08),
-      transparent 22%
+      rgba(37,99,235,.08),
+      transparent 24%
     ),
 
     linear-gradient(
       180deg,
       #09111f 0%,
-      #050816 100%
+      #040712 100%
     );
 
   color:
@@ -115,6 +128,9 @@
 
   text-rendering:
     optimizeLegibility;
+
+  isolation:
+    isolate;
 }
 
 .products-page-shell::before {
@@ -124,16 +140,35 @@
 
   inset: 0;
 
-  background:
-    linear-gradient(
-      to bottom,
-      rgba(255,255,255,.02),
-      transparent 20%
-    );
-
   pointer-events: none;
 
-  z-index: 0;
+  opacity:
+    .18;
+
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,.02) 1px,
+      transparent 1px
+    ),
+
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,.02) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    72px 72px;
+
+  mask-image:
+    radial-gradient(
+      circle at center,
+      black,
+      transparent 90%
+    );
+
+  z-index:
+    -1;
 }
 
 /* =========================================================
@@ -162,11 +197,13 @@
 .products-hero__grid {
   position: relative;
 
+  overflow: hidden;
+
   display: grid;
 
   grid-template-columns:
     minmax(0, 1fr)
-    420px;
+    430px;
 
   gap:
     4rem;
@@ -180,25 +217,24 @@
   border-radius:
     var(--vm-radius-large);
 
-  overflow:
-    hidden;
-
   background:
     linear-gradient(
       180deg,
-      rgba(15,22,38,.78),
-      rgba(8,13,24,.94)
+      rgba(15,22,38,.82),
+      rgba(8,13,24,.96)
     );
 
   border:
-    1px solid
-    var(--vm-border);
+    1px solid rgba(255,255,255,.06);
 
   backdrop-filter:
     blur(28px);
 
   box-shadow:
     var(--vm-shadow);
+
+  isolation:
+    isolate;
 }
 
 .products-hero__grid::before {
@@ -211,8 +247,8 @@
   background:
     radial-gradient(
       circle at top right,
-      rgba(125,180,255,.12),
-      transparent 34%
+      rgba(96,165,250,.10),
+      transparent 36%
     );
 
   pointer-events: none;
@@ -228,44 +264,50 @@
   z-index: 2;
 
   max-width:
-    760px;
+    780px;
 }
 
 .products-eyebrow {
   display: inline-flex;
 
   align-items: center;
+  justify-content: center;
 
   min-height:
-    42px;
+    44px;
 
   padding:
-    0 1rem;
+    0 1.1rem;
 
   border-radius:
     999px;
 
   background:
-    rgba(255,255,255,.03);
+    rgba(96,165,250,.08);
 
   border:
-    1px solid
-    rgba(255,255,255,.06);
+    1px solid rgba(96,165,250,.16);
+
+  backdrop-filter:
+    blur(12px);
 
   color:
-    var(--vm-primary);
+    var(--vm-primary-light);
 
   font-size:
     .72rem;
 
   font-weight:
-    700;
+    800;
 
   letter-spacing:
     .16em;
 
   text-transform:
     uppercase;
+
+  box-shadow:
+    0 0 40px rgba(96,165,250,.10);
 }
 
 .products-hero__title {
@@ -276,11 +318,7 @@
     white;
 
   font-size:
-    clamp(
-      4rem,
-      8vw,
-      7rem
-    );
+    clamp(4rem, 8vw, 7rem);
 
   line-height:
     .88;
@@ -296,21 +334,20 @@
 
   max-width:
     8ch;
+
+  text-shadow:
+    0 20px 40px rgba(37,99,235,.12);
 }
 
 .products-hero__intro {
   margin-top:
-    2.4rem;
+    2.2rem;
 
   color:
-    rgba(255,255,255,.9);
+    rgba(255,255,255,.92);
 
   font-size:
-    clamp(
-      1.12rem,
-      1.5vw,
-      1.38rem
-    );
+    clamp(1.08rem, 1.5vw, 1.34rem);
 
   line-height:
     1.95;
@@ -324,13 +361,13 @@
 
 .products-hero__description {
   margin-top:
-    1.3rem;
+    1.4rem;
 
   color:
     var(--vm-text-soft);
 
   font-size:
-    1.03rem;
+    1rem;
 
   line-height:
     2;
@@ -357,23 +394,48 @@
 }
 
 .hero-badge-card {
+  position: relative;
+
+  overflow: hidden;
+
   padding:
-    1.3rem;
+    1.4rem;
 
   border-radius:
-    24px;
+    26px;
 
   background:
     rgba(255,255,255,.025);
 
   border:
-    1px solid
-    rgba(255,255,255,.05);
+    1px solid rgba(255,255,255,.05);
 
   transition:
     transform var(--vm-transition),
     background var(--vm-transition),
-    border-color var(--vm-transition);
+    border-color var(--vm-transition),
+    box-shadow var(--vm-transition);
+}
+
+.hero-badge-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(96,165,250,.08),
+      transparent 40%
+    );
+
+  opacity:
+    0;
+
+  transition:
+    opacity var(--vm-transition);
 }
 
 .hero-badge-card:hover {
@@ -384,26 +446,42 @@
     rgba(255,255,255,.04);
 
   border-color:
-    rgba(125,180,255,.12);
+    rgba(96,165,250,.14);
+
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.20);
+}
+
+.hero-badge-card:hover::before {
+  opacity:
+    1;
 }
 
 .hero-badge-card strong {
+  position: relative;
+
+  z-index: 2;
+
   display: block;
+
+  margin-bottom:
+    .6rem;
 
   color:
     white;
 
   font-size:
-    .92rem;
-
-  margin-bottom:
-    .55rem;
+    .94rem;
 
   font-weight:
     700;
 }
 
 .hero-badge-card span {
+  position: relative;
+
+  z-index: 2;
+
   color:
     var(--vm-text-soft);
 
@@ -411,7 +489,7 @@
     .84rem;
 
   line-height:
-    1.7;
+    1.8;
 }
 
 /* =========================================================
@@ -426,19 +504,20 @@
   position: absolute;
 
   inset:
-    -80px;
+    -90px;
 
   background:
     radial-gradient(
       circle,
-      rgba(79,140,255,.18),
+      rgba(37,99,235,.20),
       transparent 70%
     );
 
   filter:
     blur(50px);
 
-  pointer-events: none;
+  pointer-events:
+    none;
 }
 
 .products-hero__panel-card {
@@ -447,21 +526,20 @@
   z-index: 2;
 
   padding:
-    1.6rem;
+    1.7rem;
 
   border-radius:
-    32px;
+    34px;
 
   background:
     linear-gradient(
       180deg,
-      rgba(18,26,42,.92),
-      rgba(10,15,28,.96)
+      rgba(18,26,42,.94),
+      rgba(10,15,28,.98)
     );
 
   border:
-    1px solid
-    rgba(255,255,255,.05);
+    1px solid rgba(255,255,255,.05);
 
   backdrop-filter:
     blur(22px);
@@ -482,7 +560,7 @@
 
 .hero-panel-top span {
   min-height:
-    44px;
+    46px;
 
   display: flex;
 
@@ -493,14 +571,13 @@
     0 1rem;
 
   border-radius:
-    16px;
+    18px;
 
   background:
     rgba(255,255,255,.03);
 
   border:
-    1px solid
-    rgba(255,255,255,.05);
+    1px solid rgba(255,255,255,.05);
 
   color:
     rgba(255,255,255,.84);
@@ -527,7 +604,7 @@
     84px;
 
   border-radius:
-    22px;
+    24px;
 
   background:
     linear-gradient(
@@ -537,8 +614,7 @@
     );
 
   border:
-    1px solid
-    rgba(255,255,255,.05);
+    1px solid rgba(255,255,255,.05);
 }
 
 .hero-panel-line.short {
@@ -554,8 +630,7 @@
     1rem;
 
   border-top:
-    1px solid
-    rgba(255,255,255,.05);
+    1px solid rgba(255,255,255,.05);
 
   color:
     var(--vm-text-muted);
@@ -589,7 +664,7 @@
 }
 
 /* =========================================================
-   SEO
+   SEO SECTION
 ========================================================= */
 
 .products-seo {
@@ -622,12 +697,16 @@
   display: inline-flex;
 
   align-items: center;
+  justify-content: center;
 
   min-height:
     38px;
 
   padding:
     0 1rem;
+
+  margin-bottom:
+    1.4rem;
 
   border-radius:
     999px;
@@ -636,8 +715,7 @@
     rgba(255,255,255,.03);
 
   border:
-    1px solid
-    rgba(255,255,255,.05);
+    1px solid rgba(255,255,255,.05);
 
   color:
     var(--vm-primary);
@@ -653,23 +731,17 @@
 
   text-transform:
     uppercase;
-
-  margin-bottom:
-    1.3rem;
 }
 
 .seo-block h2 {
-  margin: 0;
+  margin:
+    0;
 
   color:
     white;
 
   font-size:
-    clamp(
-      2.6rem,
-      5vw,
-      4.5rem
-    );
+    clamp(2.6rem, 5vw, 4.5rem);
 
   line-height:
     .95;
@@ -694,6 +766,8 @@
 .seo-card {
   position: relative;
 
+  overflow: hidden;
+
   margin-top:
     2rem;
 
@@ -701,24 +775,23 @@
     clamp(1.8rem, 4vw, 3rem);
 
   border-radius:
-    32px;
-
-  overflow:
-    hidden;
+    34px;
 
   background:
     linear-gradient(
       180deg,
-      rgba(14,22,38,.74),
-      rgba(10,16,28,.94)
+      rgba(14,22,38,.78),
+      rgba(10,16,28,.96)
     );
 
   border:
-    1px solid
-    rgba(255,255,255,.05);
+    1px solid rgba(255,255,255,.05);
 
   backdrop-filter:
     blur(20px);
+
+  box-shadow:
+    var(--vm-shadow-soft);
 }
 
 .seo-card::before {
@@ -731,11 +804,12 @@
   background:
     radial-gradient(
       circle at top right,
-      rgba(125,180,255,.08),
+      rgba(96,165,250,.08),
       transparent 36%
     );
 
-  pointer-events: none;
+  pointer-events:
+    none;
 }
 
 .seo-card p {
@@ -750,7 +824,7 @@
     var(--vm-text-soft);
 
   font-size:
-    1.05rem;
+    1.03rem;
 
   line-height:
     2;
@@ -775,27 +849,52 @@
     1rem;
 
   margin-top:
-    1.5rem;
+    1.6rem;
 }
 
 .benefit-card {
+  position: relative;
+
+  overflow: hidden;
+
   padding:
-    1.6rem;
+    1.7rem;
 
   border-radius:
-    26px;
+    28px;
 
   background:
     rgba(255,255,255,.025);
 
   border:
-    1px solid
-    rgba(255,255,255,.05);
+    1px solid rgba(255,255,255,.05);
 
   transition:
     transform var(--vm-transition),
     background var(--vm-transition),
-    border-color var(--vm-transition);
+    border-color var(--vm-transition),
+    box-shadow var(--vm-transition);
+}
+
+.benefit-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(96,165,250,.08),
+      transparent 42%
+    );
+
+  opacity:
+    0;
+
+  transition:
+    opacity var(--vm-transition);
 }
 
 .benefit-card:hover {
@@ -806,18 +905,30 @@
     rgba(255,255,255,.04);
 
   border-color:
-    rgba(125,180,255,.12);
+    rgba(96,165,250,.14);
+
+  box-shadow:
+    0 18px 44px rgba(0,0,0,.22);
+}
+
+.benefit-card:hover::before {
+  opacity:
+    1;
 }
 
 .benefit-card h3 {
+  position: relative;
+
+  z-index: 2;
+
   margin:
-    0 0 .8rem;
+    0 0 .9rem;
 
   color:
     white;
 
   font-size:
-    1.1rem;
+    1.08rem;
 
   line-height:
     1.3;
@@ -827,7 +938,12 @@
 }
 
 .benefit-card p {
-  margin: 0;
+  position: relative;
+
+  z-index: 2;
+
+  margin:
+    0;
 
   color:
     var(--vm-text-soft);
@@ -844,13 +960,15 @@
 ========================================================= */
 
 @media (max-width: 1100px) {
+
   .products-hero__grid {
     grid-template-columns:
       1fr;
   }
 
   .products-hero__panel {
-    display: none;
+    display:
+      none;
   }
 
   .products-hero__badges,
@@ -861,6 +979,7 @@
 }
 
 @media (max-width: 768px) {
+
   .products-hero,
   .products-section,
   .products-seo {
@@ -871,7 +990,7 @@
   .products-hero__grid,
   .seo-card {
     border-radius:
-      28px;
+      30px;
   }
 
   .products-hero__title,

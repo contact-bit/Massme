@@ -4,7 +4,8 @@ import ProductsClient from "../../products/products-client";
 
 import "./products-page.css";
 
-export const dynamic = "force-dynamic";
+export const dynamic =
+  "force-dynamic";
 
 const LOCALES = [
   "fr",
@@ -39,10 +40,10 @@ interface PageProps {
 export async function generateMetadata() {
   return {
     title:
-      "Coussin après vitrectomie — Confort post-opératoire | VitrectoMed",
+      "Coussin après vitrectomie — Confort post-opératoire premium | VitrectoMed",
 
     description:
-      "Découvrez notre coussin ergonomique après vitrectomie pour maintenir la position face vers le bas et améliorer le confort durant la convalescence.",
+      "Découvrez notre coussin ergonomique après vitrectomie conçu pour améliorer le confort en position face vers le bas après une chirurgie de la rétine ou un trou maculaire.",
   };
 }
 
@@ -61,20 +62,27 @@ export default async function Page({
 
   return (
     <main className="products-page-shell">
+
       {/* =====================================================
           HERO
       ===================================================== */}
 
       <section className="products-hero">
         <div className="products-hero__container">
+
           <div className="products-hero__grid">
-            {/* LEFT */}
+
+            {/* =================================================
+                LEFT CONTENT
+            ================================================= */}
 
             <div className="products-hero__content">
-              <span className="products-eyebrow">
-                Convalescence
+
+              <div className="products-eyebrow">
+                Vitrectomie •
+                Récupération
                 post-opératoire
-              </span>
+              </div>
 
               <h1 className="products-hero__title">
                 Coussin après
@@ -82,80 +90,106 @@ export default async function Page({
               </h1>
 
               <p className="products-hero__intro">
-                Maintenez plus
-                confortablement la
-                position face vers le
-                bas après une
-                opération du trou
-                maculaire ou un
-                décollement de
-                rétine.
+                Une solution pensée
+                pour rendre la
+                récupération après
+                chirurgie rétinienne
+                plus confortable,
+                plus stable et moins
+                contraignante au
+                quotidien.
               </p>
 
               <p className="products-hero__description">
-                Pensé pour la
-                récupération
-                post-opératoire,
-                notre coussin aide à
-                réduire les tensions
+                Après un trou
+                maculaire, un
+                décollement de
+                rétine ou certaines
+                interventions
+                ophtalmologiques,
+                maintenir une
+                position face vers
+                le bas peut devenir
+                extrêmement
+                fatigant. Nos
+                coussins ergonomiques
+                aident à soulager
+                les tensions
                 cervicales et
-                améliore le confort
-                pendant les longues
-                périodes de position
-                ventrale recommandées
-                après une
-                vitrectomie.
+                améliorent le
+                confort pendant les
+                longues périodes de
+                convalescence.
               </p>
 
               <div className="products-hero__badges">
+
                 <div className="hero-badge-card">
                   <strong>
-                    Ergonomique
+                    Ergonomie
+                    médicale
                   </strong>
 
                   <span>
-                    Confort longue
-                    durée
+                    Pensé pour les
+                    longues périodes
+                    en position
+                    ventrale.
                   </span>
                 </div>
 
                 <div className="hero-badge-card">
                   <strong>
-                    Post-opératoire
+                    Confort premium
                   </strong>
 
                   <span>
-                    Trou maculaire &
-                    rétine
+                    Réduction des
+                    tensions au cou,
+                    au dos et aux
+                    épaules.
                   </span>
                 </div>
 
                 <div className="hero-badge-card">
                   <strong>
-                    Livraison rapide
+                    Expédition rapide
                   </strong>
 
                   <span>
                     Préparation
-                    immédiate
+                    immédiate après
+                    validation de la
+                    commande.
                   </span>
                 </div>
+
               </div>
             </div>
 
-            {/* RIGHT */}
+            {/* =================================================
+                RIGHT PANEL
+            ================================================= */}
 
             <div className="products-hero__panel">
+
               <div className="products-hero__panel-glow" />
 
               <div className="products-hero__panel-card">
+
                 <div className="hero-panel-top">
                   <span>
                     VitrectoMed
                   </span>
 
                   <span>
-                    Confort médical
+                    Confort
+                    post-opératoire
+                  </span>
+
+                  <span>
+                    Position face
+                    vers le bas
                   </span>
                 </div>
 
@@ -168,24 +202,29 @@ export default async function Page({
                 <div className="hero-panel-footer">
                   Coussin •
                   Vitrectomie •
-                  Convalescence •
-                  Position ventrale
+                  Récupération •
+                  Position ventrale •
+                  Chirurgie rétinienne
                 </div>
+
               </div>
             </div>
+
           </div>
         </div>
       </section>
 
       {/* =====================================================
-          PRODUCT
+          PRODUCTS
       ===================================================== */}
 
       <section className="products-section">
         <div className="products-section__container">
+
           <ProductsClient
             locale={locale}
           />
+
         </div>
       </section>
 
@@ -194,147 +233,169 @@ export default async function Page({
       ===================================================== */}
 
       <section className="products-seo">
+
         <div className="products-seo__container">
+
+          {/* ===============================================
+              BLOCK 1
+          =============================================== */}
+
           <div className="seo-block">
+
             <span className="seo-block__eyebrow">
-              Récupération
+              Après vitrectomie
             </span>
 
             <h2>
               Pourquoi utiliser un
-              coussin après
-              vitrectomie ?
+              coussin ergonomique
+              après une chirurgie
+              de la rétine ?
             </h2>
 
             <div className="seo-card">
+
               <p>
-                Après certaines
-                opérations de la
-                rétine comme le trou
-                maculaire ou le
-                décollement de
-                rétine, il est
-                souvent demandé au
-                patient de maintenir
+                Après une
+                vitrectomie,
+                certains patients
+                doivent maintenir
                 une position face
                 vers le bas pendant
-                plusieurs jours.
+                plusieurs jours afin
+                de favoriser la
+                cicatrisation de la
+                rétine.
               </p>
 
               <p>
-                Cette posture permet
-                à la bulle de gaz
-                présente dans l’œil
-                d’exercer une
-                pression adaptée sur
-                la zone opérée afin
-                de favoriser la
-                cicatrisation.
+                Cette posture est
+                fréquemment demandée
+                après une opération
+                du trou maculaire ou
+                un décollement de
+                rétine avec bulle de
+                gaz intraoculaire.
               </p>
 
               <p>
                 Maintenir cette
-                position durant de
+                position pendant de
                 longues périodes
-                peut toutefois
+                peut rapidement
                 provoquer des
-                tensions importantes
-                au niveau du dos,
-                des épaules et du
-                cou.
+                douleurs cervicales,
+                des tensions dans le
+                dos ainsi qu’une
+                fatigue importante.
               </p>
 
               <p>
                 Les coussins
-                ergonomiques
-                spécialement conçus
-                pour l’après
+                ergonomiques dédiés
+                à l’après
                 vitrectomie
-                améliorent le
+                permettent
+                d’améliorer le
                 confort quotidien et
-                facilitent le
-                respect des
+                d’aider le patient à
+                respecter les
                 recommandations
-                médicales.
+                post-opératoires.
               </p>
+
             </div>
           </div>
 
-          {/* BENEFITS */}
+          {/* ===============================================
+              BENEFITS
+          =============================================== */}
 
           <div className="benefits-grid">
+
             <div className="benefit-card">
               <h3>
-                Position ventrale
+                Position stable
               </h3>
 
               <p>
-                Aide à maintenir une
-                posture stable plus
-                facilement.
+                Facilite le maintien
+                de la position
+                ventrale durant les
+                périodes prolongées.
               </p>
             </div>
 
             <div className="benefit-card">
               <h3>
-                Réduction des
-                tensions
+                Moins de tensions
               </h3>
 
               <p>
-                Soulage le cou, le
-                dos et les épaules
-                durant la
-                récupération.
+                Réduction de la
+                pression exercée sur
+                le cou, les épaules
+                et le dos.
               </p>
             </div>
 
             <div className="benefit-card">
               <h3>
-                Confort quotidien
+                Meilleur confort
               </h3>
 
               <p>
-                Lecture, repos ou
-                repas deviennent
-                plus supportables.
+                Lecture, repos,
+                repas ou utilisation
+                quotidienne plus
+                confortables.
               </p>
             </div>
+
           </div>
 
-          {/* SECOND BLOCK */}
+          {/* ===============================================
+              BLOCK 2
+          =============================================== */}
 
           <div className="seo-block">
+
             <span className="seo-block__eyebrow">
               Convalescence
             </span>
 
             <h2>
-              Une récupération plus
-              confortable après
-              l’opération
+              Une récupération
+              post-opératoire plus
+              confortable et plus
+              sereine
             </h2>
 
             <div className="seo-card">
+
               <p>
-                La période de
-                récupération après
-                une vitrectomie peut
+                La récupération
+                après une chirurgie
+                ophtalmologique peut
                 durer plusieurs
-                jours à plusieurs
+                jours ou plusieurs
                 semaines selon la
-                pathologie traitée.
+                pathologie traitée
+                et les consignes
+                médicales données au
+                patient.
               </p>
 
               <p>
-                Durant cette phase,
-                disposer d’un
+                Disposer d’un
                 environnement adapté
                 améliore nettement
-                le confort et aide à
-                mieux vivre les
-                contraintes
-                post-opératoires.
+                le confort pendant
+                cette période et
+                aide à mieux vivre
+                les contraintes
+                liées à la position
+                face vers le bas.
               </p>
 
               <p>
@@ -342,15 +403,72 @@ export default async function Page({
                 ergonomiques dédiés
                 à l’après
                 vitrectomie
-                permettent de mieux
-                supporter les
-                positions imposées
-                et favorisent une
+                permettent de rendre
+                cette phase plus
+                supportable au
+                quotidien tout en
+                accompagnant une
                 récupération plus
-                sereine.
+                apaisée.
               </p>
+
             </div>
           </div>
+
+          {/* ===============================================
+              BLOCK 3
+          =============================================== */}
+
+          <div className="seo-block">
+
+            <span className="seo-block__eyebrow">
+              VitrectoMed
+            </span>
+
+            <h2>
+              Une approche pensée
+              pour le confort des
+              patients
+            </h2>
+
+            <div className="seo-card">
+
+              <p>
+                Chez VitrectoMed,
+                nous concevons des
+                solutions orientées
+                vers le confort
+                post-opératoire et
+                l’amélioration de
+                l’expérience patient
+                après une chirurgie
+                rétinienne.
+              </p>
+
+              <p>
+                Notre objectif est
+                d’aider les patients
+                à traverser cette
+                période délicate
+                avec davantage de
+                confort, de stabilité
+                et de sérénité.
+              </p>
+
+              <p>
+                Chaque détail est
+                pensé pour proposer
+                une expérience plus
+                premium, plus
+                moderne et adaptée
+                aux besoins réels de
+                la récupération
+                post-vitrectomie.
+              </p>
+
+            </div>
+          </div>
+
         </div>
       </section>
     </main>

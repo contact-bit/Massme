@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 
-import "@/styles/components/navbar.css";
+import "@/styles/shop/components/navbar.css";
 
 /* =========================================================
    VITRECTOMED — PREMIUM MEDICAL NAVBAR
