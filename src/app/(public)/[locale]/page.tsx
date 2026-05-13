@@ -46,7 +46,7 @@ export default async function HomePage({
               <div className="stack-lg">
                 <div className="stack-md">
                   <span className="text-label hero-label">
-                    Guide médical premium
+                   vitrectomed - Guide médical
                   </span>
 
                   <h1 className="title-hero hero-title">
