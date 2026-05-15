@@ -1,0 +1,792 @@
+/* =========================================================
+   CHOOSE SHIPPING — CINEMATIC PREMIUM UI
+   VITRECTOMED CHECKOUT
+========================================================= */
+
+.choose-shipping {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 1.4rem;
+
+  width: 100%;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.choose-shipping-header {
+  display: flex;
+  flex-direction: column;
+
+  gap: .9rem;
+}
+
+.choose-shipping-kicker {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+
+  padding:
+    .45rem .8rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(37,99,235,.12);
+
+  border:
+    1px solid rgba(96,165,250,.16);
+
+  color:
+    rgba(147,197,253,.96);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.choose-shipping-title {
+  margin: 0;
+
+  font-size:
+    clamp(1.5rem, 2vw, 2rem);
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.05em;
+
+  color:
+    #f8fafc;
+}
+
+.choose-shipping-description {
+  margin:
+    .5rem 0 0 0;
+
+  max-width:
+    620px;
+
+  color:
+    rgba(226,232,240,.64);
+
+  font-size:
+    .96rem;
+
+  line-height:
+    1.7;
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.choose-shipping-error {
+  padding:
+    1rem 1.1rem;
+
+  border-radius:
+    20px;
+
+  background:
+    rgba(239,68,68,.08);
+
+  border:
+    1px solid rgba(239,68,68,.18);
+
+  color:
+    #fecaca;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    600;
+
+  backdrop-filter:
+    blur(10px);
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.choose-shipping-grid {
+  display: flex;
+  flex-direction: column;
+
+  gap: 1rem;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.choose-shipping-card {
+  position: relative;
+
+  width: 100%;
+
+  overflow: hidden;
+
+  padding:
+    1.4rem;
+
+  border-radius:
+    30px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.78),
+      rgba(8,15,28,.96)
+    );
+
+  backdrop-filter:
+    blur(18px);
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.22);
+
+  cursor: pointer;
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease,
+    background .25s ease;
+}
+
+.choose-shipping-card:hover {
+  transform:
+    translateY(-3px);
+
+  border-color:
+    rgba(96,165,250,.22);
+
+  box-shadow:
+    0 28px 80px rgba(37,99,235,.16);
+}
+
+/* =========================================================
+   SELECTED
+========================================================= */
+
+.choose-shipping-card-selected {
+  border-color:
+    rgba(96,165,250,.36);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(20,32,56,.92),
+      rgba(9,16,30,.98)
+    );
+
+  box-shadow:
+    0 30px 90px rgba(37,99,235,.22);
+}
+
+/* =========================================================
+   GLOW
+========================================================= */
+
+.choose-shipping-card-glow {
+  position: absolute;
+
+  top: -80px;
+  right: -80px;
+
+  width: 220px;
+  height: 220px;
+
+  border-radius:
+    999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(59,130,246,.18),
+      transparent 70%
+    );
+
+  filter:
+    blur(20px);
+
+  opacity: 0;
+
+  transition:
+    opacity .3s ease;
+
+  pointer-events: none;
+}
+
+.choose-shipping-card-selected
+.choose-shipping-card-glow {
+  opacity: 1;
+}
+
+/* =========================================================
+   RECOMMENDED
+========================================================= */
+
+.choose-shipping-recommended {
+  position: absolute;
+
+  top: 1rem;
+  right: 1rem;
+
+  display: flex;
+  align-items: center;
+
+  gap: .45rem;
+
+  padding:
+    .45rem .75rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(59,130,246,.16);
+
+  border:
+    1px solid rgba(96,165,250,.18);
+
+  color:
+    #bfdbfe;
+
+  font-size:
+    .7rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .06em;
+
+  text-transform:
+    uppercase;
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.choose-shipping-recommended svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* =========================================================
+   TOP
+========================================================= */
+
+.choose-shipping-card-top {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 1rem;
+}
+
+/* =========================================================
+   LEFT
+========================================================= */
+
+.choose-shipping-card-left {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 1rem;
+
+  flex: 1;
+}
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.choose-shipping-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 56px;
+  width: 56px;
+  height: 56px;
+
+  border-radius:
+    20px;
+
+  background:
+    rgba(255,255,255,.04);
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  color:
+    #93c5fd;
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.choose-shipping-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.choose-shipping-card-content {
+  display: flex;
+  flex-direction: column;
+
+  gap: .6rem;
+}
+
+.choose-shipping-card-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  gap: .6rem;
+}
+
+.choose-shipping-card-title {
+  margin: 0;
+
+  font-size:
+    1.08rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    -.03em;
+
+  color:
+    #f8fafc;
+}
+
+/* =========================================================
+   SELECTED BADGE
+========================================================= */
+
+.choose-shipping-selected-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding:
+    .35rem .7rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(59,130,246,.16);
+
+  border:
+    1px solid rgba(96,165,250,.18);
+
+  color:
+    #bfdbfe;
+
+  font-size:
+    .68rem;
+
+  font-weight:
+    700;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .06em;
+}
+
+/* =========================================================
+   DELAY
+========================================================= */
+
+.choose-shipping-delay {
+  display: flex;
+  align-items: center;
+
+  gap: .5rem;
+
+  color:
+    rgba(226,232,240,.72);
+
+  font-size:
+    .9rem;
+}
+
+.choose-shipping-delay svg {
+  width: 15px;
+  height: 15px;
+
+  opacity: .7;
+}
+
+/* =========================================================
+   PROVIDER
+========================================================= */
+
+.choose-shipping-provider {
+  width: fit-content;
+
+  padding:
+    .42rem .72rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(139,92,246,.14);
+
+  border:
+    1px solid rgba(167,139,250,.18);
+
+  color:
+    #ddd6fe;
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .06em;
+
+  text-transform:
+    uppercase;
+}
+
+/* =========================================================
+   PRICE
+========================================================= */
+
+.choose-shipping-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  text-align: right;
+}
+
+.choose-shipping-price strong {
+  font-size:
+    1.5rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.05em;
+
+  color:
+    #ffffff;
+}
+
+.choose-shipping-price span {
+  margin-top:
+    .25rem;
+
+  color:
+    rgba(226,232,240,.54);
+
+  font-size:
+    .75rem;
+}
+
+/* =========================================================
+   RADIO
+========================================================= */
+
+.choose-shipping-radio {
+  position: absolute;
+
+  bottom: 1.25rem;
+  right: 1.25rem;
+
+  width: 22px;
+  height: 22px;
+
+  border-radius:
+    999px;
+
+  border:
+    2px solid rgba(255,255,255,.18);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition:
+    all .25s ease;
+}
+
+.choose-shipping-radio-active {
+  border-color:
+    #60a5fa;
+
+  background:
+    rgba(59,130,246,.16);
+
+  box-shadow:
+    0 0 0 6px rgba(59,130,246,.12);
+}
+
+.choose-shipping-radio-dot {
+  width: 8px;
+  height: 8px;
+
+  border-radius:
+    999px;
+
+  background:
+    white;
+
+  transform:
+    scale(0);
+
+  transition:
+    transform .25s ease;
+}
+
+.choose-shipping-radio-active
+.choose-shipping-radio-dot {
+  transform:
+    scale(1);
+}
+
+/* =========================================================
+   RELAY
+========================================================= */
+
+.choose-shipping-relay {
+  overflow: hidden;
+
+  border-radius:
+    30px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.82),
+      rgba(8,15,28,.96)
+    );
+
+  backdrop-filter:
+    blur(20px);
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.2);
+}
+
+.choose-shipping-relay-header {
+  padding:
+    1.3rem 1.4rem;
+
+  border-bottom:
+    1px solid rgba(255,255,255,.05);
+}
+
+.choose-shipping-relay-header h3 {
+  margin: 0;
+
+  font-size:
+    1.05rem;
+
+  font-weight:
+    700;
+
+  color:
+    #f8fafc;
+}
+
+.choose-shipping-relay-content {
+  padding:
+    1.4rem;
+}
+
+/* =========================================================
+   RELAY SELECTED
+========================================================= */
+
+.choose-shipping-relay-selected {
+  margin-top:
+    1.5rem;
+
+  padding:
+    1.2rem;
+
+  border-radius:
+    24px;
+
+  background:
+    rgba(255,255,255,.03);
+
+  border:
+    1px solid rgba(255,255,255,.05);
+}
+
+.choose-shipping-relay-kicker {
+  margin:
+    0 0 .8rem 0;
+
+  color:
+    rgba(147,197,253,.88);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+}
+
+.choose-shipping-relay-details {
+  display: flex;
+  flex-direction: column;
+
+  gap: .3rem;
+}
+
+.choose-shipping-relay-details strong {
+  color:
+    #ffffff;
+
+  font-size:
+    1rem;
+}
+
+.choose-shipping-relay-details p {
+  margin: 0;
+
+  color:
+    rgba(226,232,240,.72);
+
+  font-size:
+    .92rem;
+
+  line-height:
+    1.6;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .choose-shipping-card {
+    padding:
+      1.2rem;
+  }
+
+  .choose-shipping-card-top {
+    flex-direction: column;
+
+    gap: 1.2rem;
+  }
+
+  .choose-shipping-price {
+    align-items: flex-start;
+
+    text-align: left;
+  }
+
+  .choose-shipping-radio {
+    top: 1.2rem;
+    right: 1.2rem;
+
+    bottom: auto;
+  }
+
+  .choose-shipping-recommended {
+    position: relative;
+
+    top: auto;
+    right: auto;
+
+    width: fit-content;
+
+    margin-bottom:
+      1rem;
+  }
+
+  .choose-shipping-relay-content {
+    padding:
+      1rem;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .choose-shipping-title {
+    font-size:
+      1.35rem;
+  }
+
+  .choose-shipping-card {
+    border-radius:
+      24px;
+  }
+
+  .choose-shipping-icon {
+    min-width: 50px;
+    width: 50px;
+    height: 50px;
+  }
+
+  .choose-shipping-price strong {
+    font-size:
+      1.3rem;
+  }
+
+  .choose-shipping-relay {
+    border-radius:
+      24px;
+  }
+}

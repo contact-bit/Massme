@@ -5,6 +5,13 @@ import {
   useState,
 } from "react";
 
+import {
+  FiCheck,
+  FiClock,
+  FiMapPin,
+  FiTruck,
+} from "react-icons/fi";
+
 import type {
   ShippingMethod,
   RelayPoint,
@@ -15,6 +22,8 @@ import { RELAY_PROVIDERS } from "@/components/shipping/relayProviders";
 import type { Locale } from "@/lib/i18n";
 
 import { computePrice } from "@/lib/pricing";
+
+import "./ChooseShipping.css";
 
 /* =====================================================
    PROPS
@@ -50,6 +59,7 @@ const UI: Record<
     vatIncluded: string;
     selected: string;
     relayPoint: string;
+    recommended: string;
   }
 > = {
   fr: {
@@ -67,6 +77,9 @@ const UI: Record<
 
     relayPoint:
       "Point relais sélectionné",
+
+    recommended:
+      "Recommandé",
   },
 
   en: {
@@ -84,6 +97,9 @@ const UI: Record<
 
     relayPoint:
       "Selected pickup point",
+
+    recommended:
+      "Recommended",
   },
 
   es: {
@@ -101,6 +117,9 @@ const UI: Record<
 
     relayPoint:
       "Punto de recogida seleccionado",
+
+    recommended:
+      "Recomendado",
   },
 
   de: {
@@ -118,6 +137,9 @@ const UI: Record<
 
     relayPoint:
       "Ausgewählter Abholpunkt",
+
+    recommended:
+      "Empfohlen",
   },
 
   it: {
@@ -135,6 +157,9 @@ const UI: Record<
 
     relayPoint:
       "Punto di ritiro selezionato",
+
+    recommended:
+      "Consigliato",
   },
 
   nl: {
@@ -152,6 +177,9 @@ const UI: Record<
 
     relayPoint:
       "Geselecteerd afhaalpunt",
+
+    recommended:
+      "Aanbevolen",
   },
 };
 
@@ -168,6 +196,7 @@ export default function ChooseShipping({
   onRelaySelect,
   error,
 }: ChooseShippingProps) {
+
   const t =
     UI[locale] ??
     UI.fr;
@@ -242,6 +271,7 @@ export default function ChooseShipping({
   function selectMethod(
     method: ShippingMethod
   ) {
+
     setSelectedMethod(
       method
     );
@@ -254,6 +284,7 @@ export default function ChooseShipping({
       method.type !==
       "relay"
     ) {
+
       setRelayPoint(
         null
       );
@@ -267,6 +298,7 @@ export default function ChooseShipping({
   function handleRelaySelect(
     point: RelayPoint
   ) {
+
     setRelayPoint(
       point
     );
@@ -292,20 +324,30 @@ export default function ChooseShipping({
   ===================================================== */
 
   return (
-    <section className="space-y-6">
+    <section className="choose-shipping">
 
       {/* =========================================
           HEADER
       ========================================= */}
 
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight text-neutral-950">
-          {t.title}
-        </h2>
+      <div className="choose-shipping-header">
 
-        <p className="text-sm text-neutral-500">
-          {t.subtitle}
-        </p>
+        <span className="choose-shipping-kicker">
+          Livraison
+        </span>
+
+        <div>
+
+          <h2 className="choose-shipping-title">
+            {t.title}
+          </h2>
+
+          <p className="choose-shipping-description">
+            {t.subtitle}
+          </p>
+
+        </div>
+
       </div>
 
       {/* =========================================
@@ -313,10 +355,12 @@ export default function ChooseShipping({
       ========================================= */}
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-sm font-medium text-red-700">
+        <div className="choose-shipping-error">
+
+          <p>
             {error}
           </p>
+
         </div>
       )}
 
@@ -324,9 +368,14 @@ export default function ChooseShipping({
           METHODS
       ========================================= */}
 
-      <div className="space-y-4">
+      <div className="choose-shipping-grid">
+
         {visibleMethods.map(
-          (method) => {
+          (
+            method,
+            index
+          ) => {
+
             const isSelected =
               selectedMethod?.id ===
               method.id;
@@ -362,122 +411,150 @@ export default function ChooseShipping({
                   )
                 }
                 className={`
-                  group
-                  relative
-                  w-full
-                  overflow-hidden
-                  rounded-3xl
-                  border
-                  p-5
-                  text-left
-                  transition-all
-                  duration-300
+                  choose-shipping-card
                   ${
                     isSelected
-                      ? `
-                        border-blue-500
-                        bg-blue-50/80
-                        shadow-[0_10px_40px_rgba(59,130,246,0.12)]
-                      `
-                      : `
-                        border-neutral-200
-                        bg-white
-                        hover:border-neutral-300
-                        hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]
-                      `
+                      ? "choose-shipping-card-selected"
+                      : ""
                   }
                 `}
               >
 
                 {/* Glow */}
-                <div
-                  className={`
-                    absolute
-                    inset-0
-                    opacity-0
-                    transition-opacity
-                    duration-300
-                    ${
-                      isSelected
-                        ? "opacity-100"
-                        : ""
-                    }
-                  `}
-                >
-                  <div className="absolute -top-24 right-0 h-48 w-48 rounded-full bg-blue-200/30 blur-3xl" />
-                </div>
 
-                <div className="relative flex items-start justify-between gap-6">
+                <div className="choose-shipping-card-glow" />
 
-                  {/* LEFT */}
-                  <div className="flex-1">
+                {/* Recommended */}
 
-                    <div className="flex flex-wrap items-center gap-2">
+                {index === 0 && (
+                  <div className="choose-shipping-recommended">
 
-                      <h3 className="text-base font-semibold text-neutral-950">
-                        {
-                          method.name
-                        }
-                      </h3>
+                    <FiCheck />
 
-                      {isSelected && (
-                        <span className="rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
+                    <span>
+                      {
+                        t.recommended
+                      }
+                    </span>
+
+                  </div>
+                )}
+
+                {/* Top */}
+
+                <div className="choose-shipping-card-top">
+
+                  {/* Left */}
+
+                  <div className="choose-shipping-card-left">
+
+                    <div className="choose-shipping-icon">
+
+                      {method.type ===
+                      "relay" ? (
+                        <FiMapPin />
+                      ) : (
+                        <FiTruck />
+                      )}
+
+                    </div>
+
+                    <div className="choose-shipping-card-content">
+
+                      <div className="choose-shipping-card-title-row">
+
+                        <h3 className="choose-shipping-card-title">
                           {
-                            t.selected
+                            method.name
                           }
-                        </span>
+                        </h3>
+
+                        {isSelected && (
+                          <span className="choose-shipping-selected-badge">
+                            {
+                              t.selected
+                            }
+                          </span>
+                        )}
+
+                      </div>
+
+                      {method.delay && (
+                        <div className="choose-shipping-delay">
+
+                          <FiClock />
+
+                          <span>
+                            {
+                              method.delay
+                            }
+                          </span>
+
+                        </div>
                       )}
 
                       {providerConfig && (
-                        <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-violet-700">
+                        <div className="choose-shipping-provider">
+
                           {
                             providerConfig
                               .label[
                               locale
                             ]
                           }
-                        </span>
+
+                        </div>
                       )}
+
                     </div>
 
-                    {method.delay && (
-                      <p className="mt-2 text-sm text-neutral-500">
-                        {
-                          method.delay
-                        }
-                      </p>
-                    )}
                   </div>
 
-                  {/* RIGHT */}
-                  <div className="flex flex-col items-end text-right">
+                  {/* Right */}
 
-                    <span className="text-xl font-bold tracking-tight text-neutral-950">
+                  <div className="choose-shipping-price">
+
+                    <strong>
                       {price.ttc.toFixed(
                         2
-                      )}{" "}
-                      €
-                    </span>
+                      )} €
+                    </strong>
 
                     {method.vatRate >
                       0 && (
-                      <span className="mt-1 text-xs text-neutral-500">
+                      <span>
                         {
                           t.vatIncluded
-                        }{" "}
-                        (
-                        {
-                          method.vatRate
                         }
-                        %)
                       </span>
                     )}
+
                   </div>
+
                 </div>
+
+                {/* Radio */}
+
+                <div
+                  className={`
+                    choose-shipping-radio
+                    ${
+                      isSelected
+                        ? "choose-shipping-radio-active"
+                        : ""
+                    }
+                  `}
+                >
+
+                  <div className="choose-shipping-radio-dot" />
+
+                </div>
+
               </button>
             );
           }
         )}
+
       </div>
 
       {/* =========================================
@@ -488,10 +565,12 @@ export default function ChooseShipping({
         "relay" &&
         relayConfig &&
         RelayComponent && (
-          <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.04)]">
 
-            <div className="border-b border-neutral-100 px-6 py-5">
-              <h3 className="text-lg font-semibold text-neutral-950">
+          <div className="choose-shipping-relay">
+
+            <div className="choose-shipping-relay-header">
+
+              <h3>
                 {
                   relayConfig
                     .choose[
@@ -499,9 +578,11 @@ export default function ChooseShipping({
                   ]
                 }
               </h3>
+
             </div>
 
-            <div className="p-6">
+            <div className="choose-shipping-relay-content">
+
               <RelayComponent
                 onSelect={
                   handleRelaySelect
@@ -515,21 +596,24 @@ export default function ChooseShipping({
               />
 
               {relayPoint && (
-                <div className="mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
 
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+                <div className="choose-shipping-relay-selected">
+
+                  <p className="choose-shipping-relay-kicker">
+
                     {
                       t.relayPoint
                     }
+
                   </p>
 
-                  <div className="space-y-1 text-sm text-neutral-700">
+                  <div className="choose-shipping-relay-details">
 
-                    <p className="text-base font-semibold text-neutral-950">
+                    <strong>
                       {
                         relayPoint.name
                       }
-                    </p>
+                    </strong>
 
                     <p>
                       {
@@ -553,12 +637,17 @@ export default function ChooseShipping({
                         }
                       </p>
                     )}
+
                   </div>
+
                 </div>
               )}
+
             </div>
+
           </div>
         )}
+
     </section>
   );
 }

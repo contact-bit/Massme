@@ -1,6 +1,6 @@
 /* =====================================================
    CHECKOUT — VITRECTOMED OFFICIAL EXPERIENCE
-   PREMIUM / MEDTECH / CINEMATIC
+   ULTRA PREMIUM / MEDTECH / CINEMATIC
 ===================================================== */
 
 /* =====================================================
@@ -15,31 +15,31 @@
     #081120;
 
   --vm-surface:
-    rgba(9, 17, 32, .84);
+    rgba(9,17,32,.84);
 
   --vm-surface-strong:
-    rgba(10, 20, 38, .96);
+    rgba(10,20,38,.96);
 
   --vm-card:
-    rgba(14, 24, 44, .74);
+    rgba(14,24,44,.74);
 
   --vm-card-hover:
-    rgba(20, 35, 64, .94);
+    rgba(20,35,64,.94);
 
   --vm-border:
-    rgba(148, 163, 184, .10);
+    rgba(148,163,184,.10);
 
   --vm-border-strong:
-    rgba(96, 165, 250, .22);
+    rgba(96,165,250,.22);
 
   --vm-text:
     #f8fbff;
 
   --vm-text-soft:
-    rgba(219, 234, 254, .92);
+    rgba(219,234,254,.92);
 
   --vm-text-muted:
-    rgba(148, 163, 184, .78);
+    rgba(148,163,184,.78);
 
   --vm-title:
     #ffffff;
@@ -98,9 +98,9 @@
     0 auto;
 
   padding:
-    clamp(4rem, 7vw, 7rem)
-    clamp(1rem, 3vw, 2rem)
-    clamp(6rem, 8vw, 8rem);
+    clamp(4rem,7vw,7rem)
+    clamp(1rem,3vw,2rem)
+    12rem;
 
   overflow: visible;
 
@@ -188,10 +188,10 @@
 
   grid-template-columns:
     120px
-    minmax(0, 1fr);
+    minmax(0,1fr);
 
   gap:
-    clamp(1.5rem, 3vw, 3rem);
+    clamp(1.5rem,3vw,3rem);
 
   align-items: start;
 }
@@ -243,15 +243,6 @@
 }
 
 /* =====================================================
-   BLOCK
-===================================================== */
-
-.checkout-block {
-  margin-bottom:
-    1.8rem;
-}
-
-/* =====================================================
    HEADER
 ===================================================== */
 
@@ -261,7 +252,7 @@
   text-align: center;
 
   margin-bottom:
-    clamp(3rem, 6vw, 5rem);
+    clamp(3rem,6vw,5rem);
 }
 
 .checkout-header::before {
@@ -358,7 +349,7 @@
     white;
 
   font-size:
-    clamp(3rem, 8vw, 6.4rem);
+    clamp(3rem,8vw,6.4rem);
 
   line-height:
     .92;
@@ -391,7 +382,7 @@
     rgba(219,234,254,.84);
 
   font-size:
-    clamp(1rem, 1.4vw, 1.14rem);
+    clamp(1rem,1.4vw,1.14rem);
 
   line-height:
     2;
@@ -419,7 +410,7 @@
     1.8rem;
 
   padding:
-    clamp(1.5rem, 3vw, 2rem);
+    clamp(1.5rem,3vw,2rem);
 
   border-radius:
     2rem;
@@ -527,6 +518,110 @@
 }
 
 /* =====================================================
+   PREMIUM PAYMENT BAR
+===================================================== */
+
+.checkout-payment-bar {
+  display: grid;
+
+  grid-template-columns:
+    180px
+    1fr;
+
+  gap: 1rem;
+
+  align-items: stretch;
+
+  margin:
+    2rem 0
+    2.5rem;
+
+  width: 100%;
+}
+
+/* =====================================================
+   BACK BUTTON
+===================================================== */
+
+.checkout-back-button {
+  position: relative;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.05) 0%,
+      rgba(255,255,255,.025) 100%
+    );
+
+  color:
+    white;
+
+  border-radius:
+    22px;
+
+  min-height:
+    76px;
+
+  padding:
+    0 1.4rem;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: .75rem;
+
+  cursor: pointer;
+
+  transition:
+    transform var(--vm-transition),
+    border-color var(--vm-transition),
+    background var(--vm-transition),
+    box-shadow var(--vm-transition);
+
+  backdrop-filter:
+    blur(18px);
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    -.01em;
+}
+
+.checkout-back-button:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(255,255,255,.16);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.08) 0%,
+      rgba(255,255,255,.04) 100%
+    );
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.22);
+}
+
+.checkout-back-icon {
+  font-size:
+    1rem;
+
+  opacity: .72;
+}
+
+/* =====================================================
    PAY BUTTON
 ===================================================== */
 
@@ -537,16 +632,10 @@
 
   width: 100%;
 
-  min-height:
-    64px;
-
-  margin-top:
-    2.2rem;
-
   border: none;
 
   border-radius:
-    22px;
+    24px;
 
   background:
     linear-gradient(
@@ -557,15 +646,6 @@
 
   color:
     white;
-
-  font-size:
-    1rem;
-
-  font-weight:
-    900;
-
-  letter-spacing:
-    -.01em;
 
   cursor: pointer;
 
@@ -578,6 +658,33 @@
     0 28px 60px rgba(37,99,235,.30);
 }
 
+.checkout-pay::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent,
+      rgba(255,255,255,.18),
+      transparent
+    );
+
+  transform:
+    translateX(-120%);
+
+  transition:
+    transform .9s ease;
+}
+
+.checkout-pay:hover::before {
+  transform:
+    translateX(120%);
+}
+
 .checkout-pay:hover {
   transform:
     translateY(-3px);
@@ -587,6 +694,88 @@
 
   box-shadow:
     0 34px 80px rgba(37,99,235,.36);
+}
+
+.checkout-pay:disabled {
+  opacity: .45;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  filter: grayscale(.1);
+
+  box-shadow: none;
+}
+
+.checkout-pay-large {
+  min-height:
+    76px;
+
+  padding:
+    0 1.8rem;
+}
+
+.checkout-pay-content {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 1rem;
+}
+
+.checkout-pay-text {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  gap: .15rem;
+}
+
+.checkout-pay-label {
+  font-size:
+    .72rem;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .12em;
+
+  opacity: .72;
+}
+
+.checkout-pay-main {
+  font-size:
+    1.05rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.02em;
+}
+
+.checkout-pay-arrow {
+  font-size:
+    1.35rem;
+
+  opacity: .9;
+
+  transition:
+    transform var(--vm-transition);
+}
+
+.checkout-pay:hover
+.checkout-pay-arrow {
+  transform:
+    translateX(5px);
 }
 
 /* =====================================================
@@ -645,7 +834,7 @@
 
   .checkout-title {
     font-size:
-      clamp(2.8rem, 12vw, 4.8rem);
+      clamp(2.8rem,12vw,4.8rem);
   }
 
   .checkout {
@@ -657,6 +846,22 @@
 /* =====================================================
    RESPONSIVE MOBILE
 ===================================================== */
+
+@media (max-width: 768px) {
+
+  .checkout-payment-bar {
+    grid-template-columns:
+      1fr;
+
+    gap:
+      .9rem;
+  }
+
+  .checkout-back-button,
+  .checkout-pay-large {
+    width: 100%;
+  }
+}
 
 @media (max-width: 640px) {
 
@@ -687,9 +892,10 @@
       1.2rem;
   }
 
-  .checkout-pay {
+  .checkout-pay-large,
+  .checkout-back-button {
     min-height:
-      58px;
+      64px;
 
     border-radius:
       18px;
@@ -700,7 +906,7 @@
       .96;
 
     font-size:
-      clamp(2.5rem, 13vw, 4rem);
+      clamp(2.5rem,13vw,4rem);
   }
 
   .checkout-description {
@@ -708,11 +914,4 @@
       1.8;
   }
 }
-/* =====================================================
-   FOOTER SAFE AREA
-===================================================== */
 
-.checkout {
-  padding-bottom:
-    12rem;
-}

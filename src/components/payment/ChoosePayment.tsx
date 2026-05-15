@@ -9,6 +9,20 @@ import type { Locale } from "@/lib/i18n";
 
 import type { PaymentMethod } from "@/app/admin/payments/types";
 
+import {
+  FaPaypal,
+  FaCreditCard,
+  FaUniversity,
+  FaLock,
+  FaShieldAlt,
+} from "react-icons/fa";
+
+import {
+  SiStripe,
+} from "react-icons/si";
+
+import "./ChoosePayment.css";
+
 /* =====================================================
    PROPS
 ===================================================== */
@@ -31,78 +45,28 @@ type Props = {
    UI
 ===================================================== */
 
-const UI: Record<
-  Locale,
-  {
-    title: string;
-    subtitle: string;
-    selected: string;
-  }
-> = {
+const UI = {
   fr: {
+    kicker:
+      "Paiement sécurisé",
+
     title:
-      "Méthode de paiement",
+      "Comment souhaitez-vous payer ?",
 
     subtitle:
-      "Choisissez votre mode de paiement.",
+      "Toutes les transactions sont protégées par un chiffrement avancé pour garantir une expérience rapide, fiable et entièrement sécurisée.",
 
     selected:
-      "Sélectionné",
-  },
+      "Actif",
 
-  en: {
-    title:
-      "Payment method",
+    protection:
+      "Protection avancée",
 
-    subtitle:
-      "Choose your payment method.",
+    encrypted:
+      "Connexion chiffrée SSL",
 
-    selected:
-      "Selected",
-  },
-
-  es: {
-    title:
-      "Método de pago",
-
-    subtitle:
-      "Elige tu método de pago.",
-
-    selected:
-      "Seleccionado",
-  },
-
-  de: {
-    title:
-      "Zahlungsmethode",
-
-    subtitle:
-      "Wähle deine Zahlungsmethode.",
-
-    selected:
-      "Ausgewählt",
-  },
-
-  it: {
-    title:
-      "Metodo di pagamento",
-
-    subtitle:
-      "Scegli il tuo metodo di pagamento.",
-
-    selected:
-      "Selezionato",
-  },
-
-  nl: {
-    title:
-      "Betaalmethode",
-
-    subtitle:
-      "Kies je betaalmethode.",
-
-    selected:
-      "Geselecteerd",
+    instant:
+      "Validation instantanée",
   },
 };
 
@@ -118,8 +82,8 @@ export default function ChoosePayment({
   onMethodSelect,
   error,
 }: Props) {
+
   const t =
-    UI[locale] ??
     UI.fr;
 
   const [
@@ -133,11 +97,12 @@ export default function ChoosePayment({
   );
 
   /* =====================================================
-     VISIBLE METHODS
+     METHODS
   ===================================================== */
 
   const visibleMethods =
     useMemo(() => {
+
       return methods
         .filter(
           (method) =>
@@ -152,6 +117,7 @@ export default function ChoosePayment({
             (b.sortOrder ??
               999)
         );
+
     }, [methods]);
 
   /* =====================================================
@@ -172,6 +138,7 @@ export default function ChoosePayment({
   function select(
     method: PaymentMethod
   ) {
+
     setSelected(
       method
     );
@@ -182,45 +149,164 @@ export default function ChoosePayment({
   }
 
   /* =====================================================
+     ICONS
+  ===================================================== */
+
+  function getIcon(
+    provider: string
+  ) {
+
+    switch (provider) {
+
+      case "paypal":
+        return (
+          <FaPaypal className="payment-method-logo" />
+        );
+
+      case "stripe":
+        return (
+          <SiStripe className="payment-method-logo" />
+        );
+
+      case "bank_transfer":
+        return (
+          <FaUniversity className="payment-method-logo" />
+        );
+
+      default:
+        return (
+          <FaCreditCard className="payment-method-logo" />
+        );
+    }
+  }
+
+  /* =====================================================
+     PROVIDER DESCRIPTION
+  ===================================================== */
+
+  function getProviderText(
+    provider: string
+  ) {
+
+    switch (provider) {
+
+      case "paypal":
+        return "Paiement sécurisé via votre compte PayPal ou carte bancaire.";
+
+      case "stripe":
+        return "Paiement ultra rapide et sécurisé par Stripe.";
+
+      case "bank_transfer":
+        return "Paiement direct depuis votre banque.";
+
+      default:
+        return "Paiement sécurisé.";
+    }
+  }
+
+  /* =====================================================
      RENDER
   ===================================================== */
 
   return (
-    <section className="space-y-6">
+    <section className="payment-methods">
 
-      {/* =========================================
+      {/* =====================================================
+          BACKGROUND
+      ===================================================== */}
+
+      <div className="payment-methods-background" />
+
+      {/* =====================================================
           HEADER
-      ========================================= */}
+      ===================================================== */}
 
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight text-neutral-950">
-          {t.title}
-        </h2>
+      <div className="payment-methods-header">
 
-        <p className="text-sm text-neutral-500">
-          {t.subtitle}
-        </p>
+        <div className="payment-methods-kicker">
+
+          <FaLock />
+
+          <span>
+            {t.kicker}
+          </span>
+
+        </div>
+
+        <div className="payment-methods-heading">
+
+          <h2 className="payment-methods-title">
+            {t.title}
+          </h2>
+
+          <p className="payment-methods-description">
+            {t.subtitle}
+          </p>
+
+        </div>
+
       </div>
 
-      {/* =========================================
+      {/* =====================================================
+          TRUST
+      ===================================================== */}
+
+      <div className="payment-methods-trust">
+
+        <div className="payment-methods-trust-item">
+
+          <FaShieldAlt />
+
+          <span>
+            {t.protection}
+          </span>
+
+        </div>
+
+        <div className="payment-methods-trust-item">
+
+          <FaLock />
+
+          <span>
+            {t.encrypted}
+          </span>
+
+        </div>
+
+        <div className="payment-methods-trust-item">
+
+          ⚡
+
+          <span>
+            {t.instant}
+          </span>
+
+        </div>
+
+      </div>
+
+      {/* =====================================================
           ERROR
-      ========================================= */}
+      ===================================================== */}
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-sm font-medium text-red-700">
-            {error}
-          </p>
+
+        <div className="payment-methods-error">
+
+          {error}
+
         </div>
       )}
 
-      {/* =========================================
+      {/* =====================================================
           METHODS
-      ========================================= */}
+      ===================================================== */}
 
-      <div className="space-y-4">
+      <div className="payment-methods-list">
+
         {visibleMethods.map(
           (method) => {
+
             const isSelected =
               selected?.id ===
               method.id;
@@ -242,125 +328,111 @@ export default function ChoosePayment({
               )?.fr ??
               "—";
 
-            const description =
-              (
-                method.description as Record<
-                  string,
-                  string
-                >
-              )?.[
-                locale
-              ] ??
-              (
-                method.description as Record<
-                  string,
-                  string
-                >
-              )?.fr ??
-              "";
-
             return (
               <button
                 key={
                   method.id
                 }
+
                 type="button"
+
                 onClick={() =>
                   select(
                     method
                   )
                 }
+
                 className={`
-                  group
-                  relative
-                  w-full
-                  overflow-hidden
-                  rounded-3xl
-                  border
-                  p-5
-                  text-left
-                  transition-all
-                  duration-300
+                  payment-method
                   ${
                     isSelected
-                      ? `
-                        border-blue-500
-                        bg-blue-50/80
-                        shadow-[0_10px_40px_rgba(59,130,246,0.12)]
-                      `
-                      : `
-                        border-neutral-200
-                        bg-white
-                        hover:border-neutral-300
-                        hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]
-                      `
+                      ? "payment-method-active"
+                      : ""
                   }
                 `}
               >
 
-                {/* Glow */}
-                <div
-                  className={`
-                    absolute
-                    inset-0
-                    opacity-0
-                    transition-opacity
-                    duration-300
-                    ${
-                      isSelected
-                        ? "opacity-100"
-                        : ""
-                    }
-                  `}
-                >
-                  <div className="absolute -top-24 right-0 h-48 w-48 rounded-full bg-blue-200/30 blur-3xl" />
-                </div>
+                {/* GLOW */}
 
-                <div className="relative flex items-start justify-between gap-6">
+                <div className="payment-method-glow" />
 
-                  {/* LEFT */}
-                  <div className="flex-1">
+                {/* CONTENT */}
 
-                    <div className="flex flex-wrap items-center gap-2">
+                <div className="payment-method-left">
 
-                      <h3 className="text-base font-semibold text-neutral-950">
-                        {
-                          label
-                        }
+                  {/* ICON */}
+
+                  <div className="payment-method-icon">
+
+                    {getIcon(
+                      method.provider
+                    )}
+
+                  </div>
+
+                  {/* TEXT */}
+
+                  <div className="payment-method-content">
+
+                    <div className="payment-method-top">
+
+                      <h3 className="payment-method-title">
+
+                        {label}
+
                       </h3>
 
                       {isSelected && (
-                        <span className="rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
-                          {
-                            t.selected
-                          }
+
+                        <span className="payment-method-selected">
+
+                          {t.selected}
+
                         </span>
                       )}
+
                     </div>
 
-                    {description && (
-                      <p className="mt-2 text-sm leading-relaxed text-neutral-500">
-                        {
-                          description
-                        }
-                      </p>
-                    )}
+                    <p className="payment-method-description">
+
+                      {getProviderText(
+                        method.provider
+                      )}
+
+                    </p>
+
                   </div>
 
-                  {/* RIGHT */}
-                  <div className="flex shrink-0 items-center">
-                    <span className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                      {
-                        method.provider
-                      }
-                    </span>
-                  </div>
                 </div>
+
+                {/* RIGHT */}
+
+                <div className="payment-method-right">
+
+                  <div
+                    className={`
+                      payment-method-check
+                      ${
+                        isSelected
+                          ? "payment-method-check-active"
+                          : ""
+                      }
+                    `}
+                  >
+
+                    {isSelected && "✓"}
+
+                  </div>
+
+                </div>
+
               </button>
             );
           }
         )}
+
       </div>
+
     </section>
   );
 }

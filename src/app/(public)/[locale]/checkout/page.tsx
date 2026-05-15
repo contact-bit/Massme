@@ -1,6 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import ChooseShipping from "@/components/shipping/ChooseShipping";
 import ChoosePayment from "@/components/payment/ChoosePayment";
@@ -23,6 +27,7 @@ type CheckoutFlowStep =
   | "payment";
 
 export default function CheckoutPage() {
+
   const {
     locale,
     t,
@@ -92,6 +97,19 @@ export default function CheckoutPage() {
     useState<CheckoutFlowStep>(
       "contact"
     );
+/* =====================================================
+   AUTO SCROLL TOP ON STEP CHANGE
+===================================================== */
+
+useEffect(() => {
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+
+}, [step]);
+
 
   /* =====================================================
      CURRENT STEP
@@ -148,16 +166,16 @@ export default function CheckoutPage() {
       <div className="checkout-layout">
 
         {/* =========================================
-            STICKY PROGRESS SIDEBAR
+            STICKY SIDEBAR
         ========================================= */}
 
         <aside className="checkout-progress-shell">
+
           <CheckoutProgress
-            currentStep={
-              currentStep
-            }
+            currentStep={currentStep}
             t={t}
           />
+
         </aside>
 
         {/* =========================================
@@ -165,6 +183,7 @@ export default function CheckoutPage() {
         ========================================= */}
 
         <div className="checkout-main">
+
           <div className="checkout-wrapper">
 
             {/* =========================================
@@ -191,14 +210,13 @@ export default function CheckoutPage() {
                 CART
             ========================================= */}
 
-<CartSummaryInline />
+            <CartSummaryInline />
 
             {/* =====================================================
                 STEP 1 — CONTACT
             ===================================================== */}
 
-            {step ===
-              "contact" && (
+            {step === "contact" && (
               <>
 
                 <BillingForm
@@ -214,6 +232,7 @@ export default function CheckoutPage() {
                 <button
                   className={`
                     checkout-pay
+                    checkout-pay-large
                     ${
                       canContinueToShipping
                         ? "checkout-pay-active"
@@ -224,14 +243,30 @@ export default function CheckoutPage() {
                     !canContinueToShipping
                   }
                   onClick={() =>
-                    setStep(
-                      "shipping"
-                    )
+                    setStep("shipping")
                   }
                 >
-                  <span>
-                    Continuer vers la livraison
-                  </span>
+
+                  <div className="checkout-pay-content">
+
+                    <div className="checkout-pay-text">
+
+                      <span className="checkout-pay-label">
+                        Étape suivante
+                      </span>
+
+                      <strong className="checkout-pay-main">
+                        Continuer vers la livraison
+                      </strong>
+
+                    </div>
+
+                    <span className="checkout-pay-arrow">
+                      →
+                    </span>
+
+                  </div>
+
                 </button>
 
               </>
@@ -241,8 +276,7 @@ export default function CheckoutPage() {
                 STEP 2 — SHIPPING
             ===================================================== */}
 
-            {step ===
-              "shipping" && (
+            {step === "shipping" && (
               <>
 
                 {/* =========================================
@@ -273,9 +307,7 @@ export default function CheckoutPage() {
                   <section className="checkout-section">
 
                     <p className="checkout-loading">
-                      {
-                        t.loadingShipping
-                      }
+                      {t.loadingShipping}
                     </p>
 
                   </section>
@@ -291,9 +323,7 @@ export default function CheckoutPage() {
                         </span>
 
                         <h2 className="checkout-subtitle">
-                          {
-                            t.chooseShippingMethod
-                          }
+                          {t.chooseShippingMethod}
                         </h2>
 
                       </div>
@@ -318,21 +348,11 @@ export default function CheckoutPage() {
                     <div className="checkout-choice-wrapper">
 
                       <ChooseShipping
-                        methods={
-                          methods
-                        }
-                        locale={
-                          locale
-                        }
-                        selectedMethod={
-                          shippingMethod
-                        }
-                        onMethodSelect={
-                          setShippingMethod
-                        }
-                        onRelaySelect={
-                          setRelayPoint
-                        }
+                        methods={methods}
+                        locale={locale}
+                        selectedMethod={shippingMethod}
+                        onMethodSelect={setShippingMethod}
+                        onRelaySelect={setRelayPoint}
                       />
 
                     </div>
@@ -344,22 +364,29 @@ export default function CheckoutPage() {
                     SHIPPING ACTIONS
                 ========================================= */}
 
-                <div className="checkout-actions">
+                <div className="checkout-payment-bar">
 
                   <button
-                    className="checkout-secondary-button"
+                    className="checkout-back-button"
                     onClick={() =>
-                      setStep(
-                        "contact"
-                      )
+                      setStep("contact")
                     }
                   >
-                    Retour
+
+                    <span className="checkout-back-icon">
+                      ←
+                    </span>
+
+                    <span>
+                      Retour
+                    </span>
+
                   </button>
 
                   <button
                     className={`
                       checkout-pay
+                      checkout-pay-large
                       ${
                         canContinueToPayment
                           ? "checkout-pay-active"
@@ -370,14 +397,30 @@ export default function CheckoutPage() {
                       !canContinueToPayment
                     }
                     onClick={() =>
-                      setStep(
-                        "payment"
-                      )
+                      setStep("payment")
                     }
                   >
-                    <span>
-                      Continuer vers le paiement
-                    </span>
+
+                    <div className="checkout-pay-content">
+
+                      <div className="checkout-pay-text">
+
+                        <span className="checkout-pay-label">
+                          Étape suivante
+                        </span>
+
+                        <strong className="checkout-pay-main">
+                          Continuer vers le paiement
+                        </strong>
+
+                      </div>
+
+                      <span className="checkout-pay-arrow">
+                        →
+                      </span>
+
+                    </div>
+
                   </button>
 
                 </div>
@@ -389,8 +432,7 @@ export default function CheckoutPage() {
                 STEP 3 — PAYMENT
             ===================================================== */}
 
-            {step ===
-              "payment" && (
+            {step === "payment" && (
               <>
 
                 {/* =========================================
@@ -399,18 +441,10 @@ export default function CheckoutPage() {
 
                 <HeardFrom
                   t={t}
-                  heardFrom={
-                    heardFrom
-                  }
-                  setHeardFrom={
-                    setHeardFrom
-                  }
-                  heardFromOther={
-                    heardFromOther
-                  }
-                  setHeardFromOther={
-                    setHeardFromOther
-                  }
+                  heardFrom={heardFrom}
+                  setHeardFrom={setHeardFrom}
+                  heardFromOther={heardFromOther}
+                  setHeardFromOther={setHeardFromOther}
                 />
 
                 {/* =========================================
@@ -428,9 +462,7 @@ export default function CheckoutPage() {
                       </span>
 
                       <h2 className="checkout-subtitle">
-                        {
-                          t.choosePaymentMethod
-                        }
+                        {t.choosePaymentMethod}
                       </h2>
 
                     </div>
@@ -455,21 +487,11 @@ export default function CheckoutPage() {
                   <div className="checkout-choice-wrapper">
 
                     <ChoosePayment
-                      methods={
-                        paymentMethods
-                      }
-                      locale={
-                        locale
-                      }
-                      selectedMethod={
-                        paymentMethod
-                      }
-                      onMethodSelect={
-                        setPaymentMethod
-                      }
-                      error={
-                        paymentError
-                      }
+                      methods={paymentMethods}
+                      locale={locale}
+                      selectedMethod={paymentMethod}
+                      onMethodSelect={setPaymentMethod}
+                      error={paymentError}
                     />
 
                   </div>
@@ -477,27 +499,65 @@ export default function CheckoutPage() {
                 </section>
 
                 {/* =========================================
-                    TOTALS
+                    PAYMENT ACTIONS
                 ========================================= */}
 
-                <OrderTotals
-                  t={t}
-                  cartHTCents={
-                    cartHTCents
-                  }
-                  cartVatCents={
-                    cartVatCents
-                  }
-                  shippingTTCCents={
-                    shippingTTCCents
-                  }
-                  shippingVatRate={
-                    shippingVatRate
-                  }
-                  finalTTCCents={
-                    finalTTCCents
-                  }
-                />
+                <div className="checkout-payment-bar">
+
+                  <button
+                    className="checkout-back-button"
+                    onClick={() =>
+                      setStep("shipping")
+                    }
+                  >
+
+                    <span className="checkout-back-icon">
+                      ←
+                    </span>
+
+                    <span>
+                      Retour
+                    </span>
+
+                  </button>
+
+                  <button
+                    onClick={pay}
+                    disabled={!hasPaymentSelected}
+                    className={`
+                      checkout-pay
+                      checkout-pay-large
+                      ${
+                        hasPaymentSelected
+                          ? "checkout-pay-active"
+                          : ""
+                      }
+                    `}
+                  >
+
+                    <div className="checkout-pay-content">
+
+                      <div className="checkout-pay-text">
+
+                        <span className="checkout-pay-label">
+                          Paiement sécurisé
+                        </span>
+
+                        <strong className="checkout-pay-main">
+                          {payButtonLabel}
+                        </strong>
+
+                      </div>
+
+                      <span className="checkout-pay-arrow">
+                        →
+                      </span>
+
+                    </div>
+
+                  </button>
+
+                </div>
 
                 {/* =========================================
                     PAYPAL
@@ -510,105 +570,56 @@ export default function CheckoutPage() {
 
                       <p
                         style={{
-                          color:
-                            "#fca5a5",
-
-                          fontWeight:
-                            700,
+                          color: "#fca5a5",
+                          fontWeight: 700,
                         }}
                       >
-                        {
-                          t.paypalUnavailable
-                        }
+                        {t.paypalUnavailable}
                       </p>
 
                     </section>
                   ) : (
                     <PayPalSection
                       t={t}
-                      locale={
-                        locale
-                      }
-                      paypalOptions={
-                        paypalOptions
-                      }
-                      items={
-                        safeItems
-                      }
-                      shippingMethod={
-                        shippingMethod
-                      }
-                      relayPoint={
-                        relayPoint
-                      }
-                      billingCustomer={
-                        billingCustomer
-                      }
-                      shippingCustomer={
-                        shippingCustomer
-                      }
-                      heardFrom={
-                        heardFrom
-                      }
-                      heardFromOther={
-                        heardFromOther
-                      }
-                      totals={
-                        totals
-                      }
+                      locale={locale}
+                      paypalOptions={paypalOptions}
+                      items={safeItems}
+                      shippingMethod={shippingMethod}
+                      relayPoint={relayPoint}
+                      billingCustomer={billingCustomer}
+                      shippingCustomer={shippingCustomer}
+                      heardFrom={heardFrom}
+                      heardFromOther={heardFromOther}
+                      totals={totals}
                       paypalOrderDocIdRef={
                         paypalOrderDocIdRef
                       }
-                      clearCart={
-                        clearCart
-                      }
+                      clearCart={clearCart}
                     />
                   ))}
 
                 {/* =========================================
-                    PAYMENT ACTIONS
+                    TOTALS
                 ========================================= */}
 
-                <div className="checkout-actions">
-
-                  <button
-                    className="checkout-secondary-button"
-                    onClick={() =>
-                      setStep(
-                        "shipping"
-                      )
-                    }
-                  >
-                    Retour
-                  </button>
-
-                  <button
-                    onClick={pay}
-                    className={`
-                      checkout-pay
-                      ${
-                        hasPaymentSelected
-                          ? "checkout-pay-active"
-                          : ""
-                      }
-                    `}
-                  >
-                    <span>
-                      {
-                        payButtonLabel
-                      }
-                    </span>
-                  </button>
-
-                </div>
+                <OrderTotals
+                  t={t}
+                  cartHTCents={cartHTCents}
+                  cartVatCents={cartVatCents}
+                  shippingTTCCents={shippingTTCCents}
+                  shippingVatRate={shippingVatRate}
+                  finalTTCCents={finalTTCCents}
+                />
 
               </>
             )}
 
           </div>
+
         </div>
 
       </div>
+
     </main>
   );
 }

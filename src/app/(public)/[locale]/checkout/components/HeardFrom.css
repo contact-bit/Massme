@@ -1,0 +1,363 @@
+/* =========================================================
+   HEARD FROM
+========================================================= */
+
+.heard-from {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+
+  padding:
+    clamp(1rem, 2vw, 1.6rem);
+
+  border-radius:
+    28px;
+
+  background:
+    rgba(15,23,42,0.58);
+
+  border:
+    1px solid
+    rgba(255,255,255,0.06);
+
+  backdrop-filter:
+    blur(18px);
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.heard-from-header {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.heard-from-kicker {
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .08em;
+
+  color:
+    rgba(96,165,250,.9);
+}
+
+.heard-from-title {
+  margin: 0;
+
+  font-size:
+    clamp(1.1rem, 2vw, 1.45rem);
+
+  font-weight:
+    750;
+
+  letter-spacing:
+    -.03em;
+
+  color:
+    #f8fafc;
+}
+
+.heard-from-description {
+  margin: 0;
+
+  max-width: 640px;
+
+  color:
+    rgba(226,232,240,.62);
+
+  line-height:
+    1.6;
+
+  font-size:
+    .94rem;
+}
+
+/* =========================================================
+   OPTIONS
+========================================================= */
+
+.heard-from-options {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+
+/* =========================================================
+   OPTION
+========================================================= */
+
+.heard-from-option {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  min-height: 72px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    20px;
+
+  cursor: pointer;
+
+  user-select: none;
+
+  background:
+    rgba(255,255,255,.03);
+
+  border:
+    1px solid
+    rgba(255,255,255,.06);
+
+  transition:
+    all .18s ease;
+}
+
+.heard-from-option:hover {
+  background:
+    rgba(255,255,255,.05);
+
+  border-color:
+    rgba(96,165,250,.22);
+
+  transform:
+    translateY(-1px);
+}
+
+/* =========================================================
+   ACTIVE
+========================================================= */
+
+.heard-from-option-active {
+  background:
+    rgba(37,99,235,.14);
+
+  border-color:
+    rgba(96,165,250,.5);
+
+  box-shadow:
+    0 0 0 1px
+    rgba(96,165,250,.2);
+}
+
+/* =========================================================
+   LEFT
+========================================================= */
+
+.heard-from-option-left {
+  display: flex;
+  align-items: center;
+  gap: .9rem;
+}
+
+.heard-from-radio {
+  position: absolute;
+
+  opacity: 0;
+  pointer-events: none;
+}
+
+.heard-from-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  border-radius:
+    14px;
+
+  background:
+    rgba(255,255,255,.05);
+
+  font-size:
+    1.05rem;
+
+  flex-shrink: 0;
+}
+
+.heard-from-label {
+  color:
+    #f8fafc;
+
+  font-size:
+    .96rem;
+
+  font-weight:
+    600;
+}
+
+/* =========================================================
+   CHECK
+========================================================= */
+
+.heard-from-check {
+  position: relative;
+
+  width: 22px;
+  height: 22px;
+
+  border-radius:
+    999px;
+
+  flex-shrink: 0;
+
+  border:
+    2px solid
+    rgba(255,255,255,.18);
+
+  transition:
+    all .18s ease;
+}
+
+.heard-from-option-active
+.heard-from-check {
+  border-color:
+    #60a5fa;
+
+  background:
+    #60a5fa;
+}
+
+.heard-from-option-active
+.heard-from-check::after {
+  content: "";
+
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  width: 8px;
+  height: 8px;
+
+  border-radius:
+    999px;
+
+  background:
+    white;
+
+  transform:
+    translate(-50%, -50%);
+}
+
+/* =========================================================
+   OTHER INPUT
+========================================================= */
+
+.heard-from-other {
+  animation:
+    heardFromReveal
+    .2s ease;
+}
+
+.heard-from-input {
+  width: 100%;
+
+  height: 58px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    18px;
+
+  outline: none;
+
+  background:
+    rgba(255,255,255,.04);
+
+  border:
+    1px solid
+    rgba(255,255,255,.08);
+
+  color:
+    #f8fafc;
+
+  font-size:
+    .95rem;
+
+  transition:
+    all .18s ease;
+}
+
+.heard-from-input::placeholder {
+  color:
+    rgba(226,232,240,.38);
+}
+
+.heard-from-input:focus {
+  border-color:
+    rgba(96,165,250,.38);
+
+  background:
+    rgba(255,255,255,.06);
+
+  box-shadow:
+    0 0 0 4px
+    rgba(37,99,235,.1);
+}
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
+@keyframes heardFromReveal {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .heard-from {
+    padding: 1rem;
+
+    border-radius: 24px;
+  }
+
+  .heard-from-option {
+    min-height: 66px;
+
+    border-radius: 18px;
+  }
+
+  .heard-from-label {
+    font-size:
+      .93rem;
+  }
+
+  .heard-from-input {
+    height: 54px;
+  }
+}

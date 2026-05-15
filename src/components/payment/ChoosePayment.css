@@ -1,0 +1,856 @@
+/* =========================================================
+   PAYMENT METHODS — MASTER PREMIUM EXPERIENCE
+   VITRECTOMED / APPLE-LIKE / CINEMATIC CHECKOUT
+========================================================= */
+
+.payment-methods {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  padding:
+    clamp(1.2rem, 2vw, 2rem);
+
+  border-radius:
+    clamp(30px, 3vw, 38px);
+
+  overflow: hidden;
+
+  isolation: isolate;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.84) 0%,
+      rgba(15,23,42,.68) 100%
+    );
+
+  border:
+    1px solid
+    rgba(255,255,255,.06);
+
+  backdrop-filter:
+    blur(24px);
+
+  box-shadow:
+    0 40px 120px
+    rgba(2,6,23,.38);
+}
+
+/* =========================================================
+   BACKGROUND FX
+========================================================= */
+
+.payment-methods-background {
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  z-index: 0;
+}
+
+.payment-methods-background::before {
+  content: "";
+
+  position: absolute;
+
+  top: -240px;
+  right: -180px;
+
+  width: 520px;
+  height: 520px;
+
+  border-radius:
+    999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(59,130,246,.18),
+      transparent 72%
+    );
+
+  filter:
+    blur(24px);
+}
+
+.payment-methods-background::after {
+  content: "";
+
+  position: absolute;
+
+  bottom: -260px;
+  left: -180px;
+
+  width: 520px;
+  height: 520px;
+
+  border-radius:
+    999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(14,165,233,.12),
+      transparent 72%
+    );
+
+  filter:
+    blur(24px);
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.payment-methods-header {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.payment-methods-kicker {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+
+  min-height: 34px;
+
+  padding:
+    0 .95rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(37,99,235,.12);
+
+  border:
+    1px solid
+    rgba(96,165,250,.16);
+
+  color:
+    rgba(191,219,254,.96);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+
+  backdrop-filter:
+    blur(12px);
+}
+
+.payment-methods-kicker svg {
+  font-size:
+    .82rem;
+}
+
+.payment-methods-heading {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+}
+
+.payment-methods-title {
+  margin: 0;
+
+  font-size:
+    clamp(1.6rem, 3vw, 2.4rem);
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    -.06em;
+
+  line-height:
+    .98;
+
+  color:
+    #f8fafc;
+}
+
+.payment-methods-description {
+  margin: 0;
+
+  max-width: 760px;
+
+  color:
+    rgba(226,232,240,.68);
+
+  font-size:
+    1rem;
+
+  line-height:
+    1.8;
+}
+
+/* =========================================================
+   TRUST
+========================================================= */
+
+.payment-methods-trust {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: .8rem;
+}
+
+.payment-methods-trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+
+  min-height: 44px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    18px;
+
+  background:
+    rgba(255,255,255,.04);
+
+  border:
+    1px solid
+    rgba(255,255,255,.05);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    rgba(248,250,252,.9);
+
+  font-size:
+    .86rem;
+
+  font-weight:
+    600;
+
+  transition:
+    all .22s ease;
+}
+
+.payment-methods-trust-item:hover {
+  transform:
+    translateY(-1px);
+
+  background:
+    rgba(255,255,255,.05);
+
+  border-color:
+    rgba(96,165,250,.12);
+}
+
+.payment-methods-trust-item svg {
+  color:
+    rgba(147,197,253,.96);
+
+  font-size:
+    .95rem;
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.payment-methods-error {
+  position: relative;
+  z-index: 2;
+
+  padding:
+    1rem 1.15rem;
+
+  border-radius:
+    22px;
+
+  background:
+    rgba(239,68,68,.08);
+
+  border:
+    1px solid
+    rgba(239,68,68,.14);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    #fca5a5;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    500;
+}
+
+/* =========================================================
+   LIST
+========================================================= */
+
+.payment-methods-list {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* =========================================================
+   METHOD CARD
+========================================================= */
+
+.payment-method {
+  position: relative;
+
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  overflow: hidden;
+
+  padding:
+    1.25rem 1.3rem;
+
+  border-radius:
+    32px;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  isolation: isolate;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.84) 0%,
+      rgba(15,23,42,.64) 100%
+    );
+
+  border:
+    1px solid
+    rgba(255,255,255,.06);
+
+  backdrop-filter:
+    blur(20px);
+
+  box-shadow:
+    0 18px 60px
+    rgba(2,6,23,.18);
+
+  transition:
+    transform .24s ease,
+    border-color .24s ease,
+    background .24s ease,
+    box-shadow .24s ease;
+}
+
+/* =========================================================
+   GLOW
+========================================================= */
+
+.payment-method-glow {
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0;
+
+  transition:
+    opacity .25s ease;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(59,130,246,.24),
+      transparent 40%
+    );
+
+  pointer-events: none;
+
+  z-index: 0;
+}
+
+.payment-method::after {
+  content: "";
+
+  position: absolute;
+
+  top: -140px;
+  right: -120px;
+
+  width: 260px;
+  height: 260px;
+
+  border-radius:
+    999px;
+
+  opacity: 0;
+
+  transition:
+    opacity .25s ease;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(96,165,250,.16),
+      transparent 72%
+    );
+
+  filter:
+    blur(18px);
+
+  z-index: 0;
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.payment-method:hover {
+  transform:
+    translateY(-3px);
+
+  border-color:
+    rgba(96,165,250,.18);
+
+  box-shadow:
+    0 30px 90px
+    rgba(2,6,23,.28);
+}
+
+.payment-method:hover
+.payment-method-glow {
+  opacity: 1;
+}
+
+.payment-method:hover::after {
+  opacity: 1;
+}
+
+/* =========================================================
+   ACTIVE
+========================================================= */
+
+.payment-method-active {
+  border-color:
+    rgba(59,130,246,.42);
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(15,23,42,.96) 0%,
+      rgba(30,64,175,.18) 100%
+    );
+
+  box-shadow:
+    0 0 0 1px
+    rgba(59,130,246,.22),
+
+    0 34px 100px
+    rgba(2,6,23,.34);
+}
+
+.payment-method-active
+.payment-method-glow {
+  opacity: 1;
+}
+
+.payment-method-active::after {
+  opacity: 1;
+}
+
+/* =========================================================
+   LEFT
+========================================================= */
+
+.payment-method-left {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  min-width: 0;
+
+  flex: 1;
+}
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.payment-method-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 72px;
+  height: 72px;
+
+  border-radius:
+    26px;
+
+  overflow: hidden;
+
+  flex-shrink: 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.06) 0%,
+      rgba(255,255,255,.03) 100%
+    );
+
+  border:
+    1px solid
+    rgba(255,255,255,.08);
+
+  backdrop-filter:
+    blur(12px);
+
+  transition:
+    transform .22s ease,
+    border-color .22s ease,
+    background .22s ease;
+}
+
+.payment-method:hover
+.payment-method-icon {
+  transform:
+    scale(1.04);
+
+  border-color:
+    rgba(96,165,250,.16);
+}
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.payment-method-logo {
+  font-size:
+    2rem;
+
+  color:
+    #f8fafc;
+
+  filter:
+    drop-shadow(
+      0 6px 18px
+      rgba(255,255,255,.08)
+    );
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.payment-method-content {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+
+  min-width: 0;
+}
+
+.payment-method-top {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.payment-method-title {
+  margin: 0;
+
+  color:
+    #f8fafc;
+
+  font-size:
+    1.22rem;
+
+  font-weight:
+    780;
+
+  letter-spacing:
+    -.03em;
+
+  line-height:
+    1.15;
+}
+
+.payment-method-description {
+  margin: 0;
+
+  color:
+    rgba(226,232,240,.74);
+
+  font-size:
+    .96rem;
+
+  line-height:
+    1.65;
+}
+
+/* =========================================================
+   SELECTED BADGE
+========================================================= */
+
+.payment-method-selected {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 32px;
+
+  padding:
+    0 .95rem;
+
+  border-radius:
+    999px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #3b82f6 0%,
+      #2563eb 100%
+    );
+
+  color:
+    white;
+
+  font-size:
+    .7rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    .05em;
+
+  text-transform:
+    uppercase;
+
+  box-shadow:
+    0 10px 26px
+    rgba(37,99,235,.34);
+}
+
+/* =========================================================
+   RIGHT
+========================================================= */
+
+.payment-method-right {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   CHECK
+========================================================= */
+
+.payment-method-check {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.04);
+
+  border:
+    1px solid
+    rgba(255,255,255,.08);
+
+  color:
+    transparent;
+
+  font-size:
+    .78rem;
+
+  font-weight:
+    800;
+
+  transition:
+    all .22s ease;
+}
+
+.payment-method-check-active {
+  background:
+    linear-gradient(
+      180deg,
+      #3b82f6 0%,
+      #2563eb 100%
+    );
+
+  border-color:
+    rgba(59,130,246,.5);
+
+  color:
+    white;
+
+  box-shadow:
+    0 8px 20px
+    rgba(37,99,235,.32);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .payment-methods {
+    padding:
+      1rem;
+
+    border-radius:
+      26px;
+  }
+
+  .payment-method {
+    padding:
+      1rem;
+
+    border-radius:
+      26px;
+  }
+
+  .payment-method-left {
+    align-items: flex-start;
+
+    gap: .9rem;
+  }
+
+  .payment-method-icon {
+    width: 58px;
+    height: 58px;
+
+    border-radius:
+      20px;
+  }
+
+  .payment-method-logo {
+    font-size:
+      1.6rem;
+  }
+
+  .payment-method-title {
+    font-size:
+      1.02rem;
+  }
+
+  .payment-method-description {
+    font-size:
+      .9rem;
+  }
+
+  .payment-method-selected {
+    height: 28px;
+
+    padding:
+      0 .75rem;
+
+    font-size:
+      .64rem;
+  }
+
+  .payment-methods-title {
+    font-size:
+      1.8rem;
+  }
+
+  .payment-methods-description {
+    font-size:
+      .92rem;
+  }
+
+  .payment-methods-trust {
+    flex-direction: column;
+  }
+
+  .payment-methods-trust-item {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .payment-method {
+    padding:
+      .95rem;
+
+    border-radius:
+      22px;
+  }
+
+  .payment-method-icon {
+    width: 52px;
+    height: 52px;
+
+    border-radius:
+      18px;
+  }
+
+  .payment-method-logo {
+    font-size:
+      1.4rem;
+  }
+
+  .payment-method-title {
+    font-size:
+      .96rem;
+  }
+
+  .payment-method-description {
+    font-size:
+      .84rem;
+  }
+
+  .payment-methods-title {
+    font-size:
+      1.5rem;
+  }
+}

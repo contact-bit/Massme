@@ -1,57 +1,187 @@
 "use client";
 
-type HeardFrom = "internet" | "social" | "medical" | "other" | "";
+import "./HeardFrom.css";
 
-export default function HeardFromBlock({
+type HeardFrom =
+  | "internet"
+  | "social"
+  | "medical"
+  | "other"
+  | "";
+
+type Props = {
+  t: any;
+
+  heardFrom: HeardFrom;
+
+  setHeardFrom: (
+    v: HeardFrom
+  ) => void;
+
+  heardFromOther: string;
+
+  setHeardFromOther: (
+    v: string
+  ) => void;
+};
+
+export default function HeardFrom({
   t,
   heardFrom,
   setHeardFrom,
   heardFromOther,
   setHeardFromOther,
-}: {
-  t: any;
-  heardFrom: HeardFrom;
-  setHeardFrom: (v: HeardFrom) => void;
-  heardFromOther: string;
-  setHeardFromOther: (v: string) => void;
-}) {
-  return (
-    <section className="checkout-section">
-      <h2 className="checkout-subtitle">{t.heardFromQuestion}</h2>
+}: Props) {
 
-      <div className="checkout-radio-group">
-        {(["internet", "social", "medical", "other"] as const).map((k) => (
-          <label key={k} className="checkout-radio-item">
-            <input
-              type="radio"
-              name="heardFrom"
-              value={k}
-              checked={heardFrom === k}
-              onChange={() => setHeardFrom(k)}
-            />
-            <span>
-              {k === "internet"
-                ? t.heardFromInternet
-                : k === "social"
-                ? t.heardFromSocial
-                : k === "medical"
-                ? t.heardFromMedical
-                : t.heardFromOther}
-            </span>
-          </label>
-        ))}
+  const options = [
+    {
+      key: "internet",
+      label:
+        t.heardFromInternet,
+      icon: "🌐",
+    },
+
+    {
+      key: "social",
+      label:
+        t.heardFromSocial,
+      icon: "📱",
+    },
+
+    {
+      key: "medical",
+      label:
+        t.heardFromMedical,
+      icon: "🏥",
+    },
+
+    {
+      key: "other",
+      label:
+        t.heardFromOther,
+      icon: "✨",
+    },
+  ] as const;
+
+  return (
+    <section className="heard-from">
+
+      {/* HEADER */}
+
+      <div className="heard-from-header">
+
+        <span className="heard-from-kicker">
+          Retour d’expérience
+        </span>
+
+        <div>
+
+          <h2 className="heard-from-title">
+            {t.heardFromQuestion}
+          </h2>
+
+          <p className="heard-from-description">
+            Cette information nous aide à améliorer
+            l’expérience VitrectoMed.
+          </p>
+
+        </div>
+
       </div>
 
-      {heardFrom === "other" && (
-        <div className="checkout-heardfrom-other">
+      {/* OPTIONS */}
+
+      <div className="heard-from-options">
+
+        {options.map(
+          (option) => {
+
+            const isActive =
+              heardFrom ===
+              option.key;
+
+            return (
+              <label
+                key={
+                  option.key
+                }
+                className={`
+                  heard-from-option
+                  ${
+                    isActive
+                      ? "heard-from-option-active"
+                      : ""
+                  }
+                `}
+              >
+
+                <input
+                  type="radio"
+                  name="heardFrom"
+                  value={
+                    option.key
+                  }
+                  checked={
+                    isActive
+                  }
+                  onChange={() =>
+                    setHeardFrom(
+                      option.key
+                    )
+                  }
+                  className="heard-from-radio"
+                />
+
+                <div className="heard-from-option-left">
+
+                  <span className="heard-from-icon">
+                    {
+                      option.icon
+                    }
+                  </span>
+
+                  <span className="heard-from-label">
+                    {
+                      option.label
+                    }
+                  </span>
+
+                </div>
+
+                <div className="heard-from-check" />
+
+              </label>
+            );
+          }
+        )}
+
+      </div>
+
+      {/* OTHER */}
+
+      {heardFrom ===
+        "other" && (
+
+        <div className="heard-from-other">
+
           <input
-            className="checkout-input"
-            placeholder={t.heardFromOtherPlaceholder}
-            value={heardFromOther}
-            onChange={(e) => setHeardFromOther(e.target.value)}
+            className="heard-from-input"
+            placeholder={
+              t.heardFromOtherPlaceholder
+            }
+            value={
+              heardFromOther
+            }
+            onChange={(e) =>
+              setHeardFromOther(
+                e.target.value
+              )
+            }
           />
+
         </div>
       )}
+
     </section>
   );
 }

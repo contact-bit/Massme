@@ -1,0 +1,709 @@
+/* =========================================================
+   PAYPAL SECTION — CINEMATIC PREMIUM EXPERIENCE
+   VITRECTOMED CHECKOUT
+========================================================= */
+
+.paypal-section {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 1.6rem;
+
+  width: 100%;
+
+  padding:
+    clamp(1.1rem, 2vw, 1.9rem);
+
+  border-radius:
+    clamp(26px, 3vw, 34px);
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.84) 0%,
+      rgba(9,16,30,.96) 100%
+    );
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  backdrop-filter:
+    blur(24px);
+
+  box-shadow:
+    0 30px 80px rgba(2,6,23,.34);
+}
+
+/* =========================================================
+   AMBIENT LIGHT
+========================================================= */
+
+.paypal-section::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(37,99,235,.24),
+      transparent 38%
+    );
+
+  pointer-events: none;
+}
+
+.paypal-section::after {
+  content: "";
+
+  position: absolute;
+
+  top: -160px;
+  right: -140px;
+
+  width: 340px;
+  height: 340px;
+
+  border-radius:
+    999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(96,165,250,.12),
+      transparent 72%
+    );
+
+  filter:
+    blur(22px);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.paypal-section-header {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 1rem;
+}
+
+.paypal-section-kicker {
+  display: inline-flex;
+  align-items: center;
+
+  padding:
+    .42rem .75rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(37,99,235,.12);
+
+  border:
+    1px solid rgba(96,165,250,.14);
+
+  color:
+    rgba(147,197,253,.94);
+
+  font-size:
+    .7rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.paypal-section-title {
+  margin:
+    .7rem 0 0 0;
+
+  font-size:
+    clamp(1.3rem, 2vw, 1.7rem);
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.04em;
+
+  line-height:
+    1.1;
+
+  color:
+    #f8fafc;
+}
+
+/* =========================================================
+   BADGE
+========================================================= */
+
+.paypal-section-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 42px;
+
+  padding:
+    0 .95rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(34,197,94,.1);
+
+  border:
+    1px solid rgba(34,197,94,.16);
+
+  color:
+    rgba(187,247,208,.96);
+
+  font-size:
+    .8rem;
+
+  font-weight:
+    700;
+
+  white-space:
+    nowrap;
+
+  backdrop-filter:
+    blur(10px);
+}
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.paypal-section-description {
+  position: relative;
+  z-index: 2;
+
+  margin: 0;
+
+  max-width: 660px;
+
+  color:
+    rgba(226,232,240,.68);
+
+  font-size:
+    .97rem;
+
+  line-height:
+    1.75;
+}
+
+/* =========================================================
+   PAYPAL 4X HIGHLIGHT
+========================================================= */
+
+.paypal-section-highlight {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+
+  gap: 1rem;
+
+  padding:
+    1rem 1.1rem;
+
+  border-radius:
+    22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(37,99,235,.14),
+      rgba(96,165,250,.08)
+    );
+
+  border:
+    1px solid rgba(96,165,250,.16);
+
+  backdrop-filter:
+    blur(14px);
+
+  overflow: hidden;
+}
+
+.paypal-section-highlight::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent,
+      rgba(255,255,255,.06),
+      transparent
+    );
+
+  transform:
+    translateX(-120%);
+
+  animation:
+    paypalShine 5s linear infinite;
+}
+
+@keyframes paypalShine {
+  to {
+    transform:
+      translateX(120%);
+  }
+}
+
+.paypal-section-highlight-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 52px;
+  width: 52px;
+  height: 52px;
+
+  border-radius:
+    18px;
+
+  background:
+    rgba(255,255,255,.08);
+
+  font-size:
+    1.3rem;
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.paypal-section-highlight-content {
+  display: flex;
+  flex-direction: column;
+
+  gap: .25rem;
+}
+
+.paypal-section-highlight-content strong {
+  color:
+    #ffffff;
+
+  font-size:
+    .98rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.02em;
+}
+
+.paypal-section-highlight-content span {
+  color:
+    rgba(226,232,240,.72);
+
+  font-size:
+    .88rem;
+
+  line-height:
+    1.6;
+}
+
+/* =========================================================
+   TRUST
+========================================================= */
+
+.paypal-section-trust {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: .75rem;
+}
+
+.paypal-section-trust-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 42px;
+
+  padding:
+    0 .9rem;
+
+  border-radius:
+    16px;
+
+  background:
+    rgba(255,255,255,.035);
+
+  border:
+    1px solid rgba(255,255,255,.05);
+
+  color:
+    rgba(248,250,252,.88);
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    500;
+
+  backdrop-filter:
+    blur(10px);
+
+  transition:
+    all .18s ease;
+}
+
+.paypal-section-trust-item:hover {
+  transform:
+    translateY(-1px);
+
+  background:
+    rgba(255,255,255,.05);
+
+  border-color:
+    rgba(96,165,250,.14);
+}
+
+/* =========================================================
+   BUTTONS WRAPPER
+========================================================= */
+
+.paypal-section-buttons-wrapper {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  padding-top:
+    .5rem;
+}
+
+/* =========================================================
+   PAYPAL CARD
+========================================================= */
+
+.paypal-section-buttons-card {
+  position: relative;
+
+  width: 100%;
+
+  max-width:
+    620px;
+
+  padding:
+    .3rem;
+
+  border-radius:
+    30px;
+
+  overflow: hidden;
+
+  background:
+    transparent !important;
+
+  border:
+    none !important;
+
+  box-shadow:
+    none !important;
+}
+
+/* =========================================================
+   REMOVE PAYPAL WHITE CONTAINERS
+========================================================= */
+
+.paypal-section-buttons-card
+.paypal-buttons,
+.paypal-section-buttons-card
+.paypal-buttons-layout-vertical,
+.paypal-section-buttons-card
+.paypal-button-container,
+.paypal-section-buttons-card
+.paypal-button-row,
+.paypal-section-buttons-card
+div[data-funding-source],
+.paypal-section-buttons-card
+.paypal-button-number-0,
+.paypal-section-buttons-card
+.paypal-button {
+  background:
+    transparent !important;
+
+  border:
+    none !important;
+
+  box-shadow:
+    none !important;
+}
+
+/* =========================================================
+   SDK WRAPPER
+========================================================= */
+
+.paypal-section-buttons-card
+.paypal-buttons {
+  width: 100% !important;
+
+  max-width:
+    560px;
+
+  margin:
+    0 auto !important;
+}
+
+/* =========================================================
+   IFRAMES
+========================================================= */
+
+.paypal-section-buttons-card
+iframe {
+  background:
+    transparent !important;
+
+  border:
+    none !important;
+
+  border-radius:
+    24px !important;
+
+  overflow:
+    hidden !important;
+}
+
+/* =========================================================
+   BUTTON SPACING
+========================================================= */
+
+.paypal-section-buttons-card
+.paypal-buttons > * {
+  margin-top:
+    .65rem !important;
+}
+
+/* =========================================================
+   FORCE DARK BACKGROUND
+========================================================= */
+
+.paypal-section-buttons-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius:
+    30px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(7,14,26,.84),
+      rgba(5,10,18,.98)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.05);
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+/* =========================================================
+   RESPONSIVE TABLET
+========================================================= */
+
+@media (max-width: 1024px) {
+
+  .paypal-section {
+    border-radius:
+      28px;
+  }
+
+  .paypal-section-buttons-card {
+    border-radius:
+      24px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .paypal-section {
+    gap:
+      1.25rem;
+
+    padding:
+      1rem;
+
+    border-radius:
+      24px;
+  }
+
+  .paypal-section-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+  .paypal-section-title {
+    margin-top:
+      .6rem;
+
+    font-size:
+      1.25rem;
+  }
+
+  .paypal-section-description {
+    font-size:
+      .92rem;
+
+    line-height:
+      1.65;
+  }
+
+  .paypal-section-highlight {
+    align-items: flex-start;
+  }
+
+  .paypal-section-trust {
+    flex-direction: column;
+  }
+
+  .paypal-section-trust-item {
+    width: 100%;
+
+    justify-content: flex-start;
+  }
+
+  .paypal-section-badge {
+    min-height:
+      38px;
+
+    font-size:
+      .75rem;
+  }
+
+  .paypal-section-buttons-card {
+    border-radius:
+      22px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .paypal-section {
+    padding:
+      .9rem;
+
+    border-radius:
+      22px;
+  }
+
+  .paypal-section-kicker {
+    font-size:
+      .65rem;
+  }
+
+  .paypal-section-title {
+    font-size:
+      1.15rem;
+  }
+
+  .paypal-section-description {
+    font-size:
+      .88rem;
+  }
+
+  .paypal-section-highlight {
+    padding:
+      .9rem;
+  }
+
+  .paypal-section-highlight-icon {
+    min-width: 46px;
+    width: 46px;
+    height: 46px;
+
+    font-size:
+      1.1rem;
+  }
+
+  .paypal-section-highlight-content strong {
+    font-size:
+      .92rem;
+  }
+
+  .paypal-section-highlight-content span {
+    font-size:
+      .82rem;
+  }
+
+  .paypal-section-trust-item {
+    min-height:
+      40px;
+
+    font-size:
+      .8rem;
+  }
+
+  .paypal-section-buttons-card {
+    border-radius:
+      20px;
+  }
+}
+
+/* =========================================================
+   REACT ICON
+========================================================= */
+
+.paypal-section-highlight-icon svg {
+  width: 24px;
+  height: 24px;
+
+  color:
+    #93c5fd;
+}
