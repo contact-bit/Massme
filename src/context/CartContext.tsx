@@ -1,23 +1,59 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 
 /* =====================================================
    TYPES
 ===================================================== */
 
-export type CartItem = {
+type VATConfig = {
+  enabled?: boolean;
+  rate?: number;
+};
+
+export type Addon = {
   id: string;
-  name: string;
-  priceHT: number;
-  quantity: number;
+
+  label: string;
+
   imageUrl?: string;
+
   description?: string;
 
-  /**
-   * TVA figée au moment de l'ajout au panier
-   * (par produit, par pays)
-   */
+  markets?: string[];
+
+  pricesByMarket?: Record<
+    string,
+    number
+  >;
+
+  vatByMarket?: Record<
+    string,
+    VATConfig
+  >;
+};
+
+export type CartItem = {
+  id: string;
+
+  name: string;
+
+  priceHT: number;
+
+  quantity: number;
+
+  imageUrl?: string;
+
+  description?: string;
+
+  addons?: Addon[];
+
   vat?: {
     enabled: boolean;
     rate: number;
@@ -27,153 +63,332 @@ export type CartItem = {
 type CartContextType = {
   items: CartItem[];
 
-  addItem: (item: CartItem) => void;
-  removeItem: (id: string) => void;
-  clearCart: () => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  addItem: (
+    item: CartItem
+  ) => void;
 
-  /** Totaux calculés UNE FOIS ici */
+  removeItem: (
+    id: string
+  ) => void;
+
+  clearCart: () => void;
+
+  updateQuantity: (
+    id: string,
+    quantity: number
+  ) => void;
+
   totalHT: number;
+
   totalVAT: number;
+
   totalTTC: number;
 
-  /** UI */
   isOpen: boolean;
+
   toggleCart: () => void;
 };
 
 /* =====================================================
-   CONSTANTES PRODUITS
+   CONSTANTS
 ===================================================== */
 
-// id Firestore réel du produit OculaRest / Vitrectromed
-const OCULAREST_ID = "3tuSUenbUVVF6cuSHwS9";
+const OCULAREST_ID =
+  "3tuSUenbUVVF6cuSHwS9";
+
+const STORAGE_KEY =
+  "massme-cart";
 
 /* =====================================================
    CONTEXT
 ===================================================== */
 
-const CartContext = createContext<CartContextType | null>(null);
-const STORAGE_KEY = "massme-cart";
+const CartContext =
+  createContext<CartContextType | null>(
+    null
+  );
 
 /* =====================================================
    PROVIDER
 ===================================================== */
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
+export function CartProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
 
-  /* ---------------- LOAD FROM STORAGE ---------------- */
+  const [
+    items,
+    setItems,
+  ] = useState<CartItem[]>([]);
+
+  const [
+    isOpen,
+    setIsOpen,
+  ] = useState(false);
+
+  /* =====================================================
+     LOAD STORAGE
+  ===================================================== */
+
   useEffect(() => {
+
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+
+      const saved =
+        localStorage.getItem(
+          STORAGE_KEY
+        );
+
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
+
+        const parsed =
+          JSON.parse(saved);
+
+        if (
+          Array.isArray(
+            parsed
+          )
+        ) {
           setItems(parsed);
         }
       }
+
     } catch {
       setItems([]);
     }
+
   }, []);
 
-  /* ---------------- SAVE TO STORAGE ---------------- */
+  /* =====================================================
+     SAVE STORAGE
+  ===================================================== */
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(items)
+    );
+
   }, [items]);
 
   /* =====================================================
-     ACTIONS
+     ADD ITEM
   ===================================================== */
 
-  const addItem = (item: CartItem) => {
+  function addItem(
+    item: CartItem
+  ) {
+
     setItems((prev) => {
-      const existing = prev.find((p) => p.id === item.id);
 
-      const isOcularest = item.id === OCULAREST_ID;
-      const maxQty = isOcularest ? 2 : Infinity;
-
-      if (existing) {
-        const safeQty = Math.min(
-          existing.quantity + item.quantity,
-          maxQty
+      const existing =
+        prev.find(
+          (p) =>
+            p.id ===
+            item.id
         );
 
-        return prev.map((p) =>
-          p.id === item.id ? { ...p, quantity: safeQty } : p
+      const isOcularest =
+        item.id ===
+        OCULAREST_ID;
+
+      const maxQty =
+        isOcularest
+          ? 2
+          : Infinity;
+
+      if (existing) {
+
+        const safeQty =
+          Math.min(
+            existing.quantity +
+              item.quantity,
+            maxQty
+          );
+
+        return prev.map(
+          (p) =>
+            p.id === item.id
+              ? {
+                  ...p,
+                  quantity:
+                    safeQty,
+                }
+              : p
         );
       }
 
-      const initialQty = Math.min(item.quantity, maxQty);
-      return [...prev, { ...item, quantity: initialQty }];
+      return [
+        ...prev,
+        {
+          ...item,
+          quantity:
+            Math.min(
+              item.quantity,
+              maxQty
+            ),
+        },
+      ];
     });
 
     setIsOpen(true);
-  };
+  }
 
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((p) => p.id !== id));
-  };
+  /* =====================================================
+     REMOVE ITEM
+  ===================================================== */
 
-  const clearCart = () => {
+  function removeItem(
+    id: string
+  ) {
+
+    setItems((prev) =>
+      prev.filter(
+        (item) =>
+          item.id !== id
+      )
+    );
+  }
+
+  /* =====================================================
+     CLEAR CART
+  ===================================================== */
+
+  function clearCart() {
+
     setItems([]);
-    localStorage.removeItem(STORAGE_KEY);
-  };
 
-  const updateQuantity = (id: string, quantity: number) => {
+    localStorage.removeItem(
+      STORAGE_KEY
+    );
+  }
+
+  /* =====================================================
+     UPDATE QUANTITY
+  ===================================================== */
+
+  function updateQuantity(
+    id: string,
+    quantity: number
+  ) {
+
     setItems((prev) =>
       prev
         .map((item) => {
-          const isOcularest = item.id === OCULAREST_ID;
-          const maxQty = isOcularest ? 2 : Infinity;
 
-          const safeQty = Math.max(0, Math.min(quantity, maxQty));
+          const isOcularest =
+            item.id ===
+            OCULAREST_ID;
 
-          return item.id === id ? { ...item, quantity: safeQty } : item;
+          const maxQty =
+            isOcularest
+              ? 2
+              : Infinity;
+
+          const safeQty =
+            Math.max(
+              0,
+              Math.min(
+                quantity,
+                maxQty
+              )
+            );
+
+          return item.id ===
+            id
+            ? {
+                ...item,
+                quantity:
+                  safeQty,
+              }
+            : item;
         })
-        .filter((item) => item.quantity > 0)
+        .filter(
+          (item) =>
+            item.quantity > 0
+        )
     );
-  };
+  }
 
   /* =====================================================
-     TOTALS (SOURCE DE VÉRITÉ)
+     TOTALS
   ===================================================== */
 
-  const totalHT = items.reduce(
-    (sum, item) => sum + item.priceHT * item.quantity,
-    0
-  );
-
-  const totalVAT = items.reduce((sum, item) => {
-    if (!item.vat?.enabled || item.vat.rate <= 0) return sum;
-
-    return (
-      sum +
-      (item.priceHT * item.quantity * item.vat.rate) / 100
+  const totalHT =
+    items.reduce(
+      (
+        sum,
+        item
+      ) =>
+        sum +
+        item.priceHT *
+          item.quantity,
+      0
     );
-  }, 0);
 
-  const totalTTC = totalHT + totalVAT;
+  const totalVAT =
+    items.reduce(
+      (
+        sum,
+        item
+      ) => {
+
+        if (
+          !item.vat
+            ?.enabled
+        ) {
+          return sum;
+        }
+
+        return (
+          sum +
+          (
+            item.priceHT *
+            item.quantity *
+            item.vat.rate
+          ) /
+            100
+        );
+      },
+      0
+    );
+
+  const totalTTC =
+    totalHT +
+    totalVAT;
 
   /* =====================================================
      UI
   ===================================================== */
 
-  const toggleCart = () => setIsOpen((o) => !o);
+  function toggleCart() {
+
+    setIsOpen(
+      (prev) => !prev
+    );
+  }
+
+  /* =====================================================
+     PROVIDER
+  ===================================================== */
 
   return (
     <CartContext.Provider
       value={{
         items,
+
         addItem,
         removeItem,
         clearCart,
         updateQuantity,
+
         totalHT,
         totalVAT,
         totalTTC,
+
         isOpen,
         toggleCart,
       }}
@@ -188,9 +403,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 ===================================================== */
 
 export function useCart() {
-  const ctx = useContext(CartContext);
-  if (!ctx) {
-    throw new Error("useCart must be used inside CartProvider");
+
+  const context =
+    useContext(
+      CartContext
+    );
+
+  if (!context) {
+    throw new Error(
+      "useCart must be used inside CartProvider"
+    );
   }
-  return ctx;
+
+  return context;
 }

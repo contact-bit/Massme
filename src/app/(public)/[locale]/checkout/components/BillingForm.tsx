@@ -1,6 +1,6 @@
 "use client";
 
-import type { Locale } from "@/lib/i18n";
+import "./BillingForm.css";
 
 type BillingCustomer = {
   firstName: string;
@@ -13,88 +13,302 @@ type BillingCustomer = {
   country: string;
 };
 
+type Props = {
+  t: any;
+
+  billingCustomer: BillingCustomer;
+
+  setBillingCustomer: (
+    v: BillingCustomer
+  ) => void;
+};
+
 export default function BillingForm({
   t,
   billingCustomer,
   setBillingCustomer,
-}: {
-  t: any;
-  billingCustomer: BillingCustomer;
-  setBillingCustomer: (v: BillingCustomer) => void;
-}) {
+}: Props) {
+
+  const updateField = (
+    field: keyof BillingCustomer,
+    value: string
+  ) => {
+    setBillingCustomer({
+      ...billingCustomer,
+      [field]: value,
+    });
+  };
+
   return (
-    <section className="checkout-section">
-      <h2 className="checkout-subtitle">{t.billingAddress}</h2>
+    <section className="billing-form">
 
-      <div className="checkout-grid-2">
-        <input
-          className="checkout-input"
-          placeholder={t.firstName}
-          value={billingCustomer.firstName}
-          onChange={(e) =>
-            setBillingCustomer({ ...billingCustomer, firstName: e.target.value })
-          }
-        />
-        <input
-          className="checkout-input"
-          placeholder={t.lastName}
-          value={billingCustomer.lastName}
-          onChange={(e) =>
-            setBillingCustomer({ ...billingCustomer, lastName: e.target.value })
-          }
-        />
+      {/* =========================================
+          HEADER
+      ========================================= */}
+
+      <div className="billing-form-header">
+
+        <div className="billing-form-badge">
+          Informations sécurisées
+        </div>
+
+        <div className="billing-form-heading">
+
+          <h2 className="billing-form-title">
+            {t.billingAddress}
+          </h2>
+
+          <p className="billing-form-description">
+            Vos informations sont utilisées uniquement
+            pour préparer et sécuriser votre commande.
+          </p>
+
+        </div>
+
       </div>
 
-      <input
-        className="checkout-input"
-        type="email"
-        placeholder={t.email}
-        value={billingCustomer.email}
-        onChange={(e) =>
-          setBillingCustomer({ ...billingCustomer, email: e.target.value })
-        }
-      />
+      {/* =========================================
+          NAME GRID
+      ========================================= */}
 
-      <div className="checkout-phone-wrapper">
+      <div className="billing-form-grid">
+
+        {/* FIRST NAME */}
+
+        <div className="billing-form-field">
+
+          <label className="billing-form-label">
+            {t.firstName}
+          </label>
+
+          <input
+            className="billing-form-input"
+            value={
+              billingCustomer.firstName
+            }
+            onChange={(e) =>
+              updateField(
+                "firstName",
+                e.target.value
+              )
+            }
+            autoComplete="given-name"
+          />
+
+        </div>
+
+        {/* LAST NAME */}
+
+        <div className="billing-form-field">
+
+          <label className="billing-form-label">
+            {t.lastName}
+          </label>
+
+          <input
+            className="billing-form-input"
+            value={
+              billingCustomer.lastName
+            }
+            onChange={(e) =>
+              updateField(
+                "lastName",
+                e.target.value
+              )
+            }
+            autoComplete="family-name"
+          />
+
+        </div>
+
+      </div>
+
+      {/* =========================================
+          EMAIL
+      ========================================= */}
+
+      <div className="billing-form-field billing-form-field-large">
+
+        <div className="billing-form-field-top">
+
+          <label className="billing-form-label">
+            {t.email}
+          </label>
+
+          {billingCustomer.email.trim()
+            .length > 3 && (
+            <span className="billing-form-valid">
+              ✓
+            </span>
+          )}
+
+        </div>
+
         <input
-          className="checkout-input"
+          className="billing-form-input billing-form-input-prominent"
+          type="email"
+          value={
+            billingCustomer.email
+          }
+          onChange={(e) =>
+            updateField(
+              "email",
+              e.target.value
+            )
+          }
+          autoComplete="email"
+        />
+
+        <p className="billing-form-help">
+          Confirmation et suivi de commande envoyés par email.
+        </p>
+
+      </div>
+
+      {/* =========================================
+          PHONE
+      ========================================= */}
+
+      <div className="billing-form-field billing-form-field-large">
+
+        <div className="billing-form-field-top">
+
+          <label className="billing-form-label">
+            {t.phone}
+          </label>
+
+          {billingCustomer.phone.trim()
+            .length > 5 && (
+            <span className="billing-form-valid">
+              ✓
+            </span>
+          )}
+
+        </div>
+
+        <input
+          className="billing-form-input"
           type="tel"
-          placeholder={t.phone}
-          value={billingCustomer.phone}
-          onChange={(e) =>
-            setBillingCustomer({ ...billingCustomer, phone: e.target.value })
+          value={
+            billingCustomer.phone
           }
+          onChange={(e) =>
+            updateField(
+              "phone",
+              e.target.value
+            )
+          }
+          autoComplete="tel"
         />
-        <p className="checkout-help-text">{t.phoneHelp}</p>
+
+        <p className="billing-form-help">
+          {t.phoneHelp}
+        </p>
+
       </div>
 
-      <input
-        className="checkout-input"
-        placeholder={t.address}
-        value={billingCustomer.address}
-        onChange={(e) =>
-          setBillingCustomer({ ...billingCustomer, address: e.target.value })
-        }
-      />
+      {/* =========================================
+          ADDRESS
+      ========================================= */}
 
-      <div className="checkout-grid-2">
+      <div className="billing-form-field billing-form-field-large">
+
+        <label className="billing-form-label">
+          {t.address}
+        </label>
+
         <input
-          className="checkout-input"
-          placeholder={t.postalCode}
-          value={billingCustomer.postalCode}
-          onChange={(e) =>
-            setBillingCustomer({ ...billingCustomer, postalCode: e.target.value })
+          className="billing-form-input"
+          value={
+            billingCustomer.address
           }
-        />
-        <input
-          className="checkout-input"
-          placeholder={t.city}
-          value={billingCustomer.city}
           onChange={(e) =>
-            setBillingCustomer({ ...billingCustomer, city: e.target.value })
+            updateField(
+              "address",
+              e.target.value
+            )
           }
+          autoComplete="street-address"
         />
+
       </div>
+
+      {/* =========================================
+          CITY GRID
+      ========================================= */}
+
+      <div className="billing-form-grid">
+
+        {/* POSTAL CODE */}
+
+        <div className="billing-form-field">
+
+          <label className="billing-form-label">
+            {t.postalCode}
+          </label>
+
+          <input
+            className="billing-form-input"
+            value={
+              billingCustomer.postalCode
+            }
+            onChange={(e) =>
+              updateField(
+                "postalCode",
+                e.target.value
+              )
+            }
+            autoComplete="postal-code"
+          />
+
+        </div>
+
+        {/* CITY */}
+
+        <div className="billing-form-field">
+
+          <label className="billing-form-label">
+            {t.city}
+          </label>
+
+          <input
+            className="billing-form-input"
+            value={
+              billingCustomer.city
+            }
+            onChange={(e) =>
+              updateField(
+                "city",
+                e.target.value
+              )
+            }
+            autoComplete="address-level2"
+          />
+
+        </div>
+
+      </div>
+
+      {/* =========================================
+          TRUST
+      ========================================= */}
+
+      <div className="billing-form-trust">
+
+        <div className="billing-form-trust-item">
+          🔒 Paiement sécurisé
+        </div>
+
+        <div className="billing-form-trust-item">
+          ✨ Données chiffrées
+        </div>
+
+        <div className="billing-form-trust-item">
+          📦 Suivi de commande inclus
+        </div>
+
+      </div>
+
     </section>
   );
 }

@@ -39,6 +39,31 @@ type RawVAT = {
   rate?: number;
 };
 
+type Addon = {
+  id: string;
+
+  label: string;
+
+  imageUrl?: string;
+
+  description?: string;
+
+  markets?: string[];
+
+  pricesByMarket?: Record<
+    string,
+    number
+  >;
+
+  vatByMarket?: Record<
+    string,
+    {
+      enabled?: boolean;
+      rate?: number;
+    }
+  >;
+};
+
 type Product = {
   id: string;
 
@@ -63,6 +88,8 @@ type Product = {
   isActive?: boolean;
 
   markets?: string[];
+
+  addons?: Addon[];
 
   pricesByMarket?:
     Record<string, number>;
@@ -468,6 +495,7 @@ function round2(
 function normalizeMarketKey(
   key: string
 ): Market | null {
+
   const k =
     key
       .trim()
@@ -502,6 +530,7 @@ function getVATForMarket(
 
   market: Market
 ) {
+
   if (!vatByMarket) {
     return {
       enabled: false,
@@ -515,6 +544,7 @@ function getVATForMarket(
   ] of Object.entries(
     vatByMarket
   )) {
+
     const normalized =
       normalizeMarketKey(
         key
@@ -553,6 +583,7 @@ function getPriceForMarket(
 
   market: Market
 ) {
+
   if (
     !pricesByMarket
   ) {
@@ -565,6 +596,7 @@ function getPriceForMarket(
   ] of Object.entries(
     pricesByMarket
   )) {
+
     const normalized =
       normalizeMarketKey(
         key
@@ -588,6 +620,7 @@ function getPriceForMarket(
 ===================================================== */
 
 export default function ProductPage() {
+
   const params =
     useParams() as {
       locale?: Locale;
@@ -664,13 +697,16 @@ export default function ProductPage() {
   ===================================================== */
 
   useEffect(() => {
+
     if (!productId) {
       setLoading(false);
       return;
     }
 
     async function loadProduct() {
+
       try {
+
         const snap =
           await getDoc(
             doc(
@@ -683,23 +719,43 @@ export default function ProductPage() {
         if (
           snap.exists()
         ) {
+
+          const data =
+            snap.data();
+
+          console.log(
+            "FIREBASE PRODUCT =>",
+            data
+          );
+
+          console.log(
+            "FIREBASE ADDONS =>",
+            data.addons
+          );
+
           setProduct({
             id: snap.id,
-            ...(snap.data() as any),
+            ...(data as any),
           });
         }
+
       } catch (
         error
       ) {
+
         console.error(
           error
         );
+
       } finally {
+
         setLoading(false);
+
       }
     }
 
     loadProduct();
+
   }, [productId]);
 
   /* =====================================================
@@ -775,6 +831,47 @@ export default function ProductPage() {
   ===================================================== */
 
   function handleAddToCart() {
+
+    const safeAddons =
+      Array.isArray(
+        product.addons
+      )
+        ? product.addons
+        : [];
+
+    console.log(
+      "================================="
+    );
+
+    console.log(
+      "PRODUCT RAW =>",
+      product
+    );
+
+    console.log(
+      "PRODUCT ADDONS =>",
+      product.addons
+    );
+
+    console.log(
+      "SAFE ADDONS =>",
+      safeAddons
+    );
+
+    console.log(
+      "ADDONS LENGTH =>",
+      safeAddons.length
+    );
+
+    console.log(
+      "FIRST ADDON =>",
+      safeAddons[0]
+    );
+
+    console.log(
+      "================================="
+    );
+
     addItem({
       id: product.id,
 
@@ -790,6 +887,9 @@ export default function ProductPage() {
 
       priceHT,
 
+      addons:
+        safeAddons,
+
       vat: {
         enabled:
           vat.enabled,
@@ -802,9 +902,11 @@ export default function ProductPage() {
     setAdded(true);
 
     setTimeout(() => {
+
       router.push(
         `/${locale}/checkout`
       );
+
     }, 500);
   }
 
@@ -818,8 +920,6 @@ export default function ProductPage() {
       <section className="product-hero">
 
         <div className="product-hero__grid">
-
-          {/* IMAGE */}
 
           <div className="product-visual">
 
@@ -842,10 +942,9 @@ export default function ProductPage() {
 
                 className="product-image"
               />
+
             </div>
           </div>
-
-          {/* CONTENT */}
 
           <div className="product-content">
 
@@ -869,8 +968,6 @@ export default function ProductPage() {
               </p>
             )}
 
-            {/* BADGES */}
-
             <div className="product-badges">
 
               {badges.map(
@@ -890,8 +987,6 @@ export default function ProductPage() {
               )}
 
             </div>
-
-            {/* TRUST */}
 
             <div className="product-trust">
 
@@ -914,11 +1009,10 @@ export default function ProductPage() {
 
             </div>
 
-            {/* PRICE */}
-
             <div className="product-price-card">
 
               <div className="product-price-row">
+
                 <span>
                   {
                     t.priceExclTax
@@ -930,10 +1024,12 @@ export default function ProductPage() {
                     2
                   )} €
                 </strong>
+
               </div>
 
               {vat.enabled && (
                 <div className="product-price-row">
+
                   <span>
                     {t.vat} (
                     {
@@ -947,10 +1043,12 @@ export default function ProductPage() {
                       2
                     )} €
                   </strong>
+
                 </div>
               )}
 
               <div className="product-price-total">
+
                 <span>
                   {
                     t.priceInclTax
@@ -962,11 +1060,10 @@ export default function ProductPage() {
                     2
                   )} €
                 </strong>
+
               </div>
 
             </div>
-
-            {/* CTA */}
 
             <div className="product-actions">
 
@@ -987,8 +1084,6 @@ export default function ProductPage() {
               </button>
 
             </div>
-
-            {/* FOOTNOTE */}
 
             <p className="product-footnote">
               {

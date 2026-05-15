@@ -1,111 +1,663 @@
 "use client";
 
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  doc,
+  getDoc,
+} from "firebase/firestore";
+
+import { usePathname } from "next/navigation";
+
+import { db } from "@/lib/firebase";
+
 import { useCart } from "@/context/CartContext";
 
-const OCULAREST_ID = "3tuSUenbUVVF6cuSHwS9";
+import {
+  getLocale,
+  getT,
+} from "../i18n";
+
+import "./CartSummaryInline.css";
+
+/* =====================================================
+   TYPES
+===================================================== */
+
+type CartItem = {
+  id: string;
+
+  name: string;
+
+  quantity: number;
+
+  imageUrl?: string;
+
+  description?: string;
+
+  priceHT: number;
+};
+
+type ProtectiveCaseProduct = {
+  id: string;
+
+  name: string;
+
+  imageUrl?: string;
+
+  priceHT: number;
+
+  vat: {
+    enabled: boolean;
+    rate: number;
+  };
+};
+
+/* =====================================================
+   CONSTANTS
+===================================================== */
+
+const OCULAREST_ID =
+  "3tuSUenbUVVF6cuSHwS9";
+
+/* =====================================================
+   COMPONENT
+===================================================== */
 
 export default function CartSummaryInline() {
-  const { items, totalHT, totalVAT, totalTTC, updateQuantity, removeItem } =
-    useCart();
+
+  const pathname =
+    usePathname();
+
+  const locale =
+    getLocale(pathname);
+
+  const t =
+    getT(locale);
+
+  const {
+    items,
+    totalHT,
+    totalVAT,
+    totalTTC,
+    updateQuantity,
+    removeItem,
+    addItem,
+  } = useCart();
+
+  const [
+    dismissedUpsell,
+    setDismissedUpsell,
+  ] = useState(false);
+
+  const [
+    protectiveCase,
+    setProtectiveCase,
+  ] =
+    useState<ProtectiveCaseProduct | null>(
+      null
+    );
+
+  /* =====================================================
+     LOAD ADDON FROM PRODUCT
+  ===================================================== */
+
+  useEffect(() => {
+
+    async function loadProtectiveCase() {
+
+      try {
+
+        const snap =
+          await getDoc(
+            doc(
+              db,
+              "products",
+              OCULAREST_ID
+            )
+          );
+
+        if (!snap.exists()) {
+
+          console.error(
+            "Ocularest product not found"
+          );
+
+          return;
+        }
+
+        const data =
+          snap.data();
+
+        const addon =
+          data?.addons?.[0];
+
+        if (!addon) {
+
+          console.error(
+            "No addon found in product"
+          );
+
+          return;
+        }
+
+        setProtectiveCase({
+          id:
+            addon.id,
+
+          name:
+            addon.label ||
+            "Extra bamboo cover",
+
+          imageUrl:
+            addon.imageUrl || "",
+
+          priceHT:
+            addon.pricesByMarket?.FR ||
+            16.6,
+
+          vat: {
+            enabled:
+              addon.vatByMarket?.FR
+                ?.enabled ?? true,
+
+            rate:
+              addon.vatByMarket?.FR
+                ?.rate ?? 20,
+          },
+        });
+
+      } catch (error) {
+
+        console.error(
+          "Error loading addon:",
+          error
+        );
+      }
+    }
+
+    loadProtectiveCase();
+
+  }, []);
+
+  /* =====================================================
+     TOTAL ITEMS
+  ===================================================== */
+
+  const totalItems =
+    useMemo(() => {
+
+      return items.reduce(
+        (
+          total: number,
+          item: CartItem
+        ) =>
+          total +
+          item.quantity,
+
+        0
+      );
+
+    }, [items]);
+
+  /* =====================================================
+     UPSELL
+  ===================================================== */
+
+  const hasOcularest =
+    items.some(
+      (
+        item: CartItem
+      ) =>
+        item.id ===
+        OCULAREST_ID
+    );
+
+  const hasProtectiveCase =
+    items.some(
+      (
+        item: CartItem
+      ) =>
+        item.id ===
+        protectiveCase?.id
+    );
+
+  const showUpsell =
+    hasOcularest &&
+    !hasProtectiveCase &&
+    !dismissedUpsell &&
+    !!protectiveCase;
+
+  /* =====================================================
+     ADD CASE
+  ===================================================== */
+
+  function handleAddCase() {
+
+    if (!protectiveCase) {
+      return;
+    }
+
+    addItem({
+      id:
+        protectiveCase.id,
+
+      name:
+        protectiveCase.name,
+
+      quantity: 1,
+
+      imageUrl:
+        protectiveCase.imageUrl,
+
+      description:
+        t.upsellDescription,
+
+      priceHT:
+        protectiveCase.priceHT,
+
+      vat:
+        protectiveCase.vat,
+    });
+  }
+
+  /* =====================================================
+     EMPTY
+  ===================================================== */
 
   if (!items.length) {
+
     return (
-      <section className="checkout-section">
-        <p>Votre panier est vide.</p>
+      <section className="cart-summary-empty">
+
+        <div className="cart-summary-empty-icon">
+          🛒
+        </div>
+
+        <div className="cart-summary-empty-content">
+
+          <h2 className="cart-summary-empty-title">
+            {t.emptyCart}
+          </h2>
+
+          <p className="cart-summary-empty-description">
+            {t.emptyCartDescription}
+          </p>
+
+        </div>
+
       </section>
     );
   }
 
+  /* =====================================================
+     RENDER
+  ===================================================== */
+
   return (
-    <section className="checkout-section checkout-cart">
-      <div className="checkout-cart-header">
-        <h2 className="checkout-cart-title">Votre panier</h2>
-        <span className="checkout-cart-count">
-          {items.length} article{items.length > 1 ? "s" : ""}
-        </span>
+    <section className="cart-summary">
+
+      {/* HEADER */}
+
+      <div className="cart-summary-header">
+
+        <div className="cart-summary-heading">
+
+          <div className="cart-summary-badge">
+            {t.order}
+          </div>
+
+          <h2 className="cart-summary-title">
+            {t.yourCart}
+          </h2>
+
+        </div>
+
+        <div className="cart-summary-count">
+
+          {totalItems}
+          {" "}
+          {t.article}
+          {totalItems > 1
+            ? "s"
+            : ""}
+
+        </div>
+
       </div>
 
-      <div className="checkout-cart-list">
-        {items.map((item, index) => {
-          const isOcularest = item.id === OCULAREST_ID;
-          const isMaxForOcularest = isOcularest && item.quantity >= 2;
+      {/* PRODUCTS */}
 
-          return (
-            <div key={`${item.id}-${index}`} className="checkout-cart-item">
-              <div className="checkout-cart-thumb-wrap">
-                {item.imageUrl ? (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="checkout-cart-thumb"
-                  />
-                ) : (
-                  <div className="checkout-cart-thumb placeholder" />
-                )}
-              </div>
+      <div className="cart-summary-list">
 
-              <div className="checkout-cart-main">
-                <p className="checkout-cart-name">{item.name}</p>
-                <p className="checkout-cart-unit">
-                  {item.priceHT.toFixed(2)} € HT / unité
-                </p>
+        {items.map(
+          (
+            item: CartItem,
+            index: number
+          ) => {
 
-                <div className="checkout-cart-bottom">
-                  <div className="checkout-cart-qty">
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    >
-                      −
-                    </button>
+            const isMaxQuantity =
+              item.quantity >= 2;
 
-                    <span>{item.quantity}</span>
+            return (
+              <article
+                key={`${item.id}-${index}`}
+                className="cart-summary-item"
+              >
 
-                    <button
-                      type="button"
-                      disabled={isMaxForOcularest}
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    >
-                      +
-                    </button>
+                <div className="cart-summary-image-shell">
+
+                  {item.imageUrl ? (
+                    <img
+                      src={
+                        item.imageUrl
+                      }
+                      alt={
+                        item.name
+                      }
+                      className="cart-summary-image"
+                    />
+                  ) : (
+                    <div className="cart-summary-image-placeholder" />
+                  )}
+
+                </div>
+
+                <div className="cart-summary-content">
+
+                  <div className="cart-summary-content-top">
+
+                    <div>
+
+                      <h3 className="cart-summary-product-name">
+                        {item.name}
+                      </h3>
+
+                      <p className="cart-summary-product-price">
+
+                        {item.priceHT.toFixed(
+                          2
+                        )}
+                        {" "}
+                        €
+                        {" "}
+                        {t.excludingTax}
+                        {" "}
+                        / unité
+
+                      </p>
+
+                    </div>
+
+                    <div className="cart-summary-line-total">
+
+                      {(item.priceHT *
+                        item.quantity).toFixed(
+                        2
+                      )}
+                      {" "}
+                      €
+
+                    </div>
+
                   </div>
 
-                  <button
-                    type="button"
-                    className="checkout-cart-remove"
-                    onClick={() => removeItem(item.id)}
-                  >
-                    Retirer
-                  </button>
-                </div>
-              </div>
+                  <div className="cart-summary-actions">
 
-              <div className="checkout-cart-line-total">
-                {(item.priceHT * item.quantity).toFixed(2)} €
-              </div>
-            </div>
-          );
-        })}
+                    <div className="cart-summary-quantity">
+
+                      <button
+                        type="button"
+                        className="cart-summary-quantity-button"
+                        onClick={() =>
+                          updateQuantity(
+                            item.id,
+                            item.quantity - 1
+                          )
+                        }
+                      >
+                        −
+                      </button>
+
+                      <span className="cart-summary-quantity-value">
+                        {item.quantity}
+                      </span>
+
+                      <button
+                        type="button"
+                        disabled={
+                          isMaxQuantity
+                        }
+                        className="cart-summary-quantity-button"
+                        onClick={() =>
+                          updateQuantity(
+                            item.id,
+                            item.quantity + 1
+                          )
+                        }
+                      >
+                        +
+                      </button>
+
+                    </div>
+
+                    <button
+                      type="button"
+                      className="cart-summary-remove"
+                      onClick={() =>
+                        removeItem(
+                          item.id
+                        )
+                      }
+                    >
+                      {t.remove}
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </article>
+            );
+          }
+        )}
+
       </div>
 
-      <div className="checkout-cart-summary">
-        <div className="checkout-cart-summary-row">
-          <span>Total HT</span>
-          <span>{totalHT.toFixed(2)} €</span>
+      {/* UPSELL */}
+
+      {showUpsell &&
+        protectiveCase && (
+
+        <section className="cart-summary-upsell">
+
+          <div className="cart-summary-upsell-image-shell">
+
+            {protectiveCase.imageUrl ? (
+              <img
+                src={
+                  protectiveCase.imageUrl
+                }
+                alt={
+                  protectiveCase.name
+                }
+                className="cart-summary-upsell-image"
+              />
+            ) : (
+              <div className="cart-summary-image-placeholder" />
+            )}
+
+          </div>
+
+          <div className="cart-summary-upsell-content">
+
+            <div>
+
+              <div className="cart-summary-upsell-kicker">
+                {t.upsellRecommended}
+              </div>
+
+              <h3 className="cart-summary-upsell-title">
+                {t.upsellTitle}
+              </h3>
+
+              <p className="cart-summary-upsell-description">
+                {t.upsellDescription}
+              </p>
+
+            </div>
+
+            <div className="cart-summary-upsell-footer">
+
+              <div className="cart-summary-upsell-price">
+
+                +
+                {protectiveCase.priceHT.toFixed(
+                  2
+                )}
+                {" "}
+                €
+                {" "}
+                HT
+
+                <span
+                  style={{
+                    opacity: 0.65,
+                    fontSize: ".85rem",
+                    marginLeft: ".45rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  {t.excludingTaxLong}
+                </span>
+
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: ".8rem",
+                  flexWrap: "wrap",
+                }}
+              >
+
+                <button
+                  type="button"
+                  className="cart-summary-upsell-button"
+                  onClick={
+                    handleAddCase
+                  }
+                >
+                  {t.upsellYes}
+                </button>
+
+                <button
+                  type="button"
+                  className="cart-summary-upsell-decline"
+                  onClick={() =>
+                    setDismissedUpsell(
+                      true
+                    )
+                  }
+                >
+                  {t.upsellNo}
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+      )}
+
+      {/* TOTALS */}
+
+      <div className="cart-summary-totals">
+
+        <div className="cart-summary-row">
+
+          <span>
+            {t.totalHT}
+          </span>
+
+          <span>
+
+            {totalHT.toFixed(
+              2
+            )}
+            {" "}
+            €
+
+          </span>
+
         </div>
 
         {totalVAT > 0 && (
-          <div className="checkout-cart-summary-row">
-            <span>TVA</span>
-            <span>{totalVAT.toFixed(2)} €</span>
+          <div className="cart-summary-row">
+
+            <span>
+              TVA
+            </span>
+
+            <span>
+
+              {totalVAT.toFixed(
+                2
+              )}
+              {" "}
+              €
+
+            </span>
+
           </div>
         )}
 
-        <div className="checkout-cart-summary-row total">
-          <span>Total TTC produits</span>
-          <span>{totalTTC.toFixed(2)} €</span>
+        <div className="cart-summary-divider" />
+
+        <div className="cart-summary-row cart-summary-row-total">
+
+          <span>
+            {t.totalTTCProducts}
+          </span>
+
+          <span>
+
+            {totalTTC.toFixed(
+              2
+            )}
+            {" "}
+            €
+
+          </span>
+
         </div>
+
       </div>
+
+      {/* TRUST */}
+
+      <div className="cart-summary-trust">
+
+        <div className="cart-summary-trust-item">
+          🔒 {t.securePayment}
+        </div>
+
+        <div className="cart-summary-trust-item">
+          📦 {t.trackedShipping}
+        </div>
+
+        <div className="cart-summary-trust-item">
+          ✨ {t.premiumSupport}
+        </div>
+
+      </div>
+
     </section>
   );
 }
