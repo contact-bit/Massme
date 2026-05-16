@@ -86,8 +86,11 @@ function decodeToken(
   token: string
 ) {
   try {
+    // TOKEN FORMAT:
+    // payload.signature
+
     const base64Url =
-      token.split(".")[1];
+      token.split(".")[0];
 
     if (!base64Url) {
       return null;
