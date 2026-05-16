@@ -1,14 +1,34 @@
-import "./globals.css";
 import type { ReactNode } from "react";
 
-export const metadata = {
-  title: "Vitrectomed.com",
-  description: "Boutique Vitectromed",
-};
+import {
+  isLocale,
+} from "@/components/navbar/navbar.data";
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+interface LocaleLayoutProps {
+  children: ReactNode;
+
+  params: Promise<{
+    locale: string;
+  }>;
+}
+
+export default async function LocaleLayout({
+  children,
+  params,
+}: LocaleLayoutProps) {
+  const { locale } =
+    await params;
+
+  const currentLocale =
+    isLocale(locale)
+      ? locale
+      : "fr";
+
   return (
-    <html lang="fr" className="w-full h-full">
+    <html
+      lang={currentLocale}
+      suppressHydrationWarning
+    >
       <body>
         {children}
       </body>

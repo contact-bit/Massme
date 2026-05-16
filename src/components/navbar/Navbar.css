@@ -1,0 +1,228 @@
+/* =========================================================
+   NAVBAR
+========================================================= */
+
+.vm-navbar {
+  position: sticky;
+
+  top: 0;
+
+  z-index: 9999;
+
+  width: 100%;
+
+  padding:
+    1rem 0;
+
+  isolation: isolate;
+
+  transition:
+    padding .28s ease,
+    transform .28s ease;
+}
+
+/* =========================================================
+   GLOBAL ATMOSPHERE
+========================================================= */
+
+.vm-navbar::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,208,255,.08),
+      transparent 24%
+    ),
+
+    radial-gradient(
+      circle at top right,
+      rgba(59,130,246,.08),
+      transparent 22%
+    );
+
+  opacity: .9;
+}
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+
+.vm-navbar__container {
+  position: relative;
+
+  width: 100%;
+
+  max-width: 1480px;
+
+  margin: 0 auto;
+
+  padding:
+    0 2rem;
+}
+
+/* =========================================================
+   GLASS SHELL
+========================================================= */
+
+.vm-navbar__container::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: 2rem;
+
+  pointer-events: none;
+
+  backdrop-filter:
+    blur(24px);
+
+  -webkit-backdrop-filter:
+    blur(24px);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8,17,31,.72),
+      rgba(4,7,18,.66)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  box-shadow:
+    0 10px 40px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* =========================================================
+   SCROLLED
+========================================================= */
+
+.vm-navbar--scrolled {
+  padding:
+    .65rem 0;
+}
+
+.vm-navbar--scrolled
+.vm-navbar__container::before {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8,17,31,.88),
+      rgba(4,7,18,.82)
+    );
+
+  border:
+    1px solid rgba(0,208,255,.10);
+
+  box-shadow:
+    0 18px 60px rgba(0,0,0,.34),
+    0 0 0 1px rgba(0,208,255,.04),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+/* =========================================================
+   DESKTOP
+========================================================= */
+
+.vm-navbar__desktop-wrapper {
+  position: relative;
+
+  z-index: 2;
+
+  display: block;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+.vm-navbar__mobile-wrapper {
+  position: relative;
+
+  z-index: 2;
+
+  display: none;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1280px) {
+
+  .vm-navbar__container {
+    padding:
+      0 1.5rem;
+  }
+}
+
+@media (max-width: 1100px) {
+
+  .vm-navbar {
+    padding:
+      .75rem 0;
+  }
+
+  .vm-navbar__desktop-wrapper {
+    display: none;
+  }
+
+  .vm-navbar__mobile-wrapper {
+    display: block;
+  }
+
+  .vm-navbar__container {
+    padding:
+      0 1rem;
+  }
+
+  .vm-navbar__container::before {
+    border-radius:
+      1.5rem;
+  }
+}
+
+/* =========================================================
+   SAFE AREA
+========================================================= */
+
+@supports (padding: max(0px)) {
+
+  .vm-navbar__container {
+    padding-left:
+      max(2rem, env(safe-area-inset-left));
+
+    padding-right:
+      max(2rem, env(safe-area-inset-right));
+  }
+
+  @media (max-width: 1100px) {
+
+    .vm-navbar__container {
+      padding-left:
+        max(1rem, env(safe-area-inset-left));
+
+      padding-right:
+        max(1rem, env(safe-area-inset-right));
+    }
+  }
+}
+
+
+
+@media (max-width: 1100px) {
+
+  .vm-navbar__container::before {
+    display: none;
+  }
+}

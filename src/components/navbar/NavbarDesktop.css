@@ -1,0 +1,491 @@
+/* =========================================================
+   DESKTOP NAVBAR
+========================================================= */
+
+.vm-navbar-desktop {
+  position: relative;
+
+  z-index: 20;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  width: 100%;
+
+  min-height: 84px;
+
+  gap: 2.5rem;
+}
+
+/* =========================================================
+   LEFT
+========================================================= */
+
+.vm-navbar-desktop__left {
+  display: flex;
+
+  align-items: center;
+
+  flex-shrink: 0;
+
+  min-width: max-content;
+}
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.vm-navbar-desktop__logo {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+
+  text-decoration: none;
+}
+
+.vm-navbar-desktop__logo::before {
+  content: "";
+
+  position: absolute;
+
+  inset: -12px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.12),
+      transparent 72%
+    );
+
+  opacity: 0;
+
+  transition:
+    opacity .28s ease;
+}
+
+.vm-navbar-desktop__logo:hover::before {
+  opacity: 1;
+}
+
+.vm-navbar-desktop__logo-image {
+  position: relative;
+
+  z-index: 2;
+
+  width: auto;
+
+  height: 42px;
+
+  object-fit: contain;
+
+
+
+
+  transition:
+    transform .35s ease,
+    opacity .35s ease;
+}
+
+.vm-navbar-desktop__logo:hover
+.vm-navbar-desktop__logo-image {
+  transform:
+    scale(1.03);
+
+  opacity: .96;
+}
+
+/* =========================================================
+   CENTER
+========================================================= */
+
+.vm-navbar-desktop__center {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex: 1;
+
+  gap: .5rem;
+
+  min-height: 62px;
+
+  padding:
+    .55rem;
+
+  border-radius: 999px;
+
+  background:
+    rgba(255,255,255,.03);
+
+  backdrop-filter:
+    blur(18px);
+
+  -webkit-backdrop-filter:
+    blur(18px);
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+/* =========================================================
+   CENTER ATMOSPHERE
+========================================================= */
+
+.vm-navbar-desktop__center::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: inherit;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,208,255,.08),
+      transparent 24%
+    ),
+
+    radial-gradient(
+      circle at bottom right,
+      rgba(59,130,246,.06),
+      transparent 24%
+    );
+}
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+.vm-navbar-desktop__link {
+  position: relative;
+
+  z-index: 2;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 48px;
+
+  padding:
+    0 1rem;
+
+  border-radius: 999px;
+
+  border:
+    1px solid transparent;
+
+  color:
+    rgba(255,255,255,.82);
+
+  font-size: .93rem;
+
+  font-weight: 500;
+
+  letter-spacing: -.015em;
+
+  text-decoration: none;
+
+  white-space: nowrap;
+
+  transition:
+    background .25s ease,
+    color .25s ease,
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.vm-navbar-desktop__link:hover {
+  color: white;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.12),
+      rgba(59,130,246,.06)
+    );
+
+  border:
+    1px solid rgba(0,208,255,.10);
+
+  box-shadow:
+    0 0 24px rgba(0,208,255,.05);
+
+  transform:
+    translateY(-1px);
+}
+
+/* =========================================================
+   ACTIVE
+========================================================= */
+
+.vm-navbar-desktop__link--active {
+  color: white;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.18),
+      rgba(59,130,246,.10)
+    );
+
+  border:
+    1px solid rgba(0,208,255,.14);
+
+  box-shadow:
+    0 10px 30px rgba(0,208,255,.10),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* =========================================================
+   DROPDOWN LINKS
+========================================================= */
+
+.vm-navbar-desktop__dropdown-link {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+
+  min-height: 52px;
+
+  padding:
+    0 1rem;
+
+  border-radius: 1rem;
+
+  border:
+    1px solid transparent;
+
+  color:
+    rgba(255,255,255,.82);
+
+  font-size: .92rem;
+
+  font-weight: 500;
+
+  letter-spacing: -.01em;
+
+  text-decoration: none;
+
+  white-space: nowrap;
+
+  transition:
+    background .22s ease,
+    color .22s ease,
+    transform .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease;
+}
+
+/* =========================================================
+   DROPDOWN HOVER
+========================================================= */
+
+.vm-navbar-desktop__dropdown-link:hover {
+  color: white;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.10),
+      rgba(59,130,246,.05)
+    );
+
+  border:
+    1px solid rgba(0,208,255,.08);
+
+  transform:
+    translateX(4px);
+
+  box-shadow:
+    0 0 24px rgba(0,208,255,.05);
+}
+
+/* =========================================================
+   ACTIVE DROPDOWN LINK
+========================================================= */
+
+.vm-navbar-desktop__dropdown-link--active {
+  color: white;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.16),
+      rgba(59,130,246,.08)
+    );
+
+  border:
+    1px solid rgba(0,208,255,.12);
+
+  box-shadow:
+    0 10px 24px rgba(0,208,255,.08);
+}
+
+/* =========================================================
+   RIGHT
+========================================================= */
+
+.vm-navbar-desktop__right {
+  display: flex;
+
+  align-items: center;
+
+  gap: .85rem;
+
+  flex-shrink: 0;
+
+  min-width: max-content;
+}
+
+/* =========================================================
+   CTA
+========================================================= */
+
+.vm-navbar-desktop__cta {
+  position: relative;
+
+  overflow: hidden;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 50px;
+
+  padding:
+    0 1.45rem;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.18),
+      rgba(59,130,246,.14)
+    );
+
+  backdrop-filter:
+    blur(14px);
+
+  -webkit-backdrop-filter:
+    blur(14px);
+
+  border:
+    1px solid rgba(0,208,255,.14);
+
+  color: white;
+
+  font-size: .92rem;
+
+  font-weight: 600;
+
+  letter-spacing: -.015em;
+
+  text-decoration: none;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.05);
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    border-color .25s ease,
+    background .25s ease;
+}
+
+.vm-navbar-desktop__cta::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.08),
+      transparent 60%
+    );
+
+  opacity: .7;
+}
+
+.vm-navbar-desktop__cta:hover {
+  transform:
+    translateY(-2px);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.26),
+      rgba(59,130,246,.20)
+    );
+
+  border-color:
+    rgba(0,208,255,.22);
+
+  box-shadow:
+    0 16px 40px rgba(0,0,0,.28),
+    0 0 28px rgba(0,208,255,.14);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1350px) {
+
+  .vm-navbar-desktop__center {
+    gap: .35rem;
+  }
+}
+
+@media (max-width: 1280px) {
+
+  .vm-navbar-desktop__link {
+    padding:
+      0 .8rem;
+
+    font-size:
+      .88rem;
+  }
+}
+
+@media (max-width: 1180px) {
+
+  .vm-navbar-desktop__cta {
+    padding:
+      0 1rem;
+  }
+}

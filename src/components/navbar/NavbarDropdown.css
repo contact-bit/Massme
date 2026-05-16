@@ -1,0 +1,318 @@
+/* =========================================================
+   DROPDOWN
+========================================================= */
+
+.vm-dropdown {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+
+  height: 100%;
+}
+
+/* =========================================================
+   HOVER BRIDGE
+========================================================= */
+
+.vm-dropdown::after {
+  content: "";
+
+  position: absolute;
+
+  top: 100%;
+  left: 0;
+
+  width: 100%;
+  height: 26px;
+
+  background: transparent;
+}
+
+/* =========================================================
+   TRIGGER
+========================================================= */
+
+.vm-dropdown__trigger {
+  position: relative;
+
+  z-index: 5;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: .38rem;
+
+  min-height: 48px;
+
+  padding:
+    0 1rem;
+
+  border-radius: 999px;
+
+  transition:
+    background .25s ease,
+    border-color .25s ease,
+    transform .25s ease;
+}
+
+/* =========================================================
+   TRIGGER HOVER
+========================================================= */
+
+.vm-dropdown:hover
+.vm-dropdown__trigger {
+  background:
+    rgba(255,255,255,.04);
+}
+
+/* =========================================================
+   LINK
+========================================================= */
+
+.vm-dropdown__link {
+  position: relative;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  color:
+    rgba(255,255,255,.84);
+
+  font-size: .93rem;
+
+  font-weight: 500;
+
+  letter-spacing: -.015em;
+
+  text-decoration: none;
+
+  white-space: nowrap;
+
+  transition:
+    color .25s ease,
+    transform .25s ease;
+}
+
+.vm-dropdown:hover
+.vm-dropdown__link {
+  color: white;
+}
+
+/* =========================================================
+   BUTTON
+========================================================= */
+
+.vm-dropdown__button {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 18px;
+  height: 18px;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.vm-dropdown__icon {
+  color:
+    rgba(255,255,255,.72);
+
+  transition:
+    transform .24s ease,
+    color .24s ease,
+    opacity .24s ease;
+}
+
+.vm-dropdown:hover
+.vm-dropdown__icon {
+  color: white;
+}
+
+.vm-dropdown__icon--open {
+  transform:
+    rotate(180deg);
+}
+
+/* =========================================================
+   MENU
+========================================================= */
+
+.vm-dropdown__menu {
+  position: absolute;
+
+  top: calc(100% + 14px);
+  left: 50%;
+
+  z-index: 300;
+
+  min-width: 290px;
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  pointer-events: none;
+
+  transform:
+    translateX(-50%)
+    translateY(10px)
+    scale(.985);
+
+  transform-origin:
+    top center;
+
+  transition:
+    opacity .24s ease,
+    transform .24s ease,
+    visibility .24s ease;
+}
+
+/* =========================================================
+   OPEN
+========================================================= */
+
+.vm-dropdown__menu--open {
+  opacity: 1;
+
+  visibility: visible;
+
+  pointer-events: auto;
+
+  transform:
+    translateX(-50%)
+    translateY(0)
+    scale(1);
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.vm-dropdown__content {
+  position: relative;
+
+  overflow: hidden;
+
+  isolation: isolate;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: .25rem;
+
+  padding:
+    .8rem;
+
+  border-radius: 1.6rem;
+
+  /* =========================================
+     PREMIUM GLASS
+  ========================================= */
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8,17,31,.96),
+      rgba(4,7,18,.94)
+    );
+
+  backdrop-filter:
+    blur(24px);
+
+  -webkit-backdrop-filter:
+    blur(24px);
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  /* =========================================
+     SHADOW
+  ========================================= */
+
+  box-shadow:
+    0 24px 80px rgba(0,0,0,.42),
+    0 0 0 1px rgba(255,255,255,.02),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* =========================================================
+   ATMOSPHERE
+========================================================= */
+
+.vm-dropdown__content::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,208,255,.08),
+      transparent 26%
+    ),
+
+    radial-gradient(
+      circle at bottom right,
+      rgba(59,130,246,.06),
+      transparent 24%
+    );
+}
+
+/* =========================================================
+   LIGHT
+========================================================= */
+
+.vm-dropdown__content::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 80px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,.04),
+      transparent
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1280px) {
+
+  .vm-dropdown__menu {
+    min-width: 260px;
+  }
+}

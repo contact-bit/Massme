@@ -1,0 +1,358 @@
+/* =========================================================
+   LANGUAGE
+========================================================= */
+
+.vm-language {
+  position: relative;
+
+  z-index: 500;
+}
+
+/* =========================================================
+   TRIGGER
+========================================================= */
+
+.vm-language__trigger {
+  position: relative;
+
+  overflow: hidden;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: .6rem;
+
+  min-height: 48px;
+
+  padding:
+    0 1rem;
+
+  border-radius: 999px;
+
+  /* =========================================
+     PREMIUM GLASS
+  ========================================= */
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.06),
+      rgba(255,255,255,.03)
+    );
+
+  backdrop-filter:
+    blur(16px);
+
+  -webkit-backdrop-filter:
+    blur(16px);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  color: white;
+
+  cursor: pointer;
+
+  /* =========================================
+     SHADOW
+  ========================================= */
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.03);
+
+  transition:
+    transform .25s ease,
+    background .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+/* =========================================================
+   ATMOSPHERE
+========================================================= */
+
+.vm-language__trigger::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,208,255,.08),
+      transparent 30%
+    );
+
+  opacity: .85;
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.vm-language__trigger:hover {
+  transform:
+    translateY(-1px);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.08),
+      rgba(255,255,255,.04)
+    );
+
+  border-color:
+    rgba(0,208,255,.12);
+
+  box-shadow:
+    0 14px 34px rgba(0,0,0,.24),
+    0 0 24px rgba(0,208,255,.08);
+}
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.vm-language__icon {
+  position: relative;
+
+  z-index: 2;
+
+  color:
+    rgba(255,255,255,.82);
+
+  transition:
+    transform .24s ease,
+    color .24s ease;
+}
+
+.vm-language__trigger:hover
+.vm-language__icon {
+  color: white;
+}
+
+.vm-language__icon--open {
+  transform:
+    rotate(180deg);
+}
+
+/* =========================================================
+   MENU
+========================================================= */
+
+.vm-language__menu {
+  position: absolute;
+
+  top: calc(100% + 14px);
+  right: 0;
+
+  z-index: 300;
+
+  width: 240px;
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  pointer-events: none;
+
+  transform:
+    translateY(10px)
+    scale(.985);
+
+  transform-origin:
+    top right;
+
+  transition:
+    opacity .24s ease,
+    transform .24s ease,
+    visibility .24s ease;
+}
+
+/* =========================================================
+   OPEN
+========================================================= */
+
+.vm-language__menu--open {
+  opacity: 1;
+
+  visibility: visible;
+
+  pointer-events: auto;
+
+  transform:
+    translateY(0)
+    scale(1);
+}
+
+/* =========================================================
+   MENU SHELL
+========================================================= */
+
+.vm-language__menu {
+  overflow: hidden;
+
+  padding:
+    .7rem;
+
+  border-radius: 1.7rem;
+
+  isolation: isolate;
+
+  /* =========================================
+     PREMIUM GLASS
+  ========================================= */
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8,17,31,.96),
+      rgba(4,7,18,.94)
+    );
+
+  backdrop-filter:
+    blur(24px);
+
+  -webkit-backdrop-filter:
+    blur(24px);
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  /* =========================================
+     SHADOW
+  ========================================= */
+
+  box-shadow:
+    0 24px 80px rgba(0,0,0,.42),
+    0 0 0 1px rgba(255,255,255,.02),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* =========================================================
+   ATMOSPHERE
+========================================================= */
+
+.vm-language__menu::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,208,255,.08),
+      transparent 28%
+    ),
+
+    radial-gradient(
+      circle at bottom right,
+      rgba(59,130,246,.06),
+      transparent 24%
+    );
+}
+
+/* =========================================================
+   LIGHT
+========================================================= */
+
+.vm-language__menu::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 80px;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,.04),
+      transparent
+    );
+}
+
+/* =========================================================
+   ITEM
+========================================================= */
+
+.vm-language__item {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: .85rem;
+
+  min-height: 52px;
+
+  padding:
+    0 1rem;
+
+  border-radius: 1rem;
+
+  color:
+    rgba(255,255,255,.84);
+
+  text-decoration: none;
+
+  font-size: .93rem;
+
+  font-weight: 500;
+
+  letter-spacing: -.01em;
+
+  transition:
+    background .22s ease,
+    color .22s ease,
+    transform .22s ease,
+    border-color .22s ease;
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.vm-language__item:hover {
+  color: white;
+
+  background:
+    rgba(255,255,255,.05);
+
+  transform:
+    translateX(4px);
+}
+
+/* =========================================================
+   ACTIVE
+========================================================= */
+
+.vm-language__item--active {
+  color: white;
+
+  background:
+    rgba(0,208,255,.08);
+
+  border:
+    1px solid rgba(0,208,255,.10);
+}
