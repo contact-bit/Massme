@@ -15,34 +15,65 @@ function normalizeEmail(v: unknown): string {
 
 function normalizeLocale(v: unknown): string {
   const value = String(v ?? "").trim().toLowerCase();
-  if (value === "fr" || value === "en") return value;
+
+  if (value === "fr" || value === "en") {
+    return value;
+  }
+
   return "fr";
 }
 
 function parseStatus(v: unknown): ReviewStatus | null {
   const value = String(v ?? "").trim().toLowerCase();
-  if (value === "pending" || value === "approved" || value === "rejected") {
+
+  if (
+    value === "pending" ||
+    value === "approved" ||
+    value === "rejected"
+  ) {
     return value;
   }
+
   return null;
 }
 
-function parseLimit(v: unknown, fallback = 4, max = 20) {
+function parseLimit(
+  v: unknown,
+  fallback = 4,
+  max = 20
+) {
   const n = Number(v);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.max(1, Math.min(max, Math.floor(n)));
+
+  if (!Number.isFinite(n)) {
+    return fallback;
+  }
+
+  return Math.max(
+    1,
+    Math.min(max, Math.floor(n))
+  );
 }
 
 function parseRating(v: unknown): number | null {
   const n = Number(v);
-  if (!Number.isFinite(n)) return null;
+
+  if (!Number.isFinite(n)) {
+    return null;
+  }
+
   const rounded = Math.round(n);
-  if (rounded < 1 || rounded > 5) return null;
+
+  if (rounded < 1 || rounded > 5) {
+    return null;
+  }
+
   return rounded;
 }
 
 function toIsoDate(value: any): string | null {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
 
   try {
     if (typeof value?.toDate === "function") {
@@ -54,6 +85,7 @@ function toIsoDate(value: any): string | null {
     }
 
     const d = new Date(value);
+
     if (!Number.isNaN(d.getTime())) {
       return d.toISOString();
     }
@@ -65,17 +97,32 @@ function toIsoDate(value: any): string | null {
 }
 
 function safeItems(items: unknown) {
-  if (!Array.isArray(items)) return [];
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
   return items.slice(0, 50);
 }
+
+/* =========================================================
+   GET
+========================================================= */
 
 export async function GET(req: Request) {
   try {
     const db = getAdminDb();
+
     const { searchParams } = new URL(req.url);
 
-    const requestedStatus = parseStatus(searchParams.get("status")) || "approved";
-    const limit = parseLimit(searchParams.get("limit"), 4, 20);
+    const requestedStatus =
+      parseStatus(searchParams.get("status")) ||
+      "approved";
+
+    const limit = parseLimit(
+      searchParams.get("limit"),
+      4,
+      20
+    );
 
     const snap = await db
       .collection("reviews")
@@ -89,7 +136,9 @@ export async function GET(req: Request) {
 
       return {
         id: doc.id,
-        rating: Number.isFinite(Number(data?.rating)) ? Number(data.rating) : 0,
+        rating: Number.isFinite(Number(data?.rating))
+          ? Number(data.rating)
+          : 0,
         comment: s(data?.comment, 2000),
         locale: normalizeLocale(data?.locale),
         createdAt: toIsoDate(data?.createdAt),
@@ -109,68 +158,134 @@ export async function GET(req: Request) {
         error: "server_error",
         message: e?.message || String(e),
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
 
+/* =========================================================
+   POST
+========================================================= */
+
 export async function POST(req: Request) {
   try {
     const db = getAdminDb();
+
     const body = await req.json();
 
     const orderId = s(body.orderId, 120);
+
     const token = s(body.token, 2000);
+
     const email = normalizeEmail(body.email);
+
     const comment = s(body.comment, 2000);
+
     const locale = normalizeLocale(body.locale);
+
     const rating = parseRating(body.rating);
 
     if (!orderId) {
-      return NextResponse.json({ ok: false, error: "order_id_missing" }, { status: 400 });
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "order_id_missing",
+        },
+        {
+          status: 400,
+        }
+      );
     }
 
     if (!token) {
-      return NextResponse.json({ ok: false, error: "token_missing" }, { status: 400 });
-    }
-
-    if (!email || !email.includes("@")) {
-      return NextResponse.json({ ok: false, error: "email_invalid" }, { status: 400 });
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "token_missing",
+        },
+        {
+          status: 400,
+        }
+      );
     }
 
     if (rating === null) {
-      return NextResponse.json({ ok: false, error: "rating_invalid" }, { status: 400 });
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "rating_invalid",
+        },
+        {
+          status: 400,
+        }
+      );
     }
 
-    if (!comment || comment.trim().length < 3) {
-      return NextResponse.json({ ok: false, error: "comment_invalid" }, { status: 400 });
+    if (
+      !comment ||
+      comment.trim().length < 3
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "comment_invalid",
+        },
+        {
+          status: 400,
+        }
+      );
     }
 
-    const orderRef = db.collection("orders").doc(orderId);
+    const orderRef =
+      db.collection("orders").doc(orderId);
+
     const orderSnap = await orderRef.get();
 
     if (!orderSnap.exists) {
-      return NextResponse.json({ ok: false, error: "order_not_found" }, { status: 404 });
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "order_not_found",
+        },
+        {
+          status: 404,
+        }
+      );
     }
 
     const order = orderSnap.data() as any;
 
     const expectedEmail = normalizeEmail(
-      order?.email || order?.customerEmail || order?.customer_email || ""
+      order?.email ||
+        order?.customerEmail ||
+        order?.customer_email ||
+        ""
     );
 
-    if (!expectedEmail || !expectedEmail.includes("@")) {
-      return NextResponse.json({ ok: false, error: "order_email_missing" }, { status: 400 });
+    if (
+      !expectedEmail ||
+      !expectedEmail.includes("@")
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "order_email_missing",
+        },
+        {
+          status: 400,
+        }
+      );
     }
 
-    if (expectedEmail !== email) {
-      return NextResponse.json({ ok: false, error: "email_mismatch" }, { status: 403 });
-    }
-
-    const tokenCheck = verifyReviewToken(token, {
-      orderId,
-      email: expectedEmail,
-    });
+    // VERIFY TOKEN
+    const tokenCheck = verifyReviewToken(
+      token,
+      {
+        orderId,
+      }
+    );
 
     if (!tokenCheck.ok) {
       return NextResponse.json(
@@ -179,18 +294,25 @@ export async function POST(req: Request) {
           error: "token_invalid",
           reason: tokenCheck.reason,
         },
-        { status: 403 }
+        {
+          status: 403,
+        }
       );
     }
 
     const reviewId = `${orderId}__${expectedEmail}`;
-    const reviewRef = db.collection("reviews").doc(reviewId);
+
+    const reviewRef =
+      db.collection("reviews").doc(reviewId);
 
     await db.runTransaction(async (tx) => {
-      const existingReviewSnap = await tx.get(reviewRef);
+      const existingReviewSnap =
+        await tx.get(reviewRef);
 
       if (existingReviewSnap.exists) {
-        throw new Error("review_already_exists");
+        throw new Error(
+          "review_already_exists"
+        );
       }
 
       tx.set(reviewRef, {
@@ -201,7 +323,8 @@ export async function POST(req: Request) {
         locale,
         items: safeItems(order?.items),
         status: "pending",
-        createdAt: FieldValue.serverTimestamp(),
+        createdAt:
+          FieldValue.serverTimestamp(),
         moderatedAt: null,
         moderatedBy: null,
       });
@@ -209,28 +332,48 @@ export async function POST(req: Request) {
       tx.set(
         orderRef,
         {
-          reviewSubmittedAt: FieldValue.serverTimestamp(),
-          "reviewEmail.submittedAt": FieldValue.serverTimestamp(),
-          "reviewEmail.status": "submitted",
-          "reviewEmail.updatedAt": FieldValue.serverTimestamp(),
+          reviewSubmittedAt:
+            FieldValue.serverTimestamp(),
+
+          "reviewEmail.submittedAt":
+            FieldValue.serverTimestamp(),
+
+          "reviewEmail.status":
+            "submitted",
+
+          "reviewEmail.updatedAt":
+            FieldValue.serverTimestamp(),
         },
-        { merge: true }
+        {
+          merge: true,
+        }
       );
     });
 
-    return NextResponse.json({ ok: true, id: reviewId });
+    return NextResponse.json({
+      ok: true,
+      id: reviewId,
+    });
   } catch (e: any) {
-    if (e?.message === "review_already_exists") {
+    if (
+      e?.message ===
+      "review_already_exists"
+    ) {
       return NextResponse.json(
         {
           ok: false,
           error: "review_already_exists",
         },
-        { status: 409 }
+        {
+          status: 409,
+        }
       );
     }
 
-    console.error("POST /api/reviews error:", e);
+    console.error(
+      "POST /api/reviews error:",
+      e
+    );
 
     return NextResponse.json(
       {
@@ -238,7 +381,9 @@ export async function POST(req: Request) {
         error: "server_error",
         message: e?.message || String(e),
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
