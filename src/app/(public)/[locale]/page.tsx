@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-
+import ReviewsSection from "@/components/reviews/ReviewsSection";
 import type { Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n";
 
@@ -636,6 +636,31 @@ export default async function HomePage({
                 Télécharger le PDF
               </a>
             </div>
+
+
+{/* =========================================================
+    REVIEWS
+========================================================= */}
+
+<section className="section">
+  <div className="container-xl stack-lg">
+
+    <div className="section-header">
+      <span className="text-label">
+        Avis patients
+      </span>
+
+      <h2 className="title-section">
+        Ils partagent leur expérience
+      </h2>
+    </div>
+
+    <ReviewsSection locale={locale} />
+
+  </div>
+</section>
+
+
           </div>
         </div>
       </section>
