@@ -5,20 +5,35 @@ import { FieldValue } from "firebase-admin/firestore";
 function assertCron(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization") || "";
-  if (!secret || auth !== `Bearer ${secret}`) throw new Error("unauthorized_cron");
+
+  if (!secret || auth !== `Bearer ${secret}`) {
+    throw new Error("unauthorized_cron");
+  }
 }
 
-// TODO: branche ton provider email ici (Resend/Sendgrid/SMTP/etc.)
-async function sendReviewEmail(opts: { to: string; subject: string; html: string }) {
-  // Exemple minimal: mets ton code d’envoi ici.
-  // throw new Error("send_email_not_implemented");
+// TODO: branche ton provider email ici (Resend / Sendgrid / SMTP / etc.)
+async function sendReviewEmail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+}) {
+  // Exemple minimal
   console.log("SEND EMAIL →", opts.to, opts.subject);
+
+  // Ici tu branches ton vrai provider email
+  // await resend.emails.send(...)
+
   return true;
 }
 
 function getBaseUrl() {
-  // Mets ton domaine prod dans env, sinon localhost
-  return process.env.PUBLIC_BASE_URL || "http://localhost:3000";
+  const url = process.env.PUBLIC_BASE_URL;
+
+  if (!url) {
+    throw new Error("PUBLIC_BASE_URL is missing");
+  }
+
+  return url.replace(/\/$/, "");
 }
 
 export async function GET(req: Request) {
@@ -44,16 +59,30 @@ export async function GET(req: Request) {
       const o = doc.data() as any;
       const orderId = doc.id;
 
-      const email = String(o?.email || "").trim().toLowerCase();
-      const locale = String(o?.locale || "fr").trim() || "fr";
-      const token = String(o?.reviewEmail?.token || "").trim();
+      const email = String(o?.email || "")
+        .trim()
+        .toLowerCase();
+
+      const locale =
+        String(o?.locale || "fr").trim() || "fr";
+
+      const token = String(
+        o?.reviewEmail?.token || ""
+      ).trim();
 
       if (!email || !email.includes("@") || !token) {
         failed++;
+
         await doc.ref.set(
-          { reviewEmail: { status: "cancelled", lastError: "missing_email_or_token" } },
+          {
+            reviewEmail: {
+              status: "cancelled",
+              lastError: "missing_email_or_token",
+            },
+          },
           { merge: true }
         );
+
         continue;
       }
 
@@ -64,19 +93,64 @@ export async function GET(req: Request) {
         `&email=${encodeURIComponent(email)}`;
 
       const subject = "Donne ton avis sur ta commande";
+
       const html = `
-        <div style="font-family:Arial,sans-serif;line-height:1.5">
-          <p>Merci pour ta commande ❤️</p>
-          <p>Tu peux laisser un avis en cliquant ici :</p>
-          <p><a href="${reviewUrl}">${reviewUrl}</a></p>
-          <p style="font-size:12px;color:#777">Si tu n’es pas à l’origine de cette demande, ignore cet email.</p>
+        <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+          <h2 style="margin-bottom:16px;">
+            Merci pour ta commande ❤️
+          </h2>
+
+          <p>
+            Nous espérons que ton expérience avec VitrectoMed a été parfaite.
+          </p>
+
+          <p>
+            Tu peux laisser ton avis en cliquant sur le bouton ci-dessous :
+          </p>
+
+          <div style="margin:32px 0;">
+            <a
+              href="${reviewUrl}"
+              style="
+                background:#111;
+                color:#fff;
+                text-decoration:none;
+                padding:14px 24px;
+                border-radius:10px;
+                display:inline-block;
+                font-weight:600;
+              "
+            >
+              Laisser un avis
+            </a>
+          </div>
+
+          <p style="font-size:13px;color:#777;">
+            Si le bouton ne fonctionne pas, copie ce lien :
+          </p>
+
+          <p style="font-size:12px;word-break:break-all;color:#555;">
+            ${reviewUrl}
+          </p>
+
+          <hr style="margin:32px 0;border:none;border-top:1px solid #eee;" />
+
+          <p style="font-size:12px;color:#999;">
+            Si tu n’es pas à l’origine de cette demande,
+            tu peux simplement ignorer cet email.
+          </p>
         </div>
       `;
 
       try {
-        await sendReviewEmail({ to: email, subject, html });
+        await sendReviewEmail({
+          to: email,
+          subject,
+          html,
+        });
 
         sent++;
+
         await doc.ref.set(
           {
             reviewEmail: {
@@ -89,16 +163,38 @@ export async function GET(req: Request) {
         );
       } catch (e: any) {
         failed++;
+
         await doc.ref.set(
-          { reviewEmail: { lastError: String(e?.message || e) } },
+          {
+            reviewEmail: {
+              lastError: String(e?.message || e),
+            },
+          },
           { merge: true }
         );
       }
     }
 
-    return NextResponse.json({ ok: true, processed: snap.size, sent, failed });
+    return NextResponse.json({
+      ok: true,
+      processed: snap.size,
+      sent,
+      failed,
+    });
   } catch (e: any) {
     const msg = String(e?.message || e);
-    return NextResponse.json({ ok: false, message: msg }, { status: msg === "unauthorized_cron" ? 401 : 500 });
+
+    return NextResponse.json(
+      {
+        ok: false,
+        message: msg,
+      },
+      {
+        status:
+          msg === "unauthorized_cron"
+            ? 401
+            : 500,
+      }
+    );
   }
 }
