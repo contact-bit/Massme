@@ -433,119 +433,6 @@ body {
   background: currentColor;
 }
 
-
-
-
-
-
-
-
-/* ================= ORDER DETAILS V2 ================= */
-
-.admin-detail-v2 {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* HEADER */
-.od-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.od-total {
-  font-size: 22px;
-  font-weight: 800;
-}
-
-.od-header-right {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-/* GRID */
-.od-grid {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  gap: 16px;
-}
-
-/* LEFT / RIGHT */
-.od-left,
-.od-right {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* KV */
-.od-kv {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-/* ACTIONS */
-.od-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-/* ITEMS */
-.od-items {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.od-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.od-item-name {
-  font-weight: 600;
-}
-
-.od-item-price {
-  font-weight: 700;
-}
-
-/* SUMMARY */
-.od-summary {
-  background: linear-gradient(
-    180deg,
-    rgba(99,102,241,0.05),
-    transparent
-  );
-}
-
-.od-total-row {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 800;
-  margin-top: 8px;
-}
-
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  .od-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-
-
-
-
-
-
 /* ================= ORDER CARD V2 ================= */
 
 .order-card-v2 {
@@ -1270,35 +1157,6 @@ body {
   color: var(--color-danger);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .row {
   transition: all 0.2s ease;
   cursor: pointer;
@@ -1338,14 +1196,6 @@ body {
     transform: translateY(0);
   }
 }
-
-
-
-
-
-
-
-
 
 .log-delay {
   margin-top: 6px;
