@@ -151,6 +151,31 @@ export function OrderDetails({
 
   const shipDate = getShipDate(order);
 
+  const phone =
+  (order as any)?.shippingAddress?.phone ||
+  (order as any)?.billingAddress?.phone ||
+  "—";
+
+const site =
+  "vitrectomed.com";
+
+const heardFrom =
+  (order as any)?.heardFrom || "—";
+
+const heardFromOther =
+  (order as any)?.heardFromOther || "";
+
+const heardFromLabelMap: Record<string, string> = {
+  internet: "Internet",
+  social: "Réseaux sociaux",
+  medical: "Recommandation médicale",
+  other: "Autre",
+};
+
+const heardFromLabel =
+  heardFromLabelMap[heardFrom] ||
+  heardFrom;
+
   /* =========================================================
      VALIDATE PAYMENT
   ========================================================= */
@@ -402,6 +427,49 @@ export function OrderDetails({
                   : "À préparer"}
               </div>
             </div>
+
+<div className="od-info-card">
+  <div className="od-info-label">
+    Téléphone
+  </div>
+
+  <div className="od-info-value">
+    {phone}
+  </div>
+</div>
+
+
+<div className="od-info-card">
+  <div className="od-info-label">
+    Site
+  </div>
+
+  <div className="od-info-value">
+    {site}
+  </div>
+</div>
+
+<div className="od-info-card">
+  <div className="od-info-label">
+    Média
+  </div>
+
+  <div className="od-info-value">
+    {heardFromLabel}
+  </div>
+</div>
+
+{heardFromOther && (
+  <div className="od-info-card">
+    <div className="od-info-label">
+      Détail média
+    </div>
+
+    <div className="od-info-value">
+      {heardFromOther}
+    </div>
+  </div>
+)}
 
           </div>
 

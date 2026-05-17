@@ -1,214 +1,443 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import type { Order, ShippingStatus } from "../domain/types";
-import { normalizeOrders } from "../domain/orderNormalize";
 
-export function useOrders(toastIt: (m: string) => void) {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [deleting, setDeleting] = useState<Record<string, boolean>>({});
-  const didFetchRef = useRef(false);
+import type {
+  Order,
+  ShippingStatus,
+} from "../domain/types";
 
-  const requirePassOrRedirect = () => {
-    const pass = localStorage.getItem("admin_password") || "";
-    if (!pass) {
-      window.location.href = "/admin/login";
-      return null;
-    }
-    return pass;
-  };
+import {
+  normalizeOrders,
+} from "../domain/orderNormalize";
 
-  /* =========================================================
-     🔥 FETCH ORDERS (FIX TOTAL ICI)
-  ========================================================= */
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setError("");
+export function useOrders(
+  toastIt: (m: string) => void
+) {
+  const [orders, setOrders] =
+    useState<Order[]>([]);
 
-    try {
-      const pass = requirePassOrRedirect();
-      if (!pass) return;
+  const [loading, setLoading] =
+    useState(true);
 
-      const res = await fetch("/api/admin/orders", {
-        headers: { "x-admin-password": pass },
-        cache: "no-store",
-      });
+  const [error, setError] =
+    useState("");
 
-      const txt = await res.text();
-      if (!res.ok) throw new Error(txt || `HTTP ${res.status}`);
+  const [deleting, setDeleting] =
+    useState<
+      Record<string, boolean>
+    >({});
 
-      const json = JSON.parse(txt);
-      const list: Order[] = Array.isArray(json?.orders)
-        ? json.orders
-        : [];
-
-console.log("🔥 RAW LIST", list);
-
-      // 🔥 NORMALIZE
-      const normalized = normalizeOrders(list);
-
-      // 🔥 FIX CRITIQUE  REINJECTER LE TOTAL DEPUIS FIRESTORE
-      const safeOrders = normalized.map((o, i) => {
-        const raw = list[i] as any;
-
-        const total =
-          typeof raw?.total === "number"
-            ? raw.total
-            : typeof raw?.totals?.totalTTC === "number"
-            ? raw.totals.totalTTC
-            : 0;
-
-        return {
-          ...o,
-
-          // ✅ LE FIX IMPORTANT
-          total,
-          __total: total,
-
-          // garder relay
-          relayPoint: raw?.relayPoint ?? null,
-        };
-      });
-
-      setOrders(safeOrders);
-    } catch (e: any) {
-      setError(e?.message || "Erreur chargement commandes");
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const initOnce = useCallback(async () => {
-    if (didFetchRef.current) return;
-    didFetchRef.current = true;
-    await fetchOrders();
-  }, [fetchOrders]);
+  const didFetchRef =
+    useRef(false);
 
   /* =========================================================
-     DELETE
+     AUTH
   ========================================================= */
-  const deleteOrder = useCallback(
-    async (id: string, onAfter?: () => void) => {
-      const ok = confirm("Supprimer cette commande ? (irréversible)");
-      if (!ok) return;
 
-      const pass = requirePassOrRedirect();
-      if (!pass) return;
+  const requirePassOrRedirect =
+    () => {
+      const pass =
+        localStorage.getItem(
+          "admin_password"
+        ) || "";
 
-      if (deleting[id]) return;
+      if (!pass) {
+        window.location.href =
+          "/admin/login";
+
+        return null;
+      }
+
+      return pass;
+    };
+
+  /* =========================================================
+     FETCH ORDERS
+  ========================================================= */
+
+  const fetchOrders =
+    useCallback(async () => {
+      setLoading(true);
+      setError("");
 
       try {
-        setDeleting((m) => ({ ...m, [id]: true }));
+        const pass =
+          requirePassOrRedirect();
+
+        if (!pass) return;
 
         const res = await fetch(
-          `/api/admin/orders/${encodeURIComponent(id)}`,
+          "/api/admin/orders",
           {
-            method: "DELETE",
-            headers: { "x-admin-password": pass },
+            headers: {
+              "x-admin-password":
+                pass,
+            },
+
             cache: "no-store",
           }
         );
 
-        const txt = await res.text();
-        if (!res.ok) throw new Error(txt || `HTTP ${res.status}`);
+        const txt =
+          await res.text();
 
-        setOrders((prev) => prev.filter((o) => o.id !== id));
-        toastIt("Commande supprimée ✅");
-        onAfter?.();
+        if (!res.ok) {
+          throw new Error(
+            txt ||
+              `HTTP ${res.status}`
+          );
+        }
+
+        const json =
+          JSON.parse(txt);
+
+        const list: Order[] =
+          Array.isArray(
+            json?.orders
+          )
+            ? json.orders
+            : [];
+
+        console.log(
+          "🔥 RAW LIST",
+          list
+        );
+
+        /* =====================================
+           NORMALIZE
+        ===================================== */
+
+        const normalized =
+          normalizeOrders(list);
+
+        /* =====================================
+           SAFE ORDERS
+        ===================================== */
+
+        const safeOrders =
+          normalized.map(
+            (o, i) => {
+              const raw =
+                list[i] as any;
+
+              /* ===============================
+                 TOTAL
+              =============================== */
+
+              const total =
+                typeof raw?.total ===
+                "number"
+                  ? raw.total
+                  : typeof raw
+                      ?.totals
+                      ?.totalTTC ===
+                    "number"
+                  ? raw.totals
+                      .totalTTC
+                  : 0;
+
+              return {
+                ...o,
+
+                /* ===========================
+                   TOTAL
+                =========================== */
+
+                total,
+                __total: total,
+
+                /* ===========================
+                   RELAY
+                =========================== */
+
+                relayPoint:
+                  raw?.relayPoint ??
+                  null,
+
+                /* ===========================
+                   MEDIA / ACQUISITION
+                =========================== */
+
+                heardFrom:
+                  raw?.heardFrom ??
+                  null,
+
+                heardFromOther:
+                  raw?.heardFromOther ??
+                  null,
+              };
+            }
+          );
+
+        console.log(
+          "✅ SAFE ORDERS",
+          safeOrders
+        );
+
+        setOrders(safeOrders);
       } catch (e: any) {
-        toastIt("Erreur suppression ❌");
-        alert(e?.message ?? "Erreur suppression");
+        console.error(e);
+
+        setError(
+          e?.message ||
+            "Erreur chargement commandes"
+        );
+
+        setOrders([]);
       } finally {
-        setDeleting((m) => {
-          const n = { ...m };
-          delete n[id];
-          return n;
-        });
+        setLoading(false);
       }
-    },
-    [deleting, toastIt]
-  );
+    }, []);
+
+  /* =========================================================
+     INIT
+  ========================================================= */
+
+  const initOnce =
+    useCallback(async () => {
+      if (
+        didFetchRef.current
+      ) {
+        return;
+      }
+
+      didFetchRef.current = true;
+
+      await fetchOrders();
+    }, [fetchOrders]);
+
+  /* =========================================================
+     DELETE
+  ========================================================= */
+
+  const deleteOrder =
+    useCallback(
+      async (
+        id: string,
+        onAfter?: () => void
+      ) => {
+        const ok = confirm(
+          "Supprimer cette commande ? (irréversible)"
+        );
+
+        if (!ok) return;
+
+        const pass =
+          requirePassOrRedirect();
+
+        if (!pass) return;
+
+        if (deleting[id]) {
+          return;
+        }
+
+        try {
+          setDeleting((m) => ({
+            ...m,
+            [id]: true,
+          }));
+
+          const res =
+            await fetch(
+              `/api/admin/orders/${encodeURIComponent(
+                id
+              )}`,
+              {
+                method: "DELETE",
+
+                headers: {
+                  "x-admin-password":
+                    pass,
+                },
+
+                cache: "no-store",
+              }
+            );
+
+          const txt =
+            await res.text();
+
+          if (!res.ok) {
+            throw new Error(
+              txt ||
+                `HTTP ${res.status}`
+            );
+          }
+
+          setOrders((prev) =>
+            prev.filter(
+              (o) => o.id !== id
+            )
+          );
+
+          toastIt(
+            "Commande supprimée ✅"
+          );
+
+          onAfter?.();
+        } catch (e: any) {
+          toastIt(
+            "Erreur suppression ❌"
+          );
+
+          alert(
+            e?.message ??
+              "Erreur suppression"
+          );
+        } finally {
+          setDeleting((m) => {
+            const n = { ...m };
+
+            delete n[id];
+
+            return n;
+          });
+        }
+      },
+      [deleting, toastIt]
+    );
 
   /* =========================================================
      UPDATE SHIPPING
   ========================================================= */
-  const updateShippingStatus = useCallback(
-    async (order: Order, nextStatus: ShippingStatus) => {
-      const pass = requirePassOrRedirect();
-      if (!pass) return;
 
-      const isPickup =
-        order.shippingMethod?.name
-          ?.toLowerCase()
-          .includes("retrait") ?? false;
+  const updateShippingStatus =
+    useCallback(
+      async (
+        order: Order,
+        nextStatus: ShippingStatus
+      ) => {
+        const pass =
+          requirePassOrRedirect();
 
-      let tracking: string | null = order.trackingNumber ?? null;
+        if (!pass) return;
 
-      try {
-        const res = await fetch(
-          `/api/admin/orders/${encodeURIComponent(order.id)}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              "x-admin-password": pass,
-            },
-            body: JSON.stringify({
-              shippingStatus: nextStatus,
-              trackingNumber: isPickup ? null : tracking,
-              carrier: isPickup
-                ? null
-                : order.carrier || "mondialrelay",
-            }),
+        const isPickup =
+          order.shippingMethod?.name
+            ?.toLowerCase()
+            .includes(
+              "retrait"
+            ) ?? false;
+
+        let tracking:
+          | string
+          | null =
+          order.trackingNumber ??
+          null;
+
+        try {
+          const res =
+            await fetch(
+              `/api/admin/orders/${encodeURIComponent(
+                order.id
+              )}`,
+              {
+                method: "PATCH",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  "x-admin-password":
+                    pass,
+                },
+
+                body: JSON.stringify(
+                  {
+                    shippingStatus:
+                      nextStatus,
+
+                    trackingNumber:
+                      isPickup
+                        ? null
+                        : tracking,
+
+                    carrier:
+                      isPickup
+                        ? null
+                        : order.carrier ||
+                          "mondialrelay",
+                  }
+                ),
+              }
+            );
+
+          const txt =
+            await res.text();
+
+          if (!res.ok) {
+            throw new Error(
+              txt ||
+                `HTTP ${res.status}`
+            );
           }
-        );
 
-        const txt = await res.text();
-        if (!res.ok) throw new Error(txt || `HTTP ${res.status}`);
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === order.id
+                ? {
+                    ...o,
 
-        setOrders((prev) =>
-          prev.map((o) =>
-            o.id === order.id
-              ? {
-                  ...o,
-                  shippingStatus: nextStatus,
-                  trackingNumber: isPickup ? null : tracking,
-                  carrier: isPickup
-                    ? null
-                    : order.carrier || "mondialrelay",
-                }
-              : o
-          )
-        );
+                    shippingStatus:
+                      nextStatus,
 
-        toastIt(
-          isPickup
-            ? "Commande prête en retrait ✅"
-            : nextStatus === "shipped"
-            ? "Colis expédié ✅"
-            : nextStatus === "delivered"
-            ? "Colis livré ✅"
-            : "Statut mis à jour"
-        );
-      } catch (e: any) {
-        toastIt("Erreur mise à jour livraison ❌");
-        alert(e?.message ?? "Erreur mise à jour livraison");
-      }
-    },
-    [toastIt]
-  );
+                    trackingNumber:
+                      isPickup
+                        ? null
+                        : tracking,
+
+                    carrier:
+                      isPickup
+                        ? null
+                        : order.carrier ||
+                          "mondialrelay",
+                  }
+                : o
+            )
+          );
+
+          toastIt(
+            isPickup
+              ? "Commande prête en retrait ✅"
+              : nextStatus ===
+                "shipped"
+              ? "Colis expédié ✅"
+              : nextStatus ===
+                "delivered"
+              ? "Colis livré ✅"
+              : "Statut mis à jour"
+          );
+        } catch (e: any) {
+          toastIt(
+            "Erreur mise à jour livraison ❌"
+          );
+
+          alert(
+            e?.message ??
+              "Erreur mise à jour livraison"
+          );
+        }
+      },
+      [toastIt]
+    );
+
+  /* =========================================================
+     EXPORT
+  ========================================================= */
 
   return {
     orders,
     setOrders,
+
     loading,
     error,
+
     deleting,
+
     fetchOrders,
     initOnce,
+
     deleteOrder,
     updateShippingStatus,
   };
