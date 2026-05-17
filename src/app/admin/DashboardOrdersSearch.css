@@ -1,0 +1,214 @@
+/* =========================================================
+   DASHBOARD — ORDERS SEARCH
+========================================================= */
+
+.dash-orders-toolbar {
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+
+  margin-bottom: 24px;
+}
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.dash-orders-search {
+  width: 100%;
+  height: 48px;
+
+  padding: 0 16px;
+
+  border-radius: 14px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.03);
+
+  color: white;
+
+  font-size: 14px;
+
+  outline: none;
+
+  transition: 0.2s;
+}
+
+.dash-orders-search::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.dash-orders-search:focus {
+  border-color: rgba(99, 102, 241, 0.7);
+
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* =========================================================
+   FILTERS
+========================================================= */
+
+.dash-orders-filters {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 10px;
+}
+
+.dash-filter {
+  height: 38px;
+
+  padding: 0 14px;
+
+  border: none;
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  color: var(--color-muted);
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.dash-filter:hover {
+  background: rgba(255, 255, 255, 0.08);
+
+  color: white;
+}
+
+.dash-filter.active {
+  background: linear-gradient(
+    135deg,
+    #6366f1,
+    #8b5cf6
+  );
+
+  color: white;
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.dash-orders-table {
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================================================
+   ROW
+========================================================= */
+
+.dash-order-row {
+  display: grid;
+
+  grid-template-columns:
+    120px
+    1.5fr
+    1fr
+    120px
+    140px
+    140px;
+
+  gap: 16px;
+
+  align-items: center;
+
+  min-height: 64px;
+
+  padding: 0 4px;
+
+  border-bottom: 1px solid
+    rgba(255, 255, 255, 0.05);
+
+  text-decoration: none;
+
+  color: inherit;
+
+  transition: 0.2s;
+}
+
+.dash-order-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.dash-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 32px;
+
+  padding: 0 12px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.dash-status.success {
+  background: rgba(52, 211, 153, 0.14);
+
+  color: #6ee7b7;
+}
+
+.dash-status.warning {
+  background: rgba(255, 184, 77, 0.14);
+
+  color: #ffd089;
+}
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.dash-empty {
+  padding: 48px 0;
+
+  text-align: center;
+
+  color: var(--color-muted);
+
+  font-size: 14px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 980px) {
+  .dash-order-row {
+    grid-template-columns: 1fr;
+
+    gap: 10px;
+
+    padding: 16px 0;
+  }
+
+  .dash-orders-filters {
+    overflow-x: auto;
+
+    flex-wrap: nowrap;
+
+    padding-bottom: 4px;
+  }
+
+  .dash-filter {
+    flex-shrink: 0;
+  }
+}

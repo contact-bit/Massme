@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 
+import DashboardOrdersSearch from "./DashboardOrdersSearch";
+
 import {
   ResponsiveContainer,
   AreaChart,
@@ -138,7 +140,6 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="admin-page">
-
         <div className="dash-head">
           <div>
             <h1 className="admin-page-title">
@@ -157,7 +158,6 @@ export default function AdminDashboardPage() {
           <div className="dash-skel" />
           <div className="dash-skel" />
         </div>
-
       </div>
     );
   }
@@ -169,7 +169,6 @@ export default function AdminDashboardPage() {
   if (err || !data) {
     return (
       <div className="admin-page">
-
         <div className="dash-head">
           <div>
             <h1 className="admin-page-title">
@@ -179,7 +178,6 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="dash-error">
-
           <div className="dash-error-title">
             {err}
           </div>
@@ -190,9 +188,7 @@ export default function AdminDashboardPage() {
           >
             Réessayer
           </button>
-
         </div>
-
       </div>
     );
   }
@@ -211,15 +207,12 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="admin-page">
-
       {/* =====================================================
           HEADER
       ===================================================== */}
 
       <div className="dash-head">
-
         <div>
-
           <h1 className="admin-page-title">
             Dashboard
           </h1>
@@ -227,11 +220,9 @@ export default function AdminDashboardPage() {
           <p className="dash-sub">
             Vue globale de l’activité
           </p>
-
         </div>
 
         <div className="dash-actions">
-
           <button
             className="btn-secondary"
             onClick={refresh}
@@ -245,9 +236,7 @@ export default function AdminDashboardPage() {
           >
             Commandes
           </a>
-
         </div>
-
       </div>
 
       {/* =====================================================
@@ -256,7 +245,6 @@ export default function AdminDashboardPage() {
 
       {alerts.length > 0 && (
         <div className="dash-alerts">
-
           {alerts.map((a, i) => (
             <div
               key={i}
@@ -271,7 +259,6 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           ))}
-
         </div>
       )}
 
@@ -280,12 +267,8 @@ export default function AdminDashboardPage() {
       ===================================================== */}
 
       <div className="dash-kpis">
-
-        {/* COMMANDES */}
         <div className="dash-card primary">
-
           <div className="dash-card-top">
-
             <div className="dash-label">
               Commandes
             </div>
@@ -296,7 +279,6 @@ export default function AdminDashboardPage() {
             >
               Voir
             </a>
-
           </div>
 
           <div className="dash-value">
@@ -306,12 +288,9 @@ export default function AdminDashboardPage() {
           <div className="dash-foot">
             Total des commandes
           </div>
-
         </div>
 
-        {/* PAYÉES */}
         <div className="dash-card success">
-
           <div className="dash-label">
             Payées
           </div>
@@ -323,12 +302,9 @@ export default function AdminDashboardPage() {
           <div className="dash-foot">
             Commandes validées
           </div>
-
         </div>
 
-        {/* EN ATTENTE */}
         <div className="dash-card warning">
-
           <div className="dash-label">
             En attente
           </div>
@@ -340,12 +316,9 @@ export default function AdminDashboardPage() {
           <div className="dash-foot">
             Paiement non validé
           </div>
-
         </div>
 
-        {/* À PRÉPARER */}
         <div className="dash-card warning">
-
           <div className="dash-label">
             À préparer
           </div>
@@ -357,12 +330,9 @@ export default function AdminDashboardPage() {
           <div className="dash-foot">
             Commandes à expédier
           </div>
-
         </div>
 
-        {/* EXPÉDIÉES */}
         <div className="dash-card success">
-
           <div className="dash-label">
             Expédiées
           </div>
@@ -374,12 +344,9 @@ export default function AdminDashboardPage() {
           <div className="dash-foot">
             Déjà envoyées
           </div>
-
         </div>
 
-        {/* CA 7J */}
         <div className="dash-card highlight">
-
           <div className="dash-label">
             CA 7 jours
           </div>
@@ -391,12 +358,9 @@ export default function AdminDashboardPage() {
           <div className="dash-foot">
             7 derniers jours
           </div>
-
         </div>
 
-        {/* AUJOURD'HUI */}
         <div className="dash-card">
-
           <div className="dash-label">
             Aujourd’hui
           </div>
@@ -408,12 +372,9 @@ export default function AdminDashboardPage() {
           <div className="dash-foot">
             Revenus du jour
           </div>
-
         </div>
 
-        {/* HIER */}
         <div className="dash-card">
-
           <div className="dash-label">
             Hier
           </div>
@@ -425,12 +386,9 @@ export default function AdminDashboardPage() {
           <div className="dash-foot">
             Revenus de la veille
           </div>
-
         </div>
 
-        {/* PANIER MOYEN */}
         <div className="dash-card">
-
           <div className="dash-label">
             Panier moyen
           </div>
@@ -442,12 +400,9 @@ export default function AdminDashboardPage() {
           <div className="dash-foot">
             Moyenne par commande
           </div>
-
         </div>
 
-        {/* PRODUITS */}
         <div className="dash-card">
-
           <div className="dash-label">
             Produits
           </div>
@@ -459,9 +414,7 @@ export default function AdminDashboardPage() {
           <div className="dash-foot">
             {k.activeProducts} actifs
           </div>
-
         </div>
-
       </div>
 
       {/* =====================================================
@@ -469,12 +422,9 @@ export default function AdminDashboardPage() {
       ===================================================== */}
 
       <div className="dash-grid">
-
         {/* GRAPH */}
         <div className="dash-panel">
-
           <div className="dash-panel-head">
-
             <h2 className="dash-panel-title">
               Revenus
             </h2>
@@ -482,7 +432,6 @@ export default function AdminDashboardPage() {
             <div className="dash-panel-meta">
               {eur(k.revenueLast7)}
             </div>
-
           </div>
 
           <div
@@ -491,11 +440,8 @@ export default function AdminDashboardPage() {
               height: 280,
             }}
           >
-
             <ResponsiveContainer>
-
               <AreaChart data={series}>
-
                 <defs>
                   <linearGradient
                     id="rev"
@@ -544,20 +490,14 @@ export default function AdminDashboardPage() {
                   strokeWidth={2.5}
                   fill="url(#rev)"
                 />
-
               </AreaChart>
-
             </ResponsiveContainer>
-
           </div>
-
         </div>
 
         {/* LAST ORDERS */}
         <div className="dash-panel">
-
           <div className="dash-panel-head">
-
             <h2 className="dash-panel-title">
               Dernières commandes
             </h2>
@@ -568,11 +508,9 @@ export default function AdminDashboardPage() {
             >
               Tout voir
             </a>
-
           </div>
 
           <div className="dash-orders">
-
             {lastOrders
               .slice(0, 5)
               .map((o) => (
@@ -580,7 +518,6 @@ export default function AdminDashboardPage() {
                   key={o.id}
                   className="dash-row"
                 >
-
                   <div className="mono">
                     {o.orderNumber ||
                       o.id.slice(0, 6)}
@@ -599,14 +536,10 @@ export default function AdminDashboardPage() {
                       o.createdAt
                     )}
                   </div>
-
                 </div>
               ))}
-
           </div>
-
         </div>
-
       </div>
 
       {/* =====================================================
@@ -615,17 +548,13 @@ export default function AdminDashboardPage() {
 
       {lowStock.length > 0 && (
         <div className="dash-panel">
-
           <div className="dash-panel-head">
-
             <h2 className="dash-panel-title">
               Stocks faibles
             </h2>
-
           </div>
 
           <div className="dash-lowstock">
-
             {lowStock
               .slice(0, 8)
               .map((p) => (
@@ -633,7 +562,6 @@ export default function AdminDashboardPage() {
                   key={p.id}
                   className="dash-lowstock-item"
                 >
-
                   <span className="truncate">
                     {p.name}
                   </span>
@@ -641,15 +569,17 @@ export default function AdminDashboardPage() {
                   <span className="dash-chip warn">
                     {p.stock}
                   </span>
-
                 </div>
               ))}
-
           </div>
-
         </div>
       )}
 
+      {/* =====================================================
+          SEARCH ORDERS
+      ===================================================== */}
+
+      <DashboardOrdersSearch />
     </div>
   );
 }
