@@ -3,18 +3,10 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 
+// ✅ IMPORTANT
+import { getLogisticStatus } from "@/app/admin/orders/domain/logistics";
+
 export const dynamic = "force-dynamic";
-
-/* =========================================================
-   CACHE
-========================================================= */
-
-let __cache: {
-  at: number;
-  data: any;
-} | null = null;
-
-const CACHE_TTL = 30_000;
 
 /* =========================================================
    DATES EUROPE/PARIS
@@ -138,25 +130,6 @@ function pct(
 
 export async function GET() {
   try {
-
-    /* =====================================================
-       CACHE
-    ===================================================== */
-
-    if (
-      __cache &&
-      Date.now() - __cache.at < CACHE_TTL
-    ) {
-      return NextResponse.json(
-        __cache.data,
-        {
-          headers: {
-            "x-stats-cache": "HIT",
-            "Cache-Control": "no-store",
-          },
-        }
-      );
-    }
 
     const productsCol =
       dbAdmin.collection("products");
@@ -293,37 +266,22 @@ export async function GET() {
     /* =====================================================
        LOGISTICS KPI
     ===================================================== */
-const toPrepareCount =
-  allOrders.filter((o) => {
 
-    const shippingStatus = String(
-      o?.shipping?.status ||
-      o?.shipstation?.status ||
-      ""
-    ).toLowerCase();
+    const toPrepareCount =
+      allOrders.filter(
+        (o) =>
+          getLogisticStatus(o) ===
+          "to_prepare"
+      ).length;
 
-    return (
-      shippingStatus === "to_prepare" ||
-      shippingStatus === "pending" ||
-      shippingStatus === "preparing"
-    );
-  }).length;
+    const shippedCount =
+      allOrders.filter(
+        (o) =>
+          getLogisticStatus(o) ===
+          "shipped"
+      ).length;
 
-const shippedCount =
-  allOrders.filter((o) => {
-
-    const shippingStatus = String(
-      o?.shipping?.status ||
-      o?.shipstation?.status ||
-      ""
-    ).toLowerCase();
-
-    return (
-      shippingStatus === "shipped"
-    );
-  }).length;
-  
-  /* =====================================================
+    /* =====================================================
        LOW STOCK
     ===================================================== */
 
@@ -629,16 +587,10 @@ const shippedCount =
       alerts,
     };
 
-    __cache = {
-      at: Date.now(),
-      data: payload,
-    };
-
     return NextResponse.json(
       payload,
       {
         headers: {
-          "x-stats-cache": "MISS",
           "Cache-Control":
             "no-store",
         },
