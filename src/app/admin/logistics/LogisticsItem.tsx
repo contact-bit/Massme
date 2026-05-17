@@ -135,13 +135,21 @@ export default function LogisticsItem({
         </div>
 
         {/* DATE */}
-        <div className="log-col">
-          {createdAt
-            ? createdAt.toLocaleDateString(
-                "fr-FR"
-              )
-            : "—"}
-        </div>
+<div className="log-col">
+  {createdAt
+    ? createdAt.toLocaleString(
+        "fr-FR",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+
+          hour: "2-digit",
+          minute: "2-digit",
+        }
+      )
+    : "—"}
+</div>
 
         {/* CLIENT */}
         <div className="log-col">
