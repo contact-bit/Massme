@@ -1,216 +1,1088 @@
 /* =========================================================
-   Dashboard — MAXMAX SaaS (FIXED + DESIGN SYSTEM)
+   DASHBOARD — VITRECTOMED
+   ULTRA PREMIUM CINEMATIC ADMIN SYSTEM
 ========================================================= */
 
-/* ================= PAGE ================= */
+/* =========================================================
+   ROOT TOKENS
+========================================================= */
 
-.admin-page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
+:root {
+  --dash-surface:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.84),
+      rgba(5,10,18,.96)
+    );
+
+  --dash-surface-hover:
+    linear-gradient(
+      180deg,
+      rgba(20,32,48,.92),
+      rgba(8,14,24,.98)
+    );
+
+  --dash-border:
+    rgba(255,255,255,.06);
+
+  --dash-border-strong:
+    rgba(255,255,255,.12);
+
+  --dash-text:
+    #ffffff;
+
+  --dash-text-soft:
+    rgba(203,213,225,.72);
+
+  --dash-text-muted:
+    rgba(148,163,184,.60);
+
+  --dash-cyan:
+    #00d0ff;
+
+  --dash-cyan-soft:
+    rgba(0,208,255,.12);
+
+  --dash-violet:
+    #8b5cf6;
+
+  --dash-success:
+    #22c55e;
+
+  --dash-warning:
+    #f59e0b;
+
+  --dash-danger:
+    #ef4444;
 }
 
-/* ================= HEAD ================= */
+/* =========================================================
+   PAGE
+========================================================= */
+
+.admin-page {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+
+  gap:
+    clamp(1rem, 2vw, 1.5rem);
+}
+
+/* =========================================================
+   HEAD
+========================================================= */
 
 .dash-head {
   display: flex;
+
+  align-items: flex-start;
+
   justify-content: space-between;
-  align-items: center;
+
+  gap:
+    1rem;
+
+  flex-wrap: wrap;
 }
 
+/* =========================================================
+   TITLE
+========================================================= */
+
 .dash-title {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  margin: 0;
+
+  color:
+    var(--dash-text);
+
+  font-size:
+    clamp(2rem, 3vw, 3rem);
+
+  line-height:
+    .92;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.08em;
+
+  text-shadow:
+    0 10px 40px rgba(0,208,255,.10);
 }
 
 .dash-sub {
-  font-size: 12px;
-  color: var(--color-text-soft);
-  margin-top: 2px;
+  margin-top:
+    .7rem;
+
+  color:
+    var(--dash-text-soft);
+
+  font-size:
+    .92rem;
+
+  line-height:
+    1.8;
+
+  max-width:
+    62ch;
 }
+
+/* =========================================================
+   ACTIONS
+========================================================= */
 
 .dash-actions {
   display: flex;
-  gap: 8px;
+
+  align-items: center;
+
+  gap:
+    .8rem;
+
+  flex-wrap: wrap;
 }
 
-/* ================= ALERTS ================= */
+/* =========================================================
+   ALERTS
+========================================================= */
 
 .dash-alerts {
   display: grid;
-  gap: 8px;
+
+  gap:
+    .9rem;
 }
 
+/* =========================================================
+   ALERT
+========================================================= */
+
 .dash-alert {
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  position: relative;
+
+  overflow: hidden;
+
+  isolation:
+    isolate;
+
+  padding:
+    1rem 1.1rem;
+
+  border-radius:
+    1.3rem;
+
+  border:
+    1px solid var(--dash-border);
+
+  background:
+    var(--dash-surface);
+
+  backdrop-filter:
+    blur(16px);
+
+  box-shadow:
+    0 14px 40px rgba(0,0,0,.20);
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+.dash-alert::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .08;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.18),
+      transparent 60%
+    );
+
+  pointer-events: none;
+}
+
+.dash-alert:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    var(--dash-border-strong);
+
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.26);
 }
 
 .dash-alert-title {
-  font-size: 12px;
-  font-weight: 700;
+  position: relative;
+
+  z-index: 2;
+
+  color:
+    var(--dash-text);
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.02em;
 }
 
 .dash-alert-desc {
-  font-size: 11px;
-  color: var(--color-text-soft);
+  position: relative;
+
+  z-index: 2;
+
+  margin-top:
+    .4rem;
+
+  color:
+    var(--dash-text-soft);
+
+  font-size:
+    .78rem;
+
+  line-height:
+    1.7;
 }
 
-.tone-info { border-left: 3px solid var(--color-primary); }
-.tone-warn { border-left: 3px solid var(--color-warning); }
-.tone-danger { border-left: 3px solid var(--color-danger); }
+/* =========================================================
+   ALERT TONES
+========================================================= */
 
-/* ================= KPI ================= */
+.tone-info {
+  border-left:
+    3px solid #0ea5e9;
+}
+
+.tone-info::after {
+  content: "";
+
+  position: absolute;
+
+  top: -60px;
+  right: -60px;
+
+  width: 180px;
+  height: 180px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(14,165,233,.16),
+      transparent 72%
+    );
+
+  filter:
+    blur(30px);
+}
+
+.tone-warn {
+  border-left:
+    3px solid #f59e0b;
+}
+
+.tone-warn::after {
+  content: "";
+
+  position: absolute;
+
+  top: -60px;
+  right: -60px;
+
+  width: 180px;
+  height: 180px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(245,158,11,.14),
+      transparent 72%
+    );
+
+  filter:
+    blur(30px);
+}
+
+.tone-danger {
+  border-left:
+    3px solid #ef4444;
+}
+
+.tone-danger::after {
+  content: "";
+
+  position: absolute;
+
+  top: -60px;
+  right: -60px;
+
+  width: 180px;
+  height: 180px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(239,68,68,.14),
+      transparent 72%
+    );
+
+  filter:
+    blur(30px);
+}
+
+/* =========================================================
+   KPI GRID
+========================================================= */
 
 .dash-kpis {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap:
+    1rem;
 }
 
-.dash-card {
-  padding: 10px 12px;
-  min-height: 60px;
+/* =========================================================
+   KPI CARD
+========================================================= */
 
-  border-radius: 12px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+.dash-card {
+  position: relative;
+
+  overflow: hidden;
+
+  isolation:
+    isolate;
+
+  min-height:
+    150px;
+
+  padding:
+    1.3rem;
+
+  border-radius:
+    1.6rem;
+
+  border:
+    1px solid var(--dash-border);
+
+  background:
+    var(--dash-surface);
+
+  backdrop-filter:
+    blur(18px);
 
   display: flex;
   flex-direction: column;
-  justify-content: center;
 
-  transition: all 0.15s ease;
+  justify-content: space-between;
+
+  transition:
+    transform .3s ease,
+    border-color .3s ease,
+    box-shadow .3s ease,
+    background .3s ease;
+}
+
+.dash-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.12),
+      transparent 55%
+    );
+
+  transition:
+    opacity .3s ease;
+}
+
+.dash-card::after {
+  content: "";
+
+  position: absolute;
+
+  top: -120px;
+  right: -120px;
+
+  width: 240px;
+  height: 240px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.14),
+      transparent 72%
+    );
+
+  opacity: 0;
+
+  filter:
+    blur(40px);
+
+  transition:
+    opacity .3s ease;
 }
 
 .dash-card:hover {
-  border-color: var(--color-border-strong);
+  transform:
+    translateY(-4px);
+
+  border-color:
+    rgba(255,255,255,.12);
+
+  background:
+    var(--dash-surface-hover);
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.30),
+    0 0 50px rgba(0,208,255,.06);
 }
+
+.dash-card:hover::before,
+.dash-card:hover::after {
+  opacity: 1;
+}
+
+/* =========================================================
+   KPI HIGHLIGHT
+========================================================= */
 
 .dash-card.highlight {
-  border: 1px solid rgba(99,102,241,0.4);
-  background: linear-gradient(
-    180deg,
-    rgba(99,102,241,0.08),
-    transparent
-  );
+  border:
+    1px solid rgba(0,208,255,.18);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0,208,255,.10),
+      rgba(255,255,255,.03)
+    );
+
+  box-shadow:
+    0 18px 50px rgba(0,208,255,.12);
 }
 
+/* =========================================================
+   KPI TEXT
+========================================================= */
+
 .dash-label {
-  font-size: 10px;
-  color: var(--color-text-muted);
+  color:
+    rgba(148,163,184,.72);
+
+  font-size:
+    .7rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    .12em;
+
+  text-transform:
+    uppercase;
 }
 
 .dash-value {
-  font-size: 16px;
-  font-weight: 800;
-  margin-top: 2px;
-  color: var(--color-text);
+  color:
+    white;
+
+  font-size:
+    clamp(1.8rem, 2vw, 2.4rem);
+
+  line-height:
+    .95;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.08em;
+
+  text-shadow:
+    0 8px 24px rgba(0,0,0,.20);
 }
 
 .dash-foot {
-  font-size: 10px;
-  color: var(--color-text-soft);
+  color:
+    var(--dash-text-soft);
+
+  font-size:
+    .76rem;
+
+  line-height:
+    1.7;
 }
 
-/* ================= GRID ================= */
+/* =========================================================
+   GRID
+========================================================= */
 
 .dash-grid {
   display: grid;
-  grid-template-columns: 1.5fr 0.5fr;
-  gap: 12px;
+
+  grid-template-columns:
+    minmax(0, 1.5fr)
+    minmax(320px, .5fr);
+
+  gap:
+    1rem;
 }
 
-/* ================= PANEL ================= */
+/* =========================================================
+   PANEL
+========================================================= */
 
 .dash-panel {
-  padding: 14px;
-  border-radius: 14px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  position: relative;
+
+  overflow: hidden;
+
+  isolation:
+    isolate;
+
+  padding:
+    1.4rem;
+
+  border-radius:
+    1.7rem;
+
+  border:
+    1px solid var(--dash-border);
+
+  background:
+    var(--dash-surface);
+
+  backdrop-filter:
+    blur(18px);
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.24);
+
+  transition:
+    transform .3s ease,
+    border-color .3s ease,
+    box-shadow .3s ease;
 }
 
+.dash-panel::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .08;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.14),
+      transparent 60%
+    );
+
+  pointer-events: none;
+}
+
+.dash-panel::after {
+  content: "";
+
+  position: absolute;
+
+  top: -120px;
+  right: -120px;
+
+  width: 240px;
+  height: 240px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(139,92,246,.12),
+      transparent 72%
+    );
+
+  filter:
+    blur(40px);
+
+  opacity: 0;
+
+  transition:
+    opacity .3s ease;
+}
+
+.dash-panel:hover {
+  transform:
+    translateY(-3px);
+
+  border-color:
+    rgba(255,255,255,.10);
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.32);
+}
+
+.dash-panel:hover::after {
+  opacity: 1;
+}
+
+/* =========================================================
+   PANEL HEAD
+========================================================= */
+
 .dash-panel-head {
+  position: relative;
+
+  z-index: 2;
+
   display: flex;
-  justify-content: space-between;
+
   align-items: center;
-  margin-bottom: 10px;
+
+  justify-content: space-between;
+
+  gap:
+    1rem;
+
+  margin-bottom:
+    1.1rem;
 }
 
 .dash-panel-title {
-  font-size: 13px;
-  font-weight: 800;
+  color:
+    white;
+
+  font-size:
+    .96rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.03em;
 }
 
 .dash-panel-meta {
-  font-size: 11px;
-  color: var(--color-text-soft);
+  color:
+    var(--dash-text-muted);
+
+  font-size:
+    .74rem;
+
+  font-weight:
+    600;
 }
 
-/* ================= TABLE ================= */
+/* =========================================================
+   TABLE
+========================================================= */
 
 .dash-table {
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
   overflow: hidden;
+
+  border-radius:
+    1.3rem;
+
+  border:
+    1px solid rgba(255,255,255,.05);
+
+  background:
+    rgba(255,255,255,.02);
 }
 
+/* =========================================================
+   ROW
+========================================================= */
+
 .dash-row {
+  position: relative;
+
   display: grid;
-  grid-template-columns: 70px 1fr 90px 90px 120px;
-  padding: 8px 10px;
-  font-size: 11px;
-  border-top: 1px solid var(--color-border);
+
+  grid-template-columns:
+    80px
+    1fr
+    100px
+    100px
+    130px;
+
+  gap:
+    .9rem;
+
   align-items: center;
+
+  padding:
+    1rem;
+
+  border-top:
+    1px solid rgba(255,255,255,.05);
+
+  font-size:
+    .8rem;
+
+  transition:
+    background .2s ease,
+    border-color .2s ease;
+}
+
+.dash-row:first-child {
+  border-top: none;
 }
 
 .dash-row:hover {
-  background: rgba(255,255,255,0.02);
+  background:
+    rgba(255,255,255,.03);
 }
 
-/* ================= UTILS ================= */
+/* =========================================================
+   UTILS
+========================================================= */
 
 .truncate {
   overflow: hidden;
+
   text-overflow: ellipsis;
+
   white-space: nowrap;
 }
 
 .mono {
-  font-family: monospace;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
 }
 
 .strong {
-  font-weight: 700;
+  color:
+    white;
+
+  font-weight:
+    700;
 }
 
 .muted {
-  color: var(--color-text-muted);
+  color:
+    var(--dash-text-muted);
 }
 
-/* ================= RESPONSIVE ================= */
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
+
   .dash-kpis {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 
   .dash-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      1fr;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .dash-head {
+    align-items:
+      stretch;
+  }
+
+  .dash-actions {
+    width: 100%;
+  }
+
+  .dash-actions > * {
+    flex: 1;
+  }
+
+  .dash-row {
+    grid-template-columns:
+      70px
+      1fr
+      90px
+      90px;
+  }
+
+  .dash-row > div:nth-child(5) {
+    display: none;
   }
 }
 
 @media (max-width: 640px) {
+
+  .dash-kpis {
+    grid-template-columns:
+      1fr;
+  }
+
+  .dash-title {
+    font-size:
+      clamp(2.2rem, 10vw, 3.2rem);
+  }
+
   .dash-row {
-    grid-template-columns: 60px 1fr 80px;
+    grid-template-columns:
+      60px
+      1fr
+      80px;
+
+    font-size:
+      .74rem;
   }
 
   .dash-row > div:nth-child(4),
   .dash-row > div:nth-child(5) {
     display: none;
   }
+}
+
+/* =========================================================
+   DASH BUTTONS
+========================================================= */
+
+.btn-primary,
+.btn-secondary {
+  position: relative;
+
+  overflow: hidden;
+
+  isolation: isolate;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: .6rem;
+
+  min-height: 46px;
+
+  padding: 0 1.1rem;
+
+  border-radius: 999px;
+
+  font-size: .84rem;
+  font-weight: 800;
+
+  letter-spacing: -.02em;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease,
+    color .25s ease;
+}
+
+/* =========================================================
+   SHINE
+========================================================= */
+
+.btn-primary::before,
+.btn-secondary::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -140%;
+
+  width: 120%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent 20%,
+      rgba(255,255,255,.18) 50%,
+      transparent 80%
+    );
+
+  transform:
+    skewX(-18deg);
+
+  transition:
+    left .9s cubic-bezier(.16,1,.3,1);
+}
+
+.btn-primary:hover::before,
+.btn-secondary:hover::before {
+  left: 140%;
+}
+
+/* =========================================================
+   PRIMARY
+========================================================= */
+
+.btn-primary {
+  border:
+    1px solid rgba(0,208,255,.16);
+
+  background:
+    linear-gradient(
+      135deg,
+      #00d0ff,
+      #38bdf8,
+      #2f6bff
+    );
+
+  color: white;
+
+  box-shadow:
+    0 14px 34px rgba(0,208,255,.18),
+    0 0 30px rgba(0,208,255,.08);
+}
+
+.btn-primary:hover {
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 24px 50px rgba(0,208,255,.28),
+    0 0 50px rgba(0,208,255,.14);
+}
+
+/* =========================================================
+   SECONDARY
+========================================================= */
+
+.btn-secondary {
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.04),
+      rgba(255,255,255,.025)
+    );
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    rgba(255,255,255,.88);
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.18);
+}
+
+.btn-secondary:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(255,255,255,.14);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.06),
+      rgba(255,255,255,.03)
+    );
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.24);
+}
+
+/* =========================================================
+   MINI LINK
+========================================================= */
+
+.dash-mini-link {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 30px;
+
+  padding: 0 .7rem;
+
+  border-radius: 999px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.03);
+
+  color:
+    rgba(203,213,225,.72);
+
+  font-size: .72rem;
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition:
+    all .2s ease;
+}
+
+.dash-mini-link:hover {
+  color: white;
+
+  border-color:
+    rgba(0,208,255,.14);
+
+  background:
+    rgba(0,208,255,.08);
+}
+
+/* =========================================================
+   CARD TOP
+========================================================= */
+
+.dash-card-top {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: .7rem;
 }

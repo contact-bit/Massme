@@ -6,9 +6,8 @@ export default function NewProductPage() {
   return (
     <div className="admin-content admin-page">
 
-      <h1 className="admin-page-title">➕ Ajouter un produit</h1>
 
-      <div className="admin-card">
+      <div>
         <ProductForm onSuccess={() => window.location.href = "/admin/products"} />
       </div>
 

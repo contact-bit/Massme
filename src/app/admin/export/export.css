@@ -1,319 +1,714 @@
 /* =========================================================
-   ADMIN EXPORT — PREMIUM SaaS UI
+   EXPORT ADMIN — ULTRA PREMIUM
+   MASSME / VITRECTOMED DA
 ========================================================= */
 
-.exportPage {
-  padding: 40px 20px;
-  min-height: 100vh;
+/* =========================================================
+   ROOT
+========================================================= */
 
-}
+.export-page {
+  width: 100%;
+  max-width: 1500px;
 
-/* ================== CONTAINER ================== */
+  margin: 0 auto;
 
-.exportCard {
-  max-width: 1100px;
-  margin: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-/* ================== HEADER ================== */
-
-.exportHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.exportTitle {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: white;
-}
-
-.exportSubtitle {
-  color: #64748b;
-  font-size: 14px;
-}
-
-/* ================== ALERT ================== */
-
-.exportAlert {
-  padding: 14px;
-  border-radius: 14px;
-  font-size: 14px;
-  backdrop-filter: blur(10px);
-}
-
-.exportAlert--error {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #f87171;
-}
-
-.exportAlert--success {
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  color: #34d399;
-}
-
-/* ================== FILTERS ================== */
-
-.exportFilters {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.exportFilters-modes {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-/* SEGMENT BUTTON */
-.exportModeBtn {
-  height: 42px;
-  padding: 0 16px;
-  border-radius: 999px;
-
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-
-  color: #cbd5f5;
-  font-weight: 600;
-
-  transition: all 0.2s ease;
-}
-
-.exportModeBtn:hover {
-  background: rgba(255,255,255,0.08);
-}
-
-.exportModeBtn--active {
-  background: linear-gradient(135deg,#3b82f6,#2563eb);
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 6px 20px rgba(37,99,235,0.4);
-}
-
-/* PANEL */
-.exportFilters-panel {
-  padding: 18px;
-  border-radius: 18px;
-  background: rgba(15,23,42,0.6);
-  border: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(14px);
-}
-
-.exportFilters-range {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-}
-
-.exportFilters-help {
-  font-size: 13px;
-  color: #64748b;
-}
-
-/* ================== PREVIEW ================== */
-
-.exportPreview {
-  padding: 20px;
-  border-radius: 20px;
-
-  background: rgba(15,23,42,0.7);
-  border: 1px solid rgba(255,255,255,0.08);
+  padding:
+    2rem;
 
   display: flex;
   flex-direction: column;
-  gap: 16px;
+
+  gap:
+    1.8rem;
 }
 
-.exportPreview-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: white;
+/* =========================================================
+   HERO
+========================================================= */
+
+.export-hero {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius:
+    36px;
+
+  padding:
+    2.5rem;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,208,255,.18),
+      transparent 35%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.96),
+      rgba(2,6,23,.98)
+    );
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.34);
 }
 
-.exportPreview-summary {
-  font-size: 14px;
-  color: #94a3b8;
-}
+.export-hero::before {
+  content: "";
 
-.exportPreview-format {
-  font-size: 13px;
-  color: #64748b;
-}
+  position: absolute;
 
-/* GRID */
-.exportPreview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-}
+  inset: 0;
 
-/* CARD */
-.exportPreview-card {
-  padding: 14px;
-  border-radius: 14px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.06),
+      transparent 40%
+    );
 
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.06);
-
-  transition: 0.2s;
-}
-
-.exportPreview-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(59,130,246,0.4);
-}
-
-.exportPreview-cardTitle {
-  font-weight: 600;
-  color: white;
-}
-
-.exportPreview-cardText {
-  font-size: 13px;
-  color: #94a3b8;
-}
-
-/* ================== ACTIONS ================== */
-
-.exportActions {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.exportActions-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: white;
-}
-
-.exportActions-subtitle {
-  color: #64748b;
-  font-size: 14px;
-}
-
-/* GRID */
-.exportActions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-}
-
-/* LEGEND */
-.exportActions-legend {
-  padding: 16px;
-  border-radius: 16px;
-  background: rgba(15,23,42,0.6);
-  border: 1px solid rgba(255,255,255,0.08);
-  color: #94a3b8;
-  font-size: 13px;
-}
-
-/* ================== QUICK CARDS ================== */
-
-.exportQuickCard {
-  padding: 20px;
-  border-radius: 18px;
-
-  background: rgba(15,23,42,0.7);
-  border: 1px solid rgba(255,255,255,0.08);
-
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.exportQuickCard:hover {
-  transform: translateY(-3px);
-  border-color: rgba(59,130,246,0.5);
-  box-shadow: 0 12px 30px rgba(37,99,235,0.25);
-}
-
-/* FEATURED */
-.exportQuickCard--featured {
-  background: linear-gradient(
-    135deg,
-    rgba(59,130,246,0.2),
-    rgba(37,99,235,0.15)
-  );
-  border-color: rgba(59,130,246,0.4);
-}
-
-/* TEXT */
-.exportQuickCard-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: white;
-}
-
-.exportQuickCard-desc {
-  font-size: 14px;
-  color: #94a3b8;
-}
-
-.exportQuickCard-cta {
-  margin-top: auto;
-  font-size: 13px;
-  font-weight: 700;
-  color: #3b82f6;
-}
-
-/* ================== LOADING ================== */
-
-.exportQuickCard.loading {
-  opacity: 0.6;
   pointer-events: none;
 }
 
-.exportQuickCard.loading::after {
+/* =========================================================
+   KICKER
+========================================================= */
+
+.export-kicker,
+.export-section-kicker {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height:
+    32px;
+
+  padding:
+    0 .9rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(0,208,255,.08);
+
+  border:
+    1px solid rgba(0,208,255,.16);
+
+  backdrop-filter:
+    blur(14px);
+
+  color:
+    #7dd3fc;
+
+  font-size:
+    .66rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .18em;
+
+  text-transform:
+    uppercase;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.export-title {
+  margin:
+    1rem 0 0 0;
+
+  color:
+    white;
+
+  font-size:
+    clamp(2.8rem, 5vw, 5rem);
+
+  line-height:
+    .92;
+
+  letter-spacing:
+    -.08em;
+
+  font-weight:
+    900;
+}
+
+/* =========================================================
+   SUBTITLE
+========================================================= */
+
+.export-subtitle {
+  max-width:
+    760px;
+
+  margin-top:
+    1.1rem;
+
+  color:
+    rgba(148,163,184,.76);
+
+  font-size:
+    1rem;
+
+  line-height:
+    1.9;
+
+  font-weight:
+    500;
+}
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.export-stats {
+  display: flex;
+
+  gap:
+    1rem;
+
+  margin-top:
+    2rem;
+}
+
+.export-stat {
+  min-width:
+    140px;
+
+  padding:
+    1.1rem;
+
+  border-radius:
+    24px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(16px);
+
+  box-shadow:
+    0 16px 40px rgba(0,0,0,.18);
+}
+
+.export-stat-value {
+  color:
+    white;
+
+  font-size:
+    2rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.06em;
+}
+
+.export-stat-label {
+  margin-top:
+    .3rem;
+
+  color:
+    rgba(148,163,184,.62);
+
+  font-size:
+    .76rem;
+
+  font-weight:
+    800;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .08em;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.export-card {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius:
+    32px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.92),
+      rgba(2,6,23,.96)
+    );
+
+  backdrop-filter:
+    blur(20px);
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.24);
+
+  padding:
+    1.8rem;
+}
+
+.export-card::before {
   content: "";
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255,255,255,0.2);
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+
+  position: absolute;
+
+  top: -180px;
+  right: -140px;
+
+  width:
+    320px;
+
+  height:
+    320px;
+
+  border-radius:
+    999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.12),
+      transparent 72%
+    );
+
+  pointer-events: none;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* =========================================================
+   CARD HEAD
+========================================================= */
+
+.export-card-head {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap:
+    1rem;
+
+  margin-bottom:
+    1.6rem;
 }
 
-/* ================== INPUT ERROR ================== */
+.export-card-title {
+  margin:
+    .8rem 0 .2rem 0;
 
-.admin-input--error {
-  border-color: rgba(239, 68, 68, 0.6) !important;
-  background: rgba(239, 68, 68, 0.05);
+  color:
+    white;
+
+  font-size:
+    1.6rem;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    -.04em;
 }
 
-/* ================== RESPONSIVE ================== */
+.export-card-subtitle {
+  color:
+    rgba(148,163,184,.62);
+
+  font-size:
+    .86rem;
+
+  line-height:
+    1.8;
+}
+
+/* =========================================================
+   LIVE STATUS
+========================================================= */
+
+.export-live {
+  height:
+    40px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    999px;
+
+  border:
+    1px solid rgba(34,197,94,.14);
+
+  background:
+    rgba(34,197,94,.10);
+
+  color:
+    #6ee7b7;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size:
+    .74rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+}
+
+/* =========================================================
+   BLOCK
+========================================================= */
+
+.export-block {
+  position: relative;
+
+  z-index: 2;
+}
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.export-summary {
+  margin-top:
+    1.5rem;
+
+  display: flex;
+  align-items: center;
+
+  gap:
+    1rem;
+
+  padding:
+    1rem 1.2rem;
+
+  border-radius:
+    24px;
+
+  border:
+    1px solid rgba(255,255,255,.05);
+
+  background:
+    rgba(255,255,255,.03);
+}
+
+.export-summary-icon {
+  width:
+    52px;
+
+  height:
+    52px;
+
+  border-radius:
+    18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.18),
+      rgba(37,99,235,.18)
+    );
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color:
+    white;
+
+  font-size:
+    1.2rem;
+
+  flex-shrink:
+    0;
+}
+
+.export-summary-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.export-summary-content strong {
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    800;
+}
+
+.export-summary-content span {
+  margin-top:
+    .2rem;
+
+  color:
+    rgba(148,163,184,.64);
+
+  font-size:
+    .82rem;
+
+  line-height:
+    1.7;
+}
+
+/* =========================================================
+   COLUMNS
+========================================================= */
+
+.export-columns-wrap {
+  margin-top:
+    1.5rem;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+/* =========================================================
+   ALERTS
+========================================================= */
+
+.export-alert {
+  margin-top:
+    1.4rem;
+
+  padding:
+    1rem 1.2rem;
+
+  border-radius:
+    22px;
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    700;
+
+  line-height:
+    1.7;
+}
+
+/* success */
+
+.export-alert-success {
+  border:
+    1px solid rgba(34,197,94,.16);
+
+  background:
+    rgba(34,197,94,.10);
+
+  color:
+    #6ee7b7;
+}
+
+/* error */
+
+.export-alert-error {
+  border:
+    1px solid rgba(239,68,68,.16);
+
+  background:
+    rgba(239,68,68,.10);
+
+  color:
+    #fca5a5;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.export-actions-wrap {
+  margin-top:
+    1.8rem;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+/* =========================================================
+   PREMIUM FORM ELEMENTS
+========================================================= */
+
+.export-card input,
+.export-card select {
+  width: 100%;
+
+  min-height:
+    54px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.02)
+    );
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    500;
+
+  transition:
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease,
+    transform .25s ease;
+}
+
+.export-card input:focus,
+.export-card select:focus {
+  outline: none;
+
+  border-color:
+    rgba(0,208,255,.22);
+
+  background:
+    rgba(255,255,255,.05);
+
+  box-shadow:
+    0 0 0 4px rgba(0,208,255,.10);
+}
+
+.export-card label {
+  color:
+    rgba(203,213,225,.82);
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    700;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.export-card button {
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    background .25s ease,
+    border-color .25s ease;
+}
+
+.export-card button:hover {
+  transform:
+    translateY(-2px);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 980px) {
+
+  .export-stats {
+    flex-wrap:
+      wrap;
+  }
+
+  .export-stat {
+    flex: 1;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
 
 @media (max-width: 640px) {
-  .exportPage {
-    padding: 20px 14px;
+
+  .export-page {
+    padding:
+      1rem;
   }
 
-  .exportTitle {
-    font-size: 22px;
+  .export-hero,
+  .export-card {
+    border-radius:
+      24px;
   }
 
-  .exportQuickCard {
-    padding: 16px;
+  .export-hero {
+    padding:
+      1.5rem;
   }
 
-  .exportModeBtn {
-    min-width: 90px;
+  .export-title {
+    font-size:
+      2.3rem;
+  }
+
+  .export-card-head {
+    flex-direction:
+      column;
+
+    align-items:
+      flex-start;
+  }
+
+  .export-summary {
+    align-items:
+      flex-start;
+  }
+
+  .export-summary-icon {
+    width:
+      46px;
+
+    height:
+      46px;
   }
 }

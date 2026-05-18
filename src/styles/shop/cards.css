@@ -1,6 +1,6 @@
 /* =========================================================
    VITRECTOMED — CARD SYSTEM
-   PREMIUM MEDTECH UI
+   ULTRA PREMIUM CINEMATIC EDITION
 ========================================================= */
 
 /* =========================================================
@@ -12,36 +12,38 @@
 
   overflow: hidden;
 
+  isolation:
+    isolate;
+
   border-radius:
-    var(--radius-xl);
+    calc(var(--radius-xl) + 2px);
 
   border:
-    1px solid rgba(255,255,255,.08);
+    1px solid rgba(255,255,255,.06);
 
   background:
     linear-gradient(
       180deg,
-      rgba(15,24,38,.88),
-      rgba(8,13,22,.96)
+      rgba(10,16,28,.92),
+      rgba(5,10,20,.98)
     );
 
   backdrop-filter:
-    blur(var(--blur-md));
+    blur(18px);
 
   box-shadow:
-    var(--shadow-md);
-
-  isolation: isolate;
+    0 18px 50px rgba(0,0,0,.26);
 
   transition:
     transform var(--transition-base),
     border-color var(--transition-base),
     background var(--transition-base),
-    box-shadow var(--transition-base);
+    box-shadow var(--transition-base),
+    filter var(--transition-base);
 }
 
 /* =========================================================
-   CARD GLOW
+   ATMOSPHERIC OVERLAY
 ========================================================= */
 
 .card::before {
@@ -51,21 +53,54 @@
 
   inset: 0;
 
+  opacity: .16;
+
   background:
     linear-gradient(
       135deg,
-      rgba(255,255,255,.04),
-      transparent 40%,
-      rgba(0,208,255,.03)
+      rgba(255,255,255,.06),
+      transparent 42%
+    ),
+
+    radial-gradient(
+      circle at top right,
+      rgba(0,208,255,.10),
+      transparent 34%
     );
 
-  pointer-events: none;
+  pointer-events:
+    none;
 
-  opacity: .8;
+  transition:
+    opacity var(--transition-base);
 }
 
 /* =========================================================
-   CARD HOVER
+   INNER BORDER
+========================================================= */
+
+.card::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 1px;
+
+  border-radius:
+    inherit;
+
+  border:
+    1px solid rgba(255,255,255,.03);
+
+  pointer-events:
+    none;
+
+  opacity:
+    .7;
+}
+
+/* =========================================================
+   HOVER
 ========================================================= */
 
 .card:hover {
@@ -73,11 +108,19 @@
     translateY(-6px);
 
   border-color:
-    rgba(0,208,255,.18);
+    rgba(0,208,255,.16);
 
   box-shadow:
-    0 20px 60px rgba(0,0,0,.45),
-    0 0 40px rgba(0,208,255,.10);
+    0 28px 80px rgba(0,0,0,.36),
+    0 0 40px rgba(0,208,255,.08);
+
+  filter:
+    brightness(1.02);
+}
+
+.card:hover::before {
+  opacity:
+    .24;
 }
 
 /* =========================================================
@@ -86,11 +129,15 @@
 
 .card-soft {
   background:
-    rgba(255,255,255,.03);
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.02)
+    );
 }
 
 /* =========================================================
-   LARGE CONTENT CARD
+   CONTENT
 ========================================================= */
 
 .card-content {
@@ -99,7 +146,7 @@
   z-index: 2;
 
   padding:
-    clamp(1.6rem, 3vw, 3rem);
+    clamp(1.8rem, 3vw, 3rem);
 }
 
 /* =========================================================
@@ -107,25 +154,65 @@
 ========================================================= */
 
 .card-hero {
+  position: relative;
+
   padding:
-    clamp(2rem, 5vw, 4.5rem);
+    clamp(2.5rem, 6vw, 5rem);
 
   border-radius:
-    calc(var(--radius-xl) + 6px);
+    calc(var(--radius-xl) + 10px);
 
   background:
     linear-gradient(
       180deg,
-      rgba(16,25,40,.95),
-      rgba(7,11,19,.98)
+      rgba(14,22,38,.96),
+      rgba(5,10,18,.99)
     );
 
+  border:
+    1px solid rgba(255,255,255,.08);
+
   box-shadow:
-    var(--shadow-lg);
+    0 34px 100px rgba(0,0,0,.42);
 }
 
 /* =========================================================
-   OUTLINE CARD
+   HERO GLOW
+========================================================= */
+
+.card-hero::before {
+  content: "";
+
+  position: absolute;
+
+  top: -180px;
+  right: -100px;
+
+  width:
+    360px;
+
+  height:
+    360px;
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.18),
+      transparent 72%
+    );
+
+  filter:
+    blur(30px);
+
+  pointer-events:
+    none;
+}
+
+/* =========================================================
+   OUTLINE
 ========================================================= */
 
 .card-outline {
@@ -134,10 +221,21 @@
 
   border:
     1px solid rgba(255,255,255,.10);
+
+  box-shadow:
+    none;
+}
+
+.card-outline:hover {
+  background:
+    rgba(255,255,255,.02);
+
+  border-color:
+    rgba(0,208,255,.16);
 }
 
 /* =========================================================
-   HIGHLIGHT CARD
+   HIGHLIGHT
 ========================================================= */
 
 .card-highlight {
@@ -145,15 +243,22 @@
     linear-gradient(
       135deg,
       rgba(0,208,255,.12),
-      rgba(47,107,255,.05),
-      rgba(139,92,246,.04)
+      rgba(59,130,246,.08),
+      rgba(139,92,246,.05)
     );
 
   border:
     1px solid rgba(0,208,255,.18);
 
   box-shadow:
-    0 0 40px rgba(0,208,255,.08);
+    0 0 50px rgba(0,208,255,.10),
+    0 18px 50px rgba(0,0,0,.28);
+}
+
+.card-highlight:hover {
+  box-shadow:
+    0 0 70px rgba(0,208,255,.16),
+    0 26px 80px rgba(0,0,0,.34);
 }
 
 /* =========================================================
@@ -166,9 +271,10 @@
   flex-direction: column;
 
   gap:
-    1.2rem;
+    1.3rem;
 
-  min-height: 100%;
+  min-height:
+    100%;
 }
 
 /* =========================================================
@@ -177,10 +283,10 @@
 
 .card-mini {
   padding:
-    1.3rem;
+    1.4rem;
 
   border-radius:
-    var(--radius-lg);
+    calc(var(--radius-lg) + 2px);
 }
 
 /* =========================================================
@@ -193,59 +299,64 @@
   overflow: hidden;
 
   padding:
-    clamp(2.2rem, 5vw, 5rem);
+    clamp(2.5rem, 6vw, 5rem);
 
   border-radius:
-    calc(var(--radius-xl) + 8px);
+    calc(var(--radius-xl) + 12px);
 
   background:
     linear-gradient(
       135deg,
       rgba(0,208,255,.14),
-      rgba(47,107,255,.08),
-      rgba(139,92,246,.06)
+      rgba(59,130,246,.08),
+      rgba(139,92,246,.05)
     );
 
   border:
     1px solid rgba(0,208,255,.18);
 
   box-shadow:
-    0 20px 80px rgba(0,0,0,.45),
-    0 0 60px rgba(0,208,255,.10);
+    0 28px 100px rgba(0,0,0,.40),
+    0 0 80px rgba(0,208,255,.12);
 }
 
-/* Glow */
+/* =========================================================
+   CTA GLOW
+========================================================= */
 
 .card-cta::before {
   content: "";
 
   position: absolute;
 
-  top: -30%;
+  top: -25%;
+  right: -8%;
 
-  right: -10%;
+  width:
+    420px;
 
-  width: 340px;
+  height:
+    420px;
 
-  height: 340px;
-
-  border-radius: 50%;
+  border-radius:
+    50%;
 
   background:
     radial-gradient(
       circle,
       rgba(0,208,255,.22),
-      transparent 70%
+      transparent 72%
     );
 
   filter:
-    blur(40px);
+    blur(50px);
 
-  pointer-events: none;
+  pointer-events:
+    none;
 }
 
 /* =========================================================
-   GLASS CARD
+   GLASS
 ========================================================= */
 
 .card-glass {
@@ -253,11 +364,14 @@
     rgba(255,255,255,.04);
 
   backdrop-filter:
-    blur(var(--blur-lg));
+    blur(24px);
+
+  border:
+    1px solid rgba(255,255,255,.08);
 }
 
 /* =========================================================
-   PRODUCT CARD
+   PRODUCT
 ========================================================= */
 
 .card-product {
@@ -265,13 +379,15 @@
 
   flex-direction: column;
 
-  gap: 1.5rem;
+  gap:
+    1.5rem;
 
-  height: 100%;
+  height:
+    100%;
 }
 
 /* =========================================================
-   FEATURE CARD
+   FEATURE
 ========================================================= */
 
 .card-feature {
@@ -279,46 +395,92 @@
 
   flex-direction: column;
 
-  gap: 1.4rem;
+  gap:
+    1.5rem;
 
   padding:
-    clamp(1.6rem, 3vw, 2.4rem);
+    clamp(1.8rem, 3vw, 2.6rem);
 }
 
 /* =========================================================
-   TESTIMONIAL CARD
+   TESTIMONIAL
 ========================================================= */
 
 .card-testimonial {
+  position: relative;
+
   padding:
-    clamp(1.8rem, 3vw, 2.8rem);
+    clamp(2rem, 4vw, 3rem);
 
   background:
     linear-gradient(
       180deg,
-      rgba(17,25,40,.94),
-      rgba(8,13,22,.98)
+      rgba(14,22,36,.96),
+      rgba(6,10,18,.99)
     );
 }
 
 /* =========================================================
-   CARD BADGE
+   TESTIMONIAL LIGHT
+========================================================= */
+
+.card-testimonial::before {
+  content: "";
+
+  position: absolute;
+
+  top: -100px;
+  left: -80px;
+
+  width:
+    240px;
+
+  height:
+    240px;
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.05),
+      transparent 72%
+    );
+
+  filter:
+    blur(24px);
+
+  pointer-events:
+    none;
+}
+
+/* =========================================================
+   BADGE
 ========================================================= */
 
 .card-badge {
+  position: relative;
+
+  overflow: hidden;
+
   display: inline-flex;
 
   align-items: center;
 
   justify-content: center;
 
-  min-height: 36px;
+  gap:
+    .45rem;
+
+  min-height:
+    38px;
 
   padding:
-    0 .95rem;
+    0 1rem;
 
   border-radius:
-    var(--radius-full);
+    999px;
 
   background:
     rgba(0,208,255,.10);
@@ -326,20 +488,94 @@
   border:
     1px solid rgba(0,208,255,.16);
 
+  backdrop-filter:
+    blur(10px);
+
   color:
-    var(--color-primary);
+    #7dd3fc;
 
   font-size:
-    .72rem;
+    .7rem;
 
   font-weight:
-    700;
+    900;
 
   letter-spacing:
-    .12em;
+    .14em;
 
   text-transform:
     uppercase;
+
+  box-shadow:
+    0 0 20px rgba(0,208,255,.08);
+
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    background var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+/* =========================================================
+   BADGE SHINE
+========================================================= */
+
+.card-badge::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.14),
+      transparent 60%
+    );
+
+  transition:
+    opacity var(--transition-base);
+}
+
+.card-badge:hover {
+  transform:
+    translateY(-1px);
+
+  border-color:
+    rgba(0,208,255,.24);
+
+  background:
+    rgba(0,208,255,.14);
+
+  box-shadow:
+    0 0 34px rgba(0,208,255,.14);
+}
+
+.card-badge:hover::before {
+  opacity: 1;
+}
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.card-divider {
+  width:
+    100%;
+
+  height:
+    1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.08),
+      transparent
+    );
 }
 
 /* =========================================================
@@ -364,5 +600,10 @@
   .card-cta {
     padding:
       2rem 1.5rem;
+  }
+
+  .card-mini {
+    padding:
+      1.1rem;
   }
 }

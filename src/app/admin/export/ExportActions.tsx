@@ -2,6 +2,9 @@
 
 import type { Format, Mode } from "./page";
 
+
+import "./ExportActions.css";
+
 type Props = {
   mode: Mode;
   day: string;

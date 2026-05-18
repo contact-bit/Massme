@@ -1,113 +1,453 @@
 /* =========================================================
-   ADMIN DESIGN SYSTEM — TOKENS (FINAL PRO)
+   ADMIN DESIGN SYSTEM — MASSME
+   PREMIUM MASTER TOKENS
 ========================================================= */
 
 :root {
-  /* ================= TYPO ================= */
 
-  --font-admin: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* =====================================================
+     TYPOGRAPHY
+  ===================================================== */
 
-  --text-xs: 12px;
-  --text-sm: 14px;
-  --text-md: 15px;
-  --text-base: 16px;
-  --text-lg: 18px;
-  --text-xl: 24px;
-  --text-2xl: 30px;
+  --font-admin:
+    "Inter",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 
-  /* ================= COLORS ================= */
+  --text-xs:
+    12px;
 
-  --color-bg: #f6f8fc;
-  --color-surface: #ffffff;
-  --color-surface-alt: #f9fafb;
+  --text-sm:
+    13px;
 
-  --color-border: #e5e7eb;
-  --color-border-strong: #d1d5db;
+  --text-md:
+    15px;
 
-  --color-text: #0f172a;
-  --color-text-soft: #475569;
-  --color-text-muted: #94a3b8;
+  --text-base:
+    16px;
 
-  --color-primary: #0f766e;
-  --color-primary-hover: #0b5e59;
-  --color-primary-soft: #ccfbf1;
+  --text-lg:
+    18px;
 
-  --color-success: #15803d;
-  --color-success-soft: #dcfce7;
+  --text-xl:
+    26px;
 
-  --color-warning: #d97706;
-  --color-warning-soft: #fef3c7;
+  --text-2xl:
+    34px;
 
-  --color-danger: #dc2626;
-  --color-danger-soft: #fee2e2;
+  /* =====================================================
+     BACKGROUNDS
+  ===================================================== */
 
-  /* ================= RADIUS ================= */
+  --color-bg:
+    #040712;
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --color-bg-alt:
+    #08111f;
 
-  /* ================= SHADOWS ================= */
+  --color-surface:
+    rgba(255,255,255,.04);
 
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.06);
-  --shadow-lg: 0 18px 40px rgba(15, 23, 42, 0.10);
+  --color-surface-alt:
+    rgba(255,255,255,.025);
 
-  /* ================= SPACING ================= */
+  --color-surface-hover:
+    rgba(255,255,255,.06);
 
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
+  /* =====================================================
+     BORDERS
+  ===================================================== */
 
-  /* ================= LAYOUT ================= */
+  --color-border:
+    rgba(255,255,255,.06);
 
-  --sidebar-width: 260px;
-  --header-height: 64px;
+  --color-border-strong:
+    rgba(255,255,255,.12);
 
-  /* 🔥 IMPORTANT POUR TON BUG */
-  --content-max: 1600px; /* + large */
-  --content-padding: 24px;
+  /* =====================================================
+     TEXT
+  ===================================================== */
 
-  /* ================= TRANSITIONS ================= */
+  --color-text:
+    #ffffff;
 
-  --transition-fast: 0.15s ease;
-  --transition-base: 0.22s ease;
+  --color-text-soft:
+    rgba(203,213,225,.76);
+
+  --color-text-muted:
+    rgba(148,163,184,.58);
+
+  /* =====================================================
+     BRAND
+  ===================================================== */
+
+  --color-primary:
+    #0ea5e9;
+
+  --color-primary-hover:
+    #38bdf8;
+
+  --color-primary-soft:
+    rgba(14,165,233,.12);
+
+  /* =====================================================
+     STATUS
+  ===================================================== */
+
+  --color-success:
+    #22c55e;
+
+  --color-success-soft:
+    rgba(34,197,94,.12);
+
+  --color-warning:
+    #f59e0b;
+
+  --color-warning-soft:
+    rgba(245,158,11,.12);
+
+  --color-danger:
+    #ef4444;
+
+  --color-danger-soft:
+    rgba(239,68,68,.12);
+
+  /* =====================================================
+     GLASS / FX
+  ===================================================== */
+
+  --glass-blur:
+    blur(14px);
+
+  --glass-blur-strong:
+    blur(22px);
+
+  --glow-primary:
+    0 0 30px rgba(14,165,233,.22);
+
+  --glow-danger:
+    0 0 24px rgba(239,68,68,.18);
+
+  /* =====================================================
+     RADIUS
+  ===================================================== */
+
+  --radius-sm:
+    .9rem;
+
+  --radius-md:
+    1.1rem;
+
+  --radius-lg:
+    1.5rem;
+
+  --radius-xl:
+    2rem;
+
+  --radius-full:
+    999px;
+
+  /* =====================================================
+     SHADOWS
+  ===================================================== */
+
+  --shadow-sm:
+    0 8px 24px rgba(0,0,0,.16);
+
+  --shadow-md:
+    0 14px 40px rgba(0,0,0,.24);
+
+  --shadow-lg:
+    0 24px 70px rgba(0,0,0,.36);
+
+  /* =====================================================
+     SPACING
+  ===================================================== */
+
+  --space-1:
+    4px;
+
+  --space-2:
+    8px;
+
+  --space-3:
+    12px;
+
+  --space-4:
+    16px;
+
+  --space-5:
+    20px;
+
+  --space-6:
+    24px;
+
+  --space-8:
+    32px;
+
+  --space-10:
+    40px;
+
+  --space-12:
+    56px;
+
+  /* =====================================================
+     LAYOUT
+  ===================================================== */
+
+  --sidebar-width:
+    280px;
+
+  --header-height:
+    72px;
+
+  --content-max:
+    1540px;
+
+  --content-padding:
+    clamp(1rem, 3vw, 2rem);
+
+  /* =====================================================
+     TRANSITIONS
+  ===================================================== */
+
+  --transition-fast:
+    .18s ease;
+
+  --transition-base:
+    .28s cubic-bezier(.22,1,.36,1);
+
+  /* =====================================================
+     Z-INDEX
+  ===================================================== */
+
+  --z-navbar:
+    90;
+
+  --z-sidebar:
+    80;
+
+  --z-modal:
+    200;
+
+  --z-toast:
+    300;
 }
 
-/* ================= GLOBAL ================= */
-
-body {
-  font-family: var(--font-admin);
-  background: var(--color-bg);
-  color: var(--color-text);
-
-  margin: 0;
-}
-
-/* 🔥 ULTRA IMPORTANT POUR LE FULL WIDTH */
+/* =========================================================
+   HTML / BODY
+========================================================= */
 
 html,
 body,
 #__next {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
 }
 
-/* ================= GLOBAL CONTAINER ================= */
+/* =========================================================
+   BODY
+========================================================= */
 
-/* 👉 remplace tous tes max-width dispersés */
+body {
+  position: relative;
+
+  overflow-x: hidden;
+
+  margin: 0;
+
+  font-family:
+    var(--font-admin);
+
+  background:
+    var(--color-bg);
+
+  color:
+    var(--color-text);
+
+  -webkit-font-smoothing:
+    antialiased;
+
+  text-rendering:
+    optimizeLegibility;
+}
+
+/* =========================================================
+   SELECTION
+========================================================= */
+
+::selection {
+  background:
+    rgba(14,165,233,.22);
+
+  color:
+    white;
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+* {
+  scrollbar-width:
+    thin;
+
+  scrollbar-color:
+    rgba(255,255,255,.12)
+    transparent;
+}
+
+*::-webkit-scrollbar {
+  width:
+    10px;
+
+  height:
+    10px;
+}
+
+*::-webkit-scrollbar-track {
+  background:
+    transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.10);
+
+  border:
+    2px solid transparent;
+
+  background-clip:
+    padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background:
+    rgba(255,255,255,.16);
+
+  background-clip:
+    padding-box;
+}
+
+/* =========================================================
+   GLOBAL CONTAINER
+========================================================= */
 
 .admin-container {
-  width: 100%;
-  max-width: var(--content-max);
-  margin: 0 auto;
+  position: relative;
 
-  padding-left: var(--content-padding);
-  padding-right: var(--content-padding);
+  z-index: 2;
+
+  width: 100%;
+
+  max-width:
+    var(--content-max);
+
+  margin:
+    0 auto;
+
+  padding-left:
+    var(--content-padding);
+
+  padding-right:
+    var(--content-padding);
+}
+
+/* =========================================================
+   GLOBAL SURFACE
+========================================================= */
+
+.admin-surface {
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.04),
+      rgba(255,255,255,.025)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  border-radius:
+    var(--radius-lg);
+
+  backdrop-filter:
+    var(--glass-blur);
+
+  box-shadow:
+    var(--shadow-md);
+}
+
+/* =========================================================
+   GLOBAL OVERLAY
+========================================================= */
+
+.admin-surface::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.08),
+      transparent 55%
+    );
+
+  transition:
+    opacity var(--transition-base);
+}
+
+.admin-surface:hover::before {
+  opacity: 1;
+}
+
+/* =========================================================
+   FOCUS RING
+========================================================= */
+
+:is(
+  button,
+  a,
+  input,
+  textarea,
+  select
+):focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 4px rgba(14,165,233,.12);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  :root {
+
+    --content-padding:
+      1rem;
+
+    --header-height:
+      68px;
+  }
 }

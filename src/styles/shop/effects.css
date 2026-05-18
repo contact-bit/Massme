@@ -1,6 +1,6 @@
 /* =========================================================
    VITRECTOMED — EFFECTS SYSTEM
-   CINEMATIC MEDTECH UI
+   ULTRA PREMIUM CINEMATIC EDITION
 ========================================================= */
 
 /* =========================================================
@@ -17,27 +17,38 @@
     all var(--transition-slow);
 }
 
+.transition-spring {
+  transition:
+    all .65s cubic-bezier(.16,1,.3,1);
+}
+
 /* =========================================================
    HOVER LIFT
 ========================================================= */
 
 .hover-lift {
+  position: relative;
+
   transition:
     transform var(--transition-base),
     box-shadow var(--transition-base),
     border-color var(--transition-base),
-    background var(--transition-base);
+    background var(--transition-base),
+    filter var(--transition-base);
 }
 
 .hover-lift:hover {
   transform:
-    translateY(-6px);
-
-  box-shadow:
-    var(--shadow-lg);
+    translateY(-8px);
 
   border-color:
     rgba(255,255,255,.12);
+
+  box-shadow:
+    0 26px 70px rgba(0,0,0,.34);
+
+  filter:
+    brightness(1.02);
 }
 
 /* =========================================================
@@ -47,17 +58,48 @@
 .hover-glow {
   position: relative;
 
+  overflow: hidden;
+
   transition:
     transform var(--transition-base),
-    box-shadow var(--transition-base);
+    box-shadow var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.hover-glow::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(0,208,255,.12),
+      transparent 65%
+    );
+
+  transition:
+    opacity var(--transition-base);
+
+  pointer-events:
+    none;
 }
 
 .hover-glow:hover {
   transform:
-    translateY(-4px);
+    translateY(-5px);
 
   box-shadow:
-    0 0 40px rgba(0,208,255,.16);
+    0 0 50px rgba(0,208,255,.14),
+    0 20px 50px rgba(0,0,0,.26);
+}
+
+.hover-glow:hover::before {
+  opacity: 1;
 }
 
 /* =========================================================
@@ -65,9 +107,12 @@
 ========================================================= */
 
 .hover-border {
+  position: relative;
+
   transition:
     border-color var(--transition-base),
-    background var(--transition-base);
+    background var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .hover-border:hover {
@@ -75,7 +120,28 @@
     rgba(0,208,255,.22);
 
   background:
-    rgba(255,255,255,.02);
+    rgba(255,255,255,.03);
+
+  box-shadow:
+    0 0 24px rgba(0,208,255,.08);
+}
+
+/* =========================================================
+   HOVER SCALE
+========================================================= */
+
+.hover-scale {
+  transition:
+    transform var(--transition-base),
+    filter var(--transition-base);
+}
+
+.hover-scale:hover {
+  transform:
+    scale(1.02);
+
+  filter:
+    brightness(1.03);
 }
 
 /* =========================================================
@@ -84,7 +150,11 @@
 
 .bg-soft {
   background:
-    rgba(255,255,255,.02);
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.03),
+      rgba(255,255,255,.015)
+    );
 }
 
 /* =========================================================
@@ -95,8 +165,8 @@
   background:
     linear-gradient(
       180deg,
-      rgba(15,24,38,.96),
-      rgba(5,8,14,1)
+      rgba(14,22,36,.98),
+      rgba(5,8,16,1)
     );
 }
 
@@ -107,40 +177,30 @@
 .bg-medical {
   position: relative;
 
+  overflow: hidden;
+
   background:
     linear-gradient(
       135deg,
-      rgba(0,208,255,.08),
-      rgba(47,107,255,.04),
-      rgba(139,92,246,.03)
+      rgba(0,208,255,.10),
+      rgba(59,130,246,.06),
+      rgba(139,92,246,.04)
     );
 }
 
-/* =========================================================
-   HERO GLOW
-========================================================= */
-
-.hero-glow {
-  position: relative;
-}
-
-.hero-glow::before {
+.bg-medical::before {
   content: "";
 
   position: absolute;
 
-  top: -20%;
-
-  left: 50%;
-
-  transform:
-    translateX(-50%);
+  top: -120px;
+  right: -80px;
 
   width:
-    900px;
+    320px;
 
   height:
-    900px;
+    320px;
 
   border-radius:
     50%;
@@ -149,15 +209,86 @@
     radial-gradient(
       circle,
       rgba(0,208,255,.16),
+      transparent 72%
+    );
+
+  filter:
+    blur(40px);
+
+  pointer-events:
+    none;
+}
+
+/* =========================================================
+   HERO GLOW
+========================================================= */
+
+.hero-glow {
+  position: relative;
+
+  isolation:
+    isolate;
+}
+
+.hero-glow::before {
+  content: "";
+
+  position: absolute;
+
+  top: -28%;
+  left: 50%;
+
+  transform:
+    translateX(-50%);
+
+  width:
+    1100px;
+
+  height:
+    1100px;
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.18),
       transparent 70%
     );
 
   filter:
-    blur(80px);
+    blur(120px);
 
-  pointer-events: none;
+  pointer-events:
+    none;
 
-  z-index: -1;
+  z-index:
+    -2;
+}
+
+.hero-glow::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.02),
+      transparent
+    );
+
+  pointer-events:
+    none;
+
+  opacity:
+    .4;
+
+  z-index:
+    -1;
 }
 
 /* =========================================================
@@ -174,14 +305,13 @@
   position: absolute;
 
   top: 0;
-
   left: 50%;
 
   transform:
     translateX(-50%);
 
   width:
-    min(100%, 1200px);
+    min(100%, 1400px);
 
   height:
     1px;
@@ -190,7 +320,7 @@
     linear-gradient(
       90deg,
       transparent,
-      rgba(255,255,255,.08),
+      rgba(255,255,255,.10),
       transparent
     );
 }
@@ -200,6 +330,10 @@
 ========================================================= */
 
 .glass {
+  position: relative;
+
+  overflow: hidden;
+
   background:
     rgba(255,255,255,.04);
 
@@ -210,7 +344,28 @@
     1px solid rgba(255,255,255,.08);
 
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.04);
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 10px 30px rgba(0,0,0,.16);
+}
+
+.glass::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .10;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.10),
+      transparent 60%
+    );
+
+  pointer-events:
+    none;
 }
 
 /* =========================================================
@@ -218,8 +373,12 @@
 ========================================================= */
 
 .glass-strong {
+  position: relative;
+
+  overflow: hidden;
+
   background:
-    rgba(12,18,28,.72);
+    rgba(10,16,28,.74);
 
   backdrop-filter:
     blur(var(--blur-lg));
@@ -228,7 +387,27 @@
     1px solid rgba(255,255,255,.10);
 
   box-shadow:
-    var(--shadow-lg);
+    0 24px 70px rgba(0,0,0,.32);
+}
+
+.glass-strong::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .12;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.08),
+      transparent 60%
+    );
+
+  pointer-events:
+    none;
 }
 
 /* =========================================================
@@ -239,9 +418,10 @@
   background:
     linear-gradient(
       135deg,
-      var(--color-primary),
-      var(--color-secondary),
-      var(--color-accent)
+      #7dd3fc,
+      #38bdf8,
+      #818cf8,
+      #c084fc
     );
 
   -webkit-background-clip:
@@ -262,6 +442,9 @@
   position: relative;
 
   overflow: hidden;
+
+  isolation:
+    isolate;
 }
 
 .image-overlay::after {
@@ -274,12 +457,13 @@
   background:
     linear-gradient(
       to top,
-      rgba(4,7,18,.85),
-      rgba(4,7,18,.25),
+      rgba(4,7,18,.92),
+      rgba(4,7,18,.35),
       transparent
     );
 
-  pointer-events: none;
+  pointer-events:
+    none;
 }
 
 /* =========================================================
@@ -297,18 +481,23 @@
 
   inset: 0;
 
-  opacity: .025;
+  opacity:
+    .025;
 
-  pointer-events: none;
+  pointer-events:
+    none;
+
+  mix-blend-mode:
+    soft-light;
 
   background-image:
     radial-gradient(
-      rgba(255,255,255,.35) .7px,
+      rgba(255,255,255,.4) .7px,
       transparent .7px
     );
 
   background-size:
-    22px 22px;
+    20px 20px;
 }
 
 /* =========================================================
@@ -317,6 +506,9 @@
 
 .grid-overlay {
   position: relative;
+
+  isolation:
+    isolate;
 }
 
 .grid-overlay::before {
@@ -326,11 +518,15 @@
 
   inset: 0;
 
+  opacity:
+    .24;
+
   background-image:
     linear-gradient(
       rgba(255,255,255,.03) 1px,
       transparent 1px
     ),
+
     linear-gradient(
       90deg,
       rgba(255,255,255,.03) 1px,
@@ -344,12 +540,11 @@
     radial-gradient(
       circle at center,
       black,
-      transparent 90%
+      transparent 92%
     );
 
-  pointer-events: none;
-
-  opacity: .25;
+  pointer-events:
+    none;
 }
 
 /* =========================================================
@@ -358,7 +553,7 @@
 
 .glow-cyan {
   box-shadow:
-    0 0 50px rgba(0,208,255,.18);
+    0 0 60px rgba(0,208,255,.20);
 }
 
 /* =========================================================
@@ -367,7 +562,16 @@
 
 .glow-purple {
   box-shadow:
-    0 0 50px rgba(139,92,246,.18);
+    0 0 60px rgba(139,92,246,.20);
+}
+
+/* =========================================================
+   BLUE GLOW
+========================================================= */
+
+.glow-blue {
+  box-shadow:
+    0 0 60px rgba(59,130,246,.20);
 }
 
 /* =========================================================
@@ -377,19 +581,26 @@
 .blur-orb {
   position: absolute;
 
-  width: 420px;
+  width:
+    480px;
 
-  height: 420px;
+  height:
+    480px;
 
-  border-radius: 50%;
+  border-radius:
+    50%;
 
-  filter: blur(80px);
+  filter:
+    blur(100px);
 
-  opacity: .22;
+  opacity:
+    .24;
 
-  pointer-events: none;
+  pointer-events:
+    none;
 
-  z-index: -1;
+  z-index:
+    -2;
 }
 
 .blur-orb.cyan {
@@ -399,7 +610,12 @@
 
 .blur-orb.purple {
   background:
-    rgba(139,92,246,.35);
+    rgba(139,92,246,.36);
+}
+
+.blur-orb.blue {
+  background:
+    rgba(59,130,246,.36);
 }
 
 /* =========================================================
@@ -410,7 +626,77 @@
   mask-image:
     linear-gradient(
       to bottom,
-      black 75%,
+      black 72%,
       transparent 100%
     );
+}
+
+/* =========================================================
+   LIGHT RAY
+========================================================= */
+
+.light-ray {
+  position: relative;
+
+  overflow: hidden;
+}
+
+.light-ray::before {
+  content: "";
+
+  position: absolute;
+
+  top: -120%;
+  left: -20%;
+
+  width:
+    140%;
+
+  height:
+    240%;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent,
+      rgba(255,255,255,.03),
+      transparent
+    );
+
+  transform:
+    rotate(12deg);
+
+  pointer-events:
+    none;
+}
+
+/* =========================================================
+   FLOATING
+========================================================= */
+
+.float-soft {
+  animation:
+    floatSoft 7s ease-in-out infinite;
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes floatSoft {
+
+  0% {
+    transform:
+      translateY(0px);
+  }
+
+  50% {
+    transform:
+      translateY(-10px);
+  }
+
+  100% {
+    transform:
+      translateY(0px);
+  }
 }

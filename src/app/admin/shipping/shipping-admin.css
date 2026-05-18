@@ -1,0 +1,1189 @@
+/* =========================================================
+   SHIPPING ADMIN — ULTRA PREMIUM
+   VITRECTOMED ADMIN SYSTEM
+========================================================= */
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.shipping-page {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height: 100vh;
+
+  padding:
+    2rem;
+
+
+
+  color:
+    white;
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.shipping-grid {
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .05;
+
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,.04) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,.04) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    72px 72px;
+
+  mask-image:
+    radial-gradient(
+      circle at center,
+      black,
+      transparent 90%
+    );
+}
+
+/* =========================================================
+   GLOWS
+========================================================= */
+
+.shipping-glow {
+  position: absolute;
+
+  border-radius:
+    999px;
+
+  filter:
+    blur(120px);
+
+  pointer-events:
+    none;
+}
+
+.glow-1 {
+  top: -220px;
+  left: -220px;
+
+  width: 520px;
+  height: 520px;
+
+  background:
+    rgba(0,208,255,.08);
+}
+
+.glow-2 {
+  right: -240px;
+  bottom: -240px;
+
+  width: 560px;
+  height: 560px;
+
+  background:
+    rgba(139,92,246,.08);
+}
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+
+.shipping-container {
+  position: relative;
+
+  z-index: 2;
+
+  width: 100%;
+  max-width: 1440px;
+
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1.5rem;
+}
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.shipping-hero {
+  position: relative;
+
+  overflow: hidden;
+
+  padding:
+    1.8rem;
+
+  border-radius:
+    34px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.84),
+      rgba(5,10,18,.96)
+    );
+
+  backdrop-filter:
+    blur(18px);
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.28);
+}
+
+.shipping-hero::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .08;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.16),
+      transparent 60%
+    );
+}
+
+/* =========================================================
+   KICKER
+========================================================= */
+
+.shipping-kicker,
+.shipping-card-kicker {
+  position: relative;
+
+  z-index: 2;
+
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height:
+    34px;
+
+  padding:
+    0 .9rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(0,208,255,.08);
+
+  border:
+    1px solid rgba(0,208,255,.14);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    #7dd3fc;
+
+  font-size:
+    .66rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .18em;
+
+  text-transform:
+    uppercase;
+
+  box-shadow:
+    0 0 24px rgba(0,208,255,.08);
+}
+
+/* =========================================================
+   HERO HEAD
+========================================================= */
+
+.shipping-hero-head {
+  position: relative;
+
+  z-index: 2;
+
+  margin-top:
+    1.5rem;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.shipping-title {
+  margin: 0;
+
+  color:
+    white;
+
+  font-size:
+    clamp(2.5rem, 5vw, 4rem);
+
+  line-height:
+    .9;
+
+  letter-spacing:
+    -.08em;
+
+  font-weight:
+    900;
+
+  text-shadow:
+    0 10px 40px rgba(0,0,0,.35);
+}
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.shipping-description {
+  margin:
+    .8rem 0 0 0;
+
+  max-width:
+    58ch;
+
+  color:
+    rgba(203,213,225,.68);
+
+  font-size:
+    .96rem;
+
+  line-height:
+    1.8;
+}
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.shipping-stats {
+  display: flex;
+
+  gap:
+    1rem;
+}
+
+.shipping-stat {
+  min-width:
+    120px;
+
+  padding:
+    1rem 1.2rem;
+
+  border-radius:
+    24px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(14px);
+}
+
+.shipping-stat span {
+  display: block;
+
+  color:
+    rgba(148,163,184,.62);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .08em;
+}
+
+.shipping-stat strong {
+  display: block;
+
+  margin-top:
+    .5rem;
+
+  color:
+    white;
+
+  font-size:
+    1.5rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.06em;
+}
+
+/* =========================================================
+   TABS
+========================================================= */
+
+.shipping-tabs {
+  display: flex;
+
+  gap:
+    .8rem;
+
+  overflow-x:
+    auto;
+
+  padding-bottom:
+    .3rem;
+
+  scrollbar-width:
+    none;
+}
+
+.shipping-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* =========================================================
+   TAB
+========================================================= */
+
+.shipping-tab {
+  position: relative;
+
+  overflow: hidden;
+
+  flex-shrink:
+    0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap:
+    .7rem;
+
+  min-height:
+    52px;
+
+  padding:
+    0 1.2rem;
+
+  border-radius:
+    999px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.03);
+
+  backdrop-filter:
+    blur(14px);
+
+  color:
+    rgba(255,255,255,.84);
+
+  font-size:
+    .86rem;
+
+  font-weight:
+    700;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .25s ease,
+    background .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+.shipping-tab:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(0,208,255,.12);
+
+  background:
+    rgba(255,255,255,.05);
+}
+
+.shipping-tab.active {
+  background:
+    linear-gradient(
+      135deg,
+      #00d0ff,
+      #2563eb
+    );
+
+  border-color:
+    rgba(0,208,255,.18);
+
+  color:
+    white;
+
+  box-shadow:
+    0 16px 34px rgba(0,208,255,.24);
+}
+
+.shipping-tab-flag {
+  font-size:
+    1rem;
+}
+
+.shipping-tab-label {
+  white-space:
+    nowrap;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.shipping-card,
+.shipping-edit-panel {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius:
+    32px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(12,18,30,.94),
+      rgba(5,10,18,.98)
+    );
+
+  backdrop-filter:
+    blur(24px);
+
+  box-shadow:
+    0 34px 90px rgba(0,0,0,.42);
+}
+
+.shipping-card::before,
+.shipping-edit-panel::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .08;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.16),
+      transparent 60%
+    );
+}
+
+/* =========================================================
+   CARD HEAD
+========================================================= */
+
+.shipping-card-head,
+.shipping-section-head {
+  position: relative;
+
+  z-index: 2;
+
+  padding:
+    1.5rem 1.5rem 0 1.5rem;
+}
+
+.shipping-card-head h2,
+.shipping-section-head h2 {
+  margin:
+    1rem 0 0 0;
+
+  color:
+    white;
+
+  font-size:
+    1.5rem;
+
+  letter-spacing:
+    -.04em;
+
+  font-weight:
+    800;
+}
+
+/* =========================================================
+   CARD BODY
+========================================================= */
+
+.shipping-card-body {
+  position: relative;
+
+  z-index: 2;
+
+  padding:
+    1.5rem;
+}
+
+/* =========================================================
+   SECTION
+========================================================= */
+
+.shipping-list-section {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   LIST
+========================================================= */
+
+.shipping-list {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   WRAP
+========================================================= */
+
+.shipping-method-wrap {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    .8rem;
+}
+
+/* =========================================================
+   METHOD
+========================================================= */
+
+.shipping-method {
+  position: relative;
+
+  overflow: hidden;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap:
+    1rem;
+
+  padding:
+    1.3rem;
+
+  border-radius:
+    28px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.82),
+      rgba(5,10,18,.96)
+    );
+
+  backdrop-filter:
+    blur(18px);
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+.shipping-method::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .06;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.14),
+      transparent 60%
+    );
+}
+
+.shipping-method:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(0,208,255,.12);
+
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.24);
+}
+
+.shipping-method.active {
+  border-color:
+    rgba(0,208,255,.20);
+
+  box-shadow:
+    0 0 0 1px rgba(0,208,255,.06),
+    0 20px 50px rgba(0,208,255,.08);
+}
+
+/* =========================================================
+   LEFT
+========================================================= */
+
+.shipping-method-left {
+  flex: 1;
+
+  min-width: 0;
+
+  cursor:
+    pointer;
+}
+
+/* =========================================================
+   TOP
+========================================================= */
+
+.shipping-method-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   TITLE WRAP
+========================================================= */
+
+.shipping-method-title-wrap {
+  display: flex;
+  align-items: center;
+
+  gap:
+    .7rem;
+
+  min-width:
+    0;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.shipping-method-title {
+  margin: 0;
+
+  color:
+    white;
+
+  font-size:
+    1rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.03em;
+
+  white-space:
+    nowrap;
+
+  overflow:
+    hidden;
+
+  text-overflow:
+    ellipsis;
+}
+
+/* =========================================================
+   TYPE
+========================================================= */
+
+.shipping-method-type {
+  flex-shrink:
+    0;
+
+  padding:
+    .4rem .7rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.05);
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  color:
+    rgba(255,255,255,.74);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .06em;
+}
+
+/* =========================================================
+   BOTTOM
+========================================================= */
+
+.shipping-method-bottom {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap:
+    .8rem;
+
+  margin-top:
+    .7rem;
+
+  color:
+    rgba(148,163,184,.72);
+
+  font-size:
+    .8rem;
+
+  line-height:
+    1.6;
+}
+
+/* =========================================================
+   OFF BADGE
+========================================================= */
+
+.shipping-off-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height:
+    24px;
+
+  padding:
+    0 .65rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(239,68,68,.12);
+
+  border:
+    1px solid rgba(239,68,68,.16);
+
+  color:
+    #fca5a5;
+
+  font-size:
+    .66rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.shipping-method-actions {
+  display: flex;
+  align-items: center;
+
+  gap:
+    .7rem;
+
+  flex-shrink:
+    0;
+}
+
+/* =========================================================
+   BUTTON
+========================================================= */
+
+.shipping-btn {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height:
+    44px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    16px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    white;
+
+  font-size:
+    .82rem;
+
+  font-weight:
+    700;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .25s ease,
+    background .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+.shipping-btn:hover {
+  transform:
+    translateY(-1px);
+}
+
+/* =========================================================
+   BTN GHOST
+========================================================= */
+
+.shipping-btn-ghost {
+  background:
+    rgba(255,255,255,.04);
+}
+
+.shipping-btn-ghost:hover {
+  background:
+    rgba(255,255,255,.06);
+
+  border-color:
+    rgba(0,208,255,.12);
+}
+
+/* =========================================================
+   BTN DANGER
+========================================================= */
+
+.shipping-btn-danger {
+  background:
+    rgba(239,68,68,.10);
+
+  border-color:
+    rgba(239,68,68,.14);
+
+  color:
+    #fca5a5;
+}
+
+.shipping-btn-danger:hover {
+  background:
+    rgba(239,68,68,.16);
+}
+
+/* =========================================================
+   EDIT PANEL
+========================================================= */
+
+.shipping-edit-panel {
+  padding:
+    1.4rem;
+}
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.shipping-empty {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height:
+    260px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap:
+    1rem;
+
+  text-align:
+    center;
+
+  padding:
+    2rem;
+
+  border-radius:
+    32px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(12,18,30,.94),
+      rgba(5,10,18,.98)
+    );
+
+  backdrop-filter:
+    blur(24px);
+}
+
+.shipping-empty::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .08;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.16),
+      transparent 60%
+    );
+}
+
+.shipping-empty h3 {
+  margin: 0;
+
+  color:
+    white;
+
+  font-size:
+    1.2rem;
+
+  font-weight:
+    800;
+}
+
+.shipping-empty p,
+.shipping-empty span {
+  margin: 0;
+
+  color:
+    rgba(148,163,184,.66);
+
+  font-size:
+    .92rem;
+
+  line-height:
+    1.8;
+}
+
+/* =========================================================
+   EMPTY ICON
+========================================================= */
+
+.shipping-empty-icon {
+  font-size:
+    2.5rem;
+}
+
+/* =========================================================
+   LOADER
+========================================================= */
+
+.shipping-loader {
+  width:
+    42px;
+
+  height:
+    42px;
+
+  border-radius:
+    999px;
+
+  border:
+    3px solid rgba(255,255,255,.08);
+
+  border-top-color:
+    #38bdf8;
+
+  animation:
+    shipping-spin .8s linear infinite;
+}
+
+@keyframes shipping-spin {
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 980px) {
+
+  .shipping-hero-head {
+    flex-direction:
+      column;
+  }
+
+  .shipping-stats {
+    width:
+      100%;
+  }
+
+  .shipping-stat {
+    flex:
+      1;
+  }
+
+  .shipping-method {
+    flex-direction:
+      column;
+
+    align-items:
+      stretch;
+  }
+
+  .shipping-method-actions {
+    width:
+      100%;
+  }
+
+  .shipping-btn {
+    flex:
+      1;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .shipping-page {
+    padding:
+      1rem;
+  }
+
+  .shipping-hero,
+  .shipping-card,
+  .shipping-method,
+  .shipping-empty,
+  .shipping-edit-panel {
+    border-radius:
+      26px;
+  }
+
+  .shipping-card-head,
+  .shipping-card-body,
+  .shipping-section-head,
+  .shipping-edit-panel {
+    padding:
+      1.2rem;
+  }
+
+  .shipping-title {
+    font-size:
+      2.7rem;
+  }
+
+  .shipping-description {
+    font-size:
+      .9rem;
+  }
+
+  .shipping-stats {
+    flex-direction:
+      column;
+  }
+
+  .shipping-method-top {
+    flex-direction:
+      column;
+
+    align-items:
+      flex-start;
+  }
+
+  .shipping-method-actions {
+    flex-direction:
+      column;
+  }
+
+  .shipping-btn {
+    width:
+      100%;
+  }
+}

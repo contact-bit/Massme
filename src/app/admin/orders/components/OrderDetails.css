@@ -1,11 +1,21 @@
 /* =========================================================
-   ORDER DETAILS — PREMIUM ERP UI
+   ORDER DETAILS — MASSME
+   PREMIUM MASTER ERP EDITION
+========================================================= */
+
+/* =========================================================
+   PAGE
 ========================================================= */
 
 .od-page {
+  position: relative;
+
   display: flex;
+
   flex-direction: column;
-  gap: 20px;
+
+  gap:
+    1.4rem;
 }
 
 /* =========================================================
@@ -13,70 +23,203 @@
 ========================================================= */
 
 .od-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
+  position: relative;
 
-  padding: 24px;
-  border-radius: 24px;
+  overflow: hidden;
+
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap:
+    1.4rem;
+
+  padding:
+    clamp(1.4rem, 3vw, 2rem);
+
+  border-radius:
+    2rem;
+
+  isolation:
+    isolate;
 
   background:
-    radial-gradient(circle at top left,
-      rgba(37, 99, 235, 0.14),
-      transparent 45%),
     linear-gradient(
       180deg,
-      rgba(8, 15, 32, 0.96),
-      rgba(5, 10, 24, 0.98)
+      rgba(10,16,30,.94),
+      rgba(6,10,22,.98)
     );
 
-  border: 1px solid rgba(255,255,255,0.06);
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  backdrop-filter:
+    blur(20px);
 
   box-shadow:
-    0 10px 40px rgba(0,0,0,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.04);
+    0 24px 70px rgba(0,0,0,.34);
 }
+
+/* =========================================================
+   HEADER ATMOSPHERE
+========================================================= */
+
+.od-top::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,208,255,.16),
+      transparent 34%
+    ),
+
+    radial-gradient(
+      circle at top right,
+      rgba(99,102,241,.12),
+      transparent 28%
+    );
+
+  pointer-events:
+    none;
+}
+
+.od-top::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .18;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.06),
+      transparent 55%
+    );
+
+  pointer-events:
+    none;
+}
+
+/* =========================================================
+   HEADER LEFT
+========================================================= */
 
 .od-header-left {
+  position: relative;
+
+  z-index: 2;
+
   display: flex;
+
   flex-direction: column;
-  gap: 10px;
+
+  gap:
+    .7rem;
 }
+
+/* =========================================================
+   ORDER ID
+========================================================= */
 
 .od-order-id {
-  font-size: 13px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.55);
+  color:
+    rgba(148,163,184,.60);
 
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size:
+    .72rem;
+
+  font-weight:
+    800;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .14em;
 }
+
+/* =========================================================
+   ORDER MAIN
+========================================================= */
 
 .od-order-main {
   display: flex;
+
   align-items: center;
-  gap: 14px;
+
   flex-wrap: wrap;
+
+  gap:
+    .9rem;
 }
+
+/* =========================================================
+   ORDER TITLE
+========================================================= */
 
 .od-order-title {
-  font-size: 32px;
-  font-weight: 800;
-  line-height: 1;
-  color: #fff;
+  color:
+    white;
+
+  font-size:
+    clamp(2rem, 4vw, 3rem);
+
+  line-height:
+    .92;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.06em;
+
+  text-shadow:
+    0 10px 30px rgba(0,208,255,.10);
 }
+
+/* =========================================================
+   ORDER DATE
+========================================================= */
 
 .od-order-date {
-  font-size: 14px;
-  color: rgba(255,255,255,0.5);
+  color:
+    rgba(203,213,225,.60);
+
+  font-size:
+    .9rem;
+
+  line-height:
+    1.6;
 }
 
+/* =========================================================
+   HEADER RIGHT
+========================================================= */
+
 .od-header-right {
+  position: relative;
+
+  z-index: 2;
+
   display: flex;
+
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+
+  gap:
+    .8rem;
+
+  flex-wrap:
+    wrap;
 }
 
 /* =========================================================
@@ -84,42 +227,111 @@
 ========================================================= */
 
 .od-section {
-  border-radius: 24px;
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius:
+    1.8rem;
+
+  isolation:
+    isolate;
 
   background:
     linear-gradient(
       180deg,
-      rgba(10, 18, 38, 0.96),
-      rgba(6, 12, 26, 0.98)
+      rgba(255,255,255,.045),
+      rgba(255,255,255,.025)
     );
 
-  border: 1px solid rgba(255,255,255,0.06);
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  backdrop-filter:
+    blur(16px);
 
   box-shadow:
-    0 8px 32px rgba(0,0,0,0.28),
-    inset 0 1px 0 rgba(255,255,255,0.03);
-
-  overflow: hidden;
+    0 18px 50px rgba(0,0,0,.24);
 }
+
+/* =========================================================
+   SECTION ATMOSPHERE
+========================================================= */
+
+.od-section::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .18;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.05),
+      transparent 55%
+    );
+
+  pointer-events:
+    none;
+}
+
+/* =========================================================
+   SECTION HEAD
+========================================================= */
 
 .od-section-head {
+  position: relative;
+
+  z-index: 2;
+
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
 
-  padding: 20px 24px;
+  gap:
+    1rem;
 
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding:
+    1.3rem 1.5rem;
+
+  border-bottom:
+    1px solid rgba(255,255,255,.06);
 }
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
 
 .od-section-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: #fff;
+  color:
+    white;
+
+  font-size:
+    1.05rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.03em;
 }
 
+/* =========================================================
+   SECTION BODY
+========================================================= */
+
 .od-section-body {
-  padding: 24px;
+  position: relative;
+
+  z-index: 2;
+
+  padding:
+    1.5rem;
 }
 
 /* =========================================================
@@ -128,38 +340,92 @@
 
 .od-info-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap:
+    1rem;
 }
+
+/* =========================================================
+   INFO CARD
+========================================================= */
 
 .od-info-card {
+  position: relative;
+
+  overflow: hidden;
+
   display: flex;
+
   flex-direction: column;
-  gap: 8px;
 
-  padding: 18px;
-  border-radius: 18px;
+  gap:
+    .55rem;
 
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.05);
+  padding:
+    1rem;
+
+  border-radius:
+    1.3rem;
+
+  background:
+    rgba(255,255,255,.035);
+
+  border:
+    1px solid rgba(255,255,255,.05);
+
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    background var(--transition-base);
 }
 
+.od-info-card:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(255,255,255,.10);
+
+  background:
+    rgba(255,255,255,.045);
+}
+
+/* =========================================================
+   INFO TEXT
+========================================================= */
+
 .od-info-label {
-  font-size: 12px;
-  font-weight: 700;
+  color:
+    rgba(148,163,184,.58);
 
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size:
+    .68rem;
 
-  color: rgba(255,255,255,0.45);
+  font-weight:
+    900;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .10em;
 }
 
 .od-info-value {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
+  color:
+    white;
 
-  line-height: 1.5;
+  font-size:
+    .92rem;
+
+  font-weight:
+    700;
+
+  line-height:
+    1.7;
 }
 
 /* =========================================================
@@ -168,100 +434,215 @@
 
 .od-address-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
 
-.od-address-card {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
 
-  padding: 22px;
-  border-radius: 22px;
-
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.05);
-}
-
-.od-address-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: #fff;
-}
-
-.od-address-text {
-  font-size: 14px;
-  line-height: 1.7;
-  color: rgba(255,255,255,0.75);
-
-  white-space: pre-line;
+  gap:
+    1rem;
 }
 
 /* =========================================================
-   PRODUCTS TABLE
+   ADDRESS CARD
+========================================================= */
+
+.od-address-card,
+.od-meta-card {
+  position: relative;
+
+  overflow: hidden;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap:
+    .9rem;
+
+  padding:
+    1.3rem;
+
+  border-radius:
+    1.5rem;
+
+  background:
+    rgba(255,255,255,.035);
+
+  border:
+    1px solid rgba(255,255,255,.05);
+
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    background var(--transition-base);
+}
+
+.od-address-card:hover,
+.od-meta-card:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(255,255,255,.10);
+
+  background:
+    rgba(255,255,255,.045);
+}
+
+/* =========================================================
+   ADDRESS TEXT
+========================================================= */
+
+.od-address-title {
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.02em;
+}
+
+.od-address-text {
+  color:
+    rgba(203,213,225,.72);
+
+  font-size:
+    .84rem;
+
+  line-height:
+    1.8;
+
+  white-space:
+    pre-line;
+}
+
+/* =========================================================
+   TABLE WRAP
 ========================================================= */
 
 .od-table-wrap {
-  overflow-x: auto;
+  overflow-x:
+    auto;
+
+  border-radius:
+    1.4rem;
 }
+
+/* =========================================================
+   TABLE
+========================================================= */
 
 .od-table {
   width: 100%;
-  border-collapse: collapse;
+
+  border-collapse:
+    collapse;
 }
 
 .od-table thead {
-  background: rgba(255,255,255,0.03);
+  background:
+    rgba(255,255,255,.03);
 }
+
+/* =========================================================
+   TABLE HEAD
+========================================================= */
 
 .od-table th {
-  text-align: left;
+  text-align:
+    left;
 
-  padding: 16px 18px;
+  padding:
+    1rem 1.2rem;
 
-  font-size: 12px;
-  font-weight: 800;
+  color:
+    rgba(148,163,184,.60);
 
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size:
+    .68rem;
 
-  color: rgba(255,255,255,0.45);
+  font-weight:
+    900;
 
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .10em;
+
+  border-bottom:
+    1px solid rgba(255,255,255,.06);
 }
+
+/* =========================================================
+   TABLE CELLS
+========================================================= */
 
 .od-table td {
-  padding: 18px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding:
+    1.1rem 1.2rem;
 
-  font-size: 14px;
-  color: rgba(255,255,255,0.82);
+  border-bottom:
+    1px solid rgba(255,255,255,.05);
+
+  color:
+    rgba(203,213,225,.78);
+
+  font-size:
+    .84rem;
+
+  line-height:
+    1.7;
 }
 
+/* =========================================================
+   TABLE ROW
+========================================================= */
+
 .od-table tbody tr {
-  transition: background 0.2s ease;
+  transition:
+    background var(--transition-base);
 }
 
 .od-table tbody tr:hover {
-  background: rgba(255,255,255,0.025);
+  background:
+    rgba(255,255,255,.025);
 }
 
+/* =========================================================
+   PRODUCT
+========================================================= */
+
 .od-product-name {
-  font-weight: 700;
-  color: #fff;
+  color:
+    white;
+
+  font-weight:
+    800;
 }
 
 .od-product-sub {
-  margin-top: 4px;
+  margin-top:
+    .25rem;
 
-  font-size: 13px;
-  color: rgba(255,255,255,0.45);
+  color:
+    rgba(148,163,184,.56);
+
+  font-size:
+    .76rem;
 }
 
 .od-table-price {
-  font-weight: 700;
-  color: #fff;
+  color:
+    white;
+
+  font-weight:
+    800;
 }
 
 /* =========================================================
@@ -269,88 +650,146 @@
 ========================================================= */
 
 .od-totals {
-  margin-left: auto;
+  margin-left:
+    auto;
+
   width: 100%;
-  max-width: 420px;
+
+  max-width:
+    440px;
 
   display: flex;
+
   flex-direction: column;
-  gap: 14px;
-}
 
-.od-total-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding-bottom: 14px;
-
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-
-.od-total-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.od-total-label {
-  font-size: 14px;
-  color: rgba(255,255,255,0.6);
-}
-
-.od-total-value {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.od-total-final .od-total-label,
-.od-total-final .od-total-value {
-  font-size: 18px;
-  font-weight: 800;
-  color: #fff;
+  gap:
+    .9rem;
 }
 
 /* =========================================================
-   REVIEW / SHIPPING
+   TOTAL ROW
+========================================================= */
+
+.od-total-row {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap:
+    1rem;
+
+  padding-bottom:
+    .9rem;
+
+  border-bottom:
+    1px solid rgba(255,255,255,.06);
+}
+
+.od-total-row:last-child {
+  border-bottom:
+    none;
+
+  padding-bottom:
+    0;
+}
+
+/* =========================================================
+   TOTAL TEXT
+========================================================= */
+
+.od-total-label {
+  color:
+    rgba(148,163,184,.62);
+
+  font-size:
+    .84rem;
+}
+
+.od-total-value {
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    800;
+}
+
+/* =========================================================
+   FINAL TOTAL
+========================================================= */
+
+.od-total-final .od-total-label,
+.od-total-final .od-total-value {
+  color:
+    white;
+
+  font-size:
+    1.15rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.03em;
+}
+
+/* =========================================================
+   META GRID
 ========================================================= */
 
 .od-meta-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap:
+    1rem;
 }
 
-.od-meta-card {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-
-  padding: 22px;
-  border-radius: 22px;
-
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.05);
-}
+/* =========================================================
+   META ROW
+========================================================= */
 
 .od-meta-row {
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
-  gap: 12px;
+
+  gap:
+    1rem;
 }
 
+/* =========================================================
+   META TEXT
+========================================================= */
+
 .od-meta-label {
-  font-size: 14px;
-  color: rgba(255,255,255,0.55);
+  color:
+    rgba(148,163,184,.58);
+
+  font-size:
+    .82rem;
 }
 
 .od-meta-value {
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
+  color:
+    white;
 
-  text-align: right;
+  font-size:
+    .84rem;
+
+  font-weight:
+    800;
+
+  text-align:
+    right;
 }
 
 /* =========================================================
@@ -359,9 +798,14 @@
 
 .od-actions {
   display: flex;
+
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+
+  gap:
+    .8rem;
+
+  flex-wrap:
+    wrap;
 }
 
 /* =========================================================
@@ -370,8 +814,11 @@
 
 .od-page .btn-primary,
 .od-page .btn-secondary {
-  min-height: 42px;
-  border-radius: 14px;
+  min-height:
+    44px;
+
+  border-radius:
+    1rem;
 }
 
 /* =========================================================
@@ -379,52 +826,61 @@
 ========================================================= */
 
 @media (max-width: 1100px) {
+
   .od-info-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 
-  .od-address-grid {
-    grid-template-columns: 1fr;
-  }
-
+  .od-address-grid,
   .od-meta-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      1fr;
   }
 }
 
 @media (max-width: 768px) {
+
   .od-top {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction:
+      column;
+
+    align-items:
+      stretch;
   }
 
   .od-order-title {
-    font-size: 26px;
+    font-size:
+      clamp(2rem, 10vw, 3rem);
   }
 
   .od-info-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      1fr;
   }
 
-  .od-section-head {
-    padding: 18px;
-  }
-
+  .od-section-head,
   .od-section-body {
-    padding: 18px;
+    padding:
+      1.1rem;
   }
 
   .od-table th,
   .od-table td {
-    padding: 14px;
+    padding:
+      .9rem;
   }
 
   .od-actions {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction:
+      column;
+
+    align-items:
+      stretch;
   }
 
   .od-actions button {
-    width: 100%;
+    width:
+      100%;
   }
 }

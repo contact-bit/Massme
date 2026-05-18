@@ -1,0 +1,1175 @@
+/* =========================================================
+   PAYMENTS ADMIN PAGE — ULTRA PREMIUM
+========================================================= */
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+.pap {
+  width: 100%;
+  max-width: 1500px;
+
+  margin: 0 auto;
+
+  padding:
+    2rem;
+
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    2rem;
+}
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.pap-hero {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius:
+    36px;
+
+  padding:
+    2.4rem;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,208,255,.16),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.96),
+      rgba(2,6,23,.98)
+    );
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.34);
+}
+
+.pap-hero::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.06),
+      transparent 40%
+    );
+
+  pointer-events: none;
+}
+
+.pap-hero-grid {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0,1fr)
+    auto;
+
+  gap:
+    2rem;
+
+  align-items: center;
+}
+
+/* =========================================================
+   KICKER
+========================================================= */
+
+.pap-kicker,
+.pap-section-kicker {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height:
+    32px;
+
+  padding:
+    0 .9rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(0,208,255,.08);
+
+  border:
+    1px solid rgba(0,208,255,.16);
+
+  backdrop-filter:
+    blur(14px);
+
+  color:
+    #7dd3fc;
+
+  font-size:
+    .66rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .18em;
+
+  text-transform:
+    uppercase;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.pap-title {
+  margin:
+    1rem 0 0 0;
+
+  color:
+    white;
+
+  font-size:
+    clamp(2.6rem, 5vw, 4.8rem);
+
+  line-height:
+    .92;
+
+  letter-spacing:
+    -.08em;
+
+  font-weight:
+    900;
+}
+
+/* =========================================================
+   SUBTITLE
+========================================================= */
+
+.pap-subtitle {
+  max-width:
+    720px;
+
+  margin-top:
+    1.1rem;
+
+  color:
+    rgba(148,163,184,.78);
+
+  font-size:
+    1rem;
+
+  line-height:
+    1.9;
+
+  font-weight:
+    500;
+}
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.pap-stats {
+  display: flex;
+
+  gap:
+    1rem;
+}
+
+.pap-stat {
+  min-width:
+    130px;
+
+  padding:
+    1.1rem;
+
+  border-radius:
+    24px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(16px);
+
+  box-shadow:
+    0 16px 40px rgba(0,0,0,.18);
+}
+
+.pap-stat-value {
+  color:
+    white;
+
+  font-size:
+    2rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.06em;
+}
+
+.pap-stat-label {
+  margin-top:
+    .3rem;
+
+  color:
+    rgba(148,163,184,.66);
+
+  font-size:
+    .78rem;
+
+  font-weight:
+    700;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .08em;
+}
+
+/* =========================================================
+   SECTION
+========================================================= */
+
+.pap-section {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1.1rem;
+}
+
+.pap-section-head {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    .8rem;
+}
+
+.pap-section-head h2 {
+  margin: 0;
+
+  color:
+    white;
+
+  font-size:
+    1.6rem;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    -.04em;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.pap-card {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius:
+    32px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.92),
+      rgba(2,6,23,.96)
+    );
+
+  backdrop-filter:
+    blur(20px);
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.24);
+
+  padding:
+    1.5rem;
+}
+
+/* =========================================================
+   TABS
+========================================================= */
+
+.pap-tabs {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap:
+    1rem;
+}
+
+.pap-tab {
+  display: flex;
+  align-items: center;
+
+  gap:
+    .9rem;
+
+  min-height:
+    72px;
+
+  padding:
+    0 1.2rem;
+
+  border-radius:
+    24px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(14px);
+
+  color:
+    rgba(255,255,255,.82);
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease;
+}
+
+.pap-tab:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(0,208,255,.16);
+
+  background:
+    rgba(255,255,255,.06);
+}
+
+.pap-tab.active {
+  border-color:
+    rgba(0,208,255,.24);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.18),
+      rgba(37,99,235,.16)
+    );
+
+  box-shadow:
+    0 20px 50px rgba(0,208,255,.16);
+
+  color:
+    white;
+}
+
+.pap-tab-flag {
+  font-size:
+    1.5rem;
+}
+
+.pap-tab-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.pap-tab-title {
+  font-size:
+    .9rem;
+
+  font-weight:
+    800;
+}
+
+.pap-tab-code {
+  margin-top:
+    .15rem;
+
+  color:
+    rgba(148,163,184,.7);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .08em;
+}
+
+/* =========================================================
+   LIST
+========================================================= */
+
+.pap-list {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   WRAP
+========================================================= */
+
+.pap-wrap {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   ROW
+========================================================= */
+
+.pap-row {
+  position: relative;
+
+  overflow: hidden;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0,1fr)
+    auto;
+
+  gap:
+    1.2rem;
+
+  align-items: center;
+
+  padding:
+    1.3rem;
+
+  border-radius:
+    30px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.92),
+      rgba(2,6,23,.96)
+    );
+
+  backdrop-filter:
+    blur(18px);
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.20);
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+.pap-row:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(0,208,255,.12);
+
+  box-shadow:
+    0 26px 70px rgba(0,0,0,.28);
+}
+
+.pap-row.active {
+  border-color:
+    rgba(0,208,255,.18);
+
+  box-shadow:
+    0 30px 80px rgba(0,208,255,.10);
+}
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.pap-main {
+  position: relative;
+
+  z-index: 1;
+
+  width: 100%;
+
+  min-width:
+    0;
+}
+
+/* =========================================================
+   TOP
+========================================================= */
+
+.pap-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   NAME
+========================================================= */
+
+.pap-name-wrap {
+  display: flex;
+  align-items: center;
+
+  gap:
+    .8rem;
+
+  min-width:
+    0;
+}
+
+.pap-name {
+  color:
+    white;
+
+  font-size:
+    1.2rem;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    -.04em;
+}
+
+/* =========================================================
+   OFF
+========================================================= */
+
+.pap-off {
+  height:
+    28px;
+
+  padding:
+    0 .8rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(239,68,68,.14);
+
+  border:
+    1px solid rgba(239,68,68,.18);
+
+  color:
+    #fca5a5;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size:
+    .68rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .08em;
+}
+
+/* =========================================================
+   PROVIDER
+========================================================= */
+
+.pap-provider {
+  height:
+    34px;
+
+  padding:
+    0 .9rem;
+
+  border-radius:
+    999px;
+
+  border:
+    1px solid rgba(0,208,255,.14);
+
+  background:
+    rgba(0,208,255,.08);
+
+  color:
+    #7dd3fc;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .12em;
+
+  text-transform:
+    uppercase;
+
+  flex-shrink:
+    0;
+}
+
+/* =========================================================
+   BOTTOM
+========================================================= */
+
+.pap-bottom {
+  margin-top:
+    .8rem;
+
+  color:
+    rgba(148,163,184,.76);
+
+  font-size:
+    .92rem;
+
+  line-height:
+    1.8;
+}
+
+/* =========================================================
+   META
+========================================================= */
+
+.pap-meta {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap:
+    .8rem;
+
+  margin-top:
+    1rem;
+}
+
+.pap-meta-item {
+  display: inline-flex;
+  align-items: center;
+
+  gap:
+    .45rem;
+
+  min-height:
+    34px;
+
+  padding:
+    0 .9rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.04);
+
+  border:
+    1px solid rgba(255,255,255,.05);
+}
+
+.pap-meta-item span {
+  color:
+    rgba(148,163,184,.6);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    700;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .08em;
+}
+
+.pap-meta-item strong {
+  color:
+    white;
+
+  font-size:
+    .8rem;
+
+  font-weight:
+    800;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.pap-actions {
+  position: relative;
+
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+
+  gap:
+    .8rem;
+
+  flex-shrink:
+    0;
+}
+
+/* =========================================================
+   BUTTON
+========================================================= */
+
+.pap-btn {
+  pointer-events:
+    auto;
+
+  min-height:
+    50px;
+
+  padding:
+    0 1.2rem;
+
+  border-radius:
+    18px;
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .25s ease,
+    background .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease,
+    opacity .25s ease;
+}
+
+.pap-btn:hover {
+  transform:
+    translateY(-2px);
+}
+
+/* =========================================================
+   GHOST
+========================================================= */
+
+.pap-btn-ghost {
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    rgba(255,255,255,.04);
+
+  color:
+    white;
+}
+
+.pap-btn-ghost:hover {
+  border-color:
+    rgba(0,208,255,.16);
+
+  background:
+    rgba(255,255,255,.06);
+}
+
+/* =========================================================
+   DANGER
+========================================================= */
+
+.pap-btn-danger {
+  border:
+    1px solid rgba(239,68,68,.16);
+
+  background:
+    rgba(239,68,68,.12);
+
+  color:
+    #fca5a5;
+}
+
+.pap-btn-danger:hover {
+  background:
+    rgba(239,68,68,.18);
+
+  border-color:
+    rgba(239,68,68,.24);
+}
+
+/* =========================================================
+   EDIT
+========================================================= */
+
+.pap-edit {
+  padding:
+    .5rem 0 0 0;
+}
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.pap-empty {
+  padding:
+    3rem 2rem;
+
+  border-radius:
+    30px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.03);
+
+  text-align:
+    center;
+
+  color:
+    rgba(148,163,184,.7);
+
+  font-size:
+    .95rem;
+
+  font-weight:
+    600;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .pap-hero-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .pap-stats {
+    width: 100%;
+  }
+
+  .pap-stat {
+    flex: 1;
+  }
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 840px) {
+
+  .pap-row {
+    grid-template-columns:
+      1fr;
+  }
+
+  .pap-actions {
+    width: 100%;
+  }
+
+  .pap-btn {
+    flex: 1;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .pap {
+    padding:
+      1rem;
+  }
+
+  .pap-hero,
+  .pap-card,
+  .pap-row,
+  .pap-empty {
+    border-radius:
+      24px;
+  }
+
+  .pap-hero {
+    padding:
+      1.5rem;
+  }
+
+  .pap-title {
+    font-size:
+      2.2rem;
+  }
+
+  .pap-tabs {
+    flex-wrap:
+      nowrap;
+
+    overflow-x:
+      auto;
+
+    padding-bottom:
+      .4rem;
+  }
+
+  .pap-tab {
+    flex-shrink:
+      0;
+  }
+
+  .pap-actions {
+    flex-direction:
+      column;
+  }
+
+  .pap-btn {
+    width:
+      100%;
+    min-height:
+      54px;
+  }
+
+  .pap-top {
+    flex-direction:
+      column;
+
+    align-items:
+      flex-start;
+  }
+
+  .pap-provider {
+    margin-top:
+      .3rem;
+  }
+}
+
+/* =========================================================
+   CREATE TOGGLE
+========================================================= */
+
+.pap-create-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap:
+    1rem;
+}
+
+.pap-section-title {
+  margin-top:
+    .8rem;
+
+  color:
+    white;
+
+  font-size:
+    1.6rem;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    -.04em;
+}
+
+/* =========================================================
+   CREATE BUTTON
+========================================================= */
+
+.pap-create-toggle {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height:
+    56px;
+
+  padding:
+    0 1.4rem;
+
+  border-radius:
+    20px;
+
+  border:
+    1px solid rgba(0,208,255,.16);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.10),
+      rgba(37,99,235,.10)
+    );
+
+  backdrop-filter:
+    blur(14px);
+
+  color:
+    white;
+
+  font-size:
+    .88rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.02em;
+
+  cursor:
+    pointer;
+
+  box-shadow:
+    0 16px 40px rgba(0,208,255,.10);
+
+  transition:
+    transform .25s ease,
+    background .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease,
+    opacity .25s ease;
+}
+
+/* glow */
+
+.pap-create-toggle::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.10),
+      transparent 40%
+    );
+
+  opacity:
+    .8;
+
+  pointer-events:
+    none;
+}
+
+/* hover */
+
+.pap-create-toggle:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(0,208,255,.24);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.16),
+      rgba(37,99,235,.16)
+    );
+
+  box-shadow:
+    0 22px 60px rgba(0,208,255,.18);
+}
+
+/* active */
+
+.pap-create-toggle.active {
+  border-color:
+    rgba(0,208,255,.30);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.22),
+      rgba(37,99,235,.22)
+    );
+
+  box-shadow:
+    0 26px 70px rgba(0,208,255,.24);
+}
+
+/* click */
+
+.pap-create-toggle:active {
+  transform:
+    scale(.98);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .pap-create-head {
+    flex-direction:
+      column;
+
+    align-items:
+      stretch;
+  }
+
+  .pap-create-toggle {
+    width:
+      100%;
+  }
+}

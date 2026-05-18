@@ -1,16 +1,11 @@
 /* =========================================================
    VITRECTOMED — GLOBAL APP STYLES
-   PREMIUM MEDTECH EXPERIENCE
-========================================================= */
-
-/* =========================================================
-   IMPORTS
+   PREMIUM MEDTECH MASTER EDITION
 ========================================================= */
 
 @import "tailwindcss";
 
 @import "../styles/shop/tokens.css";
-
 
 @import "../styles/components.css";
 
@@ -37,16 +32,30 @@
 }
 
 html {
+  min-height: 100%;
+
   -webkit-text-size-adjust: 100%;
+
+  scroll-behavior: smooth;
 }
 
 body {
+  position: relative;
+
+  isolation: isolate;
+
   min-height: 100vh;
 
   overflow-x: hidden;
 
   background:
-    var(--color-bg);
+    linear-gradient(
+      180deg,
+      #030712 0%,
+      #07111f 34%,
+      #091827 68%,
+      #040712 100%
+    );
 
   color:
     var(--color-text);
@@ -62,14 +71,10 @@ body {
 
   -moz-osx-font-smoothing:
     grayscale;
-
-  position: relative;
-
-  isolation: isolate;
 }
 
 /* =========================================================
-   GLOBAL BACKGROUND
+   GLOBAL ATMOSPHERIC BACKGROUND
 ========================================================= */
 
 body::before {
@@ -79,21 +84,34 @@ body::before {
 
   inset: 0;
 
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(0,208,255,.10),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(139,92,246,.08),
-      transparent 35%
-    );
+  z-index: -3;
 
   pointer-events: none;
 
-  z-index: -2;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,208,255,.12),
+      transparent 28%
+    ),
+
+    radial-gradient(
+      circle at top right,
+      rgba(59,130,246,.10),
+      transparent 22%
+    ),
+
+    radial-gradient(
+      circle at bottom right,
+      rgba(139,92,246,.08),
+      transparent 30%
+    ),
+
+    radial-gradient(
+      circle at bottom left,
+      rgba(14,165,233,.05),
+      transparent 26%
+    );
 }
 
 /* =========================================================
@@ -107,21 +125,26 @@ body::after {
 
   inset: 0;
 
+  z-index: -2;
+
+  pointer-events: none;
+
+  opacity: .18;
+
   background-image:
     linear-gradient(
-      rgba(255,255,255,.02) 1px,
+      rgba(255,255,255,.025) 1px,
       transparent 1px
     ),
+
     linear-gradient(
       90deg,
-      rgba(255,255,255,.02) 1px,
+      rgba(255,255,255,.025) 1px,
       transparent 1px
     );
 
   background-size:
     80px 80px;
-
-  opacity: .18;
 
   mask-image:
     radial-gradient(
@@ -129,10 +152,24 @@ body::after {
       black,
       transparent 90%
     );
+}
 
-  pointer-events: none;
+/* =========================================================
+   NOISE OVERLAY
+========================================================= */
 
-  z-index: -1;
+body > * {
+  position: relative;
+
+  z-index: 1;
+}
+
+body > *::selection {
+  background:
+    rgba(0,208,255,.24);
+
+  color:
+    white;
 }
 
 /* =========================================================
@@ -144,6 +181,8 @@ main {
   position: relative;
 
   isolation: isolate;
+
+  min-height: 100vh;
 }
 
 /* =========================================================
@@ -190,7 +229,8 @@ a {
 
   transition:
     color var(--transition-base),
-    opacity var(--transition-base);
+    opacity var(--transition-base),
+    transform var(--transition-base);
 }
 
 a:hover {
@@ -213,6 +253,9 @@ h4,
 h5,
 h6 {
   text-wrap: balance;
+
+  letter-spacing:
+    -.03em;
 }
 
 /* =========================================================
@@ -221,7 +264,7 @@ h6 {
 
 ::selection {
   background:
-    rgba(0,208,255,.24);
+    rgba(0,208,255,.22);
 
   color:
     white;
@@ -230,6 +273,15 @@ h6 {
 /* =========================================================
    SCROLLBAR
 ========================================================= */
+
+* {
+  scrollbar-width:
+    thin;
+
+  scrollbar-color:
+    rgba(255,255,255,.14)
+    transparent;
+}
 
 ::-webkit-scrollbar {
   width: 12px;
@@ -243,18 +295,18 @@ h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(0,208,255,.55),
-      rgba(47,107,255,.55)
-    );
-
   border-radius:
     999px;
 
   border:
     2px solid transparent;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0,208,255,.55),
+      rgba(59,130,246,.55)
+    );
 
   background-clip:
     padding-box;
@@ -264,8 +316,8 @@ h6 {
   background:
     linear-gradient(
       180deg,
-      rgba(0,208,255,.8),
-      rgba(47,107,255,.8)
+      rgba(0,208,255,.82),
+      rgba(59,130,246,.82)
     );
 }
 
@@ -275,10 +327,55 @@ h6 {
 
 :focus-visible {
   outline:
-    2px solid rgba(0,208,255,.7);
+    2px solid rgba(0,208,255,.72);
 
   outline-offset:
     3px;
+}
+
+/* =========================================================
+   PREMIUM SURFACES
+========================================================= */
+
+.glass-surface {
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.045),
+      rgba(255,255,255,.025)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  backdrop-filter:
+    blur(16px);
+
+  box-shadow:
+    0 18px 50px rgba(0,0,0,.24);
+}
+
+.glass-surface::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .18;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.06),
+      transparent 55%
+    );
 }
 
 /* =========================================================
@@ -292,7 +389,7 @@ h6 {
 
     transform:
       translateY(40px)
-      scale(.98);
+      scale(.985);
   }
 
   to {
@@ -333,13 +430,31 @@ h6 {
   }
 }
 
+@keyframes float-soft {
+
+  0% {
+    transform:
+      translateY(0px);
+  }
+
+  50% {
+    transform:
+      translateY(-6px);
+  }
+
+  100% {
+    transform:
+      translateY(0px);
+  }
+}
+
 /* =========================================================
    SECTION ENTER
 ========================================================= */
 
 .section-enter {
   animation:
-    section-enter .8s cubic-bezier(.16,1,.3,1);
+    section-enter .85s cubic-bezier(.16,1,.3,1);
 }
 
 /* =========================================================
@@ -366,15 +481,21 @@ h6 {
 ========================================================= */
 
 .mr-wrapper {
+  position: relative;
+
+  overflow: hidden;
+
+  isolation: isolate;
+
   width: 100%;
 
   margin: 0 auto;
 
   padding:
-    var(--space-4);
+    var(--space-5);
 
   border-radius:
-    var(--radius-xl);
+    calc(var(--radius-xl) + 2px);
 
   border:
     1px solid rgba(255,255,255,.08);
@@ -382,25 +503,21 @@ h6 {
   background:
     linear-gradient(
       180deg,
-      rgba(15,24,38,.88),
-      rgba(8,13,22,.96)
+      rgba(12,18,30,.92),
+      rgba(7,11,20,.96)
     );
 
   backdrop-filter:
     blur(var(--blur-md));
 
   box-shadow:
-    var(--shadow-lg);
+    0 24px 70px rgba(0,0,0,.32);
 
   display: flex;
 
   flex-direction: column;
 
   align-items: center;
-
-  overflow: hidden;
-
-  isolation: isolate;
 }
 
 /* =========================================================
@@ -414,15 +531,20 @@ h6 {
 
   inset: 0;
 
+  pointer-events: none;
+
   background:
+    radial-gradient(
+      circle at top right,
+      rgba(0,208,255,.10),
+      transparent 35%
+    ),
+
     linear-gradient(
       135deg,
-      rgba(0,208,255,.06),
-      transparent 45%,
-      rgba(139,92,246,.04)
+      rgba(255,255,255,.04),
+      transparent 55%
     );
-
-  pointer-events: none;
 }
 
 /* =========================================================
@@ -430,6 +552,10 @@ h6 {
 ========================================================= */
 
 .mr-title {
+  position: relative;
+
+  z-index: 2;
+
   margin-bottom:
     var(--space-4);
 
@@ -440,13 +566,13 @@ h6 {
     1rem;
 
   font-weight:
-    700;
+    800;
+
+  letter-spacing:
+    -.03em;
 
   text-align:
     center;
-
-  letter-spacing:
-    -.02em;
 }
 
 /* =========================================================
@@ -471,7 +597,7 @@ h6 {
 #mr-zone input[type="text"] {
   width: 100%;
 
-  min-height: 56px;
+  min-height: 58px;
 
   padding:
     0 1rem;
@@ -483,7 +609,7 @@ h6 {
     1px solid rgba(255,255,255,.08);
 
   background:
-    rgba(255,255,255,.03);
+    rgba(255,255,255,.035);
 
   backdrop-filter:
     blur(var(--blur-sm));
@@ -500,17 +626,35 @@ h6 {
   transition:
     border-color var(--transition-base),
     box-shadow var(--transition-base),
-    background var(--transition-base);
+    background var(--transition-base),
+    transform var(--transition-base);
+}
+
+#mr-zone input[type="text"]::placeholder {
+  color:
+    rgba(148,163,184,.58);
+}
+
+#mr-zone input[type="text"]:hover {
+  background:
+    rgba(255,255,255,.05);
+
+  border-color:
+    rgba(255,255,255,.12);
 }
 
 #mr-zone input[type="text"]:focus {
   outline: none;
 
+  background:
+    rgba(255,255,255,.06);
+
   border-color:
-    rgba(0,208,255,.26);
+    rgba(0,208,255,.28);
 
   box-shadow:
-    0 0 0 4px rgba(0,208,255,.08);
+    0 0 0 4px rgba(0,208,255,.08),
+    0 12px 30px rgba(0,208,255,.08);
 }
 
 /* =========================================================
@@ -518,10 +662,14 @@ h6 {
 ========================================================= */
 
 #mr-zone input[type="button"] {
-  min-height: 52px;
+  position: relative;
+
+  overflow: hidden;
+
+  min-height: 54px;
 
   padding:
-    0 1.2rem;
+    0 1.4rem;
 
   border-radius:
     var(--radius-full);
@@ -540,17 +688,40 @@ h6 {
     white;
 
   font-weight:
-    700;
+    800;
+
+  letter-spacing:
+    -.01em;
 
   cursor: pointer;
 
   box-shadow:
-    0 12px 30px rgba(0,208,255,.18);
+    0 14px 34px rgba(0,208,255,.22);
 
   transition:
     transform var(--transition-base),
     box-shadow var(--transition-base),
     filter var(--transition-base);
+}
+
+#mr-zone input[type="button"]::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.14),
+      transparent 60%
+    );
+
+  transition:
+    opacity var(--transition-base);
 }
 
 #mr-zone input[type="button"]:hover {
@@ -561,7 +732,11 @@ h6 {
     brightness(1.04);
 
   box-shadow:
-    0 18px 40px rgba(0,208,255,.26);
+    0 20px 44px rgba(0,208,255,.30);
+}
+
+#mr-zone input[type="button"]:hover::before {
+  opacity: 1;
 }
 
 /* =========================================================
@@ -583,6 +758,9 @@ h6 {
     1px solid rgba(255,255,255,.08);
 
   overflow: hidden;
+
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.24);
 }
 
 /* =========================================================
@@ -674,12 +852,15 @@ h6 {
       var(--radius-xl);
 
     background:
-      rgba(255,255,255,.03);
+      rgba(255,255,255,.035);
 
     border:
       1px solid rgba(255,255,255,.08);
 
     backdrop-filter:
       blur(var(--blur-sm));
+
+    box-shadow:
+      0 14px 34px rgba(0,0,0,.18);
   }
 }

@@ -1,0 +1,356 @@
+/* =========================================================
+   EXPORT PREVIEW — ULTRA PREMIUM
+   MASSME / VITRECTOMED DA
+========================================================= */
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+.exportPreview {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius:
+    32px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.76),
+      rgba(2,6,23,.88)
+    );
+
+  backdrop-filter:
+    blur(22px);
+
+  padding:
+    1.8rem;
+
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.24);
+}
+
+/* glow */
+
+.exportPreview::before {
+  content: "";
+
+  position: absolute;
+
+  top: -160px;
+  right: -140px;
+
+  width:
+    320px;
+
+  height:
+    320px;
+
+  border-radius:
+    999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.12),
+      transparent 72%
+    );
+
+  pointer-events:
+    none;
+}
+
+/* =========================================================
+   HEAD
+========================================================= */
+
+.exportPreview-head {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    .7rem;
+
+  margin-bottom:
+    1.6rem;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.exportPreview-title {
+  margin:
+    0;
+
+  color:
+    white;
+
+  font-size:
+    1.5rem;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    -.04em;
+}
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.exportPreview-summary {
+  width: fit-content;
+
+  margin:
+    0;
+
+  padding:
+    .75rem 1rem;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(0,208,255,.14);
+
+  background:
+    rgba(0,208,255,.08);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    #7dd3fc;
+
+  font-size:
+    .82rem;
+
+  font-weight:
+    700;
+
+  line-height:
+    1.7;
+}
+
+/* =========================================================
+   FORMAT
+========================================================= */
+
+.exportPreview-format {
+  margin:
+    0;
+
+  color:
+    rgba(148,163,184,.70);
+
+  font-size:
+    .84rem;
+
+  line-height:
+    1.8;
+
+  max-width:
+    700px;
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.exportPreview-grid {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.exportPreview-card {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height:
+    170px;
+
+  padding:
+    1.4rem;
+
+  border-radius:
+    24px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.045),
+      rgba(255,255,255,.02)
+    );
+
+  backdrop-filter:
+    blur(16px);
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease;
+}
+
+/* glow */
+
+.exportPreview-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.08),
+      transparent 45%
+    );
+
+  opacity:
+    .8;
+
+  pointer-events:
+    none;
+}
+
+/* hover */
+
+.exportPreview-card:hover {
+  transform:
+    translateY(-4px);
+
+  border-color:
+    rgba(0,208,255,.14);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.06),
+      rgba(255,255,255,.03)
+    );
+
+  box-shadow:
+    0 26px 60px rgba(0,0,0,.22);
+}
+
+/* =========================================================
+   CARD TITLE
+========================================================= */
+
+.exportPreview-cardTitle {
+  position: relative;
+
+  z-index: 2;
+
+  color:
+    white;
+
+  font-size:
+    1rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.03em;
+
+  margin-bottom:
+    .9rem;
+}
+
+/* =========================================================
+   CARD TEXT
+========================================================= */
+
+.exportPreview-cardText {
+  position: relative;
+
+  z-index: 2;
+
+  color:
+    rgba(203,213,225,.72);
+
+  font-size:
+    .84rem;
+
+  line-height:
+    1.9;
+
+  font-weight:
+    500;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 980px) {
+
+  .exportPreview-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .exportPreview-card {
+    min-height:
+      auto;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .exportPreview {
+    padding:
+      1.2rem;
+
+    border-radius:
+      26px;
+  }
+
+  .exportPreview-title {
+    font-size:
+      1.25rem;
+  }
+
+  .exportPreview-card {
+    padding:
+      1.1rem;
+
+    border-radius:
+      20px;
+  }
+}

@@ -1,0 +1,788 @@
+/* =========================================================
+   EDIT METHOD PANEL — ULTRA PREMIUM
+========================================================= */
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+.emp {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1.4rem;
+
+  color:
+    white;
+}
+
+/* =========================================================
+   HEAD
+========================================================= */
+
+.emp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   KICKER
+========================================================= */
+
+.emp-kicker,
+.emp-card-kicker {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height:
+    30px;
+
+  padding:
+    0 .85rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(0,208,255,.08);
+
+  border:
+    1px solid rgba(0,208,255,.14);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    #7dd3fc;
+
+  font-size:
+    .62rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .16em;
+
+  text-transform:
+    uppercase;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.emp-title {
+  margin:
+    1rem 0 0 0;
+
+  color:
+    white;
+
+  font-size:
+    clamp(2rem, 3vw, 3rem);
+
+  line-height:
+    .92;
+
+  letter-spacing:
+    -.06em;
+
+  font-weight:
+    900;
+}
+
+/* =========================================================
+   META
+========================================================= */
+
+.emp-meta {
+  margin-top:
+    .8rem;
+
+  color:
+    rgba(148,163,184,.66);
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    600;
+
+  letter-spacing:
+    .04em;
+}
+
+/* =========================================================
+   CLOSE
+========================================================= */
+
+.emp-close {
+  width:
+    48px;
+
+  height:
+    48px;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(14px);
+
+  color:
+    white;
+
+  font-size:
+    1rem;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .25s ease,
+    background .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+.emp-close:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(0,208,255,.14);
+
+  background:
+    rgba(255,255,255,.06);
+
+  box-shadow:
+    0 14px 30px rgba(0,0,0,.24);
+}
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.emp-body {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1.2rem;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.emp-card {
+  position: relative;
+
+  overflow: hidden;
+
+  padding:
+    1.4rem;
+
+  border-radius:
+    28px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.86),
+      rgba(5,10,18,.96)
+    );
+
+  backdrop-filter:
+    blur(18px);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.24);
+}
+
+.emp-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .06;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.14),
+      transparent 60%
+    );
+}
+
+/* =========================================================
+   CARD HEAD
+========================================================= */
+
+.emp-card-head {
+  position: relative;
+
+  z-index: 2;
+
+  margin-bottom:
+    1.2rem;
+}
+
+.emp-card-head h3 {
+  margin:
+    .8rem 0 0 0;
+
+  color:
+    white;
+
+  font-size:
+    1.15rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.04em;
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.emp-grid {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0,1fr)
+    minmax(0,1fr);
+
+  gap:
+    1rem;
+}
+
+.emp-grid > * {
+  min-width:
+    0;
+}
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+.emp-field {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    .7rem;
+}
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+.emp-field label {
+  color:
+    rgba(255,255,255,.84);
+
+  font-size:
+    .8rem;
+
+  font-weight:
+    700;
+}
+
+/* =========================================================
+   INPUT / SELECT
+========================================================= */
+
+.emp-field input,
+.emp-field select {
+  width: 100%;
+  min-width: 0;
+
+  box-sizing:
+    border-box;
+
+  min-height:
+    56px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.02)
+    );
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    500;
+
+  transition:
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease,
+    transform .25s ease;
+}
+
+/* =========================================================
+   OPTION
+========================================================= */
+
+.emp-field select option {
+  background:
+    #020617;
+
+  color:
+    white;
+}
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.emp-field input::placeholder {
+  color:
+    rgba(148,163,184,.54);
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.emp-field input:hover,
+.emp-field select:hover {
+  border-color:
+    rgba(255,255,255,.14);
+}
+
+/* =========================================================
+   FOCUS
+========================================================= */
+
+.emp-field input:focus,
+.emp-field select:focus {
+  outline: none;
+
+  border-color:
+    rgba(0,208,255,.34);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.05),
+      rgba(255,255,255,.03)
+    );
+
+  box-shadow:
+    0 0 0 4px rgba(0,208,255,.08),
+    0 0 30px rgba(0,208,255,.10);
+
+  transform:
+    translateY(-1px);
+}
+
+/* =========================================================
+   DISABLED
+========================================================= */
+
+.emp-field input:disabled,
+.emp-field select:disabled {
+  opacity:
+    .45;
+
+  cursor:
+    not-allowed;
+}
+
+/* =========================================================
+   TOGGLE
+========================================================= */
+
+.emp-toggle {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+
+  gap:
+    1rem;
+
+  cursor:
+    pointer;
+}
+
+/* =========================================================
+   HIDE CHECKBOX
+========================================================= */
+
+.emp-toggle input {
+  display:
+    none;
+}
+
+/* =========================================================
+   SWITCH
+========================================================= */
+
+.emp-switch {
+  position: relative;
+
+  flex-shrink:
+    0;
+
+  width:
+    58px;
+
+  height:
+    32px;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.08);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  transition:
+    background .25s ease,
+    border-color .25s ease;
+}
+
+.emp-switch::before {
+  content: "";
+
+  position: absolute;
+
+  top: 3px;
+  left: 4px;
+
+  width:
+    24px;
+
+  height:
+    24px;
+
+  border-radius:
+    999px;
+
+  background:
+    white;
+
+  transition:
+    transform .25s ease;
+}
+
+/* =========================================================
+   ACTIVE SWITCH
+========================================================= */
+
+.emp-toggle input:checked + .emp-switch {
+  background:
+    linear-gradient(
+      135deg,
+      #00d0ff,
+      #2563eb
+    );
+
+  border-color:
+    rgba(0,208,255,.18);
+
+  box-shadow:
+    0 0 24px rgba(0,208,255,.24);
+}
+
+.emp-toggle
+  input:checked
+  + .emp-switch::before {
+  transform:
+    translateX(25px);
+}
+
+/* =========================================================
+   TOGGLE CONTENT
+========================================================= */
+
+.emp-toggle-content {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    .2rem;
+}
+
+.emp-toggle-content strong {
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    700;
+}
+
+.emp-toggle-content span {
+  color:
+    rgba(148,163,184,.64);
+
+  font-size:
+    .76rem;
+
+  line-height:
+    1.6;
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.emp-error {
+  padding:
+    1rem 1.1rem;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(239,68,68,.16);
+
+  background:
+    rgba(239,68,68,.10);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    #fca5a5;
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    700;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.emp-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   BUTTON
+========================================================= */
+
+.emp-btn {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height:
+    54px;
+
+  padding:
+    0 1.4rem;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  font-size:
+    .9rem;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    background .25s ease,
+    border-color .25s ease,
+    opacity .25s ease;
+}
+
+.emp-btn:hover {
+  transform:
+    translateY(-2px);
+}
+
+/* =========================================================
+   PRIMARY
+========================================================= */
+
+.emp-btn-primary {
+  background:
+    linear-gradient(
+      135deg,
+      #00d0ff,
+      #2563eb
+    );
+
+  color:
+    white;
+
+  box-shadow:
+    0 18px 40px rgba(0,208,255,.22);
+}
+
+.emp-btn-primary:hover {
+  box-shadow:
+    0 24px 50px rgba(0,208,255,.30);
+}
+
+/* =========================================================
+   GHOST
+========================================================= */
+
+.emp-btn-ghost {
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(14px);
+
+  color:
+    white;
+}
+
+.emp-btn-ghost:hover {
+  border-color:
+    rgba(0,208,255,.12);
+
+  background:
+    rgba(255,255,255,.06);
+}
+
+/* =========================================================
+   DISABLED
+========================================================= */
+
+.emp-btn:disabled {
+  opacity:
+    .45;
+
+  cursor:
+    not-allowed;
+
+  transform:
+    none;
+
+  box-shadow:
+    none;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 720px) {
+
+  .emp-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .emp-footer {
+    flex-direction:
+      column;
+  }
+
+  .emp-btn {
+    width:
+      100%;
+    min-width:
+      100%;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .emp {
+    gap:
+      1rem;
+  }
+
+  .emp-title {
+    font-size:
+      2rem;
+  }
+
+  .emp-card {
+    padding:
+      1.2rem;
+
+    border-radius:
+      24px;
+  }
+
+  .emp-head {
+    align-items:
+      flex-start;
+  }
+}

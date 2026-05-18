@@ -1,209 +1,453 @@
 /* =========================================================
-   ADMIN — LOGIN (FINAL PREMIUM)
+   ADMIN DESIGN SYSTEM — MASSME
+   PREMIUM MASTER TOKENS
 ========================================================= */
 
-.admin-login-wrapper {
-  min-height: 100vh;
+:root {
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  /* =====================================================
+     TYPOGRAPHY
+  ===================================================== */
 
-  padding: var(--space-4);
+  --font-admin:
+    "Inter",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 
-  font-family: var(--font-admin);
+  --text-xs:
+    12px;
 
-  /* 🔥 fond plus premium */
+  --text-sm:
+    13px;
+
+  --text-md:
+    15px;
+
+  --text-base:
+    16px;
+
+  --text-lg:
+    18px;
+
+  --text-xl:
+    26px;
+
+  --text-2xl:
+    34px;
+
+  /* =====================================================
+     BACKGROUNDS
+  ===================================================== */
+
+  --color-bg:
+    #040712;
+
+  --color-bg-alt:
+    #08111f;
+
+  --color-surface:
+    rgba(255,255,255,.04);
+
+  --color-surface-alt:
+    rgba(255,255,255,.025);
+
+  --color-surface-hover:
+    rgba(255,255,255,.06);
+
+  /* =====================================================
+     BORDERS
+  ===================================================== */
+
+  --color-border:
+    rgba(255,255,255,.06);
+
+  --color-border-strong:
+    rgba(255,255,255,.12);
+
+  /* =====================================================
+     TEXT
+  ===================================================== */
+
+  --color-text:
+    #ffffff;
+
+  --color-text-soft:
+    rgba(203,213,225,.76);
+
+  --color-text-muted:
+    rgba(148,163,184,.58);
+
+  /* =====================================================
+     BRAND
+  ===================================================== */
+
+  --color-primary:
+    #0ea5e9;
+
+  --color-primary-hover:
+    #38bdf8;
+
+  --color-primary-soft:
+    rgba(14,165,233,.12);
+
+  /* =====================================================
+     STATUS
+  ===================================================== */
+
+  --color-success:
+    #22c55e;
+
+  --color-success-soft:
+    rgba(34,197,94,.12);
+
+  --color-warning:
+    #f59e0b;
+
+  --color-warning-soft:
+    rgba(245,158,11,.12);
+
+  --color-danger:
+    #ef4444;
+
+  --color-danger-soft:
+    rgba(239,68,68,.12);
+
+  /* =====================================================
+     GLASS / FX
+  ===================================================== */
+
+  --glass-blur:
+    blur(14px);
+
+  --glass-blur-strong:
+    blur(22px);
+
+  --glow-primary:
+    0 0 30px rgba(14,165,233,.22);
+
+  --glow-danger:
+    0 0 24px rgba(239,68,68,.18);
+
+  /* =====================================================
+     RADIUS
+  ===================================================== */
+
+  --radius-sm:
+    .9rem;
+
+  --radius-md:
+    1.1rem;
+
+  --radius-lg:
+    1.5rem;
+
+  --radius-xl:
+    2rem;
+
+  --radius-full:
+    999px;
+
+  /* =====================================================
+     SHADOWS
+  ===================================================== */
+
+  --shadow-sm:
+    0 8px 24px rgba(0,0,0,.16);
+
+  --shadow-md:
+    0 14px 40px rgba(0,0,0,.24);
+
+  --shadow-lg:
+    0 24px 70px rgba(0,0,0,.36);
+
+  /* =====================================================
+     SPACING
+  ===================================================== */
+
+  --space-1:
+    4px;
+
+  --space-2:
+    8px;
+
+  --space-3:
+    12px;
+
+  --space-4:
+    16px;
+
+  --space-5:
+    20px;
+
+  --space-6:
+    24px;
+
+  --space-8:
+    32px;
+
+  --space-10:
+    40px;
+
+  --space-12:
+    56px;
+
+  /* =====================================================
+     LAYOUT
+  ===================================================== */
+
+  --sidebar-width:
+    280px;
+
+  --header-height:
+    72px;
+
+  --content-max:
+    1540px;
+
+  --content-padding:
+    clamp(1rem, 3vw, 2rem);
+
+  /* =====================================================
+     TRANSITIONS
+  ===================================================== */
+
+  --transition-fast:
+    .18s ease;
+
+  --transition-base:
+    .28s cubic-bezier(.22,1,.36,1);
+
+  /* =====================================================
+     Z-INDEX
+  ===================================================== */
+
+  --z-navbar:
+    90;
+
+  --z-sidebar:
+    80;
+
+  --z-modal:
+    200;
+
+  --z-toast:
+    300;
+}
+
+/* =========================================================
+   HTML / BODY
+========================================================= */
+
+html,
+body,
+#__next {
+  width: 100%;
+  min-height: 100%;
+}
+
+/* =========================================================
+   BODY
+========================================================= */
+
+body {
+  position: relative;
+
+  overflow-x: hidden;
+
+  margin: 0;
+
+  font-family:
+    var(--font-admin);
+
   background:
-    radial-gradient(circle at 20% 0%, rgba(15,118,110,0.08), transparent 60%),
-    radial-gradient(circle at 80% 100%, rgba(15,118,110,0.06), transparent 60%),
     var(--color-bg);
+
+  color:
+    var(--color-text);
+
+  -webkit-font-smoothing:
+    antialiased;
+
+  text-rendering:
+    optimizeLegibility;
 }
 
-/* ================= CARD ================= */
+/* =========================================================
+   SELECTION
+========================================================= */
 
-.admin-login-box {
+::selection {
+  background:
+    rgba(14,165,233,.22);
+
+  color:
+    white;
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+* {
+  scrollbar-width:
+    thin;
+
+  scrollbar-color:
+    rgba(255,255,255,.12)
+    transparent;
+}
+
+*::-webkit-scrollbar {
+  width:
+    10px;
+
+  height:
+    10px;
+}
+
+*::-webkit-scrollbar-track {
+  background:
+    transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.10);
+
+  border:
+    2px solid transparent;
+
+  background-clip:
+    padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background:
+    rgba(255,255,255,.16);
+
+  background-clip:
+    padding-box;
+}
+
+/* =========================================================
+   GLOBAL CONTAINER
+========================================================= */
+
+.admin-container {
+  position: relative;
+
+  z-index: 2;
+
   width: 100%;
-  max-width: 420px;
 
-  padding: var(--space-5) var(--space-4);
+  max-width:
+    var(--content-max);
 
-  border-radius: var(--radius-xl);
+  margin:
+    0 auto;
 
-  background: var(--color-surface);
+  padding-left:
+    var(--content-padding);
 
-  border: 1px solid var(--color-border);
-
-  box-shadow: var(--shadow-lg);
-
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  padding-right:
+    var(--content-padding);
 }
 
-/* ================= TITLE ================= */
+/* =========================================================
+   GLOBAL SURFACE
+========================================================= */
 
-.admin-login-title {
-  font-size: var(--text-xl);
-  font-weight: 800;
+.admin-surface {
+  position: relative;
 
-  text-align: center;
-  color: var(--color-text);
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.04),
+      rgba(255,255,255,.025)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  border-radius:
+    var(--radius-lg);
+
+  backdrop-filter:
+    var(--glass-blur);
+
+  box-shadow:
+    var(--shadow-md);
 }
 
-.admin-login-subtitle {
-  font-size: var(--text-sm);
-  color: var(--color-text-soft);
+/* =========================================================
+   GLOBAL OVERLAY
+========================================================= */
 
-  text-align: center;
-}
+.admin-surface::before {
+  content: "";
 
-/* ================= FIELD ================= */
+  position: absolute;
 
-.admin-login-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+  inset: 0;
 
-.admin-login-label {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text-soft);
-}
+  opacity: 0;
 
-/* ================= INPUT ================= */
+  pointer-events: none;
 
-.admin-login-input {
-  width: 100%;
-  height: 42px;
-
-  padding: 0 12px;
-
-  border-radius: var(--radius-md);
-
-  border: 1px solid var(--color-border);
-
-  background: var(--color-surface-alt);
-  color: var(--color-text);
-
-  font-size: var(--text-sm);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.08),
+      transparent 55%
+    );
 
   transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    background var(--transition-fast);
+    opacity var(--transition-base);
 }
 
-.admin-login-input::placeholder {
-  color: var(--color-text-muted);
+.admin-surface:hover::before {
+  opacity: 1;
 }
 
-/* focus */
+/* =========================================================
+   FOCUS RING
+========================================================= */
 
-.admin-login-input:focus {
-  border-color: var(--color-primary);
-  background: var(--color-surface);
-
-  box-shadow: 0 0 0 3px var(--color-primary-soft);
+:is(
+  button,
+  a,
+  input,
+  textarea,
+  select
+):focus-visible {
   outline: none;
+
+  box-shadow:
+    0 0 0 4px rgba(14,165,233,.12);
 }
 
-/* accessibilité */
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
-.admin-login-input:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
+@media (max-width: 768px) {
 
-/* ================= BUTTON ================= */
+  :root {
 
-.admin-login-button {
-  width: 100%;
-  height: 42px;
+    --content-padding:
+      1rem;
 
-  margin-top: var(--space-2);
-
-  border-radius: var(--radius-md); /* FIX */
-
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary);
-
-  color: #fff;
-
-  font-size: var(--text-sm);
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast),
-    background var(--transition-fast);
-}
-
-/* hover */
-
-.admin-login-button:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-
-  transform: translateY(-1px);
-
-  box-shadow: 0 6px 18px rgba(15,118,110,0.25);
-}
-
-/* active */
-
-.admin-login-button:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-/* disabled */
-
-.admin-login-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* ================= ALERTS ================= */
-
-.admin-login-error,
-.admin-login-info {
-  font-size: var(--text-sm);
-
-  border-radius: var(--radius-md);
-  padding: 8px 10px;
-
-  font-weight: 600;
-}
-
-.admin-login-error {
-  color: var(--color-danger);
-  background: var(--color-danger-soft);
-}
-
-.admin-login-info {
-  color: var(--color-success);
-  background: var(--color-success-soft);
-}
-
-/* ================= FOOTNOTE ================= */
-
-.admin-login-footnote {
-  margin-top: var(--space-3);
-
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-
-  text-align: center;
-}
-
-/* ================= RESPONSIVE ================= */
-
-@media (max-width: 480px) {
-  .admin-login-box {
-    padding: var(--space-4);
-    border-radius: var(--radius-lg);
+    --header-height:
+      68px;
   }
 }

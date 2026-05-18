@@ -3,24 +3,40 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import "./login.css";
+
 export default function AdminLoginPage() {
   const router = useRouter();
 
   const [password, setPassword] = useState("");
-  const [show, setShow] = useState(false);
+  const [showPassword, setShowPassword] =
+    useState(false);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
+  const [loading, setLoading] =
+    useState(false);
 
-  const canSubmit = useMemo(
-    () => password.trim().length > 0 && !loading,
-    [password, loading]
-  );
+  const [error, setError] =
+    useState<string | null>(null);
+
+  const [info, setInfo] =
+    useState<string | null>(null);
+
+  const canSubmit = useMemo(() => {
+    return (
+      password.trim().length > 0 &&
+      !loading
+    );
+  }, [password, loading]);
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (token) router.replace("/admin");
+    const token =
+      localStorage.getItem(
+        "admin_token"
+      );
+
+    if (token) {
+      router.replace("/admin");
+    }
   }, [router]);
 
   const handleLogin = async () => {
@@ -31,13 +47,25 @@ export default function AdminLoginPage() {
     setInfo(null);
 
     try {
-      const res = await fetch("/api/admin-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
+      const res = await fetch(
+        "/api/admin-login",
+        {
+          method: "POST",
 
-      const data = await res.json().catch(() => ({}));
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            password,
+          }),
+        }
+      );
+
+      const data = await res
+        .json()
+        .catch(() => ({}));
 
       if (res.status === 429) {
         setError(
@@ -45,318 +73,282 @@ export default function AdminLoginPage() {
             data.retryAfterMinutes ?? 10
           } min.`
         );
+
         return;
       }
 
       if (!res.ok) {
-        setError("Mot de passe incorrect");
+        setError(
+          "Mot de passe incorrect"
+        );
+
         return;
       }
 
-      localStorage.setItem("admin_token", "true");
-      localStorage.setItem("admin_password", password);
       localStorage.setItem(
-        "admin_role",
-        data?.role === "logistics" ? "logistics" : "admin"
+        "admin_token",
+        "true"
       );
 
-      setInfo("Connexion réussie...");
+      localStorage.setItem(
+        "admin_password",
+        password
+      );
+
+      localStorage.setItem(
+        "admin_role",
+        data?.role === "logistics"
+          ? "logistics"
+          : "admin"
+      );
+
+      setInfo(
+        "Connexion sécurisée..."
+      );
+
       router.replace(
-        data?.role === "logistics" ? "/admin/logistics" : "/admin"
+        data?.role === "logistics"
+          ? "/admin/logistics"
+          : "/admin"
       );
     } catch {
-      setError("Erreur de connexion");
+      setError(
+        "Erreur de connexion"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="page">
+    <main className="admin-login-page">
 
       {/* BACKGROUND */}
-      <div className="bg" />
-      <div className="glow" />
+      <div className="admin-login-grid" />
 
-      <div className="wrapper">
+      <div className="admin-login-glow admin-login-glow-1" />
 
-        {/* BRAND */}
-        <div className="brand">
-          <h1>Vitrectomed/admin.com</h1>
-          <p>Panneau d'administration sécurisé</p>
+      <div className="admin-login-glow admin-login-glow-2" />
 
-          <div className="features">
-            <div>🔐 Accès sécurisé</div>
-            <div>⚡ Performances élevées</div>
-            <div>🧠 Gestion avancée</div>
-          </div>
-        </div>
+      <div className="admin-login-noise" />
 
-        {/* CARD */}
-        <div className="card">
+      {/* CONTENT */}
+      <div className="admin-login-wrapper">
 
-          <div className="header">
-            <h2>Connexion</h2>
-            <span>Accès admin</span>
+        {/* HERO */}
+        <section className="admin-login-hero">
+
+          <div className="admin-login-kicker">
+            Secure Admin Access
           </div>
 
-          <div className="form">
+          <h1 className="admin-login-title">
+            Administration
+            <span> Panel</span>
+          </h1>
 
-            <label>Mot de passe</label>
+          <p className="admin-login-description">
+            Interface sécurisée de gestion
+            et pilotage des opérations.
+          </p>
 
-            <div className="input-wrap">
-              <input
-                type={show ? "text" : "password"}
-                placeholder="Mot de passe admin"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-              />
+          {/* FEATURES */}
+          <div className="admin-login-features">
 
-              <button
-                type="button"
-                className="eye"
-                onClick={() => setShow(!show)}
-              >
-                {show ? "🙈" : "👁️"}
-              </button>
+            <div className="admin-login-feature">
+
+              <div className="admin-login-feature-icon">
+                🔐
+              </div>
+
+              <div>
+
+                <strong>
+                  Accès sécurisé
+                </strong>
+
+                <span>
+                  Infrastructure protégée et
+                  authentification avancée
+                </span>
+
+              </div>
+
             </div>
 
-            {(error || info) && (
-              <div className={`alert ${error ? "error" : "info"}`}>
-                {error ?? info}
-              </div>
-            )}
+            <div className="admin-login-feature">
 
-            <button
-              className="submit"
-              disabled={!canSubmit}
-              onClick={handleLogin}
-            >
-              {loading ? "Connexion..." : "Se connecter"}
-            </button>
+              <div className="admin-login-feature-icon">
+                ⚡
+              </div>
+
+              <div>
+
+                <strong>
+                  Performance optimisée
+                </strong>
+
+                <span>
+                  Interface fluide conçue
+                  pour une gestion rapide
+                </span>
+
+              </div>
+
+            </div>
+
+            <div className="admin-login-feature">
+
+              <div className="admin-login-feature-icon">
+                🧠
+              </div>
+
+              <div>
+
+                <strong>
+                  Gestion centralisée
+                </strong>
+
+                <span>
+                  Pilotage intelligent des
+                  opérations et du contenu
+                </span>
+
+              </div>
+
+            </div>
 
           </div>
-        </div>
 
-        {/* POWERED */}
-        <div className="powered">
-          Powered by <span>HDConnects</span>
-        </div>
+        </section>
+
+        {/* CARD */}
+        <section className="admin-login-card">
+
+          <div className="admin-login-card-glow" />
+
+          <div className="admin-login-card-content">
+
+            {/* HEADER */}
+            <div className="admin-login-card-header">
+
+              <div className="admin-login-badge">
+                ADMIN ACCESS
+              </div>
+
+              <h2>
+                Connexion sécurisée
+              </h2>
+
+              <p>
+                Authentifie-toi pour accéder
+                à l’interface d’administration.
+              </p>
+
+            </div>
+
+            {/* FORM */}
+            <div className="admin-login-form">
+
+              <div className="admin-login-field">
+
+                <label>
+                  Mot de passe
+                </label>
+
+                <div className="admin-login-input-wrap">
+
+                  <input
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
+                    placeholder="Entrer le mot de passe"
+                    value={password}
+                    onChange={(e) =>
+                      setPassword(
+                        e.target.value
+                      )
+                    }
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Enter"
+                      ) {
+                        handleLogin();
+                      }
+                    }}
+                    className="admin-login-input"
+                  />
+
+                  <button
+                    type="button"
+                    className="admin-login-eye"
+                    onClick={() =>
+                      setShowPassword(
+                        !showPassword
+                      )
+                    }
+                    aria-label={
+                      showPassword
+                        ? "Masquer le mot de passe"
+                        : "Afficher le mot de passe"
+                    }
+                  >
+                    {showPassword
+                      ? "🙈"
+                      : "👁️"}
+                  </button>
+
+                </div>
+
+              </div>
+
+              {(error || info) && (
+                <div
+                  className={`admin-login-alert ${
+                    error
+                      ? "is-error"
+                      : "is-info"
+                  }`}
+                >
+                  {error ?? info}
+                </div>
+              )}
+
+              <button
+                className="admin-login-submit"
+                disabled={!canSubmit}
+                onClick={handleLogin}
+              >
+                <span>
+                  {loading
+                    ? "Connexion..."
+                    : "Accéder au dashboard"}
+                </span>
+              </button>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* FOOTER */}
+        <footer className="admin-login-footer">
+
+          <span>
+            Powered by
+          </span>
+
+          <strong>
+            HDConnects
+          </strong>
+
+        </footer>
 
       </div>
 
-      <style jsx>{`
-
-        .page {
-          min-height: 100vh;
-          background: #020617;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-          position: relative;
-          overflow: hidden;
-        }
-
-        /* BG */
-        .bg {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at 20% 20%, #1e3a8a25, transparent 50%);
-        }
-
-        .glow {
-          position: absolute;
-          width: 600px;
-          height: 600px;
-          background: radial-gradient(circle, #3b82f6, transparent);
-          filter: blur(180px);
-          opacity: 0.12;
-        }
-
-        /* STACK */
-        .wrapper {
-          width: 100%;
-          max-width: 420px;
-          display: flex;
-          flex-direction: column;
-          gap: 28px;
-          z-index: 2;
-        }
-
-        /* BRAND */
-        .brand {
-          text-align: center;
-        }
-
-        .brand h1 {
-          font-size: 34px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-        }
-
-        .brand p {
-          color: #64748b;
-          margin-top: 6px;
-        }
-
-        .features {
-          margin-top: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          font-size: 13px;
-          color: #94a3b8;
-        }
-
-        /* CARD */
-        .card {
-          padding: 26px;
-          border-radius: 20px;
-          background: rgba(15,23,42,0.75);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255,255,255,0.08);
-          box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-        }
-
-        .header {
-          margin-bottom: 20px;
-        }
-
-        .header h2 {
-          font-size: 20px;
-          font-weight: 600;
-        }
-
-        .header span {
-          font-size: 12px;
-          color: #64748b;
-        }
-
-        /* FORM */
-        .form {
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-        }
-
-        label {
-          font-size: 12px;
-          color: #94a3b8;
-        }
-
-        .input-wrap {
-          position: relative;
-        }
-
-        input {
-          width: 100%;
-          height: 48px;
-          padding: 0 14px;
-          border-radius: 12px;
-          background: rgba(2,6,23,0.9);
-          border: 1px solid rgba(255,255,255,0.1);
-          color: white;
-          transition: all 0.2s ease;
-        }
-
-        input:focus {
-          outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
-        }
-
-        .eye {
-          position: absolute;
-          right: 10px;
-          top: 50%;
-          transform: translateY(-50%);
-          opacity: 0.7;
-        }
-
-        .eye:hover {
-          opacity: 1;
-        }
-
-        /* ALERT */
-        .alert {
-          font-size: 13px;
-          padding: 10px;
-          border-radius: 10px;
-        }
-
-        .alert.error {
-          background: rgba(239,68,68,0.1);
-          color: #f87171;
-        }
-
-        .alert.info {
-          background: rgba(59,130,246,0.1);
-          color: #60a5fa;
-        }
-
-        /* BUTTON */
-        .submit {
-          height: 48px;
-          border-radius: 12px;
-          font-weight: 600;
-          background: linear-gradient(135deg,#3b82f6,#2563eb);
-          box-shadow: 0 10px 30px rgba(37,99,235,0.4);
-          transition: all 0.2s ease;
-        }
-
-        .submit:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 14px 40px rgba(37,99,235,0.5);
-        }
-
-        .submit:disabled {
-          opacity: 0.5;
-          transform: none;
-          box-shadow: none;
-        }
-
-        /* POWERED */
-        .powered {
-          text-align: center;
-          font-size: 12px;
-          color: #64748b;
-        }
-
-        .powered span {
-          color: #3b82f6;
-          font-weight: 600;
-        }
-
-        .powered span:hover {
-          text-shadow: 0 0 8px rgba(59,130,246,0.6);
-        }
-
-        /* MOBILE */
-        @media (max-width: 500px) {
-          .wrapper {
-            gap: 22px;
-          }
-
-          .brand h1 {
-            font-size: 26px;
-          }
-
-          .card {
-            padding: 20px;
-          }
-
-          input {
-            height: 44px;
-          }
-
-          .submit {
-            height: 44px;
-          }
-        }
-
-      `}</style>
     </main>
   );
 }

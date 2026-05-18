@@ -2,56 +2,107 @@
 
 import { useState } from "react";
 
+import "./product-form.css";
+
 export default function ProductForm({
   onSuccess,
 }: {
   onSuccess: () => void;
 }) {
-  const [nameFr, setNameFr] = useState("");
-  const [descFr, setDescFr] = useState("");
-  const [priceHT, setPriceHT] = useState("");
-  const [stock, setStock] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [manageStock, setManageStock] = useState(false);
+  const [nameFr, setNameFr] =
+    useState("");
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [descFr, setDescFr] =
+    useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const [priceHT, setPriceHT] =
+    useState("");
+
+  const [stock, setStock] =
+    useState("");
+
+  const [imageUrl, setImageUrl] =
+    useState("");
+
+  const [manageStock, setManageStock] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
+
     setError(null);
 
-    if (!nameFr.trim()) return setError("Nom obligatoire");
-    if (!priceHT) return setError("Prix obligatoire");
-    if (manageStock && !stock)
-      return setError("Stock requis si activé");
+    if (!nameFr.trim()) {
+      return setError(
+        "Nom obligatoire"
+      );
+    }
+
+    if (!priceHT) {
+      return setError(
+        "Prix obligatoire"
+      );
+    }
+
+    if (manageStock && !stock) {
+      return setError(
+        "Stock requis si activé"
+      );
+    }
 
     setLoading(true);
 
     try {
-      const pass = localStorage.getItem("admin_password") || "";
+      const pass =
+        localStorage.getItem(
+          "admin_password"
+        ) || "";
 
-      const res = await fetch("/api/admin/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-password": pass,
-        },
-        body: JSON.stringify({
-          nameFr,
-          descFr,
-          priceHT,
-          stock: stock || "0",
-          imageUrl,
-          manageStock,
-        }),
-      });
+      const res = await fetch(
+        "/api/admin/products",
+        {
+          method: "POST",
 
-      const json = await res.json();
+          headers: {
+            "Content-Type":
+              "application/json",
 
-      if (!res.ok || !json?.ok) throw new Error(json?.error);
+            "x-admin-password":
+              pass,
+          },
 
-      // reset
+          body: JSON.stringify({
+            nameFr,
+            descFr,
+            priceHT,
+            stock: stock || "0",
+            imageUrl,
+            manageStock,
+          }),
+        }
+      );
+
+      const json =
+        await res.json();
+
+      if (
+        !res.ok ||
+        !json?.ok
+      ) {
+        throw new Error(
+          json?.error
+        );
+      }
+
+      /* RESET */
       setNameFr("");
       setDescFr("");
       setPriceHT("");
@@ -61,217 +112,262 @@ export default function ProductForm({
 
       onSuccess();
     } catch (e: any) {
-      setError(e?.message || "Erreur");
+      setError(
+        e?.message || "Erreur"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form">
+    <form
+      onSubmit={handleSubmit}
+      className="product-form"
+    >
 
-      <h2 className="title">➕ Ajouter un produit</h2>
+      {/* HERO */}
+      <div className="product-form-head">
 
-      {/* INPUTS */}
-      <div className="group">
-        <input
-          className="input"
-          placeholder="Nom du produit"
-          value={nameFr}
-          onChange={(e) => setNameFr(e.target.value)}
-        />
+        <div className="product-form-badge">
+          PRODUCT CREATION
+        </div>
 
-        <textarea
-          className="input textarea"
-          placeholder="Description"
-          value={descFr}
-          onChange={(e) => setDescFr(e.target.value)}
-        />
+        <div>
 
-        <input
-          className="input"
-          placeholder="URL image"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-        />
+          <h2 className="product-form-title">
+            Ajouter un produit
+          </h2>
 
-        {imageUrl && (
-          <div className="preview">
-            <img src={imageUrl} />
+          <p className="product-form-description">
+            Création avancée d’un
+            produit avec gestion du
+            contenu, du stock et des
+            médias.
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* GRID */}
+      <div className="product-form-grid">
+
+        {/* LEFT */}
+        <div className="product-form-main">
+
+          {/* NAME */}
+          <div className="pf-field">
+
+            <label>
+              Nom du produit
+            </label>
+
+            <input
+              className="pf-input"
+              placeholder="Ex: Coussin Vitrectomie Premium"
+              value={nameFr}
+              onChange={(e) =>
+                setNameFr(
+                  e.target.value
+                )
+              }
+            />
+
           </div>
-        )}
+
+          {/* DESCRIPTION */}
+          <div className="pf-field">
+
+            <label>
+              Description
+            </label>
+
+            <textarea
+              className="pf-input pf-textarea"
+              placeholder="Description du produit..."
+              value={descFr}
+              onChange={(e) =>
+                setDescFr(
+                  e.target.value
+                )
+              }
+            />
+
+          </div>
+
+          {/* IMAGE */}
+          <div className="pf-field">
+
+            <label>
+              URL image
+            </label>
+
+            <input
+              className="pf-input"
+              placeholder="https://..."
+              value={imageUrl}
+              onChange={(e) =>
+                setImageUrl(
+                  e.target.value
+                )
+              }
+            />
+
+          </div>
+
+          {/* ROW */}
+          <div className="pf-row">
+
+            <div className="pf-field">
+
+              <label>
+                Prix (€)
+              </label>
+
+              <input
+                type="number"
+                className="pf-input"
+                placeholder="149"
+                value={priceHT}
+                onChange={(e) =>
+                  setPriceHT(
+                    e.target.value
+                  )
+                }
+              />
+
+            </div>
+
+            <div className="pf-field">
+
+              <label>
+                Stock
+              </label>
+
+              <input
+                type="number"
+                className="pf-input"
+                placeholder="50"
+                value={stock}
+                onChange={(e) =>
+                  setStock(
+                    e.target.value
+                  )
+                }
+                disabled={!manageStock}
+              />
+
+            </div>
+
+          </div>
+
+          {/* SWITCH */}
+          <label className="pf-switch">
+
+            <input
+              type="checkbox"
+              checked={manageStock}
+              onChange={(e) =>
+                setManageStock(
+                  e.target.checked
+                )
+              }
+            />
+
+            <span className="pf-switch-slider" />
+
+            <div className="pf-switch-text">
+
+              <strong>
+                Gestion du stock
+              </strong>
+
+              <span>
+                Active le suivi des
+                quantités disponibles
+              </span>
+
+            </div>
+
+          </label>
+
+          {/* ERROR */}
+          {error && (
+            <div className="pf-error">
+              {error}
+            </div>
+          )}
+
+          {/* ACTIONS */}
+          <div className="pf-actions">
+
+            <button
+              type="submit"
+              className="pf-submit"
+              disabled={loading}
+            >
+              <span>
+                {loading
+                  ? "Création..."
+                  : "Créer le produit"}
+              </span>
+            </button>
+
+          </div>
+
+        </div>
+
+        {/* RIGHT */}
+        <aside className="product-form-side">
+
+          <div className="pf-preview-card">
+
+            <div className="pf-preview-kicker">
+              LIVE PREVIEW
+            </div>
+
+            <div className="pf-preview-image">
+
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt="preview"
+                />
+              ) : (
+                <div className="pf-preview-placeholder">
+                  Aperçu produit
+                </div>
+              )}
+
+            </div>
+
+            <div className="pf-preview-content">
+
+              <h3>
+                {nameFr ||
+                  "Nom du produit"}
+              </h3>
+
+              <p>
+                {descFr ||
+                  "La description du produit apparaîtra ici."}
+              </p>
+
+              <div className="pf-preview-price">
+                {priceHT
+                  ? `${priceHT} €`
+                  : "-- €"}
+              </div>
+
+            </div>
+
+          </div>
+
+        </aside>
+
       </div>
 
-      {/* PRICE + STOCK */}
-      <div className="row">
-        <input
-          type="number"
-          className="input"
-          placeholder="Prix (€)"
-          value={priceHT}
-          onChange={(e) => setPriceHT(e.target.value)}
-        />
-
-        <input
-          type="number"
-          className="input"
-          placeholder="Stock"
-          value={stock}
-          onChange={(e) => setStock(e.target.value)}
-          disabled={!manageStock}
-        />
-      </div>
-
-      {/* SWITCH */}
-      <label className="switch">
-        <input
-          type="checkbox"
-          checked={manageStock}
-          onChange={(e) => setManageStock(e.target.checked)}
-        />
-        <span className="slider" />
-        <span className="label">
-          Gestion du stock
-        </span>
-      </label>
-
-      {error && <div className="error">{error}</div>}
-
-      {/* ACTION */}
-      <button className="submit" disabled={loading}>
-        {loading ? "Création…" : "💾 Créer"}
-      </button>
-
-      {/* STYLE */}
-      <style jsx>{`
-
-        .form {
-          max-width: 600px;
-          margin: auto;
-          padding: 24px;
-          border-radius: 20px;
-          background: rgba(255,255,255,0.05);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255,255,255,0.1);
-          display: flex;
-          flex-direction: column;
-          gap: 18px;
-          color: white;
-        }
-
-        .title {
-          font-size: 20px;
-          font-weight: 800;
-        }
-
-        .group {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .input {
-          padding: 12px;
-          border-radius: 12px;
-          border: 1px solid rgba(255,255,255,0.15);
-          background: rgba(255,255,255,0.05);
-          color: white;
-        }
-
-        .input:focus {
-          outline: none;
-          border-color: #2563eb;
-          box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
-        }
-
-        .textarea {
-          min-height: 90px;
-        }
-
-        .preview {
-          border-radius: 12px;
-          overflow: hidden;
-          border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .preview img {
-          width: 100%;
-          height: 180px;
-          object-fit: cover;
-        }
-
-        .row {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-
-        /* SWITCH */
-        .switch {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          cursor: pointer;
-        }
-
-        .switch input {
-          display: none;
-        }
-
-        .slider {
-          width: 40px;
-          height: 22px;
-          background: rgba(255,255,255,0.2);
-          border-radius: 999px;
-          position: relative;
-          transition: 0.2s;
-        }
-
-        .slider::after {
-          content: "";
-          width: 18px;
-          height: 18px;
-          background: white;
-          border-radius: 50%;
-          position: absolute;
-          top: 2px;
-          left: 2px;
-          transition: 0.2s;
-        }
-
-        .switch input:checked + .slider {
-          background: #2563eb;
-        }
-
-        .switch input:checked + .slider::after {
-          transform: translateX(18px);
-        }
-
-        .label {
-          font-size: 13px;
-          color: rgba(255,255,255,0.7);
-        }
-
-        .error {
-          color: #ef4444;
-          font-size: 13px;
-        }
-
-        .submit {
-          padding: 12px;
-          border-radius: 12px;
-          border: none;
-          background: #2563eb;
-          color: white;
-          font-weight: 700;
-          cursor: pointer;
-        }
-
-        .submit:hover {
-          background: #1d4ed8;
-        }
-
-      `}</style>
     </form>
   );
 }

@@ -1,220 +1,754 @@
 /* =====================================================
-   PRODUCT FORM — PREMIUM PRO (UPGRADE)
+   PRODUCT FORM — MASSME
+   PREMIUM MASTER EDITION
 ===================================================== */
 
-/* ================= LANG TABS ================= */
+/* =====================================================
+   LANG TABS
+===================================================== */
 
 .admin-lang-tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
+
+  align-items: center;
+
+  gap:
+    .7rem;
+
+  flex-wrap:
+    wrap;
+
+  margin-bottom:
+    1.4rem;
 }
+
+/* =====================================================
+   LANG BUTTON
+===================================================== */
 
 .admin-lang-tabs button {
-  min-height: 36px;
-  padding: 6px 14px;
+  position: relative;
 
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
+  overflow: hidden;
 
-  background: var(--color-surface-alt);
-  color: var(--color-text);
+  min-height:
+    42px;
 
-  font-size: 12px;
-  font-weight: 700;
+  padding:
+    0 1rem;
 
-  cursor: pointer;
-  transition: all 0.2s ease;
+  border-radius:
+    1rem;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    rgba(255,255,255,.035);
+
+  backdrop-filter:
+    blur(10px);
+
+  color:
+    rgba(203,213,225,.78);
+
+  font-size:
+    .78rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.01em;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform var(--transition-base),
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
 }
+
+/* =====================================================
+   LANG BUTTON OVERLAY
+===================================================== */
+
+.admin-lang-tabs button::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.10),
+      transparent 60%
+    );
+
+  transition:
+    opacity var(--transition-base);
+}
+
+/* =====================================================
+   LANG BUTTON HOVER
+===================================================== */
 
 .admin-lang-tabs button:hover {
-  transform: translateY(-1px);
-  border-color: var(--color-primary);
+  transform:
+    translateY(-1px);
+
+  color:
+    white;
+
+  background:
+    rgba(255,255,255,.05);
+
+  border-color:
+    rgba(255,255,255,.12);
 }
+
+.admin-lang-tabs button:hover::before {
+  opacity: 1;
+}
+
+/* =====================================================
+   LANG BUTTON ACTIVE
+===================================================== */
 
 .admin-lang-tabs button.active {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: white;
-  border: none;
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+  color:
+    white;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(14,165,233,.92),
+      rgba(56,189,248,.92)
+    );
+
+  box-shadow:
+    0 14px 34px rgba(14,165,233,.26),
+    inset 0 1px 0 rgba(255,255,255,.16);
 }
 
-/* ================= CARD ================= */
+.admin-lang-tabs button.active::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius:
+    inherit;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(255,255,255,.18),
+      transparent 72%
+    );
+
+  pointer-events:
+    none;
+}
+
+/* =====================================================
+   CARD
+===================================================== */
 
 .pf-card {
-  margin-top: 18px;
-  padding: 18px;
+  position: relative;
 
-  border-radius: 16px;
-  border: 1px solid var(--color-border);
+  overflow: hidden;
 
-  background: linear-gradient(
-    180deg,
-    var(--color-surface),
-    var(--color-surface-alt)
-  );
+  margin-top:
+    1.4rem;
 
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  padding:
+    1.4rem;
 
-  transition: 0.2s ease;
+  border-radius:
+    1.6rem;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.045),
+      rgba(255,255,255,.025)
+    );
+
+  backdrop-filter:
+    blur(16px);
+
+  box-shadow:
+    0 18px 50px rgba(0,0,0,.24);
+
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+/* =====================================================
+   CARD ATMOSPHERE
+===================================================== */
+
+.pf-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: -140px;
+  right: -120px;
+
+  width:
+    260px;
+
+  height:
+    260px;
+
+  border-radius:
+    999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.14),
+      transparent 72%
+    );
+
+  filter:
+    blur(20px);
+
+  pointer-events:
+    none;
+}
+
+.pf-card::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.08),
+      transparent 55%
+    );
+
+  transition:
+    opacity var(--transition-base);
+
+  pointer-events:
+    none;
 }
 
 .pf-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(255,255,255,.10);
+
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.28);
 }
+
+.pf-card:hover::after {
+  opacity: 1;
+}
+
+/* =====================================================
+   CARD TITLE
+===================================================== */
 
 .pf-card h3 {
-  font-size: 15px;
-  font-weight: 900;
-  margin-bottom: 12px;
+  position: relative;
+
+  z-index: 2;
+
+  margin-bottom:
+    1rem;
+
+  color:
+    white;
+
+  font-size:
+    .95rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.03em;
 }
 
-/* ================= TABLE ================= */
+/* =====================================================
+   TABLE
+===================================================== */
 
 .pf-table {
+  position: relative;
+
+  z-index: 2;
+
   display: flex;
+
   flex-direction: column;
-  gap: 8px;
+
+  gap:
+    .7rem;
 }
 
-/* meilleure lisibilité */
+/* =====================================================
+   ROW
+===================================================== */
 
 .pf-row {
+  position: relative;
+
   display: grid;
-  grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.8fr 0.7fr;
+
+  grid-template-columns:
+    2fr
+    .8fr
+    1fr
+    .7fr
+    .8fr
+    .7fr;
+
   align-items: center;
-  gap: 8px;
 
-  padding: 8px;
-  border-radius: 10px;
+  gap:
+    .7rem;
 
-  transition: 0.15s;
+  padding:
+    .8rem;
+
+  border-radius:
+    1rem;
+
+  border:
+    1px solid transparent;
+
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    transform var(--transition-base);
 }
+
+/* =====================================================
+   ROW HOVER
+===================================================== */
 
 .pf-row:hover {
-  background: var(--color-surface-alt);
+  background:
+    rgba(255,255,255,.035);
+
+  border-color:
+    rgba(255,255,255,.05);
+
+  transform:
+    translateY(-1px);
 }
 
-/* HEADER */
+/* =====================================================
+   HEAD
+===================================================== */
+
 .pf-head {
-  font-size: 11px;
-  font-weight: 900;
-  color: var(--color-text-soft);
+  padding-bottom:
+    .7rem;
 
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom:
+    1px solid rgba(255,255,255,.06);
+
+  color:
+    rgba(148,163,184,.68);
+
+  font-size:
+    .68rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
 }
 
-/* ================= INPUTS ================= */
+/* =====================================================
+   INPUTS
+===================================================== */
 
 .pf-row input,
 .pf-row select {
   width: 100%;
-  min-height: 34px;
 
-  padding: 6px 8px;
+  min-height:
+    42px;
 
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
+  padding:
+    0 .8rem;
 
-  background: var(--color-surface);
-  color: var(--color-text);
+  border-radius:
+    .9rem;
 
-  font-size: 12px;
+  border:
+    1px solid rgba(255,255,255,.08);
 
-  transition: 0.15s;
+  background:
+    rgba(255,255,255,.035);
+
+  backdrop-filter:
+    blur(10px);
+
+  color:
+    white;
+
+  font-size:
+    .78rem;
+
+  font-weight:
+    500;
+
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base),
+    box-shadow var(--transition-base);
 }
+
+/* =====================================================
+   INPUT PLACEHOLDER
+===================================================== */
+
+.pf-row input::placeholder {
+  color:
+    rgba(148,163,184,.58);
+}
+
+/* =====================================================
+   INPUT HOVER
+===================================================== */
+
+.pf-row input:hover,
+.pf-row select:hover {
+  background:
+    rgba(255,255,255,.05);
+
+  border-color:
+    rgba(255,255,255,.12);
+}
+
+/* =====================================================
+   INPUT FOCUS
+===================================================== */
 
 .pf-row input:focus,
 .pf-row select:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-soft);
+  outline:
+    none;
+
+  background:
+    rgba(255,255,255,.06);
+
+  border-color:
+    rgba(0,208,255,.32);
+
+  box-shadow:
+    0 0 0 4px rgba(0,208,255,.10);
 }
 
+/* =====================================================
+   CHECKBOX
+===================================================== */
+
 .pf-row input[type="checkbox"] {
-  transform: scale(1.1);
-  accent-color: var(--color-primary);
+  width:
+    18px;
+
+  height:
+    18px;
+
+  transform:
+    scale(1.05);
+
+  accent-color:
+    #0ea5e9;
+
+  cursor:
+    pointer;
 }
+
+/* =====================================================
+   DISABLED
+===================================================== */
 
 .pf-row input:disabled,
 .pf-row select:disabled {
-  background: var(--color-surface-alt);
-  opacity: 0.6;
-  cursor: not-allowed;
+  opacity:
+    .55;
+
+  cursor:
+    not-allowed;
+
+  background:
+    rgba(255,255,255,.02);
 }
 
-/* ================= BUTTONS ================= */
+/* =====================================================
+   BUTTONS
+===================================================== */
 
 .btn {
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  transition: 0.2s;
+  position: relative;
+
+  overflow: hidden;
+
+  min-height:
+    42px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    1rem;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap:
+    .55rem;
+
+  border:
+    1px solid transparent;
+
+  font-size:
+    .78rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.01em;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform var(--transition-base),
+    background var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    color var(--transition-base);
 }
 
+/* =====================================================
+   BUTTON OVERLAY
+===================================================== */
+
+.btn::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.12),
+      transparent 60%
+    );
+
+  transition:
+    opacity var(--transition-base);
+}
+
+.btn:hover::before {
+  opacity: 1;
+}
+
+.btn:hover {
+  transform:
+    translateY(-1px);
+}
+
+/* =====================================================
+   PRIMARY
+===================================================== */
+
 .btn-primary {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: white;
+  color:
+    white;
+
+  border:
+    1px solid rgba(14,165,233,.20);
+
+  background:
+    linear-gradient(
+      135deg,
+      #0ea5e9,
+      #38bdf8
+    );
+
+  box-shadow:
+    0 12px 30px rgba(14,165,233,.20);
 }
 
 .btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+  box-shadow:
+    0 18px 40px rgba(14,165,233,.30);
 }
+
+/* =====================================================
+   SECONDARY
+===================================================== */
 
 .btn-secondary {
-  background: var(--color-surface-alt);
+  color:
+    white;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(10px);
 }
+
+.btn-secondary:hover {
+  background:
+    rgba(255,255,255,.06);
+
+  border-color:
+    rgba(255,255,255,.12);
+}
+
+/* =====================================================
+   GHOST
+===================================================== */
 
 .btn-ghost {
-  background: transparent;
-  color: var(--color-text-soft);
+  color:
+    rgba(203,213,225,.72);
+
+  background:
+    transparent;
 }
 
-/* ================= ERROR ================= */
+.btn-ghost:hover {
+  color:
+    white;
+
+  background:
+    rgba(255,255,255,.05);
+}
+
+/* =====================================================
+   ERROR
+===================================================== */
 
 .admin-error {
-  margin-top: 12px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-danger);
+  margin-top:
+    1rem;
+
+  color:
+    #fca5a5;
+
+  font-size:
+    .76rem;
+
+  font-weight:
+    700;
+
+  line-height:
+    1.6;
 }
 
-/* ================= HELP TEXT ================= */
+/* =====================================================
+   HELP
+===================================================== */
 
 .pf-help {
-  font-size: 12px;
-  color: var(--color-text-soft);
-  margin-bottom: 8px;
+  margin-bottom:
+    .8rem;
+
+  color:
+    rgba(148,163,184,.66);
+
+  font-size:
+    .76rem;
+
+  line-height:
+    1.7;
 }
 
-/* ================= RESPONSIVE ================= */
+/* =====================================================
+   RESPONSIVE
+===================================================== */
 
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
+
   .pf-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 
   .pf-head {
-    display: none;
+    display:
+      none;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .pf-card {
+    padding:
+      1.1rem;
+  }
+
+  .pf-row {
+    grid-template-columns:
+      1fr;
   }
 }
 
 @media (max-width: 640px) {
-  .pf-row {
-    grid-template-columns: 1fr;
-  }
-
-  .pf-card {
-    padding: 14px;
-  }
 
   .admin-lang-tabs button {
-    width: 100%;
+    width:
+      100%;
+  }
+
+  .btn {
+    width:
+      100%;
   }
 }

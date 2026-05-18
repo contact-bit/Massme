@@ -1,6 +1,6 @@
 /* =========================================================
    VITRECTOMED — TYPOGRAPHY SYSTEM
-   PREMIUM MEDTECH UI
+   ULTRA PREMIUM CINEMATIC EDITION
 ========================================================= */
 
 /* =========================================================
@@ -10,66 +10,166 @@
 .title-hero {
   position: relative;
 
-  color: var(--color-text);
+  color:
+    var(--color-text);
 
-  font-family: var(--font-family-base);
+  font-family:
+    var(--font-family-heading);
 
-  font-size: var(--font-size-hero);
+  font-size:
+    var(--font-size-hero);
 
-  line-height: 0.96;
+  line-height:
+    .90;
 
-  letter-spacing: -0.065em;
+  letter-spacing:
+    -.085em;
 
-  font-weight: 800;
+  font-weight:
+    900;
 
-  text-wrap: balance;
+  text-wrap:
+    balance;
 
-  max-width: 12ch;
+  max-width:
+    11ch;
 
   text-shadow:
-    0 4px 30px rgba(0,0,0,.35);
+    0 10px 40px rgba(0,0,0,.42);
+
+  isolation:
+    isolate;
 }
 
-/* Gradient accent sur mot important */
+/* =========================================================
+   HERO ATMOSPHERE
+========================================================= */
+
+.title-hero::before {
+  content: "";
+
+  position: absolute;
+
+  inset:
+    auto;
+
+  left:
+    -8%;
+
+  bottom:
+    -18px;
+
+  width:
+    72%;
+
+  height:
+    28px;
+
+  border-radius:
+    999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.18),
+      transparent 72%
+    );
+
+  filter:
+    blur(20px);
+
+  z-index:
+    -1;
+
+  pointer-events:
+    none;
+}
+
+/* =========================================================
+   GRADIENT ACCENT
+========================================================= */
 
 .title-hero strong,
 .title-hero span {
   background:
     linear-gradient(
       135deg,
-      var(--color-primary),
-      var(--color-secondary),
-      var(--color-accent)
+      #7dd3fc 0%,
+      #38bdf8 30%,
+      #818cf8 72%,
+      #c084fc 100%
     );
 
-  -webkit-background-clip: text;
+  -webkit-background-clip:
+    text;
 
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color:
+    transparent;
 
-  background-clip: text;
+  background-clip:
+    text;
+
+  filter:
+    drop-shadow(0 0 24px rgba(0,208,255,.14));
 }
 
 /* =========================================================
-   SECTION TITLES
+   SECTION TITLE
 ========================================================= */
 
 .title-section {
-  color: var(--color-text);
+  position: relative;
 
-  font-family: var(--font-family-base);
+  color:
+    var(--color-text);
+
+  font-family:
+    var(--font-family-heading);
 
   font-size:
-    clamp(2.4rem, 5vw, 4.6rem);
+    clamp(2.6rem, 6vw, 5.4rem);
 
-  line-height: 1.02;
+  line-height:
+    .94;
 
-  letter-spacing: -0.055em;
+  letter-spacing:
+    -.075em;
 
-  font-weight: 760;
+  font-weight:
+    850;
 
-  text-wrap: balance;
+  text-wrap:
+    balance;
 
-  max-width: 14ch;
+  max-width:
+    13ch;
+
+  text-shadow:
+    0 6px 34px rgba(0,0,0,.26);
+}
+
+/* =========================================================
+   SECTION TITLE GLOW
+========================================================= */
+
+.title-section.gradient {
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #dbeafe,
+      #7dd3fc,
+      #818cf8
+    );
+
+  -webkit-background-clip:
+    text;
+
+  -webkit-text-fill-color:
+    transparent;
+
+  background-clip:
+    text;
 }
 
 /* =========================================================
@@ -77,37 +177,68 @@
 ========================================================= */
 
 .title-subsection {
-  color: var(--color-text);
+  color:
+    var(--color-text);
 
   font-size:
-    clamp(1.5rem, 3vw, 2.2rem);
+    clamp(1.55rem, 3vw, 2.5rem);
 
-  line-height: 1.1;
+  line-height:
+    1.04;
 
-  letter-spacing: -0.04em;
+  letter-spacing:
+    -.05em;
 
-  font-weight: 700;
+  font-weight:
+    760;
+
+  text-wrap:
+    pretty;
 }
 
 /* =========================================================
-   CARD TITLES
+   CARD TITLE
 ========================================================= */
 
 .title-card {
-  color: var(--color-text);
-
-  font-family: var(--font-family-base);
+  color:
+    white;
 
   font-size:
-    clamp(1.2rem, 2vw, 1.85rem);
+    clamp(1.2rem, 2vw, 1.9rem);
 
-  line-height: 1.15;
+  line-height:
+    1.12;
 
-  letter-spacing: -0.035em;
+  letter-spacing:
+    -.04em;
 
-  font-weight: 700;
+  font-weight:
+    760;
 
-  text-wrap: pretty;
+  text-wrap:
+    pretty;
+}
+
+/* =========================================================
+   MINI TITLE
+========================================================= */
+
+.title-mini {
+  color:
+    var(--color-text);
+
+  font-size:
+    .92rem;
+
+  line-height:
+    1.4;
+
+  letter-spacing:
+    -.02em;
+
+  font-weight:
+    700;
 }
 
 /* =========================================================
@@ -115,15 +246,23 @@
 ========================================================= */
 
 .text-body {
-  color: var(--color-text-soft);
+  color:
+    rgba(203,213,225,.76);
 
-  font-size: var(--font-size-base);
+  font-size:
+    clamp(1rem, 1.1vw, 1.05rem);
 
-  line-height: var(--line-height-relaxed);
+  line-height:
+    1.95;
 
-  font-weight: 400;
+  font-weight:
+    400;
 
-  max-width: 72ch;
+  text-wrap:
+    pretty;
+
+  max-width:
+    72ch;
 }
 
 /* =========================================================
@@ -131,16 +270,23 @@
 ========================================================= */
 
 .text-large {
-  color: var(--color-text-soft);
+  color:
+    rgba(203,213,225,.82);
 
   font-size:
-    clamp(1.05rem, 1.2vw, 1.22rem);
+    clamp(1.05rem, 1.3vw, 1.28rem);
 
-  line-height: 1.95;
+  line-height:
+    2;
 
-  font-weight: 400;
+  font-weight:
+    400;
 
-  max-width: 68ch;
+  text-wrap:
+    pretty;
+
+  max-width:
+    68ch;
 }
 
 /* =========================================================
@@ -148,11 +294,14 @@
 ========================================================= */
 
 .text-small {
-  color: var(--color-text-muted);
+  color:
+    rgba(148,163,184,.78);
 
-  font-size: var(--font-size-sm);
+  font-size:
+    .9rem;
 
-  line-height: 1.8;
+  line-height:
+    1.85;
 }
 
 /* =========================================================
@@ -160,110 +309,256 @@
 ========================================================= */
 
 .text-muted {
-  color: var(--color-text-muted);
+  color:
+    rgba(148,163,184,.62);
 
-  font-size: var(--font-size-sm);
+  font-size:
+    .9rem;
 
-  line-height: 1.7;
-
-  opacity: .9;
+  line-height:
+    1.8;
 }
 
 /* =========================================================
-   LABEL / EYEBROW
+   EYEBROW / LABEL
 ========================================================= */
 
 .text-label {
+  position: relative;
+
+  overflow: hidden;
+
   display: inline-flex;
 
-  align-items: center;
+  align-items:
+    center;
 
-  justify-content: center;
+  justify-content:
+    center;
 
-  gap: .5rem;
+  gap:
+    .55rem;
 
-  min-height: 38px;
+  width:
+    fit-content;
+
+  min-height:
+    40px;
 
   padding:
     0 1.15rem;
 
   border-radius:
-    var(--radius-full);
+    999px;
+
+  border:
+    1px solid rgba(0,208,255,.14);
 
   background:
-    rgba(255,255,255,.04);
+    rgba(0,208,255,.08);
 
   backdrop-filter:
     blur(var(--blur-sm));
 
-  border:
-    1px solid rgba(255,255,255,.08);
-
   color:
-    var(--color-primary);
+    #7dd3fc;
 
   font-size:
-    .72rem;
+    .7rem;
 
   font-weight:
-    700;
+    900;
 
   letter-spacing:
-    0.16em;
+    .18em;
 
   text-transform:
     uppercase;
 
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.05);
+    0 0 24px rgba(0,208,255,.08);
 }
 
 /* =========================================================
-   LINK TEXT
+   LABEL SHINE
+========================================================= */
+
+.text-label::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .12;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.20),
+      transparent 55%
+    );
+
+  pointer-events:
+    none;
+}
+
+/* =========================================================
+   LINK
 ========================================================= */
 
 .text-link {
+  position: relative;
+
   display: inline-flex;
 
-  align-items: center;
+  align-items:
+    center;
 
-  gap: .65rem;
+  gap:
+    .7rem;
 
-  color: var(--color-primary);
+  width:
+    fit-content;
 
-  font-size: var(--font-size-sm);
+  color:
+    #7dd3fc;
 
-  font-weight: 600;
+  font-size:
+    .92rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    -.02em;
 
   transition:
     color var(--transition-base),
-    transform var(--transition-base);
+    transform var(--transition-base),
+    gap var(--transition-base);
+}
+
+/* =========================================================
+   LINK UNDERLINE
+========================================================= */
+
+.text-link::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  bottom: -6px;
+
+  width:
+    100%;
+
+  height:
+    1px;
+
+  transform:
+    scaleX(.35);
+
+  transform-origin:
+    left;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0,208,255,.75),
+      transparent
+    );
+
+  transition:
+    transform var(--transition-base),
+    opacity var(--transition-base);
+
+  opacity:
+    .6;
 }
 
 .text-link:hover {
-  color: var(--color-primary-hover);
+  color:
+    var(--color-primary-hover);
+
+  gap:
+    1rem;
 
   transform:
     translateX(4px);
 }
 
+.text-link:hover::after {
+  transform:
+    scaleX(1);
+
+  opacity:
+    1;
+}
+
 /* =========================================================
-   QUOTES / TESTIMONIALS
+   QUOTE
 ========================================================= */
 
 .text-quote {
-  color: var(--color-text);
+  position: relative;
+
+  color:
+    white;
 
   font-size:
-    clamp(1.2rem, 2vw, 1.7rem);
+    clamp(1.25rem, 2vw, 1.9rem);
 
-  line-height: 1.7;
+  line-height:
+    1.8;
 
-  font-weight: 500;
+  font-weight:
+    500;
 
-  letter-spacing: -0.02em;
+  letter-spacing:
+    -.03em;
 
-  font-style: italic;
+  font-style:
+    italic;
+
+  text-wrap:
+    pretty;
+}
+
+/* =========================================================
+   QUOTE MARK
+========================================================= */
+
+.text-quote::before {
+  content:
+    "“";
+
+  position: absolute;
+
+  top:
+    -1.8rem;
+
+  left:
+    -1rem;
+
+  color:
+    rgba(0,208,255,.18);
+
+  font-size:
+    6rem;
+
+  font-style:
+    normal;
+
+  font-weight:
+    900;
+
+  line-height:
+    1;
+
+  pointer-events:
+    none;
 }
 
 /* =========================================================
@@ -271,11 +566,14 @@
 ========================================================= */
 
 .text-list {
-  color: var(--color-text-soft);
+  color:
+    rgba(203,213,225,.76);
 
-  font-size: var(--font-size-base);
+  font-size:
+    1rem;
 
-  line-height: 1.9;
+  line-height:
+    1.95;
 }
 
 /* =========================================================
@@ -285,19 +583,88 @@
 .text-body strong,
 .text-large strong,
 .text-list strong {
-  color: var(--color-text);
+  color:
+    white;
 
-  font-weight: 650;
+  font-weight:
+    700;
 }
 
 /* =========================================================
-   SELECTION
+   GRADIENT TEXT
 ========================================================= */
 
-::selection {
+.text-gradient {
   background:
-    rgba(0,208,255,.22);
+    linear-gradient(
+      135deg,
+      #7dd3fc,
+      #38bdf8,
+      #818cf8,
+      #c084fc
+    );
 
-  color:
-    #fff;
+  -webkit-background-clip:
+    text;
+
+  -webkit-text-fill-color:
+    transparent;
+
+  background-clip:
+    text;
+}
+
+/* =========================================================
+   CENTER
+========================================================= */
+
+.text-center {
+  text-align:
+    center;
+}
+
+/* =========================================================
+   BALANCE
+========================================================= */
+
+.text-balance {
+  text-wrap:
+    balance;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .title-hero {
+    max-width:
+      100%;
+
+    line-height:
+      .96;
+  }
+
+  .title-section {
+    max-width:
+      100%;
+  }
+
+  .text-large,
+  .text-body {
+    max-width:
+      100%;
+  }
+
+  .text-quote::before {
+    font-size:
+      4rem;
+
+    left:
+      -.4rem;
+
+    top:
+      -1rem;
+  }
 }

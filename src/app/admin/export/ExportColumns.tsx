@@ -1,5 +1,8 @@
 "use client";
 
+import "./ExportColumns.css";
+
+
 type Props = {
   summary: string;
 };

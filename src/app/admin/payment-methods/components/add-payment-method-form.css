@@ -1,0 +1,792 @@
+/* =========================================================
+   ADD PAYMENT METHOD FORM — ULTRA PREMIUM
+========================================================= */
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+.apmf {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1.3rem;
+
+  color:
+    white;
+}
+
+/* =========================================================
+   HEAD
+========================================================= */
+
+.apmf-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   KICKER
+========================================================= */
+
+.apmf-kicker,
+.apmf-card-kicker {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height:
+    30px;
+
+  padding:
+    0 .85rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(0,208,255,.08);
+
+  border:
+    1px solid rgba(0,208,255,.14);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    #7dd3fc;
+
+  font-size:
+    .62rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .16em;
+
+  text-transform:
+    uppercase;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.apmf-title {
+  margin:
+    1rem 0 0 0;
+
+  color:
+    white;
+
+  font-size:
+    clamp(2rem, 3vw, 3rem);
+
+  line-height:
+    .92;
+
+  letter-spacing:
+    -.06em;
+
+  font-weight:
+    900;
+}
+
+/* =========================================================
+   META
+========================================================= */
+
+.apmf-meta {
+  margin-top:
+    .8rem;
+
+  color:
+    rgba(148,163,184,.66);
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    600;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.apmf-card {
+  position: relative;
+
+  overflow: hidden;
+
+  padding:
+    1.4rem;
+
+  border-radius:
+    28px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.86),
+      rgba(5,10,18,.96)
+    );
+
+  backdrop-filter:
+    blur(18px);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.24);
+}
+
+.apmf-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .06;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.14),
+      transparent 60%
+    );
+}
+
+/* =========================================================
+   CARD HEAD
+========================================================= */
+
+.apmf-card-head {
+  position: relative;
+
+  z-index: 2;
+
+  margin-bottom:
+    1.2rem;
+}
+
+.apmf-card-head h3 {
+  margin:
+    .8rem 0 0 0;
+
+  color:
+    white;
+
+  font-size:
+    1.15rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.04em;
+}
+
+/* =========================================================
+   PROVIDERS
+========================================================= */
+
+.apmf-providers {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0,1fr));
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   PROVIDER
+========================================================= */
+
+.apmf-provider {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height:
+    64px;
+
+  border-radius:
+    20px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(14px);
+
+  color:
+    rgba(255,255,255,.84);
+
+  font-size:
+    .86rem;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease;
+}
+
+.apmf-provider:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(0,208,255,.12);
+
+  background:
+    rgba(255,255,255,.06);
+}
+
+.apmf-provider.active {
+  border-color:
+    rgba(0,208,255,.18);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.16),
+      rgba(37,99,235,.18)
+    );
+
+  box-shadow:
+    0 18px 40px rgba(0,208,255,.16);
+
+  color:
+    white;
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.apmf-grid {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0,1fr)
+    minmax(0,1fr);
+
+  gap:
+    1rem;
+}
+
+.apmf-grid > * {
+  min-width:
+    0;
+}
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+.apmf-field {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    .7rem;
+}
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+.apmf-field label {
+  color:
+    rgba(255,255,255,.84);
+
+  font-size:
+    .8rem;
+
+  font-weight:
+    700;
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.apmf-field input,
+.apmf-field textarea {
+  width: 100%;
+  min-width: 0;
+
+  box-sizing:
+    border-box;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.02)
+    );
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    500;
+
+  transition:
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease,
+    transform .25s ease;
+}
+
+/* =========================================================
+   INPUT HEIGHT
+========================================================= */
+
+.apmf-field input {
+  min-height:
+    56px;
+
+  padding:
+    0 1rem;
+}
+
+/* =========================================================
+   TEXTAREA
+========================================================= */
+
+.apmf-field textarea {
+  min-height:
+    130px;
+
+  padding:
+    1rem;
+
+  resize:
+    vertical;
+}
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.apmf-field input::placeholder,
+.apmf-field textarea::placeholder {
+  color:
+    rgba(148,163,184,.54);
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.apmf-field input:hover,
+.apmf-field textarea:hover {
+  border-color:
+    rgba(255,255,255,.14);
+}
+
+/* =========================================================
+   FOCUS
+========================================================= */
+
+.apmf-field input:focus,
+.apmf-field textarea:focus {
+  outline: none;
+
+  border-color:
+    rgba(0,208,255,.34);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.05),
+      rgba(255,255,255,.03)
+    );
+
+  box-shadow:
+    0 0 0 4px rgba(0,208,255,.08),
+    0 0 30px rgba(0,208,255,.10);
+
+  transform:
+    translateY(-1px);
+}
+
+/* =========================================================
+   TOGGLE
+========================================================= */
+
+.apmf-toggle {
+  display: flex;
+  align-items: center;
+
+  gap:
+    1rem;
+
+  cursor:
+    pointer;
+}
+
+.apmf-toggle input {
+  display:
+    none;
+}
+
+/* =========================================================
+   SWITCH
+========================================================= */
+
+.apmf-switch {
+  position: relative;
+
+  flex-shrink:
+    0;
+
+  width:
+    58px;
+
+  height:
+    32px;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.08);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  transition:
+    background .25s ease,
+    border-color .25s ease;
+}
+
+.apmf-switch::before {
+  content: "";
+
+  position: absolute;
+
+  top: 3px;
+  left: 4px;
+
+  width:
+    24px;
+
+  height:
+    24px;
+
+  border-radius:
+    999px;
+
+  background:
+    white;
+
+  transition:
+    transform .25s ease;
+}
+
+.apmf-toggle
+  input:checked
+  + .apmf-switch {
+  background:
+    linear-gradient(
+      135deg,
+      #00d0ff,
+      #2563eb
+    );
+
+  border-color:
+    rgba(0,208,255,.18);
+
+  box-shadow:
+    0 0 24px rgba(0,208,255,.24);
+}
+
+.apmf-toggle
+  input:checked
+  + .apmf-switch::before {
+  transform:
+    translateX(25px);
+}
+
+/* =========================================================
+   TOGGLE CONTENT
+========================================================= */
+
+.apmf-toggle-content {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    .2rem;
+}
+
+.apmf-toggle-content strong {
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    700;
+}
+
+.apmf-toggle-content span {
+  color:
+    rgba(148,163,184,.64);
+
+  font-size:
+    .76rem;
+
+  line-height:
+    1.6;
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.apmf-error {
+  padding:
+    1rem 1.1rem;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(239,68,68,.16);
+
+  background:
+    rgba(239,68,68,.10);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    #fca5a5;
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    700;
+}
+
+/* =========================================================
+   SUBMIT
+========================================================= */
+
+.apmf-submit {
+  position: relative;
+
+  overflow: hidden;
+
+  isolation:
+    isolate;
+
+  min-height:
+    58px;
+
+  border-radius:
+    999px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      135deg,
+      #00d0ff 0%,
+      #38bdf8 35%,
+      #2563eb 100%
+    );
+
+  color:
+    white;
+
+  font-size:
+    .94rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.02em;
+
+  cursor:
+    pointer;
+
+  box-shadow:
+    0 20px 50px rgba(0,208,255,.22),
+    0 0 60px rgba(0,208,255,.10);
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    filter .25s ease,
+    opacity .25s ease;
+}
+
+.apmf-submit::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -140%;
+
+  width: 120%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent 20%,
+      rgba(255,255,255,.24) 50%,
+      transparent 80%
+    );
+
+  transform:
+    skewX(-18deg);
+
+  transition:
+    left 1s cubic-bezier(.16,1,.3,1);
+}
+
+.apmf-submit span {
+  position: relative;
+
+  z-index: 2;
+}
+
+.apmf-submit:hover {
+  transform:
+    translateY(-2px);
+
+  filter:
+    brightness(1.04);
+
+  box-shadow:
+    0 26px 60px rgba(0,208,255,.28),
+    0 0 80px rgba(0,208,255,.14);
+}
+
+.apmf-submit:hover::before {
+  left: 140%;
+}
+
+.apmf-submit:disabled {
+  opacity:
+    .5;
+
+  cursor:
+    not-allowed;
+
+  transform:
+    none;
+
+  box-shadow:
+    none;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 980px) {
+
+  .apmf-providers {
+    grid-template-columns:
+      repeat(2, minmax(0,1fr));
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .apmf-head {
+    flex-direction:
+      column;
+  }
+
+  .apmf-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .apmf-providers {
+    grid-template-columns:
+      1fr;
+  }
+
+  .apmf-card {
+    padding:
+      1.2rem;
+
+    border-radius:
+      24px;
+  }
+
+  .apmf-title {
+    font-size:
+      2rem;
+  }
+
+  .apmf-submit {
+    width:
+      100%;
+  }
+}
+

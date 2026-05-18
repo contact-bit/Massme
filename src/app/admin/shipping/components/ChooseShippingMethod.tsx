@@ -1,22 +1,52 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import type { ShippingMethod, RelayPoint } from "@/components/shipping/types";
+import {
+  useMemo,
+  useState,
+} from "react";
+
+import type {
+  ShippingMethod,
+  RelayPoint,
+} from "@/components/shipping/types";
+
 import RelayPointMondialRelay from "@/components/shipping/mondialrelay/RelayPointMondialRelay";
 
-type Locale = "fr" | "en";
+import "./choose-shipping-method.css";
+
+type Locale =
+  | "fr"
+  | "en";
 
 type Props = {
   methods: ShippingMethod[];
-  onSelect: (m: ShippingMethod) => void;
-  onRelayChosen: (relay: RelayPoint | null) => void;
+
+  onSelect: (
+    m: ShippingMethod
+  ) => void;
+
+  onRelayChosen: (
+    relay: RelayPoint | null
+  ) => void;
+
   locale: Locale;
+
   error?: string | null;
 };
 
+/* =====================================================
+   UTILS
+===================================================== */
+
 function round2(n: number) {
-  return Math.round(n * 100) / 100;
+  return (
+    Math.round(n * 100) / 100
+  );
 }
+
+/* =====================================================
+   COMPONENT
+===================================================== */
 
 export default function ChooseShippingMethod({
   methods,
@@ -25,219 +55,327 @@ export default function ChooseShippingMethod({
   locale,
   error,
 }: Props) {
-  const [selected, setSelected] = useState<ShippingMethod | null>(null);
-  const [relayPoint, setRelayPoint] = useState<RelayPoint | null>(null);
+  const [selected, setSelected] =
+    useState<ShippingMethod | null>(
+      null
+    );
 
-  function selectMethod(m: ShippingMethod) {
-    setSelected(m);
-    onSelect(m);
+  const [
+    relayPoint,
+    setRelayPoint,
+  ] =
+    useState<RelayPoint | null>(
+      null
+    );
 
-    if (m.type !== "relay") {
+  /* =====================================================
+     SELECT
+  ===================================================== */
+
+  function selectMethod(
+    method: ShippingMethod
+  ) {
+    setSelected(method);
+
+    onSelect(method);
+
+    if (
+      method.type !==
+      "relay"
+    ) {
       setRelayPoint(null);
+
       onRelayChosen(null);
     }
   }
 
-  function handleRelayChosen(point: RelayPoint) {
+  /* =====================================================
+     RELAY
+  ===================================================== */
+
+  function handleRelayChosen(
+    point: RelayPoint
+  ) {
     setRelayPoint(point);
+
     onRelayChosen(point);
   }
 
-  function priceTTC(m: ShippingMethod) {
-    if (!m.vatRate || m.vatRate <= 0) return m.priceHT;
-    return round2(m.priceHT * (1 + m.vatRate / 100));
+  /* =====================================================
+     PRICE TTC
+  ===================================================== */
+
+  function priceTTC(
+    method: ShippingMethod
+  ) {
+    if (
+      !method.vatRate ||
+      method.vatRate <= 0
+    ) {
+      return method.priceHT;
+    }
+
+    return round2(
+      method.priceHT *
+        (1 +
+          method.vatRate /
+            100)
+    );
   }
 
+  /* =====================================================
+     I18N
+  ===================================================== */
+
   const t = {
-    title: locale === "fr" ? "Méthode de livraison" : "Shipping method",
+    title:
+      locale === "fr"
+        ? "Méthode de livraison"
+        : "Shipping method",
+
     relay:
       locale === "fr"
         ? "Point relais"
         : "Pickup point",
+
     chooseRelay:
       locale === "fr"
         ? "Choisir un point relais"
         : "Choose pickup point",
+
+    selectedRelay:
+      locale === "fr"
+        ? "Point relais sélectionné"
+        : "Selected pickup point",
+
+    free:
+      locale === "fr"
+        ? "Gratuit"
+        : "Free",
   };
 
-  const orderedMethods = useMemo(
-    () =>
-      [...methods].sort(
-        (a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999)
-      ),
-    [methods]
-  );
+  /* =====================================================
+     SORT
+  ===================================================== */
+
+  const orderedMethods =
+    useMemo(
+      () =>
+        [...methods].sort(
+          (a, b) =>
+            (a.sortOrder ??
+              999) -
+            (b.sortOrder ??
+              999)
+        ),
+      [methods]
+    );
+
+  /* =====================================================
+     RENDER
+  ===================================================== */
 
   return (
-    <div className="wrap">
+    <div className="csm">
 
-      <h2>{t.title}</h2>
+      {/* HEADER */}
+      <div className="csm-head">
 
-      {error && <p className="error">{error}</p>}
+        <div className="csm-kicker">
+          SHIPPING
+        </div>
 
-      <div className="list">
-        {orderedMethods.map((m) => {
-          const isSelected = selected?.id === m.id;
+        <h2 className="csm-title">
+          {t.title}
+        </h2>
 
-          return (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => selectMethod(m)}
-              className={`card ${isSelected ? "active" : ""}`}
-            >
-              <div className="row">
-                <div>
-                  <p className="name">{m.name}</p>
-                  <p className="delay">{m.delay}</p>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="csm-error">
+          {error}
+        </div>
+      )}
+
+      {/* METHODS */}
+      <div className="csm-list">
+
+        {orderedMethods.map(
+          (method) => {
+            const isSelected =
+              selected?.id ===
+              method.id;
+
+            const price =
+              priceTTC(method);
+
+            return (
+              <button
+                key={method.id}
+                type="button"
+                onClick={() =>
+                  selectMethod(
+                    method
+                  )
+                }
+                className={`csm-card ${
+                  isSelected
+                    ? "active"
+                    : ""
+                }`}
+              >
+
+                {/* TOP */}
+                <div className="csm-card-top">
+
+                  <div className="csm-main">
+
+                    <div className="csm-name-row">
+
+                      <h3 className="csm-name">
+                        {
+                          method.name
+                        }
+                      </h3>
+
+                      {method.type ===
+                        "relay" && (
+                        <div className="csm-badge">
+                          {
+                            t.relay
+                          }
+                        </div>
+                      )}
+
+                    </div>
+
+                    <div className="csm-delay">
+                      {
+                        method.delay
+                      }
+                    </div>
+
+                  </div>
+
+                  {/* PRICE */}
+                  <div className="csm-price-wrap">
+
+                    <div className="csm-price">
+
+                      {price <=
+                      0
+                        ? t.free
+                        : `${price.toFixed(
+                            2
+                          )}€`}
+
+                    </div>
+
+                    <div className="csm-price-meta">
+
+                      {method.priceHT.toFixed(
+                        2
+                      )}
+                      € HT
+
+                      {method.vatRate
+                        ? ` • TVA ${method.vatRate}%`
+                        : ""}
+
+                    </div>
+
+                  </div>
+
                 </div>
 
-                <div className="price">
-                  {priceTTC(m).toFixed(2)}€
-                </div>
-              </div>
+                {/* GLOW */}
+                <div className="csm-glow" />
 
-              <div className="meta">
-                {m.priceHT.toFixed(2)}€ HT
-                {m.vatRate ? ` • TVA ${m.vatRate}%` : ""}
-              </div>
+              </button>
+            );
+          }
+        )}
 
-              {m.type === "relay" && (
-                <div className="tag">{t.relay}</div>
-              )}
-            </button>
-          );
-        })}
       </div>
 
       {/* RELAY */}
-      {selected?.type === "relay" && (
-        <div className="relay-box">
+      {selected?.type ===
+        "relay" && (
+        <div className="csm-relay">
 
-          <h3>{t.chooseRelay}</h3>
+          <div className="csm-relay-head">
 
-          <RelayPointMondialRelay
-            onSelect={handleRelayChosen}
-            country={selected.country}
-            locale={locale}
-          />
+            <div className="csm-kicker">
+              RELAY
+            </div>
 
+            <h3 className="csm-relay-title">
+              {t.chooseRelay}
+            </h3>
+
+          </div>
+
+          <div className="csm-relay-picker">
+
+            <RelayPointMondialRelay
+              onSelect={
+                handleRelayChosen
+              }
+              country={
+                selected.country
+              }
+              locale={
+                locale
+              }
+            />
+
+          </div>
+
+          {/* SELECTED */}
           {relayPoint && (
-            <div className="relay-selected">
-              <strong>{relayPoint.name}</strong>
-              <p>{relayPoint.address}</p>
-              <p>
-                {relayPoint.postalCode} {relayPoint.city}
-              </p>
+            <div className="csm-relay-selected">
+
+              <div className="csm-selected-kicker">
+                {
+                  t.selectedRelay
+                }
+              </div>
+
+              <div className="csm-selected-name">
+                {
+                  relayPoint.name
+                }
+              </div>
+
+              <div className="csm-selected-address">
+
+                <p>
+                  {
+                    relayPoint.address
+                  }
+                </p>
+
+                <p>
+
+                  {
+                    relayPoint.postalCode
+                  }{" "}
+
+                  {
+                    relayPoint.city
+                  }
+
+                </p>
+
+              </div>
+
             </div>
           )}
 
         </div>
       )}
 
-      <style jsx>{`
-
-        .wrap {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          color: white;
-        }
-
-        h2 {
-          font-size: 20px;
-          font-weight: 600;
-        }
-
-        .error {
-          color: #f87171;
-          font-size: 14px;
-        }
-
-        .list {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .card {
-          padding: 16px;
-          border-radius: 14px;
-
-          background: rgba(15,23,42,0.6);
-          backdrop-filter: blur(8px);
-
-          border: 1px solid rgba(255,255,255,0.08);
-
-          transition: 0.25s;
-          cursor: pointer;
-        }
-
-        .card:hover {
-          transform: translateY(-2px);
-          border-color: rgba(59,130,246,0.5);
-        }
-
-        .card.active {
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 2px rgba(59,130,246,0.25),
-                      0 10px 30px rgba(37,99,235,0.3);
-        }
-
-        .row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .name {
-          font-weight: 600;
-        }
-
-        .delay {
-          font-size: 13px;
-          color: #94a3b8;
-        }
-
-        .price {
-          font-weight: 700;
-          font-size: 16px;
-        }
-
-        .meta {
-          font-size: 12px;
-          color: #64748b;
-          margin-top: 6px;
-        }
-
-        .tag {
-          margin-top: 10px;
-          font-size: 11px;
-          background: rgba(139,92,246,0.2);
-          color: #c4b5fd;
-          padding: 4px 8px;
-          border-radius: 999px;
-          display: inline-block;
-        }
-
-        .relay-box {
-          padding: 18px;
-          border-radius: 16px;
-
-          background: rgba(15,23,42,0.6);
-          border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .relay-selected {
-          margin-top: 12px;
-          font-size: 13px;
-
-          background: rgba(255,255,255,0.05);
-          padding: 10px;
-          border-radius: 10px;
-        }
-
-      `}</style>
     </div>
   );
 }

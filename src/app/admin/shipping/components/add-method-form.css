@@ -1,0 +1,827 @@
+/* =========================================================
+   ADD METHOD FORM — ULTRA PREMIUM
+========================================================= */
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+.amf {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1.2rem;
+}
+
+/* =========================================================
+   HEAD
+========================================================= */
+
+.amf-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   KICKER
+========================================================= */
+
+.amf-kicker,
+.amf-card-kicker {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height:
+    30px;
+
+  padding:
+    0 .8rem;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(0,208,255,.08);
+
+  border:
+    1px solid rgba(0,208,255,.14);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    #7dd3fc;
+
+  font-size:
+    .62rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .16em;
+
+  text-transform:
+    uppercase;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.amf-title {
+  margin:
+    1rem 0 0 0;
+
+  color:
+    white;
+
+  font-size:
+    1.8rem;
+
+  line-height:
+    .95;
+
+  letter-spacing:
+    -.06em;
+
+  font-weight:
+    900;
+}
+
+/* =========================================================
+   COUNTRY
+========================================================= */
+
+.amf-country {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  gap:
+    .3rem;
+
+  padding:
+    1rem 1.2rem;
+
+  border-radius:
+    22px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.04);
+
+  backdrop-filter:
+    blur(14px);
+}
+
+.amf-country span {
+  color:
+    rgba(148,163,184,.68);
+
+  font-size:
+    .7rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+}
+
+.amf-country strong {
+  color:
+    white;
+
+  font-size:
+    1rem;
+
+  font-weight:
+    800;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.amf-card {
+  position: relative;
+
+  overflow: hidden;
+
+  padding:
+    1.4rem;
+
+  border-radius:
+    28px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,24,38,.86),
+      rgba(5,10,18,.96)
+    );
+
+  backdrop-filter:
+    blur(18px);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.24);
+}
+
+.amf-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .06;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.16),
+      transparent 60%
+    );
+}
+
+/* =========================================================
+   CARD HEAD
+========================================================= */
+
+.amf-card-head {
+  position: relative;
+
+  z-index: 2;
+
+  margin-bottom:
+    1.2rem;
+}
+
+.amf-card-head h4 {
+  margin:
+    .8rem 0 0 0;
+
+  color:
+    white;
+
+  font-size:
+    1.15rem;
+
+  letter-spacing:
+    -.04em;
+
+  font-weight:
+    800;
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.amf-grid {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0,1fr)
+    minmax(0,1fr);
+
+  gap:
+    1rem;
+}
+
+.amf-grid > * {
+  min-width:
+    0;
+}
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+.amf-field {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    .7rem;
+}
+
+.amf-field label {
+  color:
+    rgba(255,255,255,.84);
+
+  font-size:
+    .8rem;
+
+  font-weight:
+    700;
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.amf-field input {
+  width: 100%;
+  min-width: 0;
+
+  box-sizing:
+    border-box;
+
+  min-height:
+    56px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.02)
+    );
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    500;
+
+  transition:
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease,
+    transform .25s ease;
+}
+
+.amf-field input::placeholder {
+  color:
+    rgba(148,163,184,.54);
+}
+
+.amf-field input:hover {
+  border-color:
+    rgba(255,255,255,.14);
+}
+
+.amf-field input:focus {
+  outline: none;
+
+  border-color:
+    rgba(0,208,255,.34);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.05),
+      rgba(255,255,255,.03)
+    );
+
+  box-shadow:
+    0 0 0 4px rgba(0,208,255,.08),
+    0 0 30px rgba(0,208,255,.10);
+
+  transform:
+    translateY(-1px);
+}
+
+.amf-field input:disabled {
+  opacity:
+    .5;
+
+  cursor:
+    not-allowed;
+}
+
+/* =========================================================
+   TYPES
+========================================================= */
+
+.amf-types {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0,1fr));
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   TYPE
+========================================================= */
+
+.amf-type {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height:
+    120px;
+
+  padding:
+    1.2rem;
+
+  border-radius:
+    24px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.03);
+
+  backdrop-filter:
+    blur(14px);
+
+  text-align:
+    left;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease;
+}
+
+.amf-type::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  opacity: .06;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.14),
+      transparent 60%
+    );
+}
+
+.amf-type:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(0,208,255,.12);
+
+  background:
+    rgba(255,255,255,.05);
+}
+
+.amf-type.active {
+  border-color:
+    rgba(0,208,255,.18);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.16),
+      rgba(37,99,235,.18)
+    );
+
+  box-shadow:
+    0 18px 40px rgba(0,208,255,.16);
+}
+
+/* =========================================================
+   TYPE TITLE
+========================================================= */
+
+.amf-type-title {
+  position: relative;
+
+  z-index: 2;
+
+  color:
+    white;
+
+  font-size:
+    .96rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.03em;
+}
+
+/* =========================================================
+   TYPE DESC
+========================================================= */
+
+.amf-type-desc {
+  position: relative;
+
+  z-index: 2;
+
+  margin-top:
+    .7rem;
+
+  color:
+    rgba(148,163,184,.66);
+
+  font-size:
+    .8rem;
+
+  line-height:
+    1.6;
+}
+
+/* =========================================================
+   RELAYS
+========================================================= */
+
+.amf-relays {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  flex-wrap: wrap;
+
+  gap:
+    .8rem;
+}
+
+/* =========================================================
+   RELAY BTN
+========================================================= */
+
+.amf-relay {
+  position: relative;
+
+  overflow: hidden;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap:
+    .7rem;
+
+  min-height:
+    50px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    rgba(255,255,255,.03);
+
+  backdrop-filter:
+    blur(14px);
+
+  color:
+    white;
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    700;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease;
+}
+
+.amf-relay:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(0,208,255,.12);
+}
+
+.amf-relay.active {
+  border-color:
+    rgba(0,208,255,.18);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.16),
+      rgba(37,99,235,.18)
+    );
+
+  box-shadow:
+    0 18px 40px rgba(0,208,255,.16);
+}
+
+/* =========================================================
+   DOT
+========================================================= */
+
+.amf-relay-dot {
+  width:
+    10px;
+
+  height:
+    10px;
+
+  border-radius:
+    999px;
+
+  background:
+    #38bdf8;
+
+  box-shadow:
+    0 0 18px rgba(56,189,248,.8);
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.amf-error {
+  padding:
+    1rem 1.1rem;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(239,68,68,.16);
+
+  background:
+    rgba(239,68,68,.10);
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    #fca5a5;
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    700;
+}
+
+/* =========================================================
+   SUBMIT
+========================================================= */
+
+.amf-submit {
+  position: relative;
+
+  overflow: hidden;
+
+  isolation:
+    isolate;
+
+  min-height:
+    58px;
+
+  border-radius:
+    999px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      135deg,
+      #00d0ff 0%,
+      #38bdf8 35%,
+      #2563eb 100%
+    );
+
+  color:
+    white;
+
+  font-size:
+    .94rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.02em;
+
+  cursor:
+    pointer;
+
+  box-shadow:
+    0 20px 50px rgba(0,208,255,.22),
+    0 0 60px rgba(0,208,255,.10);
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    filter .25s ease,
+    opacity .25s ease;
+}
+
+.amf-submit::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -140%;
+
+  width: 120%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent 20%,
+      rgba(255,255,255,.24) 50%,
+      transparent 80%
+    );
+
+  transform:
+    skewX(-18deg);
+
+  transition:
+    left 1s cubic-bezier(.16,1,.3,1);
+}
+
+.amf-submit span {
+  position: relative;
+
+  z-index: 2;
+}
+
+.amf-submit:hover {
+  transform:
+    translateY(-2px);
+
+  filter:
+    brightness(1.04);
+
+  box-shadow:
+    0 26px 60px rgba(0,208,255,.28),
+    0 0 80px rgba(0,208,255,.14);
+}
+
+.amf-submit:hover::before {
+  left: 140%;
+}
+
+.amf-submit:disabled {
+  opacity:
+    .5;
+
+  cursor:
+    not-allowed;
+
+  transform:
+    none;
+
+  box-shadow:
+    none;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 980px) {
+
+  .amf-types {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .amf-head {
+    flex-direction:
+      column;
+  }
+
+  .amf-country {
+    width:
+      100%;
+
+    align-items:
+      flex-start;
+  }
+
+  .amf-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .amf-card {
+    padding:
+      1.2rem;
+
+    border-radius:
+      24px;
+  }
+
+  .amf-type {
+    min-height:
+      auto;
+  }
+
+  .amf-submit {
+    width:
+      100%;
+  }
+}

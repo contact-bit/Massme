@@ -1,0 +1,699 @@
+/* =========================================================
+   EXPORT FILTERS — MASTER PREMIUM
+   MASSME / VITRECTOMED DA
+========================================================= */
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+.export-filters {
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    1.6rem;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.export-filters-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap:
+    1rem;
+}
+
+.export-filters-kicker {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height:
+    32px;
+
+  padding:
+    0 .95rem;
+
+  border-radius:
+    999px;
+
+  border:
+    1px solid rgba(0,208,255,.16);
+
+  background:
+    rgba(0,208,255,.08);
+
+  backdrop-filter:
+    blur(14px);
+
+  color:
+    #7dd3fc;
+
+  font-size:
+    .64rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .18em;
+
+  text-transform:
+    uppercase;
+}
+
+.export-filters-title {
+  margin:
+    .9rem 0 .3rem 0;
+
+  color:
+    white;
+
+  font-size:
+    1.45rem;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    -.04em;
+}
+
+.export-filters-subtitle {
+  max-width:
+    560px;
+
+  color:
+    rgba(148,163,184,.68);
+
+  font-size:
+    .86rem;
+
+  line-height:
+    1.8;
+}
+
+/* =========================================================
+   MODES
+========================================================= */
+
+.export-modes {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap:
+    1rem;
+}
+
+/* =========================================================
+   MODE BUTTON
+========================================================= */
+
+.export-mode-btn {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height:
+    62px;
+
+  padding:
+    0 1.3rem;
+
+  border-radius:
+    22px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.04),
+      rgba(255,255,255,.02)
+    );
+
+  backdrop-filter:
+    blur(18px);
+
+  display: inline-flex;
+  align-items: center;
+
+  gap:
+    .9rem;
+
+  color:
+    rgba(203,213,225,.76);
+
+  font-size:
+    .88rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -.02em;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .25s ease,
+    background .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease,
+    color .25s ease;
+}
+
+/* glow */
+
+.export-mode-btn::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.10),
+      transparent 45%
+    );
+
+  opacity:
+    .8;
+
+  pointer-events:
+    none;
+}
+
+/* hover */
+
+.export-mode-btn:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(0,208,255,.16);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.06),
+      rgba(255,255,255,.03)
+    );
+
+  color:
+    white;
+
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.24);
+}
+
+/* active */
+
+.export-mode-btn.active {
+  border-color:
+    rgba(0,208,255,.24);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.18),
+      rgba(37,99,235,.18)
+    );
+
+  color:
+    white;
+
+  box-shadow:
+    0 24px 70px rgba(0,208,255,.16);
+}
+
+.export-mode-btn:active {
+  transform:
+    scale(.98);
+}
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.export-mode-btn-icon {
+  width:
+    40px;
+
+  height:
+    40px;
+
+  border-radius:
+    14px;
+
+  background:
+    rgba(255,255,255,.08);
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color:
+    white;
+
+  font-size:
+    1rem;
+
+  flex-shrink:
+    0;
+}
+
+.export-mode-btn.active .export-mode-btn-icon {
+  background:
+    rgba(255,255,255,.14);
+
+  border-color:
+    rgba(255,255,255,.12);
+}
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+.export-panel {
+  position: relative;
+
+  overflow: hidden;
+
+  padding:
+    1.6rem;
+
+  border-radius:
+    30px;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.03),
+      rgba(255,255,255,.015)
+    );
+
+  backdrop-filter:
+    blur(18px);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.export-panel::before {
+  content: "";
+
+  position: absolute;
+
+  top: -120px;
+  right: -100px;
+
+  width:
+    240px;
+
+  height:
+    240px;
+
+  border-radius:
+    999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,208,255,.10),
+      transparent 70%
+    );
+
+  pointer-events:
+    none;
+}
+
+/* =========================================================
+   SINGLE FIELD
+========================================================= */
+
+.export-panel > .export-field {
+  width: 100%;
+  max-width: 440px;
+}
+
+/* =========================================================
+   RANGE
+========================================================= */
+
+.export-range {
+  width: 100%;
+  max-width: 920px;
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap:
+    1rem;
+
+  align-items:
+    start;
+}
+
+/* fields */
+
+.export-range .export-field {
+  width: 100%;
+  min-width: 0;
+}
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+.export-field {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  gap:
+    .75rem;
+
+  min-width: 0;
+}
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+.export-label {
+  color:
+    rgba(203,213,225,.84);
+
+  font-size:
+    .84rem;
+
+  font-weight:
+    750;
+
+  letter-spacing:
+    -.01em;
+}
+
+/* =========================================================
+   GLOBAL FIX
+========================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   RANGE
+========================================================= */
+
+.export-range {
+  width: 100%;
+  max-width: 920px;
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap:
+    1rem;
+
+  align-items:
+    start;
+}
+
+/* =========================================================
+   RANGE FIELD
+========================================================= */
+
+.export-range .export-field {
+  width: 100%;
+  min-width: 0;
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.export-input {
+  width: 100%;
+
+  box-sizing:
+    border-box;
+
+  min-width:
+    0;
+
+  min-height:
+    58px;
+
+  padding:
+    0 1rem;
+
+  border-radius:
+    18px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.02)
+    );
+
+  backdrop-filter:
+    blur(12px);
+
+  color:
+    white;
+
+  font-size:
+    .92rem;
+
+  font-weight:
+    500;
+
+  transition:
+    border-color .25s ease,
+    background .25s ease,
+    box-shadow .25s ease;
+}
+
+/* =========================================================
+   DATE ICON
+========================================================= */
+
+.export-input::-webkit-calendar-picker-indicator {
+  cursor:
+    pointer;
+
+  opacity:
+    .82;
+
+  filter:
+    invert(1);
+}
+
+/* =========================================================
+   ALERT
+========================================================= */
+
+.export-alert {
+  padding:
+    1rem 1.2rem;
+
+  border-radius:
+    22px;
+
+  font-size:
+    .82rem;
+
+  font-weight:
+    700;
+
+  line-height:
+    1.7;
+}
+
+.export-alert-error {
+  border:
+    1px solid rgba(239,68,68,.16);
+
+  background:
+    rgba(239,68,68,.10);
+
+  color:
+    #fca5a5;
+}
+
+/* =========================================================
+   HELP
+========================================================= */
+
+.export-help {
+  display: flex;
+  align-items: flex-start;
+
+  gap:
+    .9rem;
+
+  padding:
+    1rem 1.1rem;
+
+  border-radius:
+    24px;
+
+  border:
+    1px solid rgba(255,255,255,.05);
+
+  background:
+    rgba(255,255,255,.03);
+
+  backdrop-filter:
+    blur(14px);
+}
+
+.export-help-icon {
+  width:
+    38px;
+
+  height:
+    38px;
+
+  border-radius:
+    14px;
+
+  background:
+    rgba(0,208,255,.10);
+
+  border:
+    1px solid rgba(0,208,255,.12);
+
+  color:
+    #7dd3fc;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size:
+    1rem;
+
+  flex-shrink:
+    0;
+}
+
+.export-help p {
+  margin:
+    0;
+
+  color:
+    rgba(148,163,184,.72);
+
+  font-size:
+    .82rem;
+
+  line-height:
+    1.8;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .export-range {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .export-modes {
+    flex-direction:
+      column;
+  }
+
+  .export-mode-btn {
+    width:
+      100%;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .export-panel,
+  .export-help {
+    border-radius:
+      24px;
+  }
+
+  .export-panel {
+    padding:
+      1rem;
+  }
+
+  .export-panel > .export-field,
+  .export-range {
+    max-width:
+      100%;
+  }
+
+  .export-mode-btn {
+    min-height:
+      56px;
+  }
+
+  .export-input {
+    min-height:
+      54px;
+  }
+
+  .export-filters-title {
+    font-size:
+      1.2rem;
+  }
+}

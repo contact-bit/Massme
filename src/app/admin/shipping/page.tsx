@@ -1,38 +1,101 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import AddMethodForm from "./components/AddMethodForm";
+
 import EditMethodPanel from "./components/EditMethodModal";
+
 import {
   CountryCode,
   ShippingLocale,
 } from "@/lib/shipping-i18n";
 
-/* ================= TYPES ================= */
+import "./shipping-admin.css";
+
+/* =========================================================
+   TYPES
+========================================================= */
+
 export type ShippingMethod = {
   id: string;
+
   country: CountryCode;
-  name: Partial<Record<ShippingLocale, string>>;
-  delay: Partial<Record<ShippingLocale, string>>;
-  type: "home" | "relay" | "local_pickup";
+
+  name: Partial<
+    Record<ShippingLocale, string>
+  >;
+
+  delay: Partial<
+    Record<ShippingLocale, string>
+  >;
+
+  type:
+    | "home"
+    | "relay"
+    | "local_pickup";
+
   relayProvider?: string | null;
+
   priceHT: number;
+
   vatRate: number;
+
   isActive: boolean;
+
   sortOrder?: number | null;
 };
 
-/* ================= CONST ================= */
+/* =========================================================
+   CONST
+========================================================= */
+
 const COUNTRIES = [
-  { code: "FR", label: "France", flag: "🇫🇷" },
-  { code: "GB", label: "UK", flag: "🇬🇧" },
-  { code: "ES", label: "Espagne", flag: "🇪🇸" },
-  { code: "DE", label: "Allemagne", flag: "🇩🇪" },
-  { code: "IT", label: "Italie", flag: "🇮🇹" },
-  { code: "NL", label: "Pays-Bas", flag: "🇳🇱" },
+  {
+    code: "FR",
+    label: "France",
+    flag: "🇫🇷",
+  },
+
+  {
+    code: "GB",
+    label: "United Kingdom",
+    flag: "🇬🇧",
+  },
+
+  {
+    code: "ES",
+    label: "Espagne",
+    flag: "🇪🇸",
+  },
+
+  {
+    code: "DE",
+    label: "Deutschland",
+    flag: "🇩🇪",
+  },
+
+  {
+    code: "IT",
+    label: "Italia",
+    flag: "🇮🇹",
+  },
+
+  {
+    code: "NL",
+    label: "Nederland",
+    flag: "🇳🇱",
+  },
 ] as const;
 
-const COUNTRY_TO_LOCALE: Record<CountryCode, ShippingLocale> = {
+const COUNTRY_TO_LOCALE: Record<
+  CountryCode,
+  ShippingLocale
+> = {
   FR: "fr",
   GB: "en",
   DE: "de",
@@ -42,40 +105,93 @@ const COUNTRY_TO_LOCALE: Record<CountryCode, ShippingLocale> = {
   CH: "fr",
 };
 
+/* =========================================================
+   COMPONENT
+========================================================= */
+
 export default function ShippingAdminPage() {
-  const [methods, setMethods] = useState<ShippingMethod[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState<ShippingMethod | null>(null);
+  const [methods, setMethods] =
+    useState<ShippingMethod[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [editing, setEditing] =
+    useState<ShippingMethod | null>(
+      null
+    );
+
   const [activeCountry, setActiveCountry] =
     useState<CountryCode>("FR");
+
+  /* =========================================================
+     LOAD
+  ========================================================= */
 
   const reload = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/admin/shipping-methods", {
-        cache: "no-store",
-      });
-      const json = await res.json();
 
-      if (!res.ok || !json.ok) {
+      const res = await fetch(
+        "/api/admin/shipping-methods",
+        {
+          cache: "no-store",
+        }
+      );
+
+      const json =
+        await res.json();
+
+      if (
+        !res.ok ||
+        !json.ok
+      ) {
         setMethods([]);
         return;
       }
 
       setMethods(
-        json.methods.map((m: any) => ({
-          id: m.id,
-          country: m.country,
-          name: m.name ?? {},
-          delay: m.delay ?? {},
-          type: m.type || "home",
-          relayProvider: m.relayProvider ?? null,
-          priceHT: Number(m.priceHT ?? 0),
-          vatRate: Number(m.vatRate ?? 0),
-          isActive: m.isActive ?? true,
-          sortOrder:
-            m.sortOrder == null ? null : Number(m.sortOrder),
-        }))
+        json.methods.map(
+          (m: any) => ({
+            id: m.id,
+
+            country: m.country,
+
+            name:
+              m.name ?? {},
+
+            delay:
+              m.delay ?? {},
+
+            type:
+              m.type ||
+              "home",
+
+            relayProvider:
+              m.relayProvider ??
+              null,
+
+            priceHT: Number(
+              m.priceHT ?? 0
+            ),
+
+            vatRate: Number(
+              m.vatRate ?? 0
+            ),
+
+            isActive:
+              m.isActive ??
+              true,
+
+            sortOrder:
+              m.sortOrder ==
+              null
+                ? null
+                : Number(
+                    m.sortOrder
+                  ),
+          })
+        )
       );
     } finally {
       setLoading(false);
@@ -86,256 +202,428 @@ export default function ShippingAdminPage() {
     reload();
   }, []);
 
-  async function handleDelete(id: string) {
-    if (!confirm("Supprimer cette méthode ?")) return;
-    await fetch(`/api/admin/shipping-methods/${id}`, {
-      method: "DELETE",
-    });
+  /* =========================================================
+     DELETE
+  ========================================================= */
+
+  async function handleDelete(
+    id: string
+  ) {
+    if (
+      !confirm(
+        "Supprimer cette méthode ?"
+      )
+    ) {
+      return;
+    }
+
+    await fetch(
+      `/api/admin/shipping-methods/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+
     reload();
   }
 
-  const filtered = methods
-    .filter((m) => m.country === activeCountry)
-    .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+  /* =========================================================
+     FILTER
+  ========================================================= */
+
+  const filtered = useMemo(() => {
+    return methods
+      .filter(
+        (m) =>
+          m.country ===
+          activeCountry
+      )
+      .sort(
+        (a, b) =>
+          (a.sortOrder ??
+            999) -
+          (b.sortOrder ??
+            999)
+      );
+  }, [
+    methods,
+    activeCountry,
+  ]);
+
+  /* =========================================================
+     RENDER
+  ========================================================= */
 
   return (
-    <main className="page">
+    <main className="shipping-page">
 
-      {/* HEADER */}
-      <div className="header">
-        <h1>Livraison</h1>
-        <p>Gestion avancée des méthodes</p>
-      </div>
+      {/* BG */}
+      <div className="shipping-grid" />
 
-      {/* TABS */}
-      <div className="tabs">
-        {COUNTRIES.map((c) => (
-          <button
-            key={c.code}
-            onClick={() => {
-              setActiveCountry(c.code);
-              setEditing(null);
-            }}
-            className={`tab ${
-              activeCountry === c.code ? "active" : ""
-            }`}
-          >
-            {c.flag} {c.label}
-          </button>
-        ))}
-      </div>
+      <div className="shipping-glow glow-1" />
 
-      {/* CREATE */}
-      <section className="section card">
-        <AddMethodForm
-          country={activeCountry}
-          onCreated={reload}
-        />
-      </section>
+      <div className="shipping-glow glow-2" />
 
-      {/* LIST */}
-      <section className="section">
-        <h2>Méthodes</h2>
+      {/* CONTAINER */}
+      <div className="shipping-container">
 
-        {loading ? (
-          <p className="muted">Chargement…</p>
-        ) : filtered.length === 0 ? (
-          <p className="muted">Aucune méthode</p>
-        ) : (
-          <div className="list">
+        {/* HERO */}
+        <section className="shipping-hero">
 
-            {filtered.map((m) => {
-              const locale = COUNTRY_TO_LOCALE[m.country];
-              const isOpen = editing?.id === m.id;
+          <div className="shipping-kicker">
+            SHIPPING MANAGEMENT
+          </div>
 
-              return (
-                <div key={m.id} className="wrap">
+          <div className="shipping-hero-head">
 
-                  {/* ROW */}
-                  <div className={`row ${isOpen ? "active" : ""}`}>
+            <div>
 
-                    <div
-                      className="left"
-                      onClick={() =>
-                        setEditing(isOpen ? null : m)
-                      }
-                    >
-                      <div className="top">
-                        <span className="name">
-                          {m.name?.[locale] || "—"}
-                        </span>
+              <h1 className="shipping-title">
+                Livraison
+              </h1>
 
-                        {!m.isActive && (
-                          <span className="badge">OFF</span>
-                        )}
-                      </div>
+              <p className="shipping-description">
+                Gestion avancée des
+                méthodes de livraison,
+                des zones et de la
+                logistique internationale.
+              </p>
 
-                      <div className="bottom">
-                        {m.priceHT.toFixed(2)}€ HT • TVA {m.vatRate}%
-                        {m.sortOrder != null && (
-                          <span> • #{m.sortOrder}</span>
-                        )}
-                      </div>
-                    </div>
+            </div>
 
-                    <div className="actions">
-                      <button
-                        onClick={() =>
-                          setEditing(isOpen ? null : m)
-                        }
-                        className="btn ghost"
-                      >
-                        {isOpen ? "Fermer" : "Modifier"}
-                      </button>
+            <div className="shipping-stats">
 
-                      <button
-                        onClick={() => handleDelete(m.id)}
-                        className="btn danger"
-                      >
-                        Supprimer
-                      </button>
-                    </div>
+              <div className="shipping-stat">
 
-                  </div>
+                <span>
+                  Méthodes
+                </span>
 
-                  {/* INLINE EDIT */}
-                  {isOpen && (
-                    <div className="edit">
-                      <EditMethodPanel
-                        data={m}
-                        onClose={() => setEditing(null)}
-                        onSaved={reload}
-                      />
-                    </div>
-                  )}
+                <strong>
+                  {
+                    filtered.length
+                  }
+                </strong>
 
-                </div>
-              );
-            })}
+              </div>
+
+              <div className="shipping-stat">
+
+                <span>
+                  Pays
+                </span>
+
+                <strong>
+                  {
+                    COUNTRIES.length
+                  }
+                </strong>
+
+              </div>
+
+            </div>
 
           </div>
-        )}
-      </section>
 
-      {/* STYLE */}
-      <style jsx>{`
+        </section>
 
-        .page {
-          padding: 40px;
-          max-width: 1000px;
-          margin: auto;
-          color: white;
+        {/* COUNTRIES */}
+        <section className="shipping-tabs">
 
+          {COUNTRIES.map(
+            (country) => (
+              <button
+                key={
+                  country.code
+                }
+                onClick={() => {
+                  setActiveCountry(
+                    country.code
+                  );
 
+                  setEditing(
+                    null
+                  );
+                }}
+                className={`shipping-tab ${
+                  activeCountry ===
+                  country.code
+                    ? "active"
+                    : ""
+                }`}
+              >
 
-          min-height: 100vh;
-        }
+                <span className="shipping-tab-flag">
+                  {country.flag}
+                </span>
 
-        h1 {
-          font-size: 32px;
-        }
+                <span className="shipping-tab-label">
+                  {
+                    country.label
+                  }
+                </span>
 
-        h2 {
-          font-size: 18px;
-          margin-bottom: 12px;
-        }
+              </button>
+            )
+          )}
 
-        .tabs {
-          display: flex;
-          gap: 10px;
-          margin: 20px 0;
-        }
+        </section>
 
-        .tab {
-          padding: 8px 14px;
-          border-radius: 999px;
-          background: rgba(255,255,255,0.05);
-        }
+        {/* CREATE */}
+        <section className="shipping-card">
 
-        .tab.active {
-          background: linear-gradient(135deg,#3b82f6,#2563eb);
-        }
+          <div className="shipping-card-head">
 
-        .section {
-          margin-top: 30px;
-        }
+            <div>
 
-        .card {
-          padding: 20px;
-          border-radius: 16px;
-          background: rgba(15,23,42,0.6);
-          border: 1px solid rgba(255,255,255,0.08);
-        }
+              <div className="shipping-card-kicker">
+                CREATE METHOD
+              </div>
 
-        .list {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
+              <h2>
+                Nouvelle méthode
+              </h2>
 
-        .wrap {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
+            </div>
 
-        .row {
-          display: flex;
-          justify-content: space-between;
-          padding: 14px;
-          border-radius: 12px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.06);
-        }
+          </div>
 
-        .row.active {
-          border-color: #3b82f6;
-        }
+          <div className="shipping-card-body">
 
-        .name {
-          font-weight: 600;
-        }
+            <AddMethodForm
+              country={
+                activeCountry
+              }
+              onCreated={
+                reload
+              }
+            />
 
-        .bottom {
-          font-size: 12px;
-          color: #94a3b8;
-        }
+          </div>
 
-        .badge {
-          margin-left: 8px;
-          font-size: 11px;
-          color: #f87171;
-        }
+        </section>
 
-        .actions {
-          display: flex;
-          gap: 8px;
-        }
+        {/* LIST */}
+        <section className="shipping-list-section">
 
-        .btn {
-          padding: 6px 10px;
-          border-radius: 8px;
-        }
+          <div className="shipping-section-head">
 
-        .ghost {
-          background: rgba(255,255,255,0.05);
-        }
+            <div>
 
-        .danger {
-          background: rgba(239,68,68,0.2);
-          color: #f87171;
-        }
+              <div className="shipping-card-kicker">
+                SHIPPING METHODS
+              </div>
 
-        .edit {
-          padding: 16px;
-          border-radius: 14px;
-        }
+              <h2>
+                Méthodes actives
+              </h2>
 
-        .muted {
-          color: #64748b;
-        }
+            </div>
 
-      `}</style>
+          </div>
+
+          {loading ? (
+            <div className="shipping-empty">
+
+              <div className="shipping-loader" />
+
+              <span>
+                Chargement des
+                méthodes...
+              </span>
+
+            </div>
+          ) : filtered.length ===
+            0 ? (
+            <div className="shipping-empty">
+
+              <div className="shipping-empty-icon">
+                📦
+              </div>
+
+              <h3>
+                Aucune méthode
+              </h3>
+
+              <p>
+                Aucune méthode
+                de livraison
+                configurée pour
+                ce pays.
+              </p>
+
+            </div>
+          ) : (
+            <div className="shipping-list">
+
+              {filtered.map(
+                (method) => {
+                  const locale =
+                    COUNTRY_TO_LOCALE[
+                      method
+                        .country
+                    ];
+
+                  const isOpen =
+                    editing?.id ===
+                    method.id;
+
+                  return (
+                    <div
+                      key={
+                        method.id
+                      }
+                      className="shipping-method-wrap"
+                    >
+
+                      {/* METHOD */}
+                      <div
+                        className={`shipping-method ${
+                          isOpen
+                            ? "active"
+                            : ""
+                        }`}
+                      >
+
+                        {/* LEFT */}
+                        <div
+                          className="shipping-method-left"
+                          onClick={() =>
+                            setEditing(
+                              isOpen
+                                ? null
+                                : method
+                            )
+                          }
+                        >
+
+                          <div className="shipping-method-top">
+
+                            <div className="shipping-method-title-wrap">
+
+                              <h3 className="shipping-method-title">
+                                {method
+                                  .name?.[
+                                  locale
+                                ] ||
+                                  "Méthode"}
+                              </h3>
+
+                              {!method.isActive && (
+                                <span className="shipping-off-badge">
+                                  OFF
+                                </span>
+                              )}
+
+                            </div>
+
+                            <div className="shipping-method-type">
+
+                              {
+                                method.type
+                              }
+
+                            </div>
+
+                          </div>
+
+                          <div className="shipping-method-bottom">
+
+                            <span>
+                              {
+                                method.priceHT
+                              }
+                              € HT
+                            </span>
+
+                            <span>
+                              TVA{" "}
+                              {
+                                method.vatRate
+                              }
+                              %
+                            </span>
+
+                            {method.sortOrder !=
+                              null && (
+                              <span>
+                                Priorité #
+                                {
+                                  method.sortOrder
+                                }
+                              </span>
+                            )}
+
+                          </div>
+
+                        </div>
+
+                        {/* ACTIONS */}
+                        <div className="shipping-method-actions">
+
+                          <button
+                            className="shipping-btn shipping-btn-ghost"
+                            onClick={() =>
+                              setEditing(
+                                isOpen
+                                  ? null
+                                  : method
+                              )
+                            }
+                          >
+                            {isOpen
+                              ? "Fermer"
+                              : "Modifier"}
+                          </button>
+
+                          <button
+                            className="shipping-btn shipping-btn-danger"
+                            onClick={() =>
+                              handleDelete(
+                                method.id
+                              )
+                            }
+                          >
+                            Supprimer
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                      {/* EDIT */}
+                      {isOpen && (
+                        <div className="shipping-edit-panel">
+
+                          <EditMethodPanel
+                            data={
+                              method
+                            }
+                            onClose={() =>
+                              setEditing(
+                                null
+                              )
+                            }
+                            onSaved={
+                              reload
+                            }
+                          />
+
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                }
+              )}
+
+            </div>
+          )}
+
+        </section>
+
+      </div>
+
     </main>
   );
 }
