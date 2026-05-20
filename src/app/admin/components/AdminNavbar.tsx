@@ -15,8 +15,9 @@ import {
   X,
   LogOut,
   ChevronRight,
-  ShieldCheck,
 } from "lucide-react";
+
+import { LOGO_URL } from "@/components/navbar/navbar.data";
 
 import "../styles/admin-navbar.css";
 
@@ -165,8 +166,12 @@ export default function AdminNavbar() {
               }
               className="admin-logo"
             >
-              <div className="admin-logo-icon">
-                <ShieldCheck size={18} />
+              <div className="admin-logo-mark">
+                <img
+                  src={LOGO_URL}
+                  alt="Vitrectomed"
+                  className="admin-logo-image"
+                />
               </div>
 
               <div className="admin-logo-text">
@@ -238,8 +243,12 @@ export default function AdminNavbar() {
         <div className="admin-mobile-top">
 
           <div className="admin-mobile-brand">
-            <div className="admin-logo-icon">
-              <ShieldCheck size={18} />
+            <div className="admin-logo-mark">
+              <img
+                src={LOGO_URL}
+                alt="Vitrectomed"
+                className="admin-logo-image"
+              />
             </div>
 
             <div className="admin-logo-text">
