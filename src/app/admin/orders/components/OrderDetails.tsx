@@ -227,6 +227,12 @@ const heardFromLabelMap: Record<string, string> = {
     }
   }
 
+  function invoiceHref(mode: "preview" | "download") {
+    return `/api/admin/orders/invoice?orderId=${encodeURIComponent(
+      order.id
+    )}&mode=${mode}`;
+  }
+
   /* =========================================================
      SEND REVIEW
   ========================================================= */
@@ -666,6 +672,9 @@ const heardFromLabelMap: Record<string, string> = {
             {/* INVOICE */}
 
             <div className="od-meta-card">
+              <div className="od-meta-card-title">
+                Facture
+              </div>
 
               <div className="od-meta-row">
 
@@ -700,31 +709,52 @@ const heardFromLabelMap: Record<string, string> = {
                 </div>
               )}
 
-              <button
-                className={
-                  invoice?.status ===
-                  "sent"
-                    ? "btn-secondary"
-                    : "btn-primary"
-                }
-                disabled={sendingInvoice}
-                onClick={() =>
-                  sendInvoiceNow(order.id)
-                }
-              >
-                {sendingInvoice
-                  ? "Envoi..."
-                  : invoice?.status ===
+              <div className="od-inline-actions">
+                <a
+                  className="btn-secondary"
+                  href={invoiceHref("preview")}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Prévisualiser
+                </a>
+
+                <a
+                  className="btn-secondary"
+                  href={invoiceHref("download")}
+                >
+                  Télécharger
+                </a>
+
+                <button
+                  className={
+                    invoice?.status ===
                     "sent"
-                  ? "Renvoyer la facture"
-                  : "Envoyer la facture"}
-              </button>
+                      ? "btn-secondary"
+                      : "btn-primary"
+                  }
+                  disabled={sendingInvoice}
+                  onClick={() =>
+                    sendInvoiceNow(order.id)
+                  }
+                >
+                  {sendingInvoice
+                    ? "Envoi..."
+                    : invoice?.status ===
+                      "sent"
+                    ? "Renvoyer"
+                    : "Envoyer"}
+                </button>
+              </div>
 
             </div>
 
             {/* REVIEW */}
 
             <div className="od-meta-card">
+              <div className="od-meta-card-title">
+                Avis client
+              </div>
 
               <div className="od-meta-row">
 
@@ -779,25 +809,27 @@ const heardFromLabelMap: Record<string, string> = {
                   </div>
                 )}
 
-              <button
-                className={
-                  review?.status ===
-                  "sent"
-                    ? "btn-secondary"
-                    : "btn-primary"
-                }
-                disabled={sendingReview}
-                onClick={() =>
-                  sendReviewNow(order.id)
-                }
-              >
-                {sendingReview
-                  ? "Envoi..."
-                  : review?.status ===
+              <div className="od-inline-actions">
+                <button
+                  className={
+                    review?.status ===
                     "sent"
-                  ? "Renvoyer"
-                  : "Envoyer maintenant"}
-              </button>
+                      ? "btn-secondary"
+                      : "btn-primary"
+                  }
+                  disabled={sendingReview}
+                  onClick={() =>
+                    sendReviewNow(order.id)
+                  }
+                >
+                  {sendingReview
+                    ? "Envoi..."
+                    : review?.status ===
+                      "sent"
+                    ? "Renvoyer"
+                    : "Envoyer"}
+                </button>
+              </div>
 
             </div>
 

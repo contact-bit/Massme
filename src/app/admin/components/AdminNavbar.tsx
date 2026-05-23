@@ -173,11 +173,6 @@ export default function AdminNavbar() {
                   className="admin-logo-image"
                 />
               </div>
-
-              <div className="admin-logo-text">
-                <strong>Vitrectomed</strong>
-                <span>Administration</span>
-              </div>
             </Link>
 
           </div>
@@ -208,11 +203,7 @@ export default function AdminNavbar() {
           {/* RIGHT */}
           <div className="admin-navbar-right">
 
-            <div className="admin-role-pill">
-              {role === "logistics"
-                ? "Logistique"
-                : "Administrateur"}
-            </div>
+
 
             <button
               className="admin-logout"
@@ -251,10 +242,7 @@ export default function AdminNavbar() {
               />
             </div>
 
-            <div className="admin-logo-text">
-              <strong>Vitrectomed</strong>
-              <span>Administration</span>
-            </div>
+            
           </div>
 
           <button

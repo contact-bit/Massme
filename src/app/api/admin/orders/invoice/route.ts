@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { FieldValue } from "firebase-admin/firestore";
-import { Resend } from "resend";
 
 import { dbAdmin } from "@/lib/firebase.admin";
 import {
@@ -65,15 +63,16 @@ function isLocale(value: string): value is Locale {
   return ["fr", "en", "es", "de", "it", "nl"].includes(value);
 }
 
-function getResendId(value: unknown) {
-  const result = asRecord(value);
-  const data = asRecord(result.data);
+function contentDisposition(
+  mode: string,
+  filename: string
+) {
+  const type =
+    mode === "download"
+      ? "attachment"
+      : "inline";
 
-  return (
-    asString(data.id) ||
-    asString(result.id) ||
-    null
-  );
+  return `${type}; filename="${filename}"`;
 }
 
 async function findOrderSource(orderId: string) {
@@ -108,10 +107,12 @@ async function findOrderSource(orderId: string) {
   return null;
 }
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   try {
-    const body = await req.json();
-    const orderId = asString(body?.orderId);
+    const url = new URL(req.url);
+    const orderId = asString(
+      url.searchParams.get("orderId")
+    );
 
     if (!orderId) {
       return NextResponse.json(
@@ -129,25 +130,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const { ref: sourceRef, snap } = source;
-    const order = asRecord(snap.data());
-    const email = getOrderEmail(order);
-
-    if (!email || !email.includes("@")) {
-      return NextResponse.json(
-        { ok: false, error: "invalid_email" },
-        { status: 400 }
-      );
-    }
-
+    const order = asRecord(source.snap.data());
     const orderNumber = getOrderNumber(order, orderId);
+    const email = getOrderEmail(order);
     const rawLocale = asString(order.locale);
     const locale = isLocale(rawLocale)
       ? rawLocale
       : "fr";
-    const from =
-      process.env.RESEND_FROM ||
-      "Vitrectomed Support <contact@hdconnects.com>";
 
     const pdf = await generateInvoicePDF(
       {
@@ -162,64 +151,22 @@ export async function POST(req: Request) {
       }
     );
 
-    await sourceRef.set(
-      {
-        invoiceEmail: {
-          status: "sending",
-          lastAttemptAt: FieldValue.serverTimestamp(),
-          email,
-          orderNumber,
-        },
+    const filename = `facture-${orderNumber}.pdf`;
+    const body = new Uint8Array(pdf);
+
+    return new NextResponse(body, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Length": String(body.byteLength),
+        "Content-Disposition": contentDisposition(
+          asString(url.searchParams.get("mode")),
+          filename
+        ),
+        "Cache-Control": "no-store",
       },
-      { merge: true }
-    );
-
-    const res = await new Resend(process.env.RESEND_API_KEY).emails.send({
-      from,
-      to: email,
-      subject: `Votre facture - Commande ${orderNumber}`,
-      html: `
-        <div style="font-family:Arial,sans-serif;padding:24px;color:#111">
-          <h2>Votre facture Vitrectomed</h2>
-          <p>Bonjour,</p>
-          <p>Vous trouverez votre facture pour la commande <strong>${orderNumber}</strong> en pièce jointe.</p>
-          <p>Merci pour votre confiance.</p>
-        </div>
-      `,
-      attachments: [
-        {
-          filename: `facture-${orderNumber}.pdf`,
-          content: pdf.toString("base64"),
-          contentType: "application/pdf",
-        },
-      ],
-    });
-
-    const resendId = getResendId(res);
-
-    const update = {
-      invoiceEmail: {
-        status: "sent",
-        sentAt: new Date(),
-        lastSentAt: new Date(),
-        email,
-        orderNumber,
-        resendId,
-        lastError: null,
-        resendCount: FieldValue.increment(1),
-      },
-    };
-
-    await sourceRef.set(update, { merge: true });
-
-    return NextResponse.json({
-      ok: true,
-      resendId,
-      email,
-      orderNumber,
     });
   } catch (e: unknown) {
-    console.error("[admin/send-invoice] error:", e);
+    console.error("[admin/invoice] error:", e);
 
     const message =
       e instanceof Error
