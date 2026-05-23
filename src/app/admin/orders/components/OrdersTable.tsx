@@ -190,8 +190,25 @@ export default function OrdersTable({
 
                   <td>
 
-                    <div className="cell-main">
-                      {displayId}
+                    <div className="cell-command">
+                      <div className="cell-main">
+                        {displayId}
+                      </div>
+
+                      <span
+                        onClick={(e) =>
+                          e.stopPropagation()
+                        }
+                      >
+                        <ActionIconButton
+                          title="Voir"
+                          onClick={() =>
+                            toggle(o.id)
+                          }
+                          icon={<IconEye />}
+                          variant="primary"
+                        />
+                      </span>
                     </div>
 
                   </td>
@@ -305,15 +322,6 @@ export default function OrdersTable({
                   >
 
                     <div className="actions">
-
-                      <ActionIconButton
-                        title="Voir"
-                        onClick={() =>
-                          toggle(o.id)
-                        }
-                        icon={<IconEye />}
-                        variant="primary"
-                      />
 
                       <ActionIconButton
                         title="Supprimer"
