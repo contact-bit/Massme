@@ -76,7 +76,7 @@ export function OrdersCards({
 
               {/* BODY */}
               <div className="oc-body">
-                <div className="oc-id">#{orderLabel}</div>
+                <div className="oc-id">{orderLabel}</div>
                 <div className="oc-email">
                   {o.__email || "—"}
                 </div>

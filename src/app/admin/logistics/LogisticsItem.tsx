@@ -126,7 +126,7 @@ export default function LogisticsItem({
         {/* COMMANDE */}
         <div className="log-col order">
           <div className="log-id">
-            #{displayId}
+            {displayId}
           </div>
 
           <div className="log-email">

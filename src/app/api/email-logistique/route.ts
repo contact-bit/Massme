@@ -150,7 +150,7 @@ export async function POST(req: Request) {
     await resend.emails.send({
       from: "Vitrectomed • Logistique <contact@hdconnects.com>",
       to: process.env.LOGISTICS_EMAIL!,
-      subject: `📦 Préparer la commande #${orderNumber}`,
+      subject: `📦 Préparer la commande ${orderNumber}`,
       html: htmlTemplate,
       attachments: pdfBase64
         ? [

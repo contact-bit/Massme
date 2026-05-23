@@ -147,15 +147,6 @@ export function OrdersList({
 }: Props) {
   const { currentPage, totalPages, paged, setPage } = pagination;
 
-  const toggleAllPage = () => {
-    selection.setSelected((prev) => {
-      const next = { ...prev };
-      const allSelected = paged.every((o) => prev[o.id]);
-      for (const o of paged) next[o.id] = !allSelected;
-      return next;
-    });
-  };
-
   return (
     <div style={S.block}>
       {/* HEADER */}
@@ -213,7 +204,6 @@ export function OrdersList({
               <OrdersTable
   orders={paged}
   onOpen={onOpen}
-  onCopyId={onCopyId}
   onDelete={onDelete}
   deleting={deleting}
   onMarkAsPaid={onMarkAsPaid}

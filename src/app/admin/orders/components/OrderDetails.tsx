@@ -7,7 +7,6 @@ import React, { useEffect, useState } from "react";
 import type { Order } from "../domain/types";
 
 import {
-  formatDateFR,
   moneyEUR,
   formatAddress,
   compactId,
@@ -20,10 +19,7 @@ import {
   getTotal,
 } from "../domain/orderMath";
 
-import { StatusPill } from "./StatusPill";
-
 import {
-  getShipDate,
   getLogisticStatus,
 } from "../domain/logistics";
 
@@ -71,24 +67,25 @@ function getRemainingTime(scheduledAt?: any) {
 
 export function OrderDetails({
   order,
-  onCopyId,
-  onCopyEmail,
   onCopyAddress,
 }: {
   order: Order;
-  onCopyId: () => void;
-  onCopyEmail: () => void;
   onCopyAddress: () => void;
 }) {
-  const [validating, setValidating] =
+  const [sendingReview, setSendingReview] =
     useState(false);
 
-  const [sendingReview, setSendingReview] =
+  const [sendingInvoice, setSendingInvoice] =
     useState(false);
 
   const [localReview, setLocalReview] =
     useState(
       (order as any)?.reviewEmail || null
+    );
+
+  const [localInvoice, setLocalInvoice] =
+    useState(
+      (order as any)?.invoiceEmail || null
     );
 
   /* =========================================================
@@ -111,6 +108,12 @@ export function OrderDetails({
       ? localReview
       : (order as any)?.reviewEmail ||
         localReview;
+
+  const invoice =
+    localInvoice?.status === "sent"
+      ? localInvoice
+      : (order as any)?.invoiceEmail ||
+        localInvoice;
 
   /* =========================================================
      LIVE TIMER
@@ -149,8 +152,6 @@ export function OrderDetails({
   const logisticStatus =
     getLogisticStatus(order);
 
-  const shipDate = getShipDate(order);
-
   const phone =
   (order as any)?.shippingAddress?.phone ||
   (order as any)?.billingAddress?.phone ||
@@ -172,22 +173,22 @@ const heardFromLabelMap: Record<string, string> = {
   other: "Autre",
 };
 
-const heardFromLabel =
+  const heardFromLabel =
   heardFromLabelMap[heardFrom] ||
   heardFrom;
 
   /* =========================================================
-     VALIDATE PAYMENT
+     SEND INVOICE
   ========================================================= */
 
-  async function handleValidate() {
-    if (validating) return;
-
+  async function sendInvoiceNow(
+    orderId: string
+  ) {
     try {
-      setValidating(true);
+      setSendingInvoice(true);
 
       const res = await fetch(
-        "/api/admin/orders/mark-paid",
+        "/api/admin/orders/send-invoice",
         {
           method: "POST",
           headers: {
@@ -195,7 +196,7 @@ const heardFromLabel =
               "application/json",
           },
           body: JSON.stringify({
-            orderId: order.id,
+            orderId,
           }),
         }
       );
@@ -205,19 +206,24 @@ const heardFromLabel =
       if (!data?.ok) {
         throw new Error(
           data?.error ||
-            "Validation échouée"
+            "invoice_send_failed"
         );
       }
 
-      window.location.reload();
+      const now = new Date();
+
+      setLocalInvoice((prev: any) => ({
+        ...prev,
+        status: "sent",
+        sentAt: now,
+        lastSentAt: now,
+      }));
     } catch (e) {
       console.error(e);
 
-      alert(
-        "❌ Erreur validation paiement"
-      );
+      alert("❌ Erreur envoi facture");
     } finally {
-      setValidating(false);
+      setSendingInvoice(false);
     }
   }
 
@@ -293,79 +299,30 @@ const heardFromLabel =
     }
   }
 
+  function renderInvoiceStatus() {
+    if (!invoice?.status) return "—";
+
+    switch (invoice.status) {
+      case "sending":
+        return "📤 Envoi...";
+
+      case "sent":
+        return "✅ Envoyée";
+
+      case "error":
+        return "❌ Erreur";
+
+      default:
+        return invoice.status;
+    }
+  }
+
   /* =========================================================
      RENDER
   ========================================================= */
 
   return (
     <div className="od-page">
-
-      {/* =====================================================
-         TOP
-      ===================================================== */}
-
-      <section className="od-top">
-
-        <div className="od-header-left">
-
-          <div className="od-order-id">
-            Commande #{displayId}
-          </div>
-
-          <div className="od-order-main">
-
-            <div className="od-order-title">
-              {moneyEUR(total)}
-            </div>
-
-            <StatusPill
-              status={order.status}
-            />
-
-          </div>
-
-          <div className="od-order-date">
-            {formatDateFR(
-              order.__created ?? null
-            )}
-          </div>
-
-        </div>
-
-        <div className="od-header-right">
-
-          <button
-            className="btn-secondary"
-            onClick={onCopyId}
-          >
-            Copier ID
-          </button>
-
-          <button
-            className="btn-secondary"
-            onClick={onCopyEmail}
-          >
-            Copier email
-          </button>
-
-          {(order.status ===
-            "pending_payment" ||
-            order.status ===
-              "awaiting_bank_transfer") && (
-            <button
-              className="btn-primary"
-              onClick={handleValidate}
-              disabled={validating}
-            >
-              {validating
-                ? "Validation..."
-                : "Valider le paiement"}
-            </button>
-          )}
-
-        </div>
-
-      </section>
 
       {/* =====================================================
          GENERAL INFO
@@ -389,7 +346,7 @@ const heardFromLabel =
               </div>
 
               <div className="od-info-value">
-                #{displayId}
+                {displayId}
               </div>
             </div>
 
@@ -698,7 +655,7 @@ const heardFromLabel =
 
         <div className="od-section-head">
           <h2 className="od-section-title">
-            Livraison & avis
+            Facture & avis
           </h2>
         </div>
 
@@ -706,48 +663,62 @@ const heardFromLabel =
 
           <div className="od-meta-grid">
 
-            {/* SHIPPING */}
+            {/* INVOICE */}
 
             <div className="od-meta-card">
 
               <div className="od-meta-row">
 
                 <div className="od-meta-label">
-                  Statut
+                  Statut facture
                 </div>
 
                 <div className="od-meta-value">
-                  {logisticStatus ===
-                  "shipped"
-                    ? "Expédiée"
-                    : "À préparer"}
+                  {renderInvoiceStatus()}
                 </div>
 
               </div>
 
-              {shipDate && (
+              {(sendingInvoice ||
+                invoice?.status ===
+                  "sent") && (
                 <div className="od-meta-row">
 
                   <div className="od-meta-label">
-                    Expédiée le
+                    Dernier envoi
                   </div>
 
                   <div className="od-meta-value">
-                    {new Intl.DateTimeFormat(
-                      "fr-FR",
-                      {
-                        dateStyle:
-                          "medium",
-                        timeStyle:
-                          "short",
-                      }
-                    ).format(
-                      new Date(shipDate)
-                    )}
+                    {toDateSafe(
+                      invoice?.lastSentAt ||
+                        invoice?.sentAt
+                    )?.toLocaleString(
+                      "fr-FR"
+                    ) || "—"}
                   </div>
 
                 </div>
               )}
+
+              <button
+                className={
+                  invoice?.status ===
+                  "sent"
+                    ? "btn-secondary"
+                    : "btn-primary"
+                }
+                disabled={sendingInvoice}
+                onClick={() =>
+                  sendInvoiceNow(order.id)
+                }
+              >
+                {sendingInvoice
+                  ? "Envoi..."
+                  : invoice?.status ===
+                    "sent"
+                  ? "Renvoyer la facture"
+                  : "Envoyer la facture"}
+              </button>
 
             </div>
 

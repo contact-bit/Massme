@@ -65,7 +65,7 @@ function buildHtml({ locale, reviewBase, stars, orderNumber }: any) {
                     ? "Merci pour votre commande"
                     : "Thank you for your order"
                 }
-                <strong>#${escapeHtml(orderNumber)}</strong>
+                <strong>${escapeHtml(orderNumber)}</strong>
               </p>
             </td>
           </tr>
@@ -273,7 +273,7 @@ const stars = [1, 2, 3, 4, 5].map(
   const res = await resend.emails.send({
     from,
     to: email,
-    subject: `Votre avis - Commande #${orderNumber}`,
+    subject: `Votre avis - Commande ${orderNumber}`,
     html: buildHtml({
       locale,
       reviewBase,

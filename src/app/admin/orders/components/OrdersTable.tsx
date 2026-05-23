@@ -31,16 +31,13 @@ import { OrderDetails } from "./OrderDetails";
 type Props = {
   orders: Order[];
 
-  /* ACTIONS */
-  onCopyId: (id: string) => void;
+  onMarkAsPaid: (
+    id: string
+  ) => Promise<void>;
 
   onDelete: (id: string) => void;
 
   deleting: Record<string, boolean>;
-
-  onMarkAsPaid: (
-    id: string
-  ) => Promise<void>;
 
   /* OPEN */
   onOpen: (id: string) => void;
@@ -48,10 +45,9 @@ type Props = {
 
 export default function OrdersTable({
   orders,
-  onCopyId,
+  onOpen,
   onDelete,
   deleting,
-  onOpen,
 }: Props) {
   const [openId, setOpenId] =
     useState<string | null>(null);
@@ -358,12 +354,6 @@ export default function OrdersTable({
 
                         <OrderDetails
                           order={o}
-                          onCopyId={() =>
-                            onCopyId(
-                              o.id
-                            )
-                          }
-                          onCopyEmail={() => {}}
                           onCopyAddress={() => {}}
                         />
 

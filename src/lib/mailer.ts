@@ -151,7 +151,7 @@ export async function sendOrderEmails({
      CLIENT EMAIL
   ========================================================= */
 
-  const subjectClient = `Commande #${orderNumber} confirmée`;
+  const subjectClient = `Commande ${orderNumber} confirmée`;
 
   const htmlClient = `
 <div style="font-family:Arial,sans-serif;padding:24px;color:#111">
@@ -214,7 +214,7 @@ Montant: ${amountText}
   const adminRes = await resend.emails.send({
     from: sender,
     to: adminEmail,
-    subject: `Nouvelle commande #${orderNumber}`,
+    subject: `Nouvelle commande ${orderNumber}`,
     text: textAdmin,
     attachments,
   });
@@ -225,7 +225,7 @@ Montant: ${amountText}
     const res = await resend.emails.send({
       from: sender,
       to: email,
-      subject: `Préparer commande #${orderNumber}`,
+      subject: `Préparer commande ${orderNumber}`,
       text: textLogistics,
       attachments,
     });

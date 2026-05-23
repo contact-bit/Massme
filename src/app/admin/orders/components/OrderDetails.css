@@ -15,7 +15,7 @@
   flex-direction: column;
 
   gap:
-    1.4rem;
+    .25rem;
 }
 
 /* =========================================================
@@ -232,26 +232,22 @@
   overflow: hidden;
 
   border-radius:
-    1.8rem;
+    0;
 
   isolation:
     isolate;
 
   background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,.045),
-      rgba(255,255,255,.025)
-    );
+    rgba(255,255,255,.018);
 
   border:
     1px solid rgba(255,255,255,.06);
 
   backdrop-filter:
-    blur(16px);
+    none;
 
   box-shadow:
-    0 18px 50px rgba(0,0,0,.24);
+    none;
 }
 
 /* =========================================================
@@ -259,23 +255,7 @@
 ========================================================= */
 
 .od-section::before {
-  content: "";
-
-  position: absolute;
-
-  inset: 0;
-
-  opacity: .18;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,.05),
-      transparent 55%
-    );
-
-  pointer-events:
-    none;
+  display: none;
 }
 
 /* =========================================================
@@ -297,7 +277,7 @@
     1rem;
 
   padding:
-    1.3rem 1.5rem;
+    .35rem .5rem;
 
   border-bottom:
     1px solid rgba(255,255,255,.06);
@@ -312,13 +292,16 @@
     white;
 
   font-size:
-    1.05rem;
+    .62rem;
 
   font-weight:
     900;
 
   letter-spacing:
-    -.03em;
+    .04em;
+
+  text-transform:
+    uppercase;
 }
 
 /* =========================================================
@@ -331,7 +314,7 @@
   z-index: 2;
 
   padding:
-    1.5rem;
+    .35rem;
 }
 
 /* =========================================================
@@ -345,7 +328,7 @@
     repeat(4, minmax(0, 1fr));
 
   gap:
-    1rem;
+    0;
 }
 
 /* =========================================================
@@ -362,19 +345,19 @@
   flex-direction: column;
 
   gap:
-    .55rem;
+    .12rem;
 
   padding:
-    1rem;
+    .32rem .45rem;
 
   border-radius:
-    1.3rem;
+    0;
 
   background:
-    rgba(255,255,255,.035);
+    rgba(255,255,255,.012);
 
   border:
-    1px solid rgba(255,255,255,.05);
+    1px solid rgba(255,255,255,.045);
 
   transition:
     transform var(--transition-base),
@@ -383,14 +366,8 @@
 }
 
 .od-info-card:hover {
-  transform:
-    translateY(-2px);
-
-  border-color:
-    rgba(255,255,255,.10);
-
   background:
-    rgba(255,255,255,.045);
+    rgba(255,255,255,.025);
 }
 
 /* =========================================================
@@ -402,7 +379,7 @@
     rgba(148,163,184,.58);
 
   font-size:
-    .68rem;
+    .54rem;
 
   font-weight:
     900;
@@ -419,13 +396,13 @@
     white;
 
   font-size:
-    .92rem;
+    .68rem;
 
   font-weight:
     700;
 
   line-height:
-    1.7;
+    1.2;
 }
 
 /* =========================================================
@@ -439,7 +416,7 @@
     repeat(2, minmax(0, 1fr));
 
   gap:
-    1rem;
+    0;
 }
 
 /* =========================================================
@@ -457,19 +434,19 @@
   flex-direction: column;
 
   gap:
-    .9rem;
+    .18rem;
 
   padding:
-    1.3rem;
+    .38rem .45rem;
 
   border-radius:
-    1.5rem;
+    0;
 
   background:
-    rgba(255,255,255,.035);
+    rgba(255,255,255,.012);
 
   border:
-    1px solid rgba(255,255,255,.05);
+    1px solid rgba(255,255,255,.045);
 
   transition:
     transform var(--transition-base),
@@ -479,14 +456,8 @@
 
 .od-address-card:hover,
 .od-meta-card:hover {
-  transform:
-    translateY(-2px);
-
-  border-color:
-    rgba(255,255,255,.10);
-
   background:
-    rgba(255,255,255,.045);
+    rgba(255,255,255,.025);
 }
 
 /* =========================================================
@@ -498,7 +469,7 @@
     white;
 
   font-size:
-    .92rem;
+    .68rem;
 
   font-weight:
     800;
@@ -512,10 +483,10 @@
     rgba(203,213,225,.72);
 
   font-size:
-    .84rem;
+    .66rem;
 
   line-height:
-    1.8;
+    1.25;
 
   white-space:
     pre-line;
@@ -530,7 +501,7 @@
     auto;
 
   border-radius:
-    1.4rem;
+    0;
 }
 
 /* =========================================================
@@ -546,7 +517,7 @@
 
 .od-table thead {
   background:
-    rgba(255,255,255,.03);
+    rgba(255,255,255,.025);
 }
 
 /* =========================================================
@@ -558,13 +529,13 @@
     left;
 
   padding:
-    1rem 1.2rem;
+    .32rem .45rem;
 
   color:
     rgba(148,163,184,.60);
 
   font-size:
-    .68rem;
+    .54rem;
 
   font-weight:
     900;
@@ -585,7 +556,7 @@
 
 .od-table td {
   padding:
-    1.1rem 1.2rem;
+    .34rem .45rem;
 
   border-bottom:
     1px solid rgba(255,255,255,.05);
@@ -594,10 +565,10 @@
     rgba(203,213,225,.78);
 
   font-size:
-    .84rem;
+    .66rem;
 
   line-height:
-    1.7;
+    1.2;
 }
 
 /* =========================================================
@@ -628,13 +599,13 @@
 
 .od-product-sub {
   margin-top:
-    .25rem;
+    .05rem;
 
   color:
     rgba(148,163,184,.56);
 
   font-size:
-    .76rem;
+    .58rem;
 }
 
 .od-table-price {
@@ -656,14 +627,14 @@
   width: 100%;
 
   max-width:
-    440px;
+    300px;
 
   display: flex;
 
   flex-direction: column;
 
   gap:
-    .9rem;
+    .16rem;
 }
 
 /* =========================================================
@@ -678,10 +649,10 @@
   justify-content: space-between;
 
   gap:
-    1rem;
+    .5rem;
 
   padding-bottom:
-    .9rem;
+    .2rem;
 
   border-bottom:
     1px solid rgba(255,255,255,.06);
@@ -704,7 +675,7 @@
     rgba(148,163,184,.62);
 
   font-size:
-    .84rem;
+    .64rem;
 }
 
 .od-total-value {
@@ -712,7 +683,7 @@
     white;
 
   font-size:
-    .92rem;
+    .68rem;
 
   font-weight:
     800;
@@ -728,7 +699,7 @@
     white;
 
   font-size:
-    1.15rem;
+    .78rem;
 
   font-weight:
     900;
@@ -748,7 +719,7 @@
     repeat(2, minmax(0, 1fr));
 
   gap:
-    1rem;
+    0;
 }
 
 /* =========================================================
@@ -763,7 +734,16 @@
   justify-content: space-between;
 
   gap:
-    1rem;
+    .45rem;
+
+  min-height:
+    26px;
+
+  padding:
+    .18rem .35rem;
+
+  border-bottom:
+    1px solid rgba(255,255,255,.04);
 }
 
 /* =========================================================
@@ -775,7 +755,7 @@
     rgba(148,163,184,.58);
 
   font-size:
-    .82rem;
+    .62rem;
 }
 
 .od-meta-value {
@@ -783,7 +763,7 @@
     white;
 
   font-size:
-    .84rem;
+    .66rem;
 
   font-weight:
     800;
@@ -815,10 +795,16 @@
 .od-page .btn-primary,
 .od-page .btn-secondary {
   min-height:
-    44px;
+    26px;
 
   border-radius:
-    1rem;
+    .35rem;
+
+  padding:
+    0 .5rem;
+
+  font-size:
+    .62rem;
 }
 
 /* =========================================================
