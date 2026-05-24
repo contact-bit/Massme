@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Order } from "../orders/domain/types";
 import { getLogisticStatus } from "../orders/domain/logistics";
+import { ShippingStatusPill } from "../orders/components/ShippingStatusPill";
 
 type Props = {
   order: Order;
@@ -62,10 +63,20 @@ export default function LogisticsItem({
 
   /* ================= SHIPPING ================= */
 
-  const shippingPriceTTC =
-    shippingMethod?.priceTTC ??
+  const shippingVatRate =
+    Number(shippingMethod?.vatRate ?? 20);
+
+  const shippingPriceHT =
+    shippingMethod?.priceHT ??
     (order as any)?.shippingPrice ??
     0;
+
+  const shippingPriceTTC =
+    shippingMethod?.priceTTC ??
+    (shippingPriceHT > 0
+      ? shippingPriceHT *
+        (1 + shippingVatRate / 100)
+      : 0);
 
   const shippingLabel = relay
     ? "Point relais"
@@ -81,6 +92,33 @@ export default function LogisticsItem({
             1000
         )
       : null);
+
+  const createdDate = createdAt
+    ? createdAt.toLocaleDateString(
+        "fr-FR",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }
+      )
+    : "—";
+
+  const createdTime = createdAt
+    ? createdAt.toLocaleTimeString(
+        "fr-FR",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+        }
+      )
+    : "";
+
+  const shippingDelay =
+    shippingMethod?.delay ||
+    (isPickup
+      ? "Retrait"
+      : "Non renseigné");
 
   /* ================= ACTION ================= */
 
@@ -134,22 +172,18 @@ export default function LogisticsItem({
           </div>
         </div>
 
-        {/* DATE */}
-<div className="log-col">
-  {createdAt
-    ? createdAt.toLocaleString(
-        "fr-FR",
-        {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
+        {/* PASSAGE */}
+        <div className="log-col log-stack">
+          <span className="log-main">
+            {createdDate}
+          </span>
 
-          hour: "2-digit",
-          minute: "2-digit",
-        }
-      )
-    : "—"}
-</div>
+          {createdTime && (
+            <span className="log-sub">
+              {createdTime}
+            </span>
+          )}
+        </div>
 
         {/* CLIENT */}
         <div className="log-col">
@@ -161,34 +195,34 @@ export default function LogisticsItem({
           {address?.country || "—"}
         </div>
 
-        {/* SERVICE */}
-        <div className="log-col">
-          {shippingLabel}
+        {/* DELAI */}
+        <div className="log-col log-delay-col">
+          <span className="log-delay-pill">
+            {shippingDelay}
+          </span>
         </div>
 
-        {/* TARIF */}
-        <div className="log-col">
+        {/* TARIF TTC */}
+        <div className="log-col log-stack">
           {shippingPriceTTC > 0
-            ? `${shippingPriceTTC.toFixed(
+            ? `${shippingPriceTTC
+                .toFixed(
                 2
-              )} €`
+              )
+                .replace(
+                  ".",
+                  ","
+                )} €`
             : "Gratuit"}
+
+          <span className="log-sub">
+            TTC
+          </span>
         </div>
 
         {/* STATUS */}
         <div className="log-col status">
-          <div
-            className={`log-status ${
-              logisticStatus === "shipped"
-                ? "success"
-                : "warning"
-            }`}
-          >
-            {logisticStatus ===
-            "shipped"
-              ? "Expédiée"
-              : "Préparation"}
-          </div>
+          <ShippingStatusPill order={order} />
         </div>
 
         {/* TOGGLE */}
@@ -203,7 +237,7 @@ export default function LogisticsItem({
           {/* PRODUITS */}
           <div className="log-expanded-card">
             <div className="log-title">
-              🛒 Produits
+              Produits
             </div>
 
             {items.length === 0 ? (
@@ -262,10 +296,24 @@ export default function LogisticsItem({
           {/* LIVRAISON */}
           <div className="log-expanded-card">
             <div className="log-title">
-              🚚 Livraison
+              Livraison
             </div>
 
             <div className="log-address">
+              <div className="log-detail-row">
+                <span>Mode</span>
+                <strong>
+                  {shippingLabel}
+                </strong>
+              </div>
+
+              <div className="log-detail-row">
+                <span>Délai</span>
+                <strong>
+                  {shippingDelay}
+                </strong>
+              </div>
+
               {relay ? (
                 <>
                   <div>
@@ -282,7 +330,7 @@ export default function LogisticsItem({
                 </>
               ) : isPickup ? (
                 <div>
-                  🏪 Retrait magasin
+                  Retrait magasin
                 </div>
               ) : (
                 <>
@@ -309,7 +357,7 @@ export default function LogisticsItem({
           {/* FACTURATION */}
           <div className="log-expanded-card">
             <div className="log-title">
-              🧾 Facturation
+              Facturation
             </div>
 
             {billing ? (

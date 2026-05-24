@@ -823,6 +823,38 @@
     .35rem;
 }
 
+.od-fee-input {
+  width:
+    70px;
+
+  min-height:
+    22px;
+
+  padding:
+    0 .35rem;
+
+  color:
+    white;
+
+  font-size:
+    .62rem;
+
+  font-weight:
+    800;
+
+  text-align:
+    right;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  border-radius:
+    .25rem;
+
+  background:
+    rgba(2,6,23,.42);
+}
+
 /* =========================================================
    FINAL TOTAL
 ========================================================= */

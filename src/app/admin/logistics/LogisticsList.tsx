@@ -89,27 +89,43 @@ export default function LogisticsList({
       });
     }, [orders]);
 
-  /* ================= GROUPS ================= */
+  /* ================= TABLE ORDER ================= */
 
-  const toPrepare = useMemo(
-    () =>
-      logisticsEligible.filter(
-        (o) =>
-          getLogisticStatus(o) ===
-          "to_prepare"
-      ),
-    [logisticsEligible]
-  );
+  const logisticsRows = useMemo(() => {
+    return [...logisticsEligible].sort(
+      (a, b) => {
+        const aStatus =
+          getLogisticStatus(a);
+        const bStatus =
+          getLogisticStatus(b);
 
-  const shipped = useMemo(
-    () =>
-      logisticsEligible.filter(
-        (o) =>
-          getLogisticStatus(o) ===
-          "shipped"
-      ),
-    [logisticsEligible]
-  );
+        if (aStatus !== bStatus) {
+          return aStatus ===
+            "to_prepare"
+            ? -1
+            : 1;
+        }
+
+        const aTime =
+          (a as any)?.createdAt?.toDate?.()
+            ?.getTime?.() ??
+          ((a as any)?.createdAt?._seconds
+            ? (a as any).createdAt
+                ._seconds * 1000
+            : 0);
+
+        const bTime =
+          (b as any)?.createdAt?.toDate?.()
+            ?.getTime?.() ??
+          ((b as any)?.createdAt?._seconds
+            ? (b as any).createdAt
+                ._seconds * 1000
+            : 0);
+
+        return bTime - aTime;
+      }
+    );
+  }, [logisticsEligible]);
 
   /* ================= STATES ================= */
 
@@ -140,7 +156,7 @@ export default function LogisticsList({
         </div>
 
         <div className="log-th">
-          Date
+          Passage
         </div>
 
         <div className="log-th">
@@ -152,11 +168,11 @@ export default function LogisticsList({
         </div>
 
         <div className="log-th">
-          Livraison
+          Délais
         </div>
 
         <div className="log-th">
-          Tarif
+          Tarif TTC
         </div>
 
         <div className="log-th status">
@@ -168,51 +184,20 @@ export default function LogisticsList({
         </div>
       </div>
 
-      {/* TO PREPARE */}
-      <div className="log-section">
-        <div className="log-section-title">
-          À préparer (
-          {toPrepare.length})
+      {logisticsRows.length === 0 ? (
+        <div className="log-empty">
+          Aucune commande logistique.
         </div>
-
-        {toPrepare.length === 0 ? (
-          <div className="log-empty">
-            Rien à préparer.
-          </div>
-        ) : (
-          toPrepare.map((o) => (
-            <LogisticsItem
-              key={o.id}
-              order={o}
-              toastIt={toastIt}
-              onShip={onShip}
-            />
-          ))
-        )}
-      </div>
-
-      {/* SHIPPED */}
-      <div className="log-section">
-        <div className="log-section-title">
-          Expédiées (
-          {shipped.length})
-        </div>
-
-        {shipped.length === 0 ? (
-          <div className="log-empty">
-            Aucune expédition.
-          </div>
-        ) : (
-          shipped.map((o) => (
-            <LogisticsItem
-              key={o.id}
-              order={o}
-              toastIt={toastIt}
-              onShip={onShip}
-            />
-          ))
-        )}
-      </div>
+      ) : (
+        logisticsRows.map((o) => (
+          <LogisticsItem
+            key={o.id}
+            order={o}
+            toastIt={toastIt}
+            onShip={onShip}
+          />
+        ))
+      )}
     </div>
   );
 }

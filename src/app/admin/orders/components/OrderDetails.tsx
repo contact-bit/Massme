@@ -175,6 +175,15 @@ export function OrderDetails({
   const [detectingFee, setDetectingFee] =
     useState(false);
 
+  const [editingFee, setEditingFee] =
+    useState(false);
+
+  const [feeDraft, setFeeDraft] =
+    useState("");
+
+  const [savingFee, setSavingFee] =
+    useState(false);
+
   const [, setFeeTick] = useState(0);
 
   /* =========================================================
@@ -534,6 +543,85 @@ const heardFromLabelMap: Record<string, string> = {
       );
     } finally {
       setDetectingFee(false);
+    }
+  }
+
+  function startFeeEdit() {
+    setFeeDraft(
+      paymentFee?.amount
+        ? String(paymentFee.amount)
+        : ""
+    );
+
+    setEditingFee(true);
+  }
+
+  async function saveManualFee() {
+    try {
+      setSavingFee(true);
+
+      const amount = Number(
+        feeDraft.replace(",", ".")
+      );
+
+      if (!Number.isFinite(amount) || amount < 0) {
+        throw new Error(
+          "Montant commission invalide"
+        );
+      }
+
+      const pass =
+        localStorage.getItem(
+          "admin_password"
+        ) || "";
+
+      const res = await fetch(
+        `/api/admin/orders/${encodeURIComponent(
+          order.id
+        )}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+            "x-admin-password": pass,
+          },
+          body: JSON.stringify({
+            paymentFee: {
+              amount,
+            },
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.ok) {
+        throw new Error(
+          data?.error ||
+            "manual_fee_update_failed"
+        );
+      }
+
+      (order as any).payment = {
+        ...((order as any).payment || {}),
+        fee: data.paymentFee.amount,
+        feeCurrency: data.paymentFee.currency,
+        feeSource: data.paymentFee.source,
+        feeDetectedAt: new Date(),
+      };
+
+      setEditingFee(false);
+      setFeeTick((x) => x + 1);
+    } catch (e) {
+      console.error(e);
+      alert(
+        e instanceof Error
+          ? e.message
+          : "Erreur commission"
+      );
+    } finally {
+      setSavingFee(false);
     }
   }
 
@@ -1229,9 +1317,49 @@ const heardFromLabelMap: Record<string, string> = {
                     : "od-total-value od-total-muted"
                 }
               >
-                {paymentFee
-                  ? `-${moneyEUR(paymentFee.amount)}`
-                  : (
+                {editingFee ? (
+                  <span className="od-total-inline-action">
+                    <input
+                      className="od-fee-input"
+                      value={feeDraft}
+                      onChange={(e) =>
+                        setFeeDraft(
+                          e.target.value
+                        )
+                      }
+                      inputMode="decimal"
+                      placeholder="0,00"
+                    />
+
+                    <button
+                      className="btn-primary"
+                      disabled={savingFee}
+                      onClick={saveManualFee}
+                    >
+                      OK
+                    </button>
+
+                    <button
+                      className="btn-secondary"
+                      disabled={savingFee}
+                      onClick={() =>
+                        setEditingFee(false)
+                      }
+                    >
+                      Annuler
+                    </button>
+                  </span>
+                ) : paymentFee ? (
+                  <span className="od-total-inline-action">
+                    -{moneyEUR(paymentFee.amount)}
+                    <button
+                      className="btn-secondary"
+                      onClick={startFeeEdit}
+                    >
+                      Modifier
+                    </button>
+                  </span>
+                ) : (
                     <span className="od-total-inline-action">
                       Non détectée
                       <button
@@ -1242,6 +1370,12 @@ const heardFromLabelMap: Record<string, string> = {
                         {detectingFee
                           ? "Recherche..."
                           : "Récupérer"}
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        onClick={startFeeEdit}
+                      >
+                        Saisir
                       </button>
                     </span>
                   )}

@@ -140,6 +140,55 @@ if (roleOrResponse instanceof Response) {
       });
     }
 
+    if (
+      body?.paymentFee &&
+      typeof body.paymentFee === "object"
+    ) {
+      if (role !== "admin") {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const rawFee = Number(body.paymentFee.amount);
+
+      if (!Number.isFinite(rawFee) || rawFee < 0) {
+        return NextResponse.json(
+          { error: "Invalid payment fee" },
+          { status: 400 }
+        );
+      }
+
+      const fee = Math.round(rawFee * 100) / 100;
+
+      const updates = {
+        "payment.fee": fee,
+        "payment.feeCurrency": "EUR",
+        "payment.feeSource": "manual_admin",
+        "payment.feeDetectedAt": new Date(),
+      };
+
+      await dbAdmin.collection("pending_orders").doc(id).set(updates, {
+        merge: true,
+      });
+
+      try {
+        await dbAdmin.collection("orders").doc(id).set(updates, {
+          merge: true,
+        });
+      } catch {}
+
+      return NextResponse.json({
+        ok: true,
+        paymentFee: {
+          amount: fee,
+          currency: "EUR",
+          source: "manual_admin",
+        },
+      });
+    }
+
     const { shippingStatus, trackingNumber, carrier } = body as {
       shippingStatus?: "pending" | "preparing" | "shipped" | "delivered" | "cancelled";
       trackingNumber?: string | null;
