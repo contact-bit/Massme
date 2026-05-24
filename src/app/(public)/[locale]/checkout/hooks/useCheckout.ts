@@ -33,7 +33,7 @@ import type {
   BankTransferPayload,
 } from "../types";
 
-const OCULAREST_ID =
+const VITRECTOMED_PRODUCT_ID =
   "3tuSUenbUVVF6cuSHwS9";
 
 export default function useCheckout() {
@@ -261,7 +261,7 @@ export default function useCheckout() {
         (item) => {
           if (
             item.id ===
-            OCULAREST_ID
+            VITRECTOMED_PRODUCT_ID
           ) {
             return {
               ...item,

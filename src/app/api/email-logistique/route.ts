@@ -140,7 +140,7 @@ export async function POST(req: Request) {
     </p>
 
     <p style="font-size:12px;color:#777;text-align:center;margin-top:35px;">
-      Massme • Service Logistique<br>Ne pas répondre à cet email.
+      Vitrectomed • Service Logistique<br>Ne pas répondre à cet email.
     </p>
 
   </div>

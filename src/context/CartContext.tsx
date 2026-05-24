@@ -93,11 +93,11 @@ type CartContextType = {
    CONSTANTS
 ===================================================== */
 
-const OCULAREST_ID =
+const VITRECTOMED_PRODUCT_ID =
   "3tuSUenbUVVF6cuSHwS9";
 
 const STORAGE_KEY =
-  "massme-cart";
+  "vitrectomed-cart";
 
 /* =====================================================
    CONTEXT
@@ -191,12 +191,12 @@ export function CartProvider({
             item.id
         );
 
-      const isOcularest =
+      const isVitrectomedProduct =
         item.id ===
-        OCULAREST_ID;
+        VITRECTOMED_PRODUCT_ID;
 
       const maxQty =
-        isOcularest
+        isVitrectomedProduct
           ? 2
           : Infinity;
 
@@ -279,12 +279,12 @@ export function CartProvider({
       prev
         .map((item) => {
 
-          const isOcularest =
+          const isVitrectomedProduct =
             item.id ===
-            OCULAREST_ID;
+            VITRECTOMED_PRODUCT_ID;
 
           const maxQty =
-            isOcularest
+            isVitrectomedProduct
               ? 2
               : Infinity;
 

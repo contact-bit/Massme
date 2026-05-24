@@ -46,9 +46,9 @@ type I18nDict = {
 
 export const I18N: Record<Locale, I18nDict> = {
   fr: {
-    BRAND: "OculaRest",
+    BRAND: "Vitrectomed",
     BRAND_BY: "par Lazurco",
-    WEBSITE: "www.ocularest.fr",
+    WEBSITE: "www.vitrectomed.com",
     FACTURE: "FACTURE",
     CLIENT: "Client",
     DATE: "Date :",
@@ -77,9 +77,9 @@ export const I18N: Record<Locale, I18nDict> = {
       "Lazurco conserve l'entière propriété des biens jusqu'au paiement complet de la commande (loi 80335 du 12 mai 1980).",
   },
   en: {
-    BRAND: "OculaRest",
+    BRAND: "Vitrectomed",
     BRAND_BY: "by Lazurco",
-    WEBSITE: "www.ocularest.fr",
+    WEBSITE: "www.vitrectomed.com",
     FACTURE: "INVOICE",
     CLIENT: "Customer",
     DATE: "Date:",
@@ -107,9 +107,9 @@ export const I18N: Record<Locale, I18nDict> = {
       "Ownership of goods remains with Lazurco until full payment is received.",
   },
   es: {
-    BRAND: "OculaRest",
+    BRAND: "Vitrectomed",
     BRAND_BY: "por Lazurco",
-    WEBSITE: "www.ocularest.fr",
+    WEBSITE: "www.vitrectomed.com",
     FACTURE: "FACTURA",
     CLIENT: "Cliente",
     DATE: "Fecha:",
@@ -137,9 +137,9 @@ export const I18N: Record<Locale, I18nDict> = {
       "Lazurco conserva la propiedad de los bienes jusqu'au paiement complet.",
   },
   de: {
-    BRAND: "OculaRest",
+    BRAND: "Vitrectomed",
     BRAND_BY: "von Lazurco",
-    WEBSITE: "www.ocularest.fr",
+    WEBSITE: "www.vitrectomed.com",
     FACTURE: "RECHNUNG",
     CLIENT: "Kunde",
     DATE: "Datum:",
@@ -167,9 +167,9 @@ export const I18N: Record<Locale, I18nDict> = {
       "Die Ware bleibt bis zur vollständigen Bezahlung Eigentum von Lazurco.",
   },
   it: {
-    BRAND: "OculaRest",
+    BRAND: "Vitrectomed",
     BRAND_BY: "di Lazurco",
-    WEBSITE: "www.ocularest.fr",
+    WEBSITE: "www.vitrectomed.com",
     FACTURE: "FATTURA",
     CLIENT: "Cliente",
     DATE: "Data:",
@@ -197,9 +197,9 @@ export const I18N: Record<Locale, I18nDict> = {
       "La proprietà dei beni rimane a Lazurco fino al pagamento completo.",
   },
   nl: {
-    BRAND: "OculaRest",
+    BRAND: "Vitrectomed",
     BRAND_BY: "door Lazurco",
-    WEBSITE: "www.ocularest.fr",
+    WEBSITE: "www.vitrectomed.com",
     FACTURE: "FACTUUR",
     CLIENT: "Klant",
     DATE: "Datum:",

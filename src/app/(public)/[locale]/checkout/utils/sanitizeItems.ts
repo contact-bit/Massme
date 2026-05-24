@@ -2,7 +2,7 @@
    CONSTANTS
 ===================================================== */
 
-const OCULAREST_ID =
+const VITRECTOMED_PRODUCT_ID =
   "3tuSUenbUVVF6cuSHwS9";
 
 /* =====================================================
@@ -28,12 +28,12 @@ export function sanitizeItems<
   return items.map(
     (item) => {
       /* =========================================
-         LIMIT OCULAREST
+         LIMIT VITRECTOMED PRODUCT
       ========================================= */
 
       if (
         item.id ===
-        OCULAREST_ID
+        VITRECTOMED_PRODUCT_ID
       ) {
         return {
           ...item,

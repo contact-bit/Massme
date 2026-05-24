@@ -6,9 +6,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function GET() {
   try {
     const r = await resend.emails.send({
-      from: "Massme <contact@hdconnects.com>",
+      from: "Vitrectomed <contact@hdconnects.com>",
       to: "devhdconnects@gmail.com",
-      subject: "🧪 Test en production - Massme",
+      subject: "🧪 Test en production - Vitrectomed",
       html: "<p>🚀 Email envoyé depuis la PRODUCTION !</p>",
     });
 

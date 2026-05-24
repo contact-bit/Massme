@@ -127,7 +127,7 @@ export async function POST(req: Request) {
     </h2>
 
     <p style="font-size:15px; color:#444; margin-bottom:25px;">
-      Une nouvelle commande vient d’être validée sur Massme.
+      Une nouvelle commande vient d’être validée sur Vitrectomed.
     </p>
 
     <div style="padding:18px; background:#f6faff; border-radius:10px; border:1px solid #d9e3f0; margin-bottom:20px;">
@@ -158,7 +158,7 @@ export async function POST(req: Request) {
     ${addressBlock}
 
     <p style="font-size:12px; color:#999; text-align:center; margin-top:40px;">
-      Massme • Administration interne<br/>
+      Vitrectomed • Administration interne<br/>
       Email automatique — ne pas répondre
     </p>
 

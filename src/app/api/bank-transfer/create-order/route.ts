@@ -102,7 +102,7 @@ export async function POST(req: Request) {
     const totals = computeTotals(items, shippingMethod);
 
     const bankTransferDetails = {
-      accountName: process.env.BANK_TRANSFER_ACCOUNT_NAME || "Massme",
+      accountName: process.env.BANK_TRANSFER_ACCOUNT_NAME || "Vitrectomed",
       iban: process.env.BANK_TRANSFER_IBAN || "",
       bic: process.env.BANK_TRANSFER_BIC || "",
       bankName: process.env.BANK_TRANSFER_BANK_NAME || "",

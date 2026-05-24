@@ -61,7 +61,7 @@ type ProtectiveCaseProduct = {
    CONSTANTS
 ===================================================== */
 
-const OCULAREST_ID =
+const VITRECTOMED_PRODUCT_ID =
   "3tuSUenbUVVF6cuSHwS9";
 
 /* =====================================================
@@ -117,14 +117,14 @@ export default function CartSummaryInline() {
             doc(
               db,
               "products",
-              OCULAREST_ID
+              VITRECTOMED_PRODUCT_ID
             )
           );
 
         if (!snap.exists()) {
 
           console.error(
-            "Ocularest product not found"
+            "Vitrectomed product not found"
           );
 
           return;
@@ -208,13 +208,13 @@ export default function CartSummaryInline() {
      UPSELL
   ===================================================== */
 
-  const hasOcularest =
+  const hasVitrectomedProduct =
     items.some(
       (
         item: CartItem
       ) =>
         item.id ===
-        OCULAREST_ID
+        VITRECTOMED_PRODUCT_ID
     );
 
   const hasProtectiveCase =
@@ -227,7 +227,7 @@ export default function CartSummaryInline() {
     );
 
   const showUpsell =
-    hasOcularest &&
+    hasVitrectomedProduct &&
     !hasProtectiveCase &&
     !dismissedUpsell &&
     !!protectiveCase;

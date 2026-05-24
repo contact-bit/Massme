@@ -4,7 +4,7 @@ import ExcelJS from "exceljs";
 
 export async function buildExcel(data: any[]) {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Massme Export";
+  wb.creator = "Vitrectomed Export";
   wb.created = new Date();
 
   const ws = wb.addWorksheet("Compta", {

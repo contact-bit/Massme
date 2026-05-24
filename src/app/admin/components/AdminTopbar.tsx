@@ -47,7 +47,7 @@ export default function AdminTopbar() {
         <div className="admin-brand">
           <div className="admin-brand-mark" aria-hidden="true" />
           <div className="admin-brand-text">
-            <div className="admin-brand-title">OculaRest</div>
+            <div className="admin-brand-title">Vitrectomed</div>
             <div className="admin-brand-sub">Admin</div>
           </div>
         </div>
