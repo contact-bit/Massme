@@ -15,6 +15,8 @@ export function paymentStatusLabelFR(status?: string) {
     case "refunded":
       return "Remboursé";
     case "failed":
+    case "refused":
+    case "declined":
       return "Paiement refusé";
     case "canceled":
     case "cancelled":

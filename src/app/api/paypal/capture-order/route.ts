@@ -38,6 +38,26 @@ function normalizeEmail(v: unknown): string | null {
   return e;
 }
 
+function getPayPalCaptureFee(captureObj: any) {
+  const fee =
+    captureObj?.seller_receivable_breakdown?.paypal_fee;
+
+  const value = Number(fee?.value);
+
+  if (!Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+
+  return {
+    fee: Math.round(value * 100) / 100,
+    feeCurrency:
+      typeof fee?.currency_code === "string"
+        ? fee.currency_code.toUpperCase()
+        : "EUR",
+    feeSource: "paypal_capture",
+  };
+}
+
 function buildShipStationBody(orderData: any, orderDocId: string) {
   const orderNumber =
     asString(pickFirst(orderData?.orderNumber, orderData?.number, orderData?.id), orderDocId) ||
@@ -263,6 +283,7 @@ export async function POST(req: Request) {
     const captureStatus = captureObj?.status;
     const capturedValue = captureObj?.amount?.value;
     const capturedCurrency = captureObj?.amount?.currency_code;
+    const paypalFee = getPayPalCaptureFee(captureObj);
 
     const customId = purchaseUnit?.custom_id || null;
     const orderDocId = customId || fallbackOrderDocId;
@@ -335,6 +356,17 @@ export async function POST(req: Request) {
             value: capturedValue ?? null,
             currency: capturedCurrency ?? null,
           },
+          ...(paypalFee
+            ? {
+                fee: paypalFee.fee,
+                feeCurrency: paypalFee.feeCurrency,
+                feeSource: paypalFee.feeSource,
+                feeDetectedAt: new Date(),
+              }
+            : {
+                feeSource: "paypal_capture_not_detected",
+                feeDetectedAt: new Date(),
+              }),
         },
       });
 

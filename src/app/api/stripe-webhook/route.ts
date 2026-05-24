@@ -105,6 +105,85 @@ function isFixtureEmail(email: string | null) {
   return email === "stripe@example.com" || email.endsWith("@example.com");
 }
 
+async function getStripePaymentFee(
+  stripe: Stripe,
+  paymentIntentId: unknown
+) {
+  if (typeof paymentIntentId !== "string" || !paymentIntentId) {
+    return null;
+  }
+
+  try {
+    const fromBalanceTransaction = (
+      balanceTransaction: any
+    ) => {
+      const feeCents =
+        typeof balanceTransaction?.fee === "number"
+          ? balanceTransaction.fee
+          : null;
+
+      if (feeCents === null) {
+        return null;
+      }
+
+      return {
+        fee: Math.round(feeCents) / 100,
+        feeCurrency:
+          typeof balanceTransaction?.currency === "string"
+            ? balanceTransaction.currency.toUpperCase()
+            : "EUR",
+        feeSource: "stripe_balance_transaction",
+        balanceTransactionId:
+          typeof balanceTransaction?.id === "string"
+            ? balanceTransaction.id
+            : null,
+      };
+    };
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(
+      paymentIntentId,
+      {
+        expand: ["latest_charge.balance_transaction"],
+      }
+    );
+
+    const charge = paymentIntent.latest_charge as any;
+    const balanceTransaction =
+      charge?.balance_transaction &&
+      typeof charge.balance_transaction === "object"
+        ? charge.balance_transaction
+        : null;
+
+    const feeFromIntent =
+      fromBalanceTransaction(balanceTransaction);
+
+    if (feeFromIntent) {
+      return feeFromIntent;
+    }
+
+    const charges = await stripe.charges.list({
+      payment_intent: paymentIntentId,
+      limit: 1,
+      expand: ["data.balance_transaction"],
+    });
+
+    const chargeFromList = charges.data[0] as any;
+    const feeFromChargeList =
+      fromBalanceTransaction(
+        chargeFromList?.balance_transaction
+      );
+
+    return feeFromChargeList;
+  } catch (err: any) {
+    console.warn(
+      "[stripe/webhook] fee lookup failed:",
+      err?.message || err
+    );
+
+    return null;
+  }
+}
+
 /* =====================================================
    HELPERS (ShipStation mapping)
 ===================================================== */
@@ -423,6 +502,11 @@ export async function POST(req: Request) {
       { merge: true }
     );
 
+    const stripeFee = await getStripePaymentFee(
+      stripe,
+      session.payment_intent
+    );
+
     const finalizeResult = await finalizePaidOrder({
       orderId,
       provider: "stripe",
@@ -431,6 +515,20 @@ export async function POST(req: Request) {
       payment: {
         checkoutSessionId: session.id,
         paymentIntentId: session.payment_intent ?? null,
+        ...(stripeFee
+          ? {
+              fee: stripeFee.fee,
+              feeCurrency: stripeFee.feeCurrency,
+              feeSource: stripeFee.feeSource,
+              feeDetectedAt: new Date(),
+              balanceTransactionId:
+                stripeFee.balanceTransactionId,
+            }
+          : {
+              feeSource:
+                "stripe_balance_transaction_not_detected",
+              feeDetectedAt: new Date(),
+            }),
       },
     });
 

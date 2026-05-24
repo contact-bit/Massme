@@ -48,7 +48,6 @@ if (roleOrResponse instanceof Response) {
   return roleOrResponse;
 }
 
-const role = roleOrResponse;
   try {
     const { id } = await context.params;
     if (!id) {
@@ -58,6 +57,89 @@ const role = roleOrResponse;
     const role = getRoleFromRequest(req);
 
     const body = await req.json().catch(() => ({} as any));
+    const addressUpdates = {
+      ...(body?.shippingAddress &&
+      typeof body.shippingAddress === "object"
+        ? { shippingAddress: body.shippingAddress }
+        : {}),
+      ...(body?.billingAddress &&
+      typeof body.billingAddress === "object"
+        ? { billingAddress: body.billingAddress }
+        : {}),
+    };
+
+    if (Object.keys(addressUpdates).length > 0) {
+      if (role !== "admin") {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      await dbAdmin.collection("pending_orders").doc(id).set(addressUpdates, {
+        merge: true,
+      });
+
+      try {
+        await dbAdmin.collection("orders").doc(id).set(addressUpdates, {
+          merge: true,
+        });
+      } catch {}
+
+      return NextResponse.json({
+        ok: true,
+        ...addressUpdates,
+      });
+    }
+
+    if (
+      body?.contact &&
+      typeof body.contact === "object"
+    ) {
+      if (role !== "admin") {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const email =
+        typeof body.contact.email === "string"
+          ? body.contact.email.trim()
+          : "";
+
+      const phone =
+        typeof body.contact.phone === "string"
+          ? body.contact.phone.trim()
+          : "";
+
+      const updates = {
+        email,
+        customerEmail: email,
+        customer_email: email,
+        "shippingAddress.phone": phone,
+        "billingAddress.phone": phone,
+      };
+
+      await dbAdmin.collection("pending_orders").doc(id).set(updates, {
+        merge: true,
+      });
+
+      try {
+        await dbAdmin.collection("orders").doc(id).set(updates, {
+          merge: true,
+        });
+      } catch {}
+
+      return NextResponse.json({
+        ok: true,
+        contact: {
+          email,
+          phone,
+        },
+      });
+    }
+
     const { shippingStatus, trackingNumber, carrier } = body as {
       shippingStatus?: "pending" | "preparing" | "shipped" | "delivered" | "cancelled";
       trackingNumber?: string | null;

@@ -10,6 +10,7 @@ import {
   moneyEUR,
   formatAddress,
   compactId,
+  copyText,
 } from "../domain/utils";
 
 import {
@@ -18,10 +19,30 @@ import {
   getSubtotal,
   getTotal,
 } from "../domain/orderMath";
+import {
+  getPaymentFee,
+} from "../domain/paymentFees";
 
 import {
-  getLogisticStatus,
-} from "../domain/logistics";
+  ShippingStatusPill,
+} from "./ShippingStatusPill";
+
+type AddressDraft = {
+  name: string;
+  address: string;
+  postalCode: string;
+  city: string;
+  country: string;
+};
+
+type AddressKind =
+  | "shippingAddress"
+  | "billingAddress";
+
+type ContactDraft = {
+  email: string;
+  phone: string;
+};
 
 /* =========================================================
    DATE SAFE
@@ -63,6 +84,22 @@ function getRemainingTime(scheduledAt?: any) {
   return `${days}j ${hours}h ${minutes}m`;
 }
 
+function addressToDraft(value: any): AddressDraft {
+  const name =
+    value?.name ||
+    [value?.firstName, value?.lastName]
+      .filter(Boolean)
+      .join(" ");
+
+  return {
+    name: name || "",
+    address: value?.address || "",
+    postalCode: value?.postalCode || "",
+    city: value?.city || "",
+    country: value?.country || "",
+  };
+}
+
 /* ========================================================= */
 
 export function OrderDetails({
@@ -88,6 +125,58 @@ export function OrderDetails({
       (order as any)?.invoiceEmail || null
     );
 
+  const [localShippingAddress, setLocalShippingAddress] =
+    useState(
+      (order as any)?.shippingAddress || null
+    );
+
+  const [localBillingAddress, setLocalBillingAddress] =
+    useState(
+      (order as any)?.billingAddress || null
+    );
+
+  const [editingAddress, setEditingAddress] =
+    useState<AddressKind | null>(null);
+
+  const [addressDraft, setAddressDraft] =
+    useState<AddressDraft>(
+      addressToDraft(null)
+    );
+
+  const [savingAddress, setSavingAddress] =
+    useState(false);
+
+  const [localEmail, setLocalEmail] =
+    useState(
+      (order as any)?.__email ||
+        (order as any)?.email ||
+        ""
+    );
+
+  const [localPhone, setLocalPhone] =
+    useState(
+      (order as any)?.shippingAddress?.phone ||
+        (order as any)?.billingAddress?.phone ||
+        ""
+    );
+
+  const [editingContact, setEditingContact] =
+    useState<keyof ContactDraft | null>(null);
+
+  const [contactDraft, setContactDraft] =
+    useState<ContactDraft>({
+      email: "",
+      phone: "",
+    });
+
+  const [savingContact, setSavingContact] =
+    useState(false);
+
+  const [detectingFee, setDetectingFee] =
+    useState(false);
+
+  const [, setFeeTick] = useState(0);
+
   /* =========================================================
      SYNC REVIEW
   ========================================================= */
@@ -103,6 +192,28 @@ export function OrderDetails({
     setLocalReview(incoming || null);
   }, [order]);
 
+  useEffect(() => {
+    setLocalShippingAddress(
+      (order as any)?.shippingAddress || null
+    );
+
+    setLocalBillingAddress(
+      (order as any)?.billingAddress || null
+    );
+
+    setLocalEmail(
+      (order as any)?.__email ||
+        (order as any)?.email ||
+        ""
+    );
+
+    setLocalPhone(
+      (order as any)?.shippingAddress?.phone ||
+        (order as any)?.billingAddress?.phone ||
+        ""
+    );
+  }, [order]);
+
   const review =
     localReview?.status === "sent"
       ? localReview
@@ -114,6 +225,16 @@ export function OrderDetails({
       ? localInvoice
       : (order as any)?.invoiceEmail ||
         localInvoice;
+
+  const shippingAddress =
+    localShippingAddress ||
+    (order as any)?.shippingAddress ||
+    null;
+
+  const billingAddress =
+    localBillingAddress ||
+    (order as any)?.billingAddress ||
+    shippingAddress;
 
   /* =========================================================
      LIVE TIMER
@@ -144,18 +265,20 @@ export function OrderDetails({
 
   const subtotal = getSubtotal(order);
 
+  const paymentFee =
+    getPaymentFee(order, total);
+
+  const netTotal =
+    total -
+    (paymentFee?.amount || 0);
+
   const displayId =
     (order as any).orderNumber ||
     (order as any).number ||
     compactId(order.id);
 
-  const logisticStatus =
-    getLogisticStatus(order);
-
   const phone =
-  (order as any)?.shippingAddress?.phone ||
-  (order as any)?.billingAddress?.phone ||
-  "—";
+    localPhone || "—";
 
 const site =
   "vitrectomed.com";
@@ -225,6 +348,321 @@ const heardFromLabelMap: Record<string, string> = {
     } finally {
       setSendingInvoice(false);
     }
+  }
+
+  function startAddressEdit(kind: AddressKind) {
+    const current =
+      kind === "shippingAddress"
+        ? shippingAddress
+        : billingAddress;
+
+    setEditingAddress(kind);
+    setAddressDraft(addressToDraft(current));
+  }
+
+  function updateAddressDraft(
+    key: keyof AddressDraft,
+    value: string
+  ) {
+    setAddressDraft((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  }
+
+  function startContactEdit(
+    field: keyof ContactDraft
+  ) {
+    setContactDraft({
+      email: localEmail,
+      phone: localPhone,
+    });
+
+    setEditingContact(field);
+  }
+
+  function updateContactDraft(
+    key: keyof ContactDraft,
+    value: string
+  ) {
+    setContactDraft((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  }
+
+  async function saveContact() {
+    try {
+      setSavingContact(true);
+
+      const pass =
+        localStorage.getItem(
+          "admin_password"
+        ) || "";
+
+      const res = await fetch(
+        `/api/admin/orders/${encodeURIComponent(
+          order.id
+        )}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+            "x-admin-password": pass,
+          },
+          body: JSON.stringify({
+            contact: contactDraft,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.ok) {
+        throw new Error(
+          data?.error ||
+            "contact_update_failed"
+        );
+      }
+
+      setLocalEmail(contactDraft.email);
+      setLocalPhone(contactDraft.phone);
+
+      (order as any).email =
+        contactDraft.email;
+      (order as any).__email =
+        contactDraft.email;
+
+      const shipping =
+        ((order as any).shippingAddress ||
+          {}) as Record<string, unknown>;
+      const billing =
+        ((order as any).billingAddress ||
+          {}) as Record<string, unknown>;
+
+      (order as any).shippingAddress = {
+        ...shipping,
+        phone: contactDraft.phone,
+      };
+
+      (order as any).billingAddress = {
+        ...billing,
+        phone: contactDraft.phone,
+      };
+
+      setLocalShippingAddress(
+        (order as any).shippingAddress
+      );
+
+      setLocalBillingAddress(
+        (order as any).billingAddress
+      );
+
+      setEditingContact(null);
+    } catch (e) {
+      console.error(e);
+      alert("❌ Erreur mise à jour contact");
+    } finally {
+      setSavingContact(false);
+    }
+  }
+
+  async function detectPaymentFee() {
+    try {
+      setDetectingFee(true);
+
+      const pass =
+        localStorage.getItem(
+          "admin_password"
+        ) || "";
+
+      const res = await fetch(
+        "/api/admin/orders/detect-payment-fee",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+            "x-admin-password": pass,
+          },
+          body: JSON.stringify({
+            orderId: order.id,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.ok) {
+        throw new Error(
+          data?.error ||
+            "fee_detection_failed"
+        );
+      }
+
+      if (!data.detected) {
+        alert(
+          `Commission non détectée par l'API${
+            data.reason
+              ? ` : ${data.reason}`
+              : ""
+          }.`
+        );
+        return;
+      }
+
+      (order as any).payment = {
+        ...((order as any).payment || {}),
+        fee: data.fee,
+        feeCurrency: data.feeCurrency,
+        feeSource: data.feeSource,
+        feeDetectedAt: new Date(),
+        balanceTransactionId:
+          data.balanceTransactionId || null,
+      };
+
+      setFeeTick((x) => x + 1);
+    } catch (e) {
+      console.error(e);
+      alert(
+        `❌ Erreur récupération commission : ${
+          e instanceof Error
+            ? e.message
+            : "erreur inconnue"
+        }`
+      );
+    } finally {
+      setDetectingFee(false);
+    }
+  }
+
+  async function copyCurrentShippingAddress() {
+    await copyText(
+      formatAddress(shippingAddress) || ""
+    );
+
+    onCopyAddress();
+  }
+
+  async function copyCurrentBillingAddress() {
+    await copyText(
+      formatAddress(billingAddress) || ""
+    );
+  }
+
+  async function saveAddress(kind: AddressKind) {
+    try {
+      setSavingAddress(true);
+
+      const pass =
+        localStorage.getItem(
+          "admin_password"
+        ) || "";
+
+      const nextAddress = {
+        ...addressDraft,
+      };
+
+      const res = await fetch(
+        `/api/admin/orders/${encodeURIComponent(
+          order.id
+        )}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+            "x-admin-password": pass,
+          },
+          body: JSON.stringify({
+            [kind]: nextAddress,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.ok) {
+        throw new Error(
+          data?.error ||
+            "address_update_failed"
+        );
+      }
+
+      if (kind === "shippingAddress") {
+        setLocalShippingAddress(nextAddress);
+      } else {
+        setLocalBillingAddress(nextAddress);
+      }
+
+      (order as any)[kind] = nextAddress;
+
+      setEditingAddress(null);
+    } catch (e) {
+      console.error(e);
+      alert("❌ Erreur mise à jour adresse");
+    } finally {
+      setSavingAddress(false);
+    }
+  }
+
+  function renderAddressEditor(kind: AddressKind) {
+    return (
+      <div className="od-address-form">
+        {(
+          [
+            ["name", "Nom"],
+            ["address", "Adresse"],
+            ["postalCode", "Code postal"],
+            ["city", "Ville"],
+            ["country", "Pays"],
+          ] as Array<
+            [keyof AddressDraft, string]
+          >
+        ).map(([key, label]) => (
+          <label
+            key={key}
+            className="od-address-field"
+          >
+            <span>{label}</span>
+            <input
+              value={addressDraft[key]}
+              onChange={(e) =>
+                updateAddressDraft(
+                  key,
+                  e.target.value
+                )
+              }
+            />
+          </label>
+        ))}
+
+        <div className="od-inline-actions">
+          <button
+            className="btn-primary"
+            disabled={savingAddress}
+            onClick={() =>
+              saveAddress(kind)
+            }
+          >
+            {savingAddress
+              ? "Enregistrement..."
+              : "Enregistrer"}
+          </button>
+
+          <button
+            className="btn-secondary"
+            disabled={savingAddress}
+            onClick={() =>
+              setEditingAddress(null)
+            }
+          >
+            Annuler
+          </button>
+        </div>
+      </div>
+    );
   }
 
   function invoiceHref(mode: "preview" | "download") {
@@ -346,7 +784,7 @@ const heardFromLabelMap: Record<string, string> = {
 
           <div className="od-info-grid">
 
-            <div className="od-info-card">
+            <div className="od-info-card od-info-card-email">
               <div className="od-info-label">
                 Commande
               </div>
@@ -362,19 +800,59 @@ const heardFromLabelMap: Record<string, string> = {
               </div>
 
               <div className="od-info-value">
-                {order.__email ||
-                  order.email ||
-                  "—"}
-              </div>
-            </div>
+                <div className="od-info-edit">
+                  {editingContact ===
+                  "email" ? (
+                    <>
+                      <label className="od-address-field">
+                        <input
+                          value={contactDraft.email}
+                          onChange={(e) =>
+                            updateContactDraft(
+                              "email",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </label>
 
-            <div className="od-info-card">
-              <div className="od-info-label">
-                Paiement
-              </div>
+                      <button
+                        className="btn-primary"
+                        disabled={savingContact}
+                        onClick={saveContact}
+                      >
+                        OK
+                      </button>
 
-              <div className="od-info-value">
-                {order.status}
+                      <button
+                        className="btn-secondary"
+                        disabled={savingContact}
+                        onClick={() =>
+                          setEditingContact(null)
+                        }
+                      >
+                        Annuler
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span>
+                        {localEmail || "—"}
+                      </span>
+
+                      <button
+                        className="btn-secondary"
+                        onClick={() =>
+                          startContactEdit(
+                            "email"
+                          )
+                        }
+                      >
+                        Modifier email
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -384,10 +862,9 @@ const heardFromLabelMap: Record<string, string> = {
               </div>
 
               <div className="od-info-value">
-                {logisticStatus ===
-                "shipped"
-                  ? "Expédiée"
-                  : "À préparer"}
+                <ShippingStatusPill
+                  order={order}
+                />
               </div>
             </div>
 
@@ -397,7 +874,57 @@ const heardFromLabelMap: Record<string, string> = {
   </div>
 
   <div className="od-info-value">
-    {phone}
+    <div className="od-info-edit">
+      {editingContact ===
+      "phone" ? (
+        <>
+          <label className="od-address-field">
+            <input
+              value={contactDraft.phone}
+              onChange={(e) =>
+                updateContactDraft(
+                  "phone",
+                  e.target.value
+                )
+              }
+            />
+          </label>
+
+          <button
+            className="btn-primary"
+            disabled={savingContact}
+            onClick={saveContact}
+          >
+            OK
+          </button>
+
+          <button
+            className="btn-secondary"
+            disabled={savingContact}
+            onClick={() =>
+              setEditingContact(null)
+            }
+          >
+            Annuler
+          </button>
+        </>
+      ) : (
+        <>
+          <span>{phone}</span>
+
+          <button
+            className="btn-secondary"
+            onClick={() =>
+              startContactEdit(
+                "phone"
+              )
+            }
+          >
+            Modifier
+          </button>
+        </>
+      )}
+    </div>
   </div>
 </div>
 
@@ -463,17 +990,40 @@ const heardFromLabelMap: Record<string, string> = {
               </div>
 
               <div className="od-address-text">
-                {formatAddress(
-                  order.shippingAddress
-                ) || "—"}
+                {editingAddress ===
+                "shippingAddress"
+                  ? renderAddressEditor(
+                      "shippingAddress"
+                    )
+                  : formatAddress(
+                      shippingAddress
+                    ) || "—"}
               </div>
 
-              <button
-                className="btn-secondary"
-                onClick={onCopyAddress}
-              >
-                Copier adresse
-              </button>
+              {editingAddress !==
+                "shippingAddress" && (
+                <div className="od-inline-actions">
+                  <button
+                    className="btn-secondary"
+                    onClick={() =>
+                      startAddressEdit(
+                        "shippingAddress"
+                      )
+                    }
+                  >
+                    Modifier
+                  </button>
+
+                  <button
+                    className="btn-secondary"
+                    onClick={
+                      copyCurrentShippingAddress
+                    }
+                  >
+                    Copier
+                  </button>
+                </div>
+              )}
 
             </div>
 
@@ -484,12 +1034,40 @@ const heardFromLabelMap: Record<string, string> = {
               </div>
 
               <div className="od-address-text">
-                {formatAddress(
-                  (order as any)
-                    .billingAddress ||
-                    order.shippingAddress
-                ) || "—"}
+                {editingAddress ===
+                "billingAddress"
+                  ? renderAddressEditor(
+                      "billingAddress"
+                    )
+                  : formatAddress(
+                      billingAddress
+                    ) || "—"}
               </div>
+
+              {editingAddress !==
+                "billingAddress" && (
+                <div className="od-inline-actions">
+                  <button
+                    className="btn-secondary"
+                    onClick={() =>
+                      startAddressEdit(
+                        "billingAddress"
+                      )
+                    }
+                  >
+                    Modifier
+                  </button>
+
+                  <button
+                    className="btn-secondary"
+                    onClick={
+                      copyCurrentBillingAddress
+                    }
+                  >
+                    Copier
+                  </button>
+                </div>
+              )}
 
             </div>
 
@@ -635,6 +1213,42 @@ const heardFromLabelMap: Record<string, string> = {
 
             </div>
 
+            <div className="od-total-row">
+
+              <div className="od-total-label">
+                Commission
+                {paymentFee
+                  ? ` ${paymentFee.label}`
+                  : ""}
+              </div>
+
+              <div
+                className={
+                  paymentFee
+                    ? "od-total-value od-total-negative"
+                    : "od-total-value od-total-muted"
+                }
+              >
+                {paymentFee
+                  ? `-${moneyEUR(paymentFee.amount)}`
+                  : (
+                    <span className="od-total-inline-action">
+                      Non détectée
+                      <button
+                        className="btn-secondary"
+                        disabled={detectingFee}
+                        onClick={detectPaymentFee}
+                      >
+                        {detectingFee
+                          ? "Recherche..."
+                          : "Récupérer"}
+                      </button>
+                    </span>
+                  )}
+              </div>
+
+            </div>
+
             <div className="od-total-row od-total-final">
 
               <div className="od-total-label">
@@ -646,6 +1260,20 @@ const heardFromLabelMap: Record<string, string> = {
               </div>
 
             </div>
+
+            {paymentFee && (
+              <div className="od-total-row od-total-net">
+
+                <div className="od-total-label">
+                  Total net
+                </div>
+
+                <div className="od-total-value">
+                  {moneyEUR(netTotal)}
+                </div>
+
+              </div>
+            )}
 
           </div>
 

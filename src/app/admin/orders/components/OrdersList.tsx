@@ -60,12 +60,9 @@ const S: Record<string, React.CSSProperties> = {
     paddingBottom: "14px",
   },
 
-  title: { fontSize: "15px", fontWeight: 600, color: T.text },
-
   sub: {
     fontSize: "12px",
     color: T.textMuted,
-    marginTop: "2px",
     fontFamily: T.mono,
   },
 
@@ -152,7 +149,6 @@ export function OrdersList({
       {/* HEADER */}
       <div style={S.header}>
         <div>
-          <div style={S.title}>Commandes</div>
           <div style={S.sub}>
             {filteredCount} résultat{filteredCount !== 1 ? "s" : ""}
           </div>

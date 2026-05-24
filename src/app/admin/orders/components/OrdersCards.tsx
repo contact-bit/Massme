@@ -8,10 +8,8 @@ import {
 } from "../domain/utils";
 
 import { StatusPill } from "./StatusPill";
-import {
-  getLogisticStatus,
-  getShipDate,
-} from "../domain/logistics";
+import { ShippingStatusPill } from "./ShippingStatusPill";
+import { getShipDate } from "../domain/logistics";
 
 type Props = {
   orders: Order[];
@@ -48,7 +46,6 @@ export function OrdersCards({
           const paymentStatus =
             (o as any)?.payment?.status ?? o.status;
 
-          const logisticStatus = getLogisticStatus(o);
           const shipDate = getShipDate(o);
 
           const total =
@@ -88,20 +85,10 @@ export function OrdersCards({
 
               {/* LOGISTIC */}
               <div className="oc-logistic">
-                <span
-                  className={`oc-status ${
-                    logisticStatus === "shipped"
-                      ? "success"
-                      : "warning"
-                  }`}
-                >
-                  {logisticStatus === "shipped"
-                    ? "Expédiée"
-                    : "À préparer"}
-                </span>
+                <ShippingStatusPill order={o} />
 
                 <span className="oc-shipdate">
-                  {logisticStatus === "shipped" && shipDate
+                  {shipDate
                     ? new Intl.DateTimeFormat("fr-FR", {
                         dateStyle: "short",
                         timeStyle: "short",

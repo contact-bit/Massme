@@ -195,6 +195,18 @@ export async function GET(
               o?.payment ??
               null,
 
+            paymentMethod:
+              o?.paymentMethod ??
+              null,
+
+            fees:
+              o?.fees ??
+              null,
+
+            commission:
+              o?.commission ??
+              null,
+
             /* =========================================
                DATES
             ========================================= */
@@ -229,6 +241,14 @@ export async function GET(
 
             reviewEmail:
               o?.reviewEmail ??
+              null,
+
+            invoiceEmail:
+              o?.invoiceEmail ??
+              null,
+
+            emails:
+              o?.emails ??
               null,
 
             /* =========================================

@@ -11,6 +11,7 @@ import {
 } from "../domain/utils";
 
 import { StatusPill } from "./StatusPill";
+import { ShippingStatusPill } from "./ShippingStatusPill";
 
 import {
   ActionIconButton,
@@ -21,10 +22,7 @@ import {
   IconTrash,
 } from "./icons";
 
-import {
-  getLogisticStatus,
-  getShipDate,
-} from "../domain/logistics";
+import { getShipDate } from "../domain/logistics";
 
 import { OrderDetails } from "./OrderDetails";
 
@@ -109,9 +107,6 @@ export default function OrdersTable({
               (o as any)?.orderNumber ||
               (o as any)?.number ||
               compactId(o.id);
-
-            const logisticStatus =
-              getLogisticStatus(o);
 
             const shipDate =
               getShipDate(o);
@@ -265,37 +260,25 @@ export default function OrdersTable({
 
                     <div className="logistic-cell">
 
-                      <span
-                        className={
-                          logisticStatus ===
-                          "shipped"
-                            ? "ok"
-                            : "pending"
-                        }
-                      >
-                        {logisticStatus ===
-                        "shipped"
-                          ? "Expédiée"
-                          : "Préparation"}
-                      </span>
+                      <ShippingStatusPill
+                        order={o}
+                      />
 
-                      <span className="cell-sub">
-
-                        {shipDate
-                          ? new Intl.DateTimeFormat(
-                              "fr-FR",
-                              {
-                                dateStyle:
-                                  "short",
-                              }
-                            ).format(
-                              new Date(
-                                shipDate
-                              )
+                      {shipDate && (
+                        <span className="cell-sub">
+                          {new Intl.DateTimeFormat(
+                            "fr-FR",
+                            {
+                              dateStyle:
+                                "short",
+                            }
+                          ).format(
+                            new Date(
+                              shipDate
                             )
-                          : "—"}
-
-                      </span>
+                          )}
+                        </span>
+                      )}
 
                     </div>
 

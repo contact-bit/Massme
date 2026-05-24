@@ -9,8 +9,19 @@ function getTone(status?: string): Tone {
   const s = (status || "unknown").toLowerCase();
 
   if (s === "paid") return "success";
-  if (s === "pending_payment" || s === "pending") return "warning";
-  if (s === "canceled" || s === "cancelled") return "danger";
+  if (
+    s === "pending_payment" ||
+    s === "awaiting_bank_transfer" ||
+    s === "pending" ||
+    s === "failed" ||
+    s === "refused" ||
+    s === "declined" ||
+    s === "canceled" ||
+    s === "cancelled"
+  ) {
+    return "danger";
+  }
+
   if (s === "refunded") return "info";
 
   return "info";
