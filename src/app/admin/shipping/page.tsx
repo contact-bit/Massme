@@ -371,15 +371,6 @@ export default function ShippingAdminPage() {
           <div className="shipping-create-head">
 
             <div>
-
-              <div className="shipping-card-kicker">
-                Création
-              </div>
-
-              <h2>
-                Ajouter une méthode
-              </h2>
-
             </div>
 
             <button

@@ -347,17 +347,7 @@ export default function PaymentsAdminPage() {
 
       <section className="pap-section">
 
-        <div className="pap-section-head">
 
-          <div className="pap-section-kicker">
-            Pays
-          </div>
-
-          <h2>
-            Pays disponibles
-          </h2>
-
-        </div>
 
         <div className="pap-tabs">
 
@@ -431,14 +421,7 @@ export default function PaymentsAdminPage() {
 
           <div>
 
-            <div className="pap-section-kicker">
-              Création
-            </div>
-
-            <h2 className="pap-section-title">
-              Ajouter une méthode
-            </h2>
-
+            
           </div>
 
           <button

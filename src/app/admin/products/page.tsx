@@ -220,20 +220,6 @@ export default function ProductsAdminPage() {
 
         <div className="products-header-content">
 
-          <div className="products-kicker">
-            Catalogue Management
-          </div>
-
-          <h1 className="products-title">
-            Produits
-          </h1>
-
-          <p className="products-subtitle">
-            Gestion centralisée du
-            catalogue, des stocks et
-            des produits actifs.
-          </p>
-
         </div>
 
         <div className="products-actions">

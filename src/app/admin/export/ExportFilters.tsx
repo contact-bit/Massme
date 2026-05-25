@@ -133,10 +133,6 @@ export default function ExportFilters({
 
         <div>
 
-          <div className="export-filters-kicker">
-            FILTRES
-          </div>
-
           <h3 className="export-filters-title">
             Période d’export
           </h3>
@@ -145,7 +141,7 @@ export default function ExportFilters({
             Sélectionnez une
             période précise
             pour générer votre
-            export premium.
+            export.
           </p>
 
         </div>

@@ -499,96 +499,10 @@ export default function AdminExportPage() {
   return (
     <main className="export-page">
 
-      {/* HERO */}
-      <section className="export-hero">
-
-        <div className="export-kicker">
-          EXPORT CENTER
-        </div>
-
-        <h1 className="export-title">
-          Export des commandes
-        </h1>
-
-        <p className="export-subtitle">
-          Téléchargez vos
-          commandes en PDF,
-          CSV ou Excel avec
-          des exports premium,
-          propres et rapides.
-        </p>
-
-        <div className="export-stats">
-
-          <div className="export-stat">
-
-            <div className="export-stat-value">
-              PDF
-            </div>
-
-            <div className="export-stat-label">
-              Documents
-            </div>
-
-          </div>
-
-          <div className="export-stat">
-
-            <div className="export-stat-value">
-              CSV
-            </div>
-
-            <div className="export-stat-label">
-              Analyse
-            </div>
-
-          </div>
-
-          <div className="export-stat">
-
-            <div className="export-stat-value">
-              XLSX
-            </div>
-
-            <div className="export-stat-label">
-              Comptabilité
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
+      
       {/* MAIN CARD */}
       <section className="export-card">
 
-        {/* HEADER */}
-        <header className="export-card-head">
-
-          <div>
-
-            <div className="export-section-kicker">
-              CONFIGURATION
-            </div>
-
-            <h2 className="export-card-title">
-              Paramètres d’export
-            </h2>
-
-            <p className="export-card-subtitle">
-              Sélectionnez une
-              période puis un
-              format d’export.
-            </p>
-
-          </div>
-
-          <div className="export-live">
-            Prêt
-          </div>
-
-        </header>
 
         {/* FILTERS */}
         <div className="export-block">
