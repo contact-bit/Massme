@@ -9,6 +9,9 @@ import {
 } from "react";
 
 import { useOrders } from "./orders/hooks/useOrders";
+import { StatusPill } from "./orders/components/StatusPill";
+import { ShippingStatusPill } from "./orders/components/ShippingStatusPill";
+import { IconEye } from "./orders/components/icons";
 
 /* =========================================================
    HELPERS
@@ -44,6 +47,24 @@ function shortDate(v: any) {
   } catch {
     return "—";
   }
+}
+
+function getTotal(o: any) {
+  if (typeof o?.total === "number") return o.total;
+  if (typeof o?.__total === "number") return o.__total;
+  if (typeof o?.totals?.totalTTC === "number") return o.totals.totalTTC;
+  return 0;
+}
+
+function getCustomerName(o: any) {
+  const firstName = o?.shippingAddress?.firstName || "";
+  const lastName = o?.shippingAddress?.lastName || "";
+  return (
+    `${firstName} ${lastName}`.trim() ||
+    o?.shippingAddress?.name ||
+    o?.email ||
+    "—"
+  );
 }
 
 /* =========================================================
@@ -188,111 +209,124 @@ export default function DashboardOrdersSearch({
 
       {/* TABLE */}
       {hasSearch && (
-        <div className="dash-orders-table">
-          <div className="dash-orders-head">
-            <div>Commande</div>
-            <div>Client</div>
-            <div>Ville</div>
-            <div>Total</div>
-            <div>Statut</div>
-            <div>Date</div>
-          </div>
+        <div className="dash-orders-table orders-table-wrap">
+          {loading ? (
+            <div className="dash-empty">
+              Chargement...
+            </div>
+          ) : filtered.length ===
+            0 ? (
+            <div className="dash-empty">
+              Aucun résultat.
+            </div>
+          ) : (
+            <table className="orders-table-v2 dash-search-table">
+              <thead>
+                <tr>
+                  <th>Commande</th>
+                  <th>Client</th>
+                  <th>Ville</th>
+                  <th>Total</th>
+                  <th>Paiement</th>
+                  <th>Livraison</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
 
-        {loading ? (
-          <div className="dash-empty">
-            Chargement...
-          </div>
-        ) : filtered.length ===
-          0 ? (
-          <div className="dash-empty">
-            Aucun résultat.
-          </div>
-        ) : (
-          filtered
-            .slice(0, 20)
-            .map((o: any) => {
-              const shipping =
-                String(
-                  o?.shippingStatus ||
-                    o
-                      ?.fulfillment
-                      ?.status ||
-                    ""
-                ).toLowerCase();
-
-              const total =
-                typeof o?.total ===
-                "number"
-                  ? o.total
-                  : typeof o
-                        ?.totals
-                        ?.totalTTC ===
-                      "number"
-                  ? o.totals
-                      .totalTTC
-                  : 0;
-
-              return (
-                <a
-                  key={o.id}
-                  href={`/admin/orders/${o.id}`}
-                  className="dash-order-row"
-                >
-                  <div className="mono">
-                    {o?.orderNumber ||
+              <tbody>
+                {filtered
+                  .slice(0, 20)
+                  .map((o: any) => {
+                    const displayId =
+                      o?.orderNumber ||
                       o?.id?.slice(
                         0,
                         6
-                      )}
-                  </div>
+                      );
 
-                  {/* CLIENT */}
-                  <div className="truncate">
-                    {o
-                      ?.shippingAddress
-                      ?.name ||
-                      o?.email ||
-                      "—"}
-                  </div>
+                    const paymentStatus =
+                      o?.payment
+                        ?.status ||
+                      o?.status;
 
-                  {/* CITY */}
-                  <div className="truncate muted">
-                    {o
-                      ?.shippingAddress
-                      ?.city ||
-                      "—"}
-                  </div>
+                    const createdAt =
+                      o?.__created ||
+                      o?.createdAt;
 
-                  {/* TOTAL */}
-                  <div className="strong">
-                    {eur(total)}
-                  </div>
+                    return (
+                      <tr key={o.id}>
+                        <td>
+                          <div className="cell-command">
+                            <span className="cell-main mono">
+                              {displayId}
+                            </span>
 
-                  {/* STATUS */}
-                  <div
-                    className={`dash-status ${
-                      shipping ===
-                      "shipped"
-                        ? "success"
-                        : "warning"
-                    }`}
-                  >
-                    {shipping ===
-                    "shipped"
-                      ? "Expédiée"
-                      : "Préparation"}
-                  </div>
+                            <a
+                              className="admin-icon-btn btn-primary dash-search-eye"
+                              href={`/admin/orders?open=${encodeURIComponent(
+                                o.id
+                              )}`}
+                              title="Voir la commande"
+                              aria-label="Voir la commande"
+                            >
+                              <IconEye />
+                            </a>
+                          </div>
+                        </td>
 
-                  {/* DATE */}
-                  <div className="muted">
-                    {shortDate(
-                      o?.createdAt
-                    )}
-                  </div>
-                </a>
-              );
-            })
-        )}
+                        <td>
+                          <div className="cell-main truncate">
+                            {getCustomerName(
+                              o
+                            )}
+                          </div>
+
+                          <div className="cell-sub truncate">
+                            {o?.email ||
+                              "—"}
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="cell-main truncate">
+                            {o
+                              ?.shippingAddress
+                              ?.city ||
+                              "—"}
+                          </div>
+                        </td>
+
+                        <td className="cell-strong">
+                          {eur(getTotal(o))}
+                        </td>
+
+                        <td>
+                          <StatusPill
+                            status={
+                              paymentStatus
+                            }
+                          />
+                        </td>
+
+                        <td>
+                          <ShippingStatusPill
+                            order={o as any}
+                          />
+                        </td>
+
+                        <td>
+                          <div className="cell-sub">
+                            {shortDate(
+                              createdAt
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
     </>

@@ -4,7 +4,7 @@
 
 .dash-orders-toolbar {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
 
   gap: 8px;
 
@@ -17,6 +17,7 @@
 
 .dash-orders-search {
   width: 100%;
+  max-width: 420px;
   height: 38px;
 
   padding: 0 12px;
@@ -52,9 +53,6 @@
 ========================================================= */
 
 .dash-orders-table {
-  display: flex;
-  flex-direction: column;
-
   overflow-x: auto;
 
   border: 1px solid
@@ -65,106 +63,26 @@
   background: #0d1117;
 }
 
-.dash-orders-head {
-  min-width: 920px;
-
-  display: grid;
-
-  grid-template-columns:
-    1fr
-    1.4fr
-    1fr
-    .75fr
-    .9fr
-    1fr;
-
-  gap: 10px;
-
-  padding: 10px;
-
-  border-bottom: 1px solid
-    rgba(255, 255, 255, 0.06);
-
-  background: rgba(255, 255, 255, 0.018);
-
-  color: var(--color-muted);
-
-  font-size: 11px;
-  font-weight: 600;
-
-  text-transform: uppercase;
+.dash-search-table {
+  min-width: 980px;
 }
 
-/* =========================================================
-   ROW
-========================================================= */
-
-.dash-order-row {
-  min-width: 920px;
-
-  display: grid;
-
-  grid-template-columns:
-    1fr
-    1.4fr
-    1fr
-    .75fr
-    .9fr
-    1fr;
-
-  gap: 10px;
-
-  align-items: center;
-
-  min-height: 38px;
-
-  padding: 8px 10px;
-
-  border-bottom: 1px solid
-    rgba(255, 255, 255, 0.05);
-
-  text-decoration: none;
-
-  color: inherit;
-
-  transition: 0.2s;
-}
-
-.dash-order-row:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-/* =========================================================
-   STATUS
-========================================================= */
-
-.dash-status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  height: 24px;
-
-  padding: 0 10px;
-
-  border-radius: 999px;
-
-  font-size: 11px;
-  font-weight: 700;
-
+.dash-search-table td,
+.dash-search-table th {
   white-space: nowrap;
 }
 
-.dash-status.success {
-  background: rgba(52, 211, 153, 0.14);
-
-  color: #6ee7b7;
+.dash-search-table .cell-command {
+  min-width: 124px;
 }
 
-.dash-status.warning {
-  background: rgba(255, 184, 77, 0.14);
-
-  color: #ffd089;
+.dash-search-eye {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  text-decoration: none;
 }
 
 /* =========================================================
@@ -186,8 +104,11 @@
 ========================================================= */
 
 @media (max-width: 980px) {
-  .dash-orders-head,
-  .dash-order-row {
-    min-width: 860px;
+  .dash-orders-search {
+    max-width: 100%;
+  }
+
+  .dash-search-table {
+    min-width: 900px;
   }
 }

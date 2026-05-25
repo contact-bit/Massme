@@ -26,6 +26,8 @@ function getOrderLabel(o?: Order | null) {
 
 export default function AdminOrdersPage() {
   const { toast, toastIt } = useToast();
+  const [openOrderId, setOpenOrderId] =
+    useState<string | null>(null);
 
   const {
     orders,
@@ -48,12 +50,46 @@ export default function AdminOrdersPage() {
   );
 
   const pagination = usePagination(filtered, 12);
+  const { pageSize, setPage } = pagination;
 
   const selection = useSelection();
 
   useEffect(() => {
     initOnce();
   }, [initOnce]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
+    setOpenOrderId(params.get("open"));
+  }, []);
+
+  useEffect(() => {
+    if (!openOrderId) return;
+    if (orders.length === 0) return;
+
+    const index = filtered.findIndex(
+      (o) => o.id === openOrderId
+    );
+
+    if (index === -1) return;
+
+    setActiveId(openOrderId);
+    setPage(
+      () =>
+        Math.floor(
+          index / pageSize
+        ) + 1
+    );
+  }, [
+    openOrderId,
+    orders.length,
+    filtered,
+    pageSize,
+    setPage,
+  ]);
 
   /* ================= ACTIONS ================= */
 

@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 
 import type { Order } from "../domain/types";
 
@@ -39,6 +42,8 @@ type Props = {
 
   /* OPEN */
   onOpen: (id: string) => void;
+
+  activeId?: string | null;
 };
 
 export default function OrdersTable({
@@ -46,9 +51,15 @@ export default function OrdersTable({
   onOpen,
   onDelete,
   deleting,
+  activeId,
 }: Props) {
   const [openId, setOpenId] =
     useState<string | null>(null);
+
+  useEffect(() => {
+    if (!activeId) return;
+    setOpenId(activeId);
+  }, [activeId]);
 
   function toggle(id: string) {
     setOpenId((prev) =>

@@ -131,6 +131,7 @@ const S: Record<string, React.CSSProperties> = {
 /* ================= COMPONENT ================= */
 
 export function OrdersList({
+  activeId,
   loading,
   error,
   filteredCount,
@@ -199,6 +200,7 @@ export function OrdersList({
             <div style={S.desktopOnly}>
               <OrdersTable
   orders={paged}
+  activeId={activeId}
   onOpen={onOpen}
   onDelete={onDelete}
   deleting={deleting}
