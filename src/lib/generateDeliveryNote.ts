@@ -17,7 +17,6 @@ type Address = {
 type DeliveryNote = {
   packageCount?: number | string | null;
   weight?: string | null;
-  instructions?: string | null;
 };
 
 type Order = {
@@ -29,7 +28,6 @@ type Order = {
     quantity?: number;
     weightKg?: number | string;
     deliveryPackageCount?: number | string;
-    deliveryNoteInstructions?: string;
     description?: string;
   }>;
   shippingAddress?: Address | null;
@@ -187,13 +185,6 @@ export async function generateDeliveryNotePDF(
     (sum, item) => sum + getItemWeight(item) * getQuantity(item),
     0
   );
-  const itemInstructions = items
-    .map((item) => safeString(item?.deliveryNoteInstructions))
-    .filter(Boolean);
-  const deliveryInstructions =
-    itemInstructions.length > 0
-      ? [...new Set(itemInstructions)].join("\n")
-      : safeString(delivery.instructions);
   const deliveryPackageCount =
     totalQuantity > 0
       ? String(totalQuantity)
@@ -427,37 +418,6 @@ export async function generateDeliveryNotePDF(
       color: MUTED,
     });
     y -= 20;
-  }
-
-  const instructions = deliveryInstructions;
-  if (instructions) {
-    y -= 18;
-    page.drawRectangle({
-      x: M,
-      y: y - 58,
-      width: W - M * 2,
-      height: 76,
-      borderColor: BORDER,
-      borderWidth: 1,
-      color: rgb(1, 1, 1),
-    });
-    page.drawText("Consignes logistiques", {
-      x: M + 12,
-      y: y,
-      size: 9,
-      font: bold,
-      color: INK,
-    });
-    drawTextLines({
-      page,
-      x: M + 12,
-      y: y - 18,
-      size: 8,
-      font: regular,
-      color: MUTED,
-      lineHeight: 12,
-      lines: instructions.match(/.{1,86}/g) || [],
-    });
   }
 
   page.drawText("Document à joindre au colis. Ne pas utiliser comme facture.", {

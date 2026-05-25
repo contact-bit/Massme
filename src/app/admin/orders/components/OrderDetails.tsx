@@ -23,10 +23,6 @@ import {
   getPaymentFee,
 } from "../domain/paymentFees";
 
-import {
-  ShippingStatusPill,
-} from "./ShippingStatusPill";
-
 type AddressDraft = {
   name: string;
   address: string;
@@ -350,18 +346,6 @@ const heardFromLabelMap: Record<string, string> = {
         getDeliveryQuantity(item),
     0
   );
-
-  const deliveryInstructions = [
-    ...new Set(
-      items
-        .map((item: any) =>
-          String(
-            item?.deliveryNoteInstructions || ""
-          ).trim()
-        )
-        .filter(Boolean)
-    ),
-  ];
 
   /* =========================================================
      SEND INVOICE
@@ -1004,18 +988,6 @@ const heardFromLabelMap: Record<string, string> = {
               </div>
             </div>
 
-            <div className="od-info-card">
-              <div className="od-info-label">
-                Livraison
-              </div>
-
-              <div className="od-info-value">
-                <ShippingStatusPill
-                  order={order}
-                />
-              </div>
-            </div>
-
 <div className="od-info-card">
   <div className="od-info-label">
     Téléphone
@@ -1597,20 +1569,6 @@ const heardFromLabelMap: Record<string, string> = {
                   {formatDeliveryWeight(
                     deliveryTotalWeight
                   ) || "—"}
-                </div>
-              </div>
-
-              <div className="od-meta-row">
-                <div className="od-meta-label">
-                  Consignes
-                </div>
-
-                <div className="od-meta-value">
-                  {deliveryInstructions.length
-                    ? deliveryInstructions.join(
-                        " · "
-                      )
-                    : "—"}
                 </div>
               </div>
 

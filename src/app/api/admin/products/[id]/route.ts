@@ -212,11 +212,6 @@ export async function PATCH(req: Request) {
         toInt(data.deliveryPackageCount || 1)
       );
     }
-    if ("deliveryNoteInstructions" in data) {
-      update.deliveryNoteInstructions = String(
-        data.deliveryNoteInstructions || ""
-      ).trim();
-    }
 
     // 🔥 nouveau : gestion du stock oui/non
     if ("manageStock" in data) {

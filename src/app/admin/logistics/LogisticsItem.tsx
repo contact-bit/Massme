@@ -102,18 +102,6 @@ export default function LogisticsItem({
     0
   );
 
-  const deliveryInstructions = [
-    ...new Set(
-      items
-        .map((item: any) =>
-          String(
-            item?.deliveryNoteInstructions || ""
-          ).trim()
-        )
-        .filter(Boolean)
-    ),
-  ];
-
   /* ================= SHIPPING ================= */
 
   const shippingVatRate =
@@ -321,11 +309,6 @@ export default function LogisticsItem({
                   const qty =
                     item?.quantity ?? 1;
 
-                  const price =
-                    item?.priceTTC ??
-                    item?.priceHT ??
-                    0;
-
                   return (
                     <div
                       key={i}
@@ -339,13 +322,6 @@ export default function LogisticsItem({
                         <div className="log-muted">
                           Qté : {qty}
                         </div>
-                      </div>
-
-                      <div className="log-price">
-                        {(
-                          price * qty
-                        ).toFixed(2)}{" "}
-                        €
                       </div>
                     </div>
                   );
@@ -471,17 +447,6 @@ export default function LogisticsItem({
                 {formatDeliveryWeight(
                   deliveryTotalWeight
                 ) || "—"}
-              </strong>
-            </div>
-
-            <div className="log-detail-row">
-              <span>Consignes</span>
-              <strong>
-                {deliveryInstructions.length
-                  ? deliveryInstructions.join(
-                      " · "
-                    )
-                  : "—"}
               </strong>
             </div>
 

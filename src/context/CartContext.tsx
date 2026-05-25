@@ -50,8 +50,6 @@ export type CartItem = {
 
   deliveryPackageCount?: number;
 
-  deliveryNoteInstructions?: string;
-
   quantity: number;
 
   imageUrl?: string;

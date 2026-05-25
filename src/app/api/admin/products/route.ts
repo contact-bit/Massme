@@ -105,7 +105,6 @@ export async function POST(req: Request) {
       priceHT,
       weightKg,
       deliveryPackageCount,
-      deliveryNoteInstructions,
       stock,
       imageUrl,
       manageStock,
@@ -115,7 +114,6 @@ export async function POST(req: Request) {
       priceHT?: string | number;
       weightKg?: string | number;
       deliveryPackageCount?: string | number;
-      deliveryNoteInstructions?: string;
       stock?: string | number;
       imageUrl?: string;
       manageStock?: boolean;
@@ -145,9 +143,6 @@ export async function POST(req: Request) {
         1,
         Math.round(Number(deliveryPackageCount ?? 1) || 1)
       ),
-      deliveryNoteInstructions: String(
-        deliveryNoteInstructions || ""
-      ).trim(),
       stock: Number(stock ?? 0),
       manageStock: manageStock ?? false, // 🔥 écrit en base
       isActive: true,

@@ -10,7 +10,6 @@ type CartItem = {
   priceHT: number;
   weightKg?: number;
   deliveryPackageCount?: number;
-  deliveryNoteInstructions?: string;
   quantity: number;
 };
 
@@ -125,9 +124,6 @@ function buildOrderFingerprint(input: {
               0,
               Number((item as any).deliveryPackageCount) || 0
             ),
-      deliveryNoteInstructions: String(
-        (item as any).deliveryNoteInstructions || ""
-      ).trim(),
       quantity: Math.max(1, Number(item.quantity || 1)),
     }))
     .sort((a, b) => {
@@ -337,9 +333,6 @@ export async function POST(req: Request) {
               0,
               Number((i as any).deliveryPackageCount) || 0
             ),
-      deliveryNoteInstructions: String(
-        (i as any).deliveryNoteInstructions || ""
-      ).trim(),
       quantity: Math.max(1, Number(i.quantity || 1)),
     }));
 

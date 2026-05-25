@@ -155,9 +155,6 @@ async function enrichItemsFromProducts(items: unknown) {
         asNumberOrString(
           record.deliveryPackageCount
         ),
-      deliveryNoteInstructions:
-        asString(product.deliveryNoteInstructions) ||
-        asString(record.deliveryNoteInstructions),
     };
   });
 }

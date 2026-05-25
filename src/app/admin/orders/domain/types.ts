@@ -9,7 +9,6 @@ export type OrderItem = {
 
   weightKg?: number;
   deliveryPackageCount?: number;
-  deliveryNoteInstructions?: string;
 
   quantity?: number;
   description?: string;

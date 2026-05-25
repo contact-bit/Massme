@@ -121,10 +121,6 @@ export default function ProductEditForm({
     deliveryPackageCount,
     setDeliveryPackageCount,
   ] = useState("1");
-  const [
-    deliveryNoteInstructions,
-    setDeliveryNoteInstructions,
-  ] = useState("");
   const [stock, setStock] = useState(0);
   const [manageStock, setManageStock] = useState<boolean>(true); // ✅ gestion du stock pour cet article
   const [isActive, setIsActive] = useState(true);
@@ -151,9 +147,6 @@ export default function ProductEditForm({
     setWeightKg(String(product.weightKg ?? ""));
     setDeliveryPackageCount(
       String(product.deliveryPackageCount ?? 1)
-    );
-    setDeliveryNoteInstructions(
-      product.deliveryNoteInstructions || ""
     );
     setStock(product.stock ?? 0);
     setManageStock(
@@ -257,7 +250,6 @@ export default function ProductEditForm({
           imageUrl: imageUrl || null,
           weightKg,
           deliveryPackageCount,
-          deliveryNoteInstructions,
           stock,
           manageStock, // ✅ envoyé au backend
           isActive,
@@ -495,22 +487,6 @@ export default function ProductEditForm({
             />
           </div>
 
-          <div className="pf-field pf-field-wide">
-            <label className="admin-label">
-              Indications BL
-            </label>
-            <textarea
-              className="admin-textarea"
-              rows={3}
-              value={deliveryNoteInstructions}
-              placeholder="Consignes reprises automatiquement sur le bon de livraison."
-              onChange={(e) =>
-                setDeliveryNoteInstructions(
-                  e.target.value
-                )
-              }
-            />
-          </div>
         </div>
       </section>
 
