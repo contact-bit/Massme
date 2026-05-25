@@ -81,6 +81,32 @@ export default function EditMethodPanel({
                 form.priceHT
               ),
 
+            weightPriceTiers:
+              Array.isArray(
+                form.weightPriceTiers
+              )
+                ? form.weightPriceTiers
+                    .filter(
+                      (tier) =>
+                        Number(
+                          tier.maxWeightKg
+                        ) > 0 &&
+                        Number(
+                          tier.priceHT
+                        ) >= 0
+                    )
+                    .map((tier) => ({
+                      maxWeightKg:
+                        Number(
+                          tier.maxWeightKg
+                        ),
+                      priceHT:
+                        Number(
+                          tier.priceHT
+                        ),
+                    }))
+                : [],
+
             vatRate:
               Number(
                 form.vatRate ??
@@ -251,6 +277,118 @@ export default function EditMethodPanel({
 
             </div>
 
+          </div>
+
+          <div className="emp-weight-tiers">
+            <div className="emp-card-kicker">
+              Paliers poids
+            </div>
+
+            {(form.weightPriceTiers || []).map(
+              (tier, index) => (
+                <div
+                  key={index}
+                  className="emp-grid"
+                >
+                  <div className="emp-field">
+                    <label>
+                      Jusqu’à kg
+                    </label>
+
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={
+                        tier.maxWeightKg
+                      }
+                      onChange={(e) =>
+                        setForm(
+                          (f) => ({
+                            ...f,
+                            weightPriceTiers:
+                              (
+                                f.weightPriceTiers ||
+                                []
+                              ).map(
+                                (t, i) =>
+                                  i === index
+                                    ? {
+                                        ...t,
+                                        maxWeightKg:
+                                          Number(
+                                            e
+                                              .target
+                                              .value
+                                          ),
+                                      }
+                                    : t
+                              ),
+                          })
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="emp-field">
+                    <label>
+                      Prix HT
+                    </label>
+
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={
+                        tier.priceHT
+                      }
+                      onChange={(e) =>
+                        setForm(
+                          (f) => ({
+                            ...f,
+                            weightPriceTiers:
+                              (
+                                f.weightPriceTiers ||
+                                []
+                              ).map(
+                                (t, i) =>
+                                  i === index
+                                    ? {
+                                        ...t,
+                                        priceHT:
+                                          Number(
+                                            e
+                                              .target
+                                              .value
+                                          ),
+                                      }
+                                    : t
+                              ),
+                          })
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              )
+            )}
+
+            <button
+              type="button"
+              className="emp-close emp-tier-add"
+              onClick={() =>
+                setForm((f) => ({
+                  ...f,
+                  weightPriceTiers: [
+                    ...(f.weightPriceTiers || []),
+                    {
+                      maxWeightKg: 1,
+                      priceHT: f.priceHT || 0,
+                    },
+                  ],
+                }))
+              }
+            >
+              Ajouter un palier
+            </button>
           </div>
 
         </section>

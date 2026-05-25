@@ -23,6 +23,18 @@ export type ShippingMethod = {
   /** Prix hors taxes — source de vérité */
   priceHT: number;
 
+  /** Prix HT de base avant palier poids */
+  basePriceHT?: number;
+
+  /** Poids total utilisé pour calculer ce prix */
+  appliedWeightKg?: number;
+
+  /** Paliers personnalisables : jusqu'à X kg = prix HT */
+  weightPriceTiers?: Array<{
+    maxWeightKg: number;
+    priceHT: number;
+  }>;
+
   /** Taux de TVA (ex: 20). Undefined ou 0 = pas de TVA */
   vatRate?: number;
 

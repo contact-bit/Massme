@@ -54,6 +54,22 @@ export default function useCheckout() {
     clearCart,
   } = useCart();
 
+  const totalWeightKg =
+    useMemo(
+      () =>
+        items.reduce(
+          (sum, item: any) =>
+            sum +
+            (Number(item.weightKg) || 0) *
+              Math.max(
+                1,
+                Number(item.quantity || 1)
+              ),
+          0
+        ),
+      [items]
+    );
+
   const paypalOrderDocIdRef =
     useRef<string | null>(null);
 
@@ -173,6 +189,7 @@ export default function useCheckout() {
       shippingCustomer.country,
 
     locale,
+    totalWeightKg,
   });
 
   /* =====================================================
@@ -674,6 +691,7 @@ export default function useCheckout() {
 
     cartHTCents,
     cartVatCents,
+    totalWeightKg,
 
     hasShippingSelected,
     hasPaymentSelected,

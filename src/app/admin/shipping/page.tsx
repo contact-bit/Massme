@@ -48,6 +48,11 @@ export type ShippingMethod = {
 
   priceHT: number;
 
+  weightPriceTiers?: Array<{
+    maxWeightKg: number;
+    priceHT: number;
+  }>;
+
   vatRate: number;
 
   isActive: boolean;
@@ -147,6 +152,13 @@ export default function ShippingAdminPage() {
             priceHT: Number(
               m.priceHT ?? 0
             ),
+
+            weightPriceTiers:
+              Array.isArray(
+                m.weightPriceTiers
+              )
+                ? m.weightPriceTiers
+                : [],
 
             vatRate: Number(
               m.vatRate ?? 0

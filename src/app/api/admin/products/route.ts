@@ -99,10 +99,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const { nameFr, descFr, priceHT, stock, imageUrl, manageStock } = body as {
+    const { nameFr, descFr, priceHT, weightKg, stock, imageUrl, manageStock } = body as {
       nameFr?: string;
       descFr?: string;
       priceHT?: string | number;
+      weightKg?: string | number;
       stock?: string | number;
       imageUrl?: string;
       manageStock?: boolean;
@@ -127,6 +128,7 @@ export async function POST(req: Request) {
       name: { fr: String(nameFr) },
       description: { fr: String(descFr || "") },
       imageUrl: imageUrl || null,
+      weightKg: Math.max(0, Number(weightKg ?? 0) || 0),
       stock: Number(stock ?? 0),
       manageStock: manageStock ?? false, // 🔥 écrit en base
       isActive: true,

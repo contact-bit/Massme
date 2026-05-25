@@ -6,13 +6,16 @@ import { db } from "@/lib/firebase";
 import type { ShippingMethod, RelayPoint } from "@/components/shipping/types";
 import { moneyToCents, centsToMoney } from "../money";
 import type { Locale } from "../i18n";
+import { getShippingPriceForWeight } from "@/lib/shippingWeightPricing";
 
 export default function useShippingMethods({
   country,
   locale,
+  totalWeightKg = 0,
 }: {
   country: string;
   locale: Locale;
+  totalWeightKg?: number;
 }) {
   const [methods, setMethods] = useState<ShippingMethod[]>([]);
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod | null>(null);
@@ -38,7 +41,12 @@ export default function useShippingMethods({
       const list: ShippingMethod[] = snap.docs.map((doc) => {
         const raw = doc.data() as any;
 
-        const priceHT = Number(raw.priceHT ?? 0);
+        const basePriceHT = Number(raw.priceHT ?? 0);
+        const priceHT = getShippingPriceForWeight(
+          basePriceHT,
+          raw.weightPriceTiers,
+          totalWeightKg
+        );
         const vatRate = typeof raw.vatRate === "number" && raw.vatRate > 0 ? raw.vatRate : 0;
 
         const priceHTCents = moneyToCents(priceHT);
@@ -52,6 +60,11 @@ export default function useShippingMethods({
           name: raw.name?.[locale] || raw.name?.fr || "",
           delay: raw.delay?.[locale] || raw.delay?.fr || "",
           priceHT,
+          basePriceHT,
+          appliedWeightKg: totalWeightKg,
+          weightPriceTiers: Array.isArray(raw.weightPriceTiers)
+            ? raw.weightPriceTiers
+            : [],
           vatRate,
           priceTTC,
           type: raw.type || "home",
@@ -82,7 +95,7 @@ export default function useShippingMethods({
     return () => {
       cancelled = true;
     };
-  }, [country, locale]);
+  }, [country, locale, totalWeightKg]);
 
   return {
     methods,

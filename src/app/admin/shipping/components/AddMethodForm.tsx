@@ -16,6 +16,11 @@ import {
 
 import "./add-method-form.css";
 
+type WeightTierDraft = {
+  maxWeightKg: string;
+  priceHT: string;
+};
+
 type Props = {
   country: CountryCode;
   onCreated: () => void;
@@ -47,6 +52,17 @@ export default function AddMethodForm({
         null as RelayProvider | null,
 
       priceHT: "",
+
+      weightPriceTiers: [
+        {
+          maxWeightKg: "1",
+          priceHT: "",
+        },
+        {
+          maxWeightKg: "2",
+          priceHT: "",
+        },
+      ] as WeightTierDraft[],
 
       vatRate:
         country === "CH"
@@ -118,6 +134,22 @@ export default function AddMethodForm({
               form.priceHT
             ),
 
+            weightPriceTiers:
+              form.weightPriceTiers
+                .filter(
+                  (tier) =>
+                    tier.maxWeightKg !== "" &&
+                    tier.priceHT !== ""
+                )
+                .map((tier) => ({
+                  maxWeightKg: Number(
+                    tier.maxWeightKg
+                  ),
+                  priceHT: Number(
+                    tier.priceHT
+                  ),
+                })),
+
             vatRate: Number(
               form.vatRate ||
                 0
@@ -152,6 +184,17 @@ export default function AddMethodForm({
           null,
 
         priceHT: "",
+
+        weightPriceTiers: [
+          {
+            maxWeightKg: "1",
+            priceHT: "",
+          },
+          {
+            maxWeightKg: "2",
+            priceHT: "",
+          },
+        ],
 
         vatRate:
           country === "CH"
@@ -278,6 +321,102 @@ export default function AddMethodForm({
 
           </div>
 
+        </div>
+
+        <div className="amf-weight-tiers">
+          <div className="amf-card-kicker">
+            Paliers poids
+          </div>
+
+          {form.weightPriceTiers.map(
+            (tier, index) => (
+              <div
+                key={index}
+                className="amf-grid"
+              >
+                <div className="amf-field">
+                  <label>
+                    Jusqu’à kg
+                  </label>
+
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={
+                      tier.maxWeightKg
+                    }
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        weightPriceTiers:
+                          form.weightPriceTiers.map(
+                            (t, i) =>
+                              i === index
+                                ? {
+                                    ...t,
+                                    maxWeightKg:
+                                      e
+                                        .target
+                                        .value,
+                                  }
+                                : t
+                          ),
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="amf-field">
+                  <label>
+                    Prix HT
+                  </label>
+
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={tier.priceHT}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        weightPriceTiers:
+                          form.weightPriceTiers.map(
+                            (t, i) =>
+                              i === index
+                                ? {
+                                    ...t,
+                                    priceHT:
+                                      e
+                                        .target
+                                        .value,
+                                  }
+                                : t
+                          ),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            )
+          )}
+
+          <button
+            type="button"
+            className="amf-submit amf-submit-secondary"
+            onClick={() =>
+              setForm({
+                ...form,
+                weightPriceTiers: [
+                  ...form.weightPriceTiers,
+                  {
+                    maxWeightKg: "",
+                    priceHT: "",
+                  },
+                ],
+              })
+            }
+          >
+            Ajouter un palier
+          </button>
         </div>
 
       </section>

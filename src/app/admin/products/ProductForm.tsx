@@ -18,6 +18,9 @@ export default function ProductForm({
   const [priceHT, setPriceHT] =
     useState("");
 
+  const [weightKg, setWeightKg] =
+    useState("");
+
   const [stock, setStock] =
     useState("");
 
@@ -83,6 +86,7 @@ export default function ProductForm({
             nameFr,
             descFr,
             priceHT,
+            weightKg,
             stock: stock || "0",
             imageUrl,
             manageStock,
@@ -106,6 +110,7 @@ export default function ProductForm({
       setNameFr("");
       setDescFr("");
       setPriceHT("");
+      setWeightKg("");
       setStock("");
       setImageUrl("");
       setManageStock(false);
@@ -232,6 +237,27 @@ export default function ProductForm({
                 value={priceHT}
                 onChange={(e) =>
                   setPriceHT(
+                    e.target.value
+                  )
+                }
+              />
+
+            </div>
+
+            <div className="pf-field">
+
+              <label>
+                Poids unitaire (kg)
+              </label>
+
+              <input
+                type="number"
+                step="0.01"
+                className="pf-input"
+                placeholder="1.20"
+                value={weightKg}
+                onChange={(e) =>
+                  setWeightKg(
                     e.target.value
                   )
                 }

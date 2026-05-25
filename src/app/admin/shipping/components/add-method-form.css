@@ -709,6 +709,21 @@
     opacity .25s ease;
 }
 
+.amf-submit-secondary {
+  width: fit-content;
+  min-height: 34px;
+  margin-top: .5rem;
+  padding: 0 .8rem;
+  background: rgba(255,255,255,.04);
+  box-shadow: none;
+}
+
+.amf-weight-tiers {
+  display: grid;
+  gap: .55rem;
+  margin-top: .8rem;
+}
+
 .amf-submit::before {
   content: "";
 

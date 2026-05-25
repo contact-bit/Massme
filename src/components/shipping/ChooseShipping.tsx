@@ -529,6 +529,12 @@ export default function ChooseShipping({
                       </span>
                     )}
 
+                    {method.appliedWeightKg ? (
+                      <span>
+                        {method.appliedWeightKg.toFixed(2)} kg
+                      </span>
+                    ) : null}
+
                   </div>
 
                 </div>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { normalizeWeightPriceTiers } from "@/lib/shippingWeightPricing";
 
 // GET
 export async function GET() {
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
       relayProvider,
       priceHT,
       vatRate,
+      weightPriceTiers,
       isActive,
       sortOrder,        // 🔹 on récupère sortOrder
     } = await req.json();
@@ -71,6 +73,8 @@ export async function POST(req: Request) {
       type: type || "home",
       relayProvider: relayProvider ?? null,
       priceHT,
+      weightPriceTiers:
+        normalizeWeightPriceTiers(weightPriceTiers),
       vatRate,
       isActive: isActive ?? true,
       sortOrder:

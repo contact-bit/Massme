@@ -148,6 +148,7 @@ type Product = {
   description?: Partial<Record<Locale, string>>;
   imageUrl?: string;
   isActive?: boolean;
+  weightKg?: number;
 
   markets: Market[];
 
@@ -319,6 +320,8 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
       id: hasVariants && selectedVariant ? `${p.id}:${selectedVariant.id}` : p.id,
       name: mainName,
       priceHT: mainPriceHT,
+      weightKg:
+        Number(p.weightKg ?? 0) || 0,
       quantity: 1,
       imageUrl: mainImage,
       description: desc,
@@ -339,6 +342,7 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
           id: `${p.id}:addon:${addon.id}`,
           name: addon.label,
           priceHT: addonPriceHT,
+          weightKg: 0,
           quantity: 1,
           imageUrl: mainImage,
           description: addon.label,

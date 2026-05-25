@@ -370,6 +370,18 @@
     transform .25s ease;
 }
 
+.emp-weight-tiers {
+  display: grid;
+  gap: .55rem;
+  margin-top: .8rem;
+}
+
+.emp-tier-add {
+  width: fit-content;
+  height: 34px;
+  padding: 0 .8rem;
+}
+
 /* =========================================================
    OPTION
 ========================================================= */

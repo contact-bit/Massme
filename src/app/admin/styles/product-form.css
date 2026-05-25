@@ -906,6 +906,10 @@
   grid-column: span 2;
 }
 
+.pf-field:nth-child(6) {
+  grid-column: span 2;
+}
+
 .pf-field-wide {
   grid-column: 1 / -1;
 }
@@ -1052,10 +1056,11 @@
   }
 
   .pf-field:nth-child(4) {
-    grid-column: span 4;
+    grid-column: span 2;
   }
 
-  .pf-field:nth-child(5) {
+  .pf-field:nth-child(5),
+  .pf-field:nth-child(6) {
     grid-column: span 2;
   }
 
@@ -1089,7 +1094,8 @@
   .pf-field:nth-child(1),
   .pf-field:nth-child(2),
   .pf-field:nth-child(4),
-  .pf-field:nth-child(5) {
+  .pf-field:nth-child(5),
+  .pf-field:nth-child(6) {
     grid-column: 1 / -1;
   }
 

@@ -116,6 +116,7 @@ export default function ProductEditForm({
   const [adminPassword, setAdminPassword] = useState("");
 
   const [imageUrl, setImageUrl] = useState("");
+  const [weightKg, setWeightKg] = useState("");
   const [stock, setStock] = useState(0);
   const [manageStock, setManageStock] = useState<boolean>(true); // ✅ gestion du stock pour cet article
   const [isActive, setIsActive] = useState(true);
@@ -139,6 +140,7 @@ export default function ProductEditForm({
     if (!product) return;
 
     setImageUrl(product.imageUrl || "");
+    setWeightKg(String(product.weightKg ?? ""));
     setStock(product.stock ?? 0);
     setManageStock(
       typeof product.manageStock === "boolean" ? product.manageStock : true
@@ -239,6 +241,7 @@ export default function ProductEditForm({
           name,
           description,
           imageUrl: imageUrl || null,
+          weightKg,
           stock,
           manageStock, // ✅ envoyé au backend
           isActive,
@@ -428,6 +431,21 @@ export default function ProductEditForm({
               />
               Gestion du stock
             </label>
+          </div>
+
+          <div className="pf-field">
+            <label className="admin-label">
+              Poids unitaire (kg)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              className="admin-input"
+              value={weightKg}
+              onChange={(e) =>
+                setWeightKg(e.target.value)
+              }
+            />
           </div>
 
           <div className="pf-field">

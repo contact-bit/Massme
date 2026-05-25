@@ -201,6 +201,11 @@ export async function PATCH(req: Request) {
     if ("imageUrl" in data) update.imageUrl = data.imageUrl || null;
     if ("isActive" in data) update.isActive = !!data.isActive;
     if ("stock" in data) update.stock = Math.max(0, toInt(data.stock));
+    if ("weightKg" in data) {
+      update.weightKg =
+        Math.round(Math.max(0, toNum(data.weightKg)) * 100) /
+        100;
+    }
 
     // 🔥 nouveau : gestion du stock oui/non
     if ("manageStock" in data) {

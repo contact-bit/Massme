@@ -46,6 +46,8 @@ export type CartItem = {
 
   priceHT: number;
 
+  weightKg?: number;
+
   quantity: number;
 
   imageUrl?: string;

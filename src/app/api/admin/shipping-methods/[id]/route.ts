@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { normalizeWeightPriceTiers } from "@/lib/shippingWeightPricing";
 
 type Context = {
   params: Promise<{ id: string }>;
@@ -36,6 +37,7 @@ export async function PATCH(
       type,
       relayProvider,
       priceHT,
+      weightPriceTiers,
       vatRate,
       isActive,
       sortOrder, // 🔹 nouveau
@@ -98,6 +100,11 @@ export async function PATCH(
         );
       }
       payload.priceHT = priceHT;
+    }
+
+    if (weightPriceTiers !== undefined) {
+      payload.weightPriceTiers =
+        normalizeWeightPriceTiers(weightPriceTiers);
     }
 
     /* ---------- vatRate ---------- */
