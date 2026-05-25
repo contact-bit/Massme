@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { COUNTRIES } from "@/lib/countries";
 
 // ✅ IMPORTANT
 import { getLogisticStatus } from "@/app/admin/orders/domain/logistics";
@@ -137,6 +138,15 @@ export async function GET() {
     const ordersCol =
       dbAdmin.collection("orders");
 
+    const paymentMethodsCol =
+      dbAdmin.collection("payment_methods");
+
+    const shippingMethodsCol =
+      dbAdmin.collection("shipping_methods");
+
+    const reviewsCol =
+      dbAdmin.collection("reviews");
+
     const now = new Date();
 
     const todayStart =
@@ -178,6 +188,62 @@ export async function GET() {
     const activeProducts =
       products.filter(
         (p: any) => p?.active === true
+      ).length;
+
+    /* =====================================================
+       ADMIN CONFIG
+    ===================================================== */
+
+    const [
+      paymentMethodsSnap,
+      shippingMethodsSnap,
+      reviewsSnap,
+    ] = await Promise.all([
+      paymentMethodsCol.get(),
+      shippingMethodsCol.get(),
+      reviewsCol.get(),
+    ]);
+
+    const paymentMethods =
+      paymentMethodsSnap.docs.map((d) =>
+        d.data()
+      );
+
+    const shippingMethods =
+      shippingMethodsSnap.docs.map((d) =>
+        d.data()
+      );
+
+    const reviews =
+      reviewsSnap.docs.map((d) =>
+        d.data()
+      );
+
+    const paymentMethodsCount =
+      paymentMethods.length;
+
+    const activePaymentMethods =
+      paymentMethods.filter(
+        (m: any) => m?.isActive !== false
+      ).length;
+
+    const shippingMethodsCount =
+      shippingMethods.length;
+
+    const adminCountriesCount =
+      COUNTRIES.length;
+
+    const reviewsCount =
+      reviews.length;
+
+    const approvedReviews =
+      reviews.filter(
+        (r: any) => r?.status === "approved"
+      ).length;
+
+    const pendingReviews =
+      reviews.filter(
+        (r: any) => r?.status === "pending"
       ).length;
 
     /* =====================================================
@@ -533,6 +599,14 @@ export async function GET() {
       kpis: {
         productsCount,
         activeProducts,
+
+        paymentMethodsCount,
+        activePaymentMethods,
+        shippingMethodsCount,
+        adminCountriesCount,
+        reviewsCount,
+        approvedReviews,
+        pendingReviews,
 
         ordersCount,
         paidOrdersCount,

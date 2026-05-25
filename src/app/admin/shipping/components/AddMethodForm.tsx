@@ -187,7 +187,7 @@ export default function AddMethodForm({
         <div>
 
           <div className="amf-kicker">
-            CREATE METHOD
+            Méthode
           </div>
 
           <h3 className="amf-title">

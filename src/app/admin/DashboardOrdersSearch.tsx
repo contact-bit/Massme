@@ -11,16 +11,6 @@ import {
 import { useOrders } from "./orders/hooks/useOrders";
 
 /* =========================================================
-   TYPES
-========================================================= */
-
-type Filter =
-  | "all"
-  | "paid"
-  | "to_prepare"
-  | "shipped";
-
-/* =========================================================
    HELPERS
 ========================================================= */
 
@@ -60,7 +50,13 @@ function shortDate(v: any) {
    COMPONENT
 ========================================================= */
 
-export default function DashboardOrdersSearch() {
+type Props = {
+  embedded?: boolean;
+};
+
+export default function DashboardOrdersSearch({
+  embedded = false,
+}: Props) {
   const {
     orders,
     loading,
@@ -69,9 +65,6 @@ export default function DashboardOrdersSearch() {
 
   const [q, setQ] =
     useState("");
-
-  const [filter, setFilter] =
-    useState<Filter>("all");
 
   /* =========================================================
      INIT
@@ -86,81 +79,15 @@ export default function DashboardOrdersSearch() {
   ========================================================= */
 
   const filtered = useMemo(() => {
-    let base = [...orders];
-
-    /* ================= FILTERS ================= */
-
-    if (filter === "paid") {
-      base = base.filter(
-        (o: any) => {
-          const payment =
-            String(
-              o?.paymentStatus ||
-                o?.payment
-                  ?.status ||
-                ""
-            ).toLowerCase();
-
-          return (
-            payment === "paid"
-          );
-        }
-      );
-    }
-
-    if (
-      filter === "to_prepare"
-    ) {
-      base = base.filter(
-        (o: any) => {
-          const shipping =
-            String(
-              o?.shippingStatus ||
-                o
-                  ?.fulfillment
-                  ?.status ||
-                ""
-            ).toLowerCase();
-
-          return (
-            shipping !==
-            "shipped"
-          );
-        }
-      );
-    }
-
-    if (filter === "shipped") {
-      base = base.filter(
-        (o: any) => {
-          const shipping =
-            String(
-              o?.shippingStatus ||
-                o
-                  ?.fulfillment
-                  ?.status ||
-                ""
-            ).toLowerCase();
-
-          return (
-            shipping ===
-            "shipped"
-          );
-        }
-      );
-    }
-
-    /* ================= SEARCH ================= */
-
     const term = q
       .trim()
       .toLowerCase();
 
     if (!term) {
-      return base;
+      return [];
     }
 
-    return base.filter(
+    return orders.filter(
       (o: any) => {
         const itemText =
           Array.isArray(
@@ -219,14 +146,17 @@ export default function DashboardOrdersSearch() {
         );
       }
     );
-  }, [orders, q, filter]);
+  }, [orders, q]);
+
+  const hasSearch =
+    q.trim().length > 0;
 
   /* =========================================================
      UI
   ========================================================= */
 
-  return (
-    <div className="dash-panel">
+  const content = (
+    <>
       {/* HEADER */}
       <div className="dash-panel-head">
         <h2 className="dash-panel-title">
@@ -234,7 +164,9 @@ export default function DashboardOrdersSearch() {
         </h2>
 
         <div className="dash-panel-meta">
-          {filtered.length} résultats
+          {hasSearch
+            ? `${filtered.length} résultats`
+            : "Tapez pour rechercher"}
         </div>
       </div>
 
@@ -252,70 +184,20 @@ export default function DashboardOrdersSearch() {
           }
         />
 
-        {/* FILTERS */}
-        <div className="dash-orders-filters">
-          <button
-            className={`dash-filter ${
-              filter === "all"
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              setFilter("all")
-            }
-          >
-            Tous
-          </button>
-
-          <button
-            className={`dash-filter ${
-              filter === "paid"
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              setFilter("paid")
-            }
-          >
-            Payées
-          </button>
-
-          <button
-            className={`dash-filter ${
-              filter ===
-              "to_prepare"
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              setFilter(
-                "to_prepare"
-              )
-            }
-          >
-            À préparer
-          </button>
-
-          <button
-            className={`dash-filter ${
-              filter ===
-              "shipped"
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              setFilter(
-                "shipped"
-              )
-            }
-          >
-            Expédiées
-          </button>
-        </div>
       </div>
 
       {/* TABLE */}
-      <div className="dash-orders-table">
+      {hasSearch && (
+        <div className="dash-orders-table">
+          <div className="dash-orders-head">
+            <div>Commande</div>
+            <div>Client</div>
+            <div>Ville</div>
+            <div>Total</div>
+            <div>Statut</div>
+            <div>Date</div>
+          </div>
+
         {loading ? (
           <div className="dash-empty">
             Chargement...
@@ -356,9 +238,7 @@ export default function DashboardOrdersSearch() {
                   href={`/admin/orders/${o.id}`}
                   className="dash-order-row"
                 >
-                  {/* ORDER */}
                   <div className="mono">
-                    #
                     {o?.orderNumber ||
                       o?.id?.slice(
                         0,
@@ -413,7 +293,18 @@ export default function DashboardOrdersSearch() {
               );
             })
         )}
-      </div>
+        </div>
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <div className="dash-panel">
+      {content}
     </div>
   );
 }

@@ -187,7 +187,7 @@ export default function EditPaymentMethodPanel({
         <div>
 
           <div className="epmp-kicker">
-            EDIT METHOD
+            Modification
           </div>
 
           <h2 className="epmp-title">

@@ -288,6 +288,13 @@
     -.04em;
 }
 
+.pap-section-note {
+  margin: 0;
+  color: rgba(148,163,184,.64);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
 /* =========================================================
    CARD
 ========================================================= */
@@ -456,6 +463,19 @@
 
   gap:
     1rem;
+
+  cursor:
+    grab;
+}
+
+.pap-wrap.dragging {
+  opacity:
+    .55;
+}
+
+.pap-wrap:active {
+  cursor:
+    grabbing;
 }
 
 /* =========================================================
@@ -479,10 +499,10 @@
   align-items: center;
 
   padding:
-    1.3rem;
+    .9rem 1rem;
 
   border-radius:
-    30px;
+    12px;
 
   border:
     1px solid rgba(255,255,255,.06);
@@ -498,12 +518,17 @@
     blur(18px);
 
   box-shadow:
-    0 20px 60px rgba(0,0,0,.20);
+    0 12px 30px rgba(0,0,0,.18);
 
   transition:
     transform .25s ease,
     border-color .25s ease,
     box-shadow .25s ease;
+}
+
+.pap-row::before {
+  pointer-events:
+    none;
 }
 
 .pap-row:hover {
@@ -514,7 +539,7 @@
     rgba(0,208,255,.12);
 
   box-shadow:
-    0 26px 70px rgba(0,0,0,.28);
+    0 16px 34px rgba(0,0,0,.24);
 }
 
 .pap-row.active {
@@ -573,13 +598,93 @@
     white;
 
   font-size:
-    1.2rem;
+    1rem;
 
   font-weight:
     850;
 
   letter-spacing:
     -.04em;
+}
+
+.pap-order-badge {
+  width:
+    30px;
+
+  height:
+    30px;
+
+  flex:
+    0 0 30px;
+
+  border-radius:
+    8px;
+
+  display:
+    inline-flex;
+  align-items:
+    center;
+  justify-content:
+    center;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    rgba(255,255,255,.05);
+
+  color:
+    white;
+
+  font-size:
+    .78rem;
+
+  font-weight:
+    900;
+}
+
+.pap-drag-handle {
+  width:
+    30px;
+
+  height:
+    30px;
+
+  flex:
+    0 0 30px;
+
+  border-radius:
+    8px;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  background:
+    rgba(255,255,255,.04);
+
+  color:
+    rgba(226,232,240,.86);
+
+  display:
+    inline-flex;
+  align-items:
+    center;
+  justify-content:
+    center;
+
+  font-size:
+    .9rem;
+
+  font-weight:
+    900;
+
+  cursor:
+    grab;
+}
+
+.pap-drag-handle:active {
+  cursor:
+    grabbing;
 }
 
 /* =========================================================
@@ -653,10 +758,7 @@
     900;
 
   letter-spacing:
-    .12em;
-
-  text-transform:
-    uppercase;
+    0;
 
   flex-shrink:
     0;
@@ -668,16 +770,16 @@
 
 .pap-bottom {
   margin-top:
-    .8rem;
+    .45rem;
 
   color:
     rgba(148,163,184,.76);
 
   font-size:
-    .92rem;
+    .8rem;
 
   line-height:
-    1.8;
+    1.45;
 }
 
 /* =========================================================
@@ -689,10 +791,10 @@
   flex-wrap: wrap;
 
   gap:
-    .8rem;
+    .45rem;
 
   margin-top:
-    1rem;
+    .55rem;
 }
 
 .pap-meta-item {
@@ -703,10 +805,10 @@
     .45rem;
 
   min-height:
-    34px;
+    26px;
 
   padding:
-    0 .9rem;
+    0 .55rem;
 
   border-radius:
     999px;
@@ -774,16 +876,16 @@
     auto;
 
   min-height:
-    50px;
+    34px;
 
   padding:
-    0 1.2rem;
+    0 .8rem;
 
   border-radius:
-    18px;
+    10px;
 
   font-size:
-    .84rem;
+    .76rem;
 
   font-weight:
     800;

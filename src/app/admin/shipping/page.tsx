@@ -15,6 +15,11 @@ import {
   ShippingLocale,
 } from "@/lib/shipping-i18n";
 
+import {
+  COUNTRIES,
+  COUNTRY_TO_LOCALE,
+} from "@/lib/countries";
+
 import "./shipping-admin.css";
 
 /* =========================================================
@@ -50,60 +55,19 @@ export type ShippingMethod = {
   sortOrder?: number | null;
 };
 
-/* =========================================================
-   CONST
-========================================================= */
+function shippingTypeLabel(
+  type: ShippingMethod["type"]
+) {
+  if (type === "relay") {
+    return "Point relais";
+  }
 
-const COUNTRIES = [
-  {
-    code: "FR",
-    label: "France",
-    flag: "🇫🇷",
-  },
+  if (type === "local_pickup") {
+    return "Retrait";
+  }
 
-  {
-    code: "GB",
-    label: "United Kingdom",
-    flag: "🇬🇧",
-  },
-
-  {
-    code: "ES",
-    label: "Espagne",
-    flag: "🇪🇸",
-  },
-
-  {
-    code: "DE",
-    label: "Deutschland",
-    flag: "🇩🇪",
-  },
-
-  {
-    code: "IT",
-    label: "Italia",
-    flag: "🇮🇹",
-  },
-
-  {
-    code: "NL",
-    label: "Nederland",
-    flag: "🇳🇱",
-  },
-] as const;
-
-const COUNTRY_TO_LOCALE: Record<
-  CountryCode,
-  ShippingLocale
-> = {
-  FR: "fr",
-  GB: "en",
-  DE: "de",
-  ES: "es",
-  IT: "it",
-  NL: "nl",
-  CH: "fr",
-};
+  return "À domicile";
+}
 
 /* =========================================================
    COMPONENT
@@ -123,6 +87,15 @@ export default function ShippingAdminPage() {
 
   const [activeCountry, setActiveCountry] =
     useState<CountryCode>("FR");
+
+  const [showCreate, setShowCreate] =
+    useState(false);
+
+  const [draggedId, setDraggedId] =
+    useState<string | null>(null);
+
+  const [savingOrder, setSavingOrder] =
+    useState(false);
 
   /* =========================================================
      LOAD
@@ -227,6 +200,82 @@ export default function ShippingAdminPage() {
     reload();
   }
 
+  async function handleReorder(
+    targetId: string,
+    sourceId = draggedId
+  ) {
+    if (
+      !sourceId ||
+      sourceId === targetId
+    ) {
+      setDraggedId(null);
+      return;
+    }
+
+    const current = [...filtered];
+    const from = current.findIndex(
+      (m) => m.id === sourceId
+    );
+    const to = current.findIndex(
+      (m) => m.id === targetId
+    );
+
+    if (from < 0 || to < 0) {
+      setDraggedId(null);
+      return;
+    }
+
+    const [moved] = current.splice(
+      from,
+      1
+    );
+
+    current.splice(to, 0, moved);
+
+    const ordered = current.map(
+      (m, index) => ({
+        ...m,
+        sortOrder: index + 1,
+      })
+    );
+
+    setMethods((prev) =>
+      prev.map((m) => {
+        const next = ordered.find(
+          (o) => o.id === m.id
+        );
+
+        return next ?? m;
+      })
+    );
+
+    setSavingOrder(true);
+
+    try {
+      await Promise.all(
+        ordered.map((m) =>
+          fetch(
+            `/api/admin/shipping-methods/${m.id}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                sortOrder:
+                  m.sortOrder,
+              }),
+            }
+          )
+        )
+      );
+    } finally {
+      setSavingOrder(false);
+      setDraggedId(null);
+    }
+  }
+
   /* =========================================================
      FILTER
   ========================================================= */
@@ -257,75 +306,8 @@ export default function ShippingAdminPage() {
   return (
     <main className="shipping-page">
 
-      {/* BG */}
-      <div className="shipping-grid" />
-
-      <div className="shipping-glow glow-1" />
-
-      <div className="shipping-glow glow-2" />
-
       {/* CONTAINER */}
       <div className="shipping-container">
-
-        {/* HERO */}
-        <section className="shipping-hero">
-
-          <div className="shipping-kicker">
-            SHIPPING MANAGEMENT
-          </div>
-
-          <div className="shipping-hero-head">
-
-            <div>
-
-              <h1 className="shipping-title">
-                Livraison
-              </h1>
-
-              <p className="shipping-description">
-                Gestion avancée des
-                méthodes de livraison,
-                des zones et de la
-                logistique internationale.
-              </p>
-
-            </div>
-
-            <div className="shipping-stats">
-
-              <div className="shipping-stat">
-
-                <span>
-                  Méthodes
-                </span>
-
-                <strong>
-                  {
-                    filtered.length
-                  }
-                </strong>
-
-              </div>
-
-              <div className="shipping-stat">
-
-                <span>
-                  Pays
-                </span>
-
-                <strong>
-                  {
-                    COUNTRIES.length
-                  }
-                </strong>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </section>
 
         {/* COUNTRIES */}
         <section className="shipping-tabs">
@@ -344,6 +326,10 @@ export default function ShippingAdminPage() {
                   setEditing(
                     null
                   );
+
+                  setShowCreate(
+                    false
+                  );
                 }}
                 className={`shipping-tab ${
                   activeCountry ===
@@ -357,10 +343,20 @@ export default function ShippingAdminPage() {
                   {country.flag}
                 </span>
 
-                <span className="shipping-tab-label">
-                  {
-                    country.label
-                  }
+                <span className="shipping-tab-content">
+
+                  <span className="shipping-tab-label">
+                    {
+                      country.label
+                    }
+                  </span>
+
+                  <span className="shipping-tab-code">
+                    {
+                      country.code
+                    }
+                  </span>
+
                 </span>
 
               </button>
@@ -370,36 +366,64 @@ export default function ShippingAdminPage() {
         </section>
 
         {/* CREATE */}
-        <section className="shipping-card">
+        <section className="shipping-create-section">
 
-          <div className="shipping-card-head">
+          <div className="shipping-create-head">
 
             <div>
 
               <div className="shipping-card-kicker">
-                CREATE METHOD
+                Création
               </div>
 
               <h2>
-                Nouvelle méthode
+                Ajouter une méthode
               </h2>
 
             </div>
 
+            <button
+              type="button"
+              className={`shipping-create-toggle ${
+                showCreate
+                  ? "active"
+                  : ""
+              }`}
+              onClick={() =>
+                setShowCreate(
+                  !showCreate
+                )
+              }
+            >
+              {showCreate
+                ? "Fermer"
+                : "Nouvelle méthode"}
+            </button>
+
           </div>
 
-          <div className="shipping-card-body">
+          {showCreate && (
+            <div className="shipping-card">
 
-            <AddMethodForm
-              country={
-                activeCountry
-              }
-              onCreated={
-                reload
-              }
-            />
+              <div className="shipping-card-body">
 
-          </div>
+                <AddMethodForm
+                  country={
+                    activeCountry
+                  }
+                  onCreated={() => {
+                    reload();
+
+                    setShowCreate(
+                      false
+                    );
+                  }}
+                />
+
+              </div>
+
+            </div>
+          )}
 
         </section>
 
@@ -411,12 +435,19 @@ export default function ShippingAdminPage() {
             <div>
 
               <div className="shipping-card-kicker">
-                SHIPPING METHODS
+                Méthodes
               </div>
 
               <h2>
-                Méthodes actives
+                Ordre d’affichage
               </h2>
+
+              <p className="shipping-section-note">
+                Glissez les cartes pour choisir l’ordre visible sur la boutique.
+                {savingOrder
+                  ? " Enregistrement..."
+                  : ""}
+              </p>
 
             </div>
 
@@ -457,7 +488,7 @@ export default function ShippingAdminPage() {
             <div className="shipping-list">
 
               {filtered.map(
-                (method) => {
+                (method, index) => {
                   const locale =
                     COUNTRY_TO_LOCALE[
                       method
@@ -473,7 +504,31 @@ export default function ShippingAdminPage() {
                       key={
                         method.id
                       }
-                      className="shipping-method-wrap"
+                      className={`shipping-method-wrap ${
+                        draggedId ===
+                        method.id
+                          ? "dragging"
+                          : ""
+                      }`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect =
+                          "move";
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        handleReorder(
+                          method.id,
+                          e.dataTransfer.getData(
+                            "text/plain"
+                          )
+                        );
+                      }}
+                      onDragEnd={() =>
+                        setDraggedId(null)
+                      }
                     >
 
                       {/* METHOD */}
@@ -501,6 +556,39 @@ export default function ShippingAdminPage() {
 
                             <div className="shipping-method-title-wrap">
 
+                              <button
+                                type="button"
+                                className="shipping-drag-handle"
+                                title="Déplacer"
+                                draggable
+                                onClick={(e) =>
+                                  e.stopPropagation()
+                                }
+                                onDragStart={(e) => {
+                                  e.stopPropagation();
+                                  e.dataTransfer.effectAllowed =
+                                    "move";
+                                  e.dataTransfer.setData(
+                                    "text/plain",
+                                    method.id
+                                  );
+                                  setDraggedId(
+                                    method.id
+                                  );
+                                }}
+                                onDragEnd={() =>
+                                  setDraggedId(
+                                    null
+                                  )
+                                }
+                              >
+                                ≡
+                              </button>
+
+                              <span className="shipping-order-badge">
+                                {index + 1}
+                              </span>
+
                               <h3 className="shipping-method-title">
                                 {method
                                   .name?.[
@@ -520,7 +608,9 @@ export default function ShippingAdminPage() {
                             <div className="shipping-method-type">
 
                               {
-                                method.type
+                                shippingTypeLabel(
+                                  method.type
+                                )
                               }
 
                             </div>
@@ -543,16 +633,6 @@ export default function ShippingAdminPage() {
                               }
                               %
                             </span>
-
-                            {method.sortOrder !=
-                              null && (
-                              <span>
-                                Priorité #
-                                {
-                                  method.sortOrder
-                                }
-                              </span>
-                            )}
 
                           </div>
 

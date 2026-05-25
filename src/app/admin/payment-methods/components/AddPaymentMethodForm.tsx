@@ -224,7 +224,7 @@ export default function AddPaymentMethodForm({
         <div>
 
           <div className="apmf-kicker">
-            PAYMENT METHOD
+            Méthode
           </div>
 
           <h2 className="apmf-title">

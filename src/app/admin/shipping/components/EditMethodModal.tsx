@@ -140,7 +140,7 @@ export default function EditMethodPanel({
         <div>
 
           <div className="emp-kicker">
-            SHIPPING METHOD
+            Modification
           </div>
 
           <h2 className="emp-title">

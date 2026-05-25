@@ -42,13 +42,6 @@ type ReviewEmailSettings = {
   delayDays: number;
 };
 
-type ReviewStats = {
-  total: number;
-  approved: number;
-  pending: number;
-  rejected: number;
-};
-
 /* =====================================================
    API
 ===================================================== */
@@ -465,13 +458,10 @@ export default function AdminReviewsPage() {
       "pending"
     );
 
-  const [stats, setStats] =
-    useState<ReviewStats>({
-      total: 0,
-      approved: 0,
-      pending: 0,
-      rejected: 0,
-    });
+  const [
+    showSettings,
+    setShowSettings,
+  ] = useState(false);
 
   const {
     draftSettings,
@@ -502,76 +492,6 @@ export default function AdminReviewsPage() {
     useReviews(
       status
     );
-
-  /* =====================================================
-     STATS
-  ===================================================== */
-
-  async function loadStats() {
-
-    try {
-
-      const [
-        pendingRes,
-        approvedRes,
-        rejectedRes,
-      ] = await Promise.all([
-        fetch(
-          "/api/admin/reviews?status=pending&limit=999"
-        ),
-        fetch(
-          "/api/admin/reviews?status=approved&limit=999"
-        ),
-        fetch(
-          "/api/admin/reviews?status=rejected&limit=999"
-        ),
-      ]);
-
-      const [
-        pendingJson,
-        approvedJson,
-        rejectedJson,
-      ] = await Promise.all([
-        pendingRes.json(),
-        approvedRes.json(),
-        rejectedRes.json(),
-      ]);
-
-      const pending =
-        pendingJson?.rows?.length || 0;
-
-      const approved =
-        approvedJson?.rows?.length || 0;
-
-      const rejected =
-        rejectedJson?.rows?.length || 0;
-
-      setStats({
-        total:
-          pending +
-          approved +
-          rejected,
-
-        pending,
-        approved,
-        rejected,
-      });
-
-    } catch (e) {
-
-      console.error(
-        "Stats error:",
-        e
-      );
-
-    }
-  }
-
-  useEffect(() => {
-
-    loadStats();
-
-  }, []);
 
   /* =====================================================
      COMPUTED
@@ -639,74 +559,6 @@ export default function AdminReviewsPage() {
   return (
     <main className="reviews-page">
 
-      {/* HERO */}
-      <section className="reviews-hero">
-
-        <div className="reviews-kicker">
-          REVIEWS CENTER
-        </div>
-
-        <h1 className="reviews-title">
-          Avis clients
-        </h1>
-
-        <p className="reviews-subtitle">
-          Modérez les avis,
-          contrôlez les
-          publications et
-          automatisez les
-          emails d’invitation
-          après commande.
-        </p>
-
-        <div className="reviews-stats">
-
-          <div className="reviews-stat">
-
-            <div className="reviews-stat-value">
-              {
-                stats.total
-              }
-            </div>
-
-            <div className="reviews-stat-label">
-              Avis
-            </div>
-
-          </div>
-
-          <div className="reviews-stat">
-
-            <div className="reviews-stat-value">
-              {
-                stats.approved
-              }
-            </div>
-
-            <div className="reviews-stat-label">
-              Publiés
-            </div>
-
-          </div>
-
-          <div className="reviews-stat">
-
-            <div className="reviews-stat-value">
-              {
-                stats.pending
-              }
-            </div>
-
-            <div className="reviews-stat-label">
-              En attente
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
       {/* SETTINGS */}
       <section className="reviews-card">
 
@@ -730,19 +582,41 @@ export default function AdminReviewsPage() {
 
           </div>
 
-          <div className="reviews-live">
+          <div className="reviews-card-actions">
 
-            {settingsLoading
-              ? "Chargement..."
-              : settingsSaving
-              ? "Sauvegarde..."
-              : "Connecté"}
+            <div className="reviews-live">
+
+              {settingsLoading
+                ? "Chargement..."
+                : settingsSaving
+                ? "Sauvegarde..."
+                : "Connecté"}
+
+            </div>
+
+            <button
+              type="button"
+              className={`reviews-create-toggle ${
+                showSettings
+                  ? "active"
+                  : ""
+              }`}
+              onClick={() =>
+                setShowSettings(
+                  !showSettings
+                )
+              }
+            >
+              {showSettings
+                ? "Fermer"
+                : "Réglages"}
+            </button>
 
           </div>
 
         </div>
 
-        {draftSettings && (
+        {showSettings && draftSettings && (
           <>
 
             <label className="reviews-switch">
@@ -999,8 +873,6 @@ export default function AdminReviewsPage() {
 
             await reloadReviews();
 
-            loadStats();
-
           }}
           className="reviews-btn reviews-btn-ghost"
         >
@@ -1036,6 +908,14 @@ export default function AdminReviewsPage() {
       {/* LIST */}
       <section className="reviews-list">
 
+        <div className="reviews-table-head">
+          <div>Note</div>
+          <div>Client</div>
+          <div>Commande</div>
+          <div>Commentaire</div>
+          <div>Date</div>
+        </div>
+
         {rows.map(
           (
             r
@@ -1053,32 +933,23 @@ export default function AdminReviewsPage() {
                 className="reviews-review"
               >
 
-                <div className="reviews-review-head">
+                <div className="reviews-review-rating">
 
-                  <div>
+                  {r.rating ??
+                    "?"}
+                  ★
 
-                    <div className="reviews-review-rating">
+                </div>
 
-                      {r.rating ??
-                        "?"}
-                      ★
+                <div className="reviews-review-email">
+                  {r.email}
+                </div>
 
-                    </div>
-
-                    <div className="reviews-review-email">
-                      {r.email}
-                    </div>
-
-                  </div>
-
-                  <div className="reviews-review-date">
-
-                    {formatDate(
-                      r.createdAt
-                    )}
-
-                  </div>
-
+                <div className="reviews-review-order">
+                  {
+                    r.orderNumber ||
+                    r.orderId
+                  }
                 </div>
 
                 <div className="reviews-review-comment">
@@ -1088,27 +959,11 @@ export default function AdminReviewsPage() {
 
                 </div>
 
-                <div className="reviews-review-meta">
+                <div className="reviews-review-date">
 
-                  <strong>
-                    {
-                      r.orderNumber ||
-                      r.orderId
-                    }
-                  </strong>
-
-                  {r.items?.length
-                    ? ` • ${r.items
-                        .map(
-                          (
-                            it
-                          ) =>
-                            `${it.name || it.productId || "?"} x${it.qty || 1}`
-                        )
-                        .join(
-                          ", "
-                        )}`
-                    : ""}
+                  {formatDate(
+                    r.createdAt
+                  )}
 
                 </div>
 
@@ -1128,8 +983,6 @@ export default function AdminReviewsPage() {
                           r.id,
                           "approve"
                         );
-
-                        loadStats();
 
                       }}
                     >
@@ -1152,8 +1005,6 @@ export default function AdminReviewsPage() {
                           r.id,
                           "reject"
                         );
-
-                        loadStats();
 
                       }}
                     >

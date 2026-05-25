@@ -51,6 +51,20 @@ function normalizeCountryCode(
     : fallback;
 }
 
+function providerLabel(
+  provider: PaymentMethod["provider"]
+) {
+  if (provider === "stripe") {
+    return "Carte bancaire";
+  }
+
+  if (provider === "paypal") {
+    return "PayPal";
+  }
+
+  return "Manuel";
+}
+
 /* =====================================================
    PAGE
 ===================================================== */
@@ -85,6 +99,20 @@ export default function PaymentsAdminPage() {
   const [
     showCreate,
     setShowCreate,
+  ] =
+    useState(false);
+
+  const [
+    draggedId,
+    setDraggedId,
+  ] =
+    useState<string | null>(
+      null
+    );
+
+  const [
+    savingOrder,
+    setSavingOrder,
   ] =
     useState(false);
 
@@ -204,6 +232,82 @@ export default function PaymentsAdminPage() {
     reload();
   }
 
+  async function handleReorder(
+    targetId: string,
+    sourceId = draggedId
+  ) {
+    if (
+      !sourceId ||
+      sourceId === targetId
+    ) {
+      setDraggedId(null);
+      return;
+    }
+
+    const current = [...filtered];
+    const from = current.findIndex(
+      (m) => m.id === sourceId
+    );
+    const to = current.findIndex(
+      (m) => m.id === targetId
+    );
+
+    if (from < 0 || to < 0) {
+      setDraggedId(null);
+      return;
+    }
+
+    const [moved] = current.splice(
+      from,
+      1
+    );
+
+    current.splice(to, 0, moved);
+
+    const ordered = current.map(
+      (m, index) => ({
+        ...m,
+        sortOrder: index + 1,
+      })
+    );
+
+    setMethods((prev) =>
+      prev.map((m) => {
+        const next = ordered.find(
+          (o) => o.id === m.id
+        );
+
+        return next ?? m;
+      })
+    );
+
+    setSavingOrder(true);
+
+    try {
+      await Promise.all(
+        ordered.map((m) =>
+          fetch(
+            `/api/admin/payment-methods/${m.id}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                sortOrder:
+                  m.sortOrder,
+              }),
+            }
+          )
+        )
+      );
+    } finally {
+      setSavingOrder(false);
+      setDraggedId(null);
+    }
+  }
+
   /* =====================================================
      FILTERED
   ===================================================== */
@@ -238,90 +342,6 @@ export default function PaymentsAdminPage() {
     <main className="pap">
 
       {/* =====================================================
-          HERO
-      ===================================================== */}
-
-      <section className="pap-hero">
-
-        <div className="pap-hero-grid">
-
-          <div className="pap-hero-left">
-
-            <div className="pap-kicker">
-              PAYMENT CENTER
-            </div>
-
-            <h1 className="pap-title">
-              Méthodes de paiement
-            </h1>
-
-            <p className="pap-subtitle">
-              Gérez les providers,
-              l’activation,
-              l’ordre d’affichage
-              et la configuration
-              des paiements pour
-              chaque pays.
-            </p>
-
-          </div>
-
-          <div className="pap-stats">
-
-            <div className="pap-stat">
-
-              <div className="pap-stat-value">
-                {
-                  methods.length
-                }
-              </div>
-
-              <div className="pap-stat-label">
-                Méthodes
-              </div>
-
-            </div>
-
-            <div className="pap-stat">
-
-              <div className="pap-stat-value">
-                {
-                  methods.filter(
-                    (
-                      m
-                    ) =>
-                      m.isActive
-                  ).length
-                }
-              </div>
-
-              <div className="pap-stat-label">
-                Actives
-              </div>
-
-            </div>
-
-            <div className="pap-stat">
-
-              <div className="pap-stat-value">
-                {
-                  COUNTRIES.length
-                }
-              </div>
-
-              <div className="pap-stat-label">
-                Pays
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* =====================================================
           COUNTRIES
       ===================================================== */}
 
@@ -330,7 +350,7 @@ export default function PaymentsAdminPage() {
         <div className="pap-section-head">
 
           <div className="pap-section-kicker">
-            COUNTRIES
+            Pays
           </div>
 
           <h2>
@@ -412,7 +432,7 @@ export default function PaymentsAdminPage() {
           <div>
 
             <div className="pap-section-kicker">
-              CREATE
+              Création
             </div>
 
             <h2 className="pap-section-title">
@@ -477,12 +497,17 @@ export default function PaymentsAdminPage() {
         <div className="pap-section-head">
 
           <div className="pap-section-kicker">
-            METHODS
+            Méthodes
           </div>
 
           <h2>
-            Méthodes actives
+            Ordre d’affichage
           </h2>
+
+          <p className="pap-section-note">
+            Glissez les cartes pour choisir l’ordre visible sur la boutique.
+            {savingOrder ? " Enregistrement..." : ""}
+          </p>
 
         </div>
 
@@ -505,7 +530,7 @@ export default function PaymentsAdminPage() {
           <div className="pap-list">
 
             {filtered.map(
-              (method) => {
+              (method, index) => {
 
                 const locale =
                   COUNTRY_TO_LOCALE[
@@ -518,12 +543,36 @@ export default function PaymentsAdminPage() {
                   method.id;
 
                 return (
-                  <div
-                    key={
-                      method.id
-                    }
-                    className="pap-wrap"
-                  >
+                    <div
+                      key={
+                        method.id
+                      }
+                      className={`pap-wrap ${
+                        draggedId ===
+                        method.id
+                          ? "dragging"
+                          : ""
+                      }`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect =
+                          "move";
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        handleReorder(
+                          method.id,
+                          e.dataTransfer.getData(
+                            "text/plain"
+                          )
+                        );
+                      }}
+                      onDragEnd={() =>
+                        setDraggedId(null)
+                      }
+                    >
 
                     {/* CARD */}
                     <div
@@ -540,6 +589,39 @@ export default function PaymentsAdminPage() {
                         <div className="pap-top">
 
                           <div className="pap-name-wrap">
+
+                            <button
+                              type="button"
+                              className="pap-drag-handle"
+                              title="Déplacer"
+                              draggable
+                              onClick={(e) =>
+                                e.stopPropagation()
+                              }
+                              onDragStart={(e) => {
+                                e.stopPropagation();
+                                e.dataTransfer.effectAllowed =
+                                  "move";
+                                e.dataTransfer.setData(
+                                  "text/plain",
+                                  method.id
+                                );
+                                setDraggedId(
+                                  method.id
+                                );
+                              }}
+                              onDragEnd={() =>
+                                setDraggedId(
+                                  null
+                                )
+                              }
+                            >
+                              ≡
+                            </button>
+
+                            <div className="pap-order-badge">
+                              {index + 1}
+                            </div>
 
                             <div className="pap-name">
 
@@ -562,7 +644,9 @@ export default function PaymentsAdminPage() {
                           </div>
 
                           <div className="pap-provider">
-                            {method.provider}
+                            {providerLabel(
+                              method.provider
+                            )}
                           </div>
 
                         </div>
@@ -578,22 +662,6 @@ export default function PaymentsAdminPage() {
                         </div>
 
                         <div className="pap-meta">
-
-                          <div className="pap-meta-item">
-
-                            <span>
-                              Ordre
-                            </span>
-
-                            <strong>
-
-                              #
-                              {method.sortOrder ??
-                                "—"}
-
-                            </strong>
-
-                          </div>
 
                           <div className="pap-meta-item">
 
