@@ -48,9 +48,26 @@ type ProductAddon = {
 ===================================================== */
 const LANGS: Lang[] = ["fr", "en", "es", "de", "it", "nl", "pt"];
 
+const LANG_META: Record<
+  Lang,
+  {
+    flag: string;
+    label: string;
+    code: string;
+  }
+> = {
+  fr: { flag: "🇫🇷", label: "France", code: "FR" },
+  en: { flag: "🇬🇧", label: "Angleterre", code: "EN" },
+  es: { flag: "🇪🇸", label: "Espagne", code: "ES" },
+  de: { flag: "🇩🇪", label: "Allemagne", code: "DE" },
+  it: { flag: "🇮🇹", label: "Italie", code: "IT" },
+  nl: { flag: "🇳🇱", label: "Pays-Bas", code: "NL" },
+  pt: { flag: "🇵🇹", label: "Portugal", code: "PT" },
+};
+
 const MARKETS: { code: Market; label: string; currency: Currency }[] = [
   { code: "FR", label: "France", currency: "EUR" },
-  { code: "EN", label: "English market", currency: "EUR" },
+  { code: "EN", label: "Angleterre", currency: "EUR" },
   { code: "BE", label: "Belgique", currency: "EUR" },
   { code: "DE", label: "Allemagne", currency: "EUR" },
   { code: "AT", label: "Autriche", currency: "EUR" },
@@ -329,72 +346,108 @@ export default function ProductEditForm({
   ===================================================== */
   return (
     <form onSubmit={handleSave} className="admin-form">
-      <h2 className="admin-section-title">Modifier le produit</h2>
+      <div className="pf-form-head">
+        <div>
+          <h2 className="admin-section-title">Contenu produit</h2>
+          <p className="pf-form-note">
+            Modifiez les textes, prix, variantes et options par pays.
+          </p>
+        </div>
+      </div>
 
       {/* LANG */}
       <div className="admin-lang-tabs">
-        {LANGS.map((l) => (
-          <button
-            key={l}
-            type="button"
-            className={activeLang === l ? "active" : ""}
-            onClick={() => setActiveLang(l)}
-          >
-            {l.toUpperCase()}
-          </button>
-        ))}
+        {LANGS.map((l) => {
+          const meta = LANG_META[l];
+
+          return (
+            <button
+              key={l}
+              type="button"
+              className={activeLang === l ? "active" : ""}
+              onClick={() => setActiveLang(l)}
+            >
+              <span className="pf-lang-flag">
+                {meta.flag}
+              </span>
+
+              <span className="pf-lang-content">
+                <span className="pf-lang-label">
+                  {meta.label}
+                </span>
+
+                <span className="pf-lang-code">
+                  {meta.code}
+                </span>
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      <label className="admin-label">Nom</label>
-      <input
-        className="admin-input"
-        value={name[activeLang]}
-        onChange={(e) =>
-          setName((p) => ({ ...p, [activeLang]: e.target.value }))
-        }
-      />
+      <section className="pf-card pf-card-compact">
+        <div className="pf-field-grid">
+          <div className="pf-field">
+            <label className="admin-label">Nom</label>
+            <input
+              className="admin-input"
+              value={name[activeLang]}
+              onChange={(e) =>
+                setName((p) => ({ ...p, [activeLang]: e.target.value }))
+              }
+            />
+          </div>
 
-      <label className="admin-label">Description</label>
-      <textarea
-        className="admin-textarea"
-        rows={5}
-        value={description[activeLang]}
-        onChange={(e) =>
-          setDescription((p) => ({ ...p, [activeLang]: e.target.value }))
-        }
-      />
+          <div className="pf-field">
+            <label className="admin-label">Image URL</label>
+            <input
+              className="admin-input"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+            />
+          </div>
 
-      <label className="admin-label">Image URL</label>
-      <input
-        className="admin-input"
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-      />
+          <div className="pf-field pf-field-wide">
+            <label className="admin-label">Description</label>
+            <textarea
+              className="admin-textarea"
+              rows={4}
+              value={description[activeLang]}
+              onChange={(e) =>
+                setDescription((p) => ({ ...p, [activeLang]: e.target.value }))
+              }
+            />
+          </div>
 
-      {/* Gestion du stock pour cet article */}
-      <label className="admin-switch">
-        <input
-          type="checkbox"
-          checked={manageStock}
-          onChange={(e) => setManageStock(e.target.checked)}
-        />
-        Gestion du stock pour cet article
-      </label>
+          <div className="pf-field">
+            <label className="admin-switch">
+              <input
+                type="checkbox"
+                checked={manageStock}
+                onChange={(e) => setManageStock(e.target.checked)}
+              />
+              Gestion du stock
+            </label>
+          </div>
 
-      <label className="admin-label">
-        Stock {manageStock ? "" : "(ignoré si gestion désactivée)"}
-      </label>
-      <input
-        type="number"
-        className="admin-input"
-        value={stock}
-        onChange={(e) => setStock(Number(e.target.value))}
-        disabled={!manageStock}
-      />
+          <div className="pf-field">
+            <label className="admin-label">
+              Stock {manageStock ? "" : "(ignoré)"}
+            </label>
+            <input
+              type="number"
+              className="admin-input"
+              value={stock}
+              onChange={(e) => setStock(Number(e.target.value))}
+              disabled={!manageStock}
+            />
+          </div>
+        </div>
+      </section>
 
       {/* VARIANTES */}
       <section className="pf-card">
-        <h3>🎨 Variantes (couleurs / matières)</h3>
+        <h3>Variantes</h3>
 
         {variants.length === 0 && (
           <p className="pf-help">
@@ -585,7 +638,7 @@ export default function ProductEditForm({
 
       {/* OPTIONS / HOUSSES */}
       <section className="pf-card">
-        <h3>🧺 Options / Housses</h3>
+        <h3>Options / Housses</h3>
 
         {addons.length === 0 && (
           <p className="pf-help">
@@ -776,7 +829,7 @@ export default function ProductEditForm({
 
       {/* PRIX + TVA PRODUIT */}
       <section className="pf-card">
-        <h3>🌍 Prix & TVA par pays (produit)</h3>
+        <h3>Prix & TVA par pays</h3>
 
         <div className="pf-table">
           <div className="pf-row pf-head">
@@ -886,7 +939,7 @@ export default function ProductEditForm({
           Annuler
         </button>
         <button className="btn btn-primary" disabled={loading}>
-          {loading ? "Enregistrement…" : "💾 Enregistrer"}
+          {loading ? "Enregistrement…" : "Enregistrer"}
         </button>
       </div>
     </form>

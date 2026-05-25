@@ -752,3 +752,349 @@
       100%;
   }
 }
+
+/* =====================================================
+   PRODUCT EDIT — ADMIN DA ALIGNMENT
+===================================================== */
+
+.pf-form-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pf-form-head .admin-section-title {
+  margin-bottom: .25rem;
+  font-size: 1.1rem;
+  letter-spacing: 0;
+  line-height: 1.1;
+  text-shadow: none;
+}
+
+.pf-form-note {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: .78rem;
+  line-height: 1.45;
+}
+
+.admin-lang-tabs {
+  gap: .75rem;
+  margin-bottom: 1rem;
+}
+
+.admin-lang-tabs button {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  min-height: 58px;
+  padding: 0 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.82);
+  backdrop-filter: blur(14px);
+  letter-spacing: 0;
+  box-shadow: none;
+}
+
+.admin-lang-tabs button::before,
+.admin-lang-tabs button.active::after {
+  display: none;
+}
+
+.admin-lang-tabs button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0,208,255,.16);
+  background: rgba(255,255,255,.06);
+}
+
+.admin-lang-tabs button.active {
+  border-color: rgba(0,208,255,.24);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.18),
+      rgba(37,99,235,.16)
+    );
+  color: white;
+  box-shadow: 0 16px 38px rgba(0,208,255,.12);
+}
+
+.pf-lang-flag {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.pf-lang-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .12rem;
+}
+
+.pf-lang-label {
+  font-size: .82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.pf-lang-code {
+  color: rgba(148,163,184,.72);
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+.pf-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.025);
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.pf-card::before,
+.pf-card::after {
+  display: none;
+}
+
+.pf-card:hover {
+  transform: none;
+  border-color: rgba(255,255,255,.10);
+  box-shadow: none;
+}
+
+.pf-card h3 {
+  margin: 0 0 .75rem;
+  font-size: .82rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.pf-card-compact {
+  margin-top: 0;
+}
+
+.pf-field-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: .85rem;
+  align-items: end;
+}
+
+.pf-field {
+  min-width: 0;
+}
+
+.pf-field:nth-child(1) {
+  grid-column: span 4;
+}
+
+.pf-field:nth-child(2) {
+  grid-column: span 6;
+}
+
+.pf-field:nth-child(4) {
+  grid-column: span 3;
+}
+
+.pf-field:nth-child(5) {
+  grid-column: span 2;
+}
+
+.pf-field-wide {
+  grid-column: 1 / -1;
+}
+
+.pf-field .admin-label,
+.pf-field .admin-switch,
+.admin-form > .admin-label,
+.admin-form > .admin-switch {
+  margin: 0 0 .45rem;
+}
+
+.pf-field .admin-switch {
+  min-height: 42px;
+  margin: 0;
+  padding: 0 .75rem;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 8px;
+  background: rgba(255,255,255,.025);
+  white-space: nowrap;
+}
+
+.edit-product-card .admin-input,
+.edit-product-card .admin-textarea,
+.pf-row input,
+.pf-row select {
+  min-height: 38px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.035);
+  font-size: .82rem;
+  box-sizing: border-box;
+}
+
+.edit-product-card .admin-textarea {
+  min-height: 110px;
+}
+
+.pf-table {
+  gap: 0;
+  overflow-x: auto;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 8px;
+}
+
+.pf-row {
+  min-width: 760px;
+  grid-template-columns:
+    minmax(180px, 1.5fr)
+    70px
+    minmax(110px, .8fr)
+    70px
+    minmax(90px, .7fr)
+    70px;
+  gap: .55rem;
+  padding: .55rem .65rem;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  align-items: center;
+}
+
+.pf-row:last-child {
+  border-bottom: 0;
+}
+
+.pf-row:hover {
+  transform: none;
+  background: rgba(255,255,255,.03);
+}
+
+.pf-head {
+  padding: .55rem .65rem;
+  background: rgba(255,255,255,.025);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  font-size: .66rem;
+}
+
+.pf-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  justify-self: center;
+}
+
+.pf-variant-block,
+.pf-addon-block {
+  display: grid;
+  gap: .7rem;
+  margin-bottom: .8rem;
+  padding: .8rem;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  background: rgba(255,255,255,.018);
+}
+
+.pf-variant-row,
+.pf-addon-row {
+  min-width: 0;
+  grid-template-columns:
+    minmax(140px, 180px)
+    minmax(220px, 1fr)
+    minmax(280px, 1.35fr)
+    38px;
+  padding: 0;
+  border: 0;
+  align-items: end;
+}
+
+.pf-variant-remove,
+.pf-addon-remove {
+  width: 38px;
+  min-height: 38px;
+  padding: 0;
+  border-radius: 8px;
+}
+
+.pf-variant-add,
+.pf-addon-add {
+  min-height: 38px;
+  border-radius: 8px;
+}
+
+.pf-variant-row:hover,
+.pf-addon-row:hover {
+  background: transparent;
+}
+
+.pf-help {
+  margin: -.25rem 0 .75rem;
+  font-size: .74rem;
+}
+
+.admin-form-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+
+@media (max-width: 900px) {
+  .pf-field-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .pf-field:nth-child(1),
+  .pf-field:nth-child(2) {
+    grid-column: span 3;
+  }
+
+  .pf-field:nth-child(4) {
+    grid-column: span 4;
+  }
+
+  .pf-field:nth-child(5) {
+    grid-column: span 2;
+  }
+
+  .pf-variant-row,
+  .pf-addon-row {
+    grid-template-columns:
+      minmax(120px, 160px)
+      minmax(180px, 1fr)
+      minmax(220px, 1.2fr)
+      38px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-lang-tabs button {
+    width: auto;
+    min-width: calc(50% - .4rem);
+    flex: 1;
+  }
+
+  .pf-card {
+    padding: .85rem;
+  }
+
+  .pf-field-grid,
+  .pf-variant-row,
+  .pf-addon-row {
+    grid-template-columns: 1fr;
+  }
+
+  .pf-field:nth-child(1),
+  .pf-field:nth-child(2),
+  .pf-field:nth-child(4),
+  .pf-field:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+
+  .pf-variant-remove,
+  .pf-addon-remove {
+    width: 100%;
+  }
+}

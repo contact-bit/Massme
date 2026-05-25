@@ -247,6 +247,10 @@ export async function GET(
               o?.invoiceEmail ??
               null,
 
+            deliveryNote:
+              o?.deliveryNote ??
+              null,
+
             emails:
               o?.emails ??
               null,

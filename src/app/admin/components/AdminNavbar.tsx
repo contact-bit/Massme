@@ -10,7 +10,6 @@ import {
   Truck,
   CreditCard,
   Star,
-  FileDown,
   Menu,
   X,
   LogOut,
@@ -124,12 +123,6 @@ export default function AdminNavbar() {
         icon: <Star size={17} />,
       },
 
-      {
-        href: "/admin/export",
-        label: "Exports",
-        short: "Exports",
-        icon: <FileDown size={17} />,
-      },
     ];
   }, [role]);
 

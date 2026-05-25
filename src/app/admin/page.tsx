@@ -751,6 +751,13 @@ export default function AdminDashboardPage() {
           )}
 
           <a
+            className="btn-secondary"
+            href="/admin/export"
+          >
+            Exports
+          </a>
+
+          <a
             className="btn-primary"
             href="/admin/orders"
           >

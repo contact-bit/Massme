@@ -44,6 +44,12 @@ type ContactDraft = {
   phone: string;
 };
 
+type DeliveryNoteDraft = {
+  packageCount: string;
+  weight: string;
+  instructions: string;
+};
+
 /* =========================================================
    DATE SAFE
 ========================================================= */
@@ -97,6 +103,17 @@ function addressToDraft(value: any): AddressDraft {
     postalCode: value?.postalCode || "",
     city: value?.city || "",
     country: value?.country || "",
+  };
+}
+
+function deliveryNoteToDraft(value: any): DeliveryNoteDraft {
+  return {
+    packageCount:
+      value?.packageCount == null
+        ? ""
+        : String(value.packageCount),
+    weight: value?.weight || "",
+    instructions: value?.instructions || "",
   };
 }
 
@@ -186,6 +203,24 @@ export function OrderDetails({
 
   const [, setFeeTick] = useState(0);
 
+  const [localDeliveryNote, setLocalDeliveryNote] =
+    useState(
+      (order as any)?.deliveryNote || null
+    );
+
+  const [editingDeliveryNote, setEditingDeliveryNote] =
+    useState(false);
+
+  const [deliveryNoteDraft, setDeliveryNoteDraft] =
+    useState<DeliveryNoteDraft>(
+      deliveryNoteToDraft(
+        (order as any)?.deliveryNote || null
+      )
+    );
+
+  const [savingDeliveryNote, setSavingDeliveryNote] =
+    useState(false);
+
   /* =========================================================
      SYNC REVIEW
   ========================================================= */
@@ -221,6 +256,10 @@ export function OrderDetails({
         (order as any)?.billingAddress?.phone ||
         ""
     );
+
+    setLocalDeliveryNote(
+      (order as any)?.deliveryNote || null
+    );
   }, [order]);
 
   const review =
@@ -244,6 +283,11 @@ export function OrderDetails({
     localBillingAddress ||
     (order as any)?.billingAddress ||
     shippingAddress;
+
+  const deliveryNote =
+    localDeliveryNote ||
+    (order as any)?.deliveryNote ||
+    null;
 
   /* =========================================================
      LIVE TIMER
@@ -695,6 +739,70 @@ const heardFromLabelMap: Record<string, string> = {
     }
   }
 
+  function startDeliveryNoteEdit() {
+    setDeliveryNoteDraft(
+      deliveryNoteToDraft(deliveryNote)
+    );
+    setEditingDeliveryNote(true);
+  }
+
+  function updateDeliveryNoteDraft(
+    key: keyof DeliveryNoteDraft,
+    value: string
+  ) {
+    setDeliveryNoteDraft((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  }
+
+  async function saveDeliveryNote() {
+    try {
+      setSavingDeliveryNote(true);
+
+      const pass =
+        localStorage.getItem(
+          "admin_password"
+        ) || "";
+
+      const res = await fetch(
+        `/api/admin/orders/${encodeURIComponent(
+          order.id
+        )}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+            "x-admin-password": pass,
+          },
+          body: JSON.stringify({
+            deliveryNote: deliveryNoteDraft,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.ok) {
+        throw new Error(
+          data?.error ||
+            "delivery_note_update_failed"
+        );
+      }
+
+      setLocalDeliveryNote(data.deliveryNote);
+      (order as any).deliveryNote =
+        data.deliveryNote;
+      setEditingDeliveryNote(false);
+    } catch (e) {
+      console.error(e);
+      alert("❌ Erreur mise à jour BL");
+    } finally {
+      setSavingDeliveryNote(false);
+    }
+  }
+
   function renderAddressEditor(kind: AddressKind) {
     return (
       <div className="od-address-form">
@@ -755,6 +863,12 @@ const heardFromLabelMap: Record<string, string> = {
 
   function invoiceHref(mode: "preview" | "download") {
     return `/api/admin/orders/invoice?orderId=${encodeURIComponent(
+      order.id
+    )}&mode=${mode}`;
+  }
+
+  function deliveryNoteHref(mode: "preview" | "download") {
+    return `/api/admin/orders/delivery-note?orderId=${encodeURIComponent(
       order.id
     )}&mode=${mode}`;
   }
@@ -1508,6 +1622,146 @@ const heardFromLabelMap: Record<string, string> = {
                     : "Envoyer"}
                 </button>
               </div>
+
+            </div>
+
+            {/* DELIVERY NOTE */}
+
+            <div className="od-meta-card">
+              <div className="od-meta-card-title">
+                Bon de livraison
+              </div>
+
+              {editingDeliveryNote ? (
+                <div className="od-delivery-form">
+                  <label className="od-address-field">
+                    <span>Colis</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={deliveryNoteDraft.packageCount}
+                      onChange={(e) =>
+                        updateDeliveryNoteDraft(
+                          "packageCount",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label className="od-address-field">
+                    <span>Poids</span>
+                    <input
+                      value={deliveryNoteDraft.weight}
+                      placeholder="Ex : 1,2 kg"
+                      onChange={(e) =>
+                        updateDeliveryNoteDraft(
+                          "weight",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label className="od-address-field od-delivery-wide">
+                    <span>Consignes</span>
+                    <textarea
+                      value={deliveryNoteDraft.instructions}
+                      placeholder="Consignes de préparation ou d'impression..."
+                      onChange={(e) =>
+                        updateDeliveryNoteDraft(
+                          "instructions",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </label>
+
+                  <div className="od-inline-actions">
+                    <button
+                      className="btn-primary"
+                      disabled={savingDeliveryNote}
+                      onClick={saveDeliveryNote}
+                    >
+                      {savingDeliveryNote
+                        ? "Enregistrement..."
+                        : "Enregistrer"}
+                    </button>
+
+                    <button
+                      className="btn-secondary"
+                      disabled={savingDeliveryNote}
+                      onClick={() =>
+                        setEditingDeliveryNote(false)
+                      }
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="od-meta-row">
+                    <div className="od-meta-label">
+                      Colis
+                    </div>
+
+                    <div className="od-meta-value">
+                      {deliveryNote?.packageCount ?? "—"}
+                    </div>
+                  </div>
+
+                  <div className="od-meta-row">
+                    <div className="od-meta-label">
+                      Poids
+                    </div>
+
+                    <div className="od-meta-value">
+                      {deliveryNote?.weight || "—"}
+                    </div>
+                  </div>
+
+                  <div className="od-meta-row">
+                    <div className="od-meta-label">
+                      Consignes
+                    </div>
+
+                    <div className="od-meta-value">
+                      {deliveryNote?.instructions
+                        ? deliveryNote.instructions.slice(
+                            0,
+                            80
+                          )
+                        : "—"}
+                    </div>
+                  </div>
+
+                  <div className="od-inline-actions">
+                    <button
+                      className="btn-secondary"
+                      onClick={startDeliveryNoteEdit}
+                    >
+                      Éditer BL
+                    </button>
+
+                    <a
+                      className="btn-secondary"
+                      href={deliveryNoteHref("preview")}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Prévisualiser
+                    </a>
+
+                    <a
+                      className="btn-secondary"
+                      href={deliveryNoteHref("download")}
+                    >
+                      Télécharger
+                    </a>
+                  </div>
+                </>
+              )}
 
             </div>
 

@@ -189,6 +189,78 @@ if (roleOrResponse instanceof Response) {
       });
     }
 
+    if (
+      body?.deliveryNote &&
+      typeof body.deliveryNote === "object"
+    ) {
+      const packageCountRaw =
+        body.deliveryNote.packageCount;
+
+      const packageCount =
+        packageCountRaw === "" ||
+        packageCountRaw == null
+          ? null
+          : Math.max(
+              0,
+              Math.round(
+                Number(packageCountRaw)
+              )
+            );
+
+      if (
+        packageCountRaw !== "" &&
+        packageCountRaw != null &&
+        !Number.isFinite(
+          Number(packageCountRaw)
+        )
+      ) {
+        return NextResponse.json(
+          { error: "Invalid package count" },
+          { status: 400 }
+        );
+      }
+
+      const deliveryNote = {
+        packageCount,
+        weight:
+          typeof body.deliveryNote.weight ===
+          "string"
+            ? body.deliveryNote.weight
+                .trim()
+                .slice(0, 80)
+            : "",
+        instructions:
+          typeof body.deliveryNote.instructions ===
+          "string"
+            ? body.deliveryNote.instructions
+                .trim()
+                .slice(0, 800)
+            : "",
+        updatedAt: new Date(),
+        updatedBy:
+          role === "logistics"
+            ? "logistics_manual"
+            : "admin_manual",
+      };
+
+      await dbAdmin.collection("pending_orders").doc(id).set(
+        { deliveryNote },
+        { merge: true }
+      );
+
+      try {
+        await dbAdmin.collection("orders").doc(id).set(
+          { deliveryNote },
+          { merge: true }
+        );
+      } catch {}
+
+      return NextResponse.json({
+        ok: true,
+        deliveryNote,
+      });
+    }
+
     const { shippingStatus, trackingNumber, carrier } = body as {
       shippingStatus?: "pending" | "preparing" | "shipped" | "delivered" | "cancelled";
       trackingNumber?: string | null;

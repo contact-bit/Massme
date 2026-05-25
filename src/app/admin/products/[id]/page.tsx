@@ -63,24 +63,11 @@ export default function EditProductPage({
   return (
     <main className="edit-product-page">
 
-      {/* BG */}
-      <div className="edit-product-grid" />
-
-      <div className="edit-product-glow glow-1" />
-
-      <div className="edit-product-glow glow-2" />
-
       {/* CONTAINER */}
       <div className="edit-product-container">
 
-        {/* HERO */}
-        <section className="edit-product-hero">
-
-          <div className="edit-product-kicker">
-            Product Management
-          </div>
-
-          <div className="edit-product-head">
+        {/* HEADER */}
+        <section className="edit-product-head">
 
             <div>
 
@@ -89,8 +76,7 @@ export default function EditProductPage({
               </h1>
 
               <p className="edit-product-description">
-                Édition avancée du produit
-                et gestion complète du contenu.
+                Produit #{id}
               </p>
 
             </div>
@@ -110,55 +96,10 @@ export default function EditProductPage({
               Retour
             </button>
 
-          </div>
-
-        </section>
-
-        {/* PRODUCT META */}
-        <section className="edit-product-meta">
-
-          <div className="edit-meta-card">
-
-            <div className="edit-meta-label">
-              Product ID
-            </div>
-
-            <div className="edit-meta-value mono">
-              {id}
-            </div>
-
-          </div>
-
-          <div className="edit-meta-card">
-
-            <div className="edit-meta-label">
-              Status
-            </div>
-
-            <div className="edit-meta-value success">
-              Active
-            </div>
-
-          </div>
-
-          <div className="edit-meta-card">
-
-            <div className="edit-meta-label">
-              Environment
-            </div>
-
-            <div className="edit-meta-value">
-              Production
-            </div>
-
-          </div>
-
         </section>
 
         {/* CONTENT */}
         <section className="edit-product-card">
-
-          <div className="edit-product-card-glow" />
 
           <div className="edit-product-card-content">
 

@@ -95,6 +95,14 @@ export type Order = {
 
   relayPoint?: RelayPoint | null;
 
+  deliveryNote?: {
+    packageCount?: number | string | null;
+    weight?: string | null;
+    instructions?: string | null;
+    updatedAt?: any;
+    updatedBy?: string | null;
+  } | null;
+
   shippingStatus?: ShippingStatus;
   trackingNumber?: string | null;
   carrier?: "mondialrelay" | "other" | null;

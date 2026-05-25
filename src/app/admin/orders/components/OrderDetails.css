@@ -553,6 +553,19 @@
     rgba(2,6,23,.42);
 }
 
+.od-address-field textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: .35rem .4rem;
+  color: rgba(248,250,252,.92);
+  font-size: .64rem;
+  line-height: 1.25;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: .25rem;
+  background: rgba(2,6,23,.42);
+  resize: vertical;
+}
+
 .od-address-field input:focus {
   outline:
     none;
@@ -891,10 +904,22 @@
   display: grid;
 
   grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+    repeat(3, minmax(0, 1fr));
 
   gap:
     .35rem;
+}
+
+.od-delivery-form {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: .25rem;
+  padding: .28rem .35rem .05rem;
+}
+
+.od-delivery-wide {
+  grid-column: 1 / -1;
 }
 
 /* =========================================================
