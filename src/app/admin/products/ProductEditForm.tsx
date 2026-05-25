@@ -28,6 +28,7 @@ type VatConfig = {
 type ProductVariant = {
   id: string;
   label: string;
+  description: string;
   imageUrl: string;
   markets: Market[];
   pricesByMarket: Record<Market, string>;
@@ -37,6 +38,7 @@ type ProductVariant = {
 type ProductAddon = {
   id: string;
   label: string;
+  description: string;
   imageUrl: string;
   markets: Market[];
   pricesByMarket: Record<Market, string>;
@@ -121,8 +123,6 @@ export default function ProductEditForm({
     deliveryPackageCount,
     setDeliveryPackageCount,
   ] = useState("1");
-  const [stock, setStock] = useState(0);
-  const [manageStock, setManageStock] = useState<boolean>(true); // ✅ gestion du stock pour cet article
   const [isActive, setIsActive] = useState(true);
 
   const [name, setName] = useState<Record<Lang, string>>(emptyLangRecord);
@@ -147,10 +147,6 @@ export default function ProductEditForm({
     setWeightKg(String(product.weightKg ?? ""));
     setDeliveryPackageCount(
       String(product.deliveryPackageCount ?? 1)
-    );
-    setStock(product.stock ?? 0);
-    setManageStock(
-      typeof product.manageStock === "boolean" ? product.manageStock : true
     );
     setIsActive(product.isActive ?? true);
 
@@ -193,6 +189,7 @@ export default function ProductEditForm({
             return {
               id: String(vv.id || ""),
               label: String(vv.label || ""),
+              description: String(vv.description || ""),
               imageUrl: String(vv.imageUrl || ""),
               markets: vm,
               pricesByMarket: vp,
@@ -221,6 +218,7 @@ export default function ProductEditForm({
             return {
               id: String(aa.id || ""),
               label: String(aa.label || ""),
+              description: String(aa.description || ""),
               imageUrl: String(aa.imageUrl || ""),
               markets: am,
               pricesByMarket: ap,
@@ -250,8 +248,6 @@ export default function ProductEditForm({
           imageUrl: imageUrl || null,
           weightKg,
           deliveryPackageCount,
-          stock,
-          manageStock, // ✅ envoyé au backend
           isActive,
           markets,
           pricesByMarket: Object.fromEntries(
@@ -276,6 +272,7 @@ export default function ProductEditForm({
             .map((v) => ({
               id: v.id,
               label: v.label,
+              description: v.description,
               imageUrl: v.imageUrl,
               markets: v.markets,
               pricesByMarket: Object.fromEntries(
@@ -304,6 +301,7 @@ export default function ProductEditForm({
             .map((a) => ({
               id: a.id,
               label: a.label,
+              description: a.description,
               imageUrl: a.imageUrl,
               markets: a.markets,
               pricesByMarket: Object.fromEntries(
@@ -431,17 +429,6 @@ export default function ProductEditForm({
           </div>
 
           <div className="pf-field">
-            <label className="admin-switch">
-              <input
-                type="checkbox"
-                checked={manageStock}
-                onChange={(e) => setManageStock(e.target.checked)}
-              />
-              Gestion du stock
-            </label>
-          </div>
-
-          <div className="pf-field">
             <label className="admin-label">
               Poids unitaire (kg)
             </label>
@@ -453,19 +440,6 @@ export default function ProductEditForm({
               onChange={(e) =>
                 setWeightKg(e.target.value)
               }
-            />
-          </div>
-
-          <div className="pf-field">
-            <label className="admin-label">
-              Stock {manageStock ? "" : "(ignoré)"}
-            </label>
-            <input
-              type="number"
-              className="admin-input"
-              value={stock}
-              onChange={(e) => setStock(Number(e.target.value))}
-              disabled={!manageStock}
             />
           </div>
 
@@ -503,37 +477,49 @@ export default function ProductEditForm({
         <div className="pf-variants-list">
           {variants.map((v, idx) => (
             <div key={idx} className="pf-variant-block">
-              <div className="pf-row pf-variant-row">
-                <input
-                  className="admin-input pf-variant-id"
-                  placeholder="ID interne"
-                  value={v.id}
-                  onChange={(e) => {
-                    const copy = [...variants];
-                    copy[idx] = { ...copy[idx], id: e.target.value };
-                    setVariants(copy);
-                  }}
-                />
-                <input
-                  className="admin-input pf-variant-label"
-                  placeholder="Label affiché"
-                  value={v.label}
-                  onChange={(e) => {
-                    const copy = [...variants];
-                    copy[idx] = { ...copy[idx], label: e.target.value };
-                    setVariants(copy);
-                  }}
-                />
-                <input
-                  className="admin-input pf-variant-image"
-                  placeholder="Image URL"
-                  value={v.imageUrl}
-                  onChange={(e) => {
-                    const copy = [...variants];
-                    copy[idx] = { ...copy[idx], imageUrl: e.target.value };
-                    setVariants(copy);
-                  }}
-                />
+              <div className="pf-option-head">
+                <label className="pf-option-field compact">
+                  <span>ID interne</span>
+                  <input
+                    className="admin-input pf-variant-id"
+                    placeholder="bambou"
+                    value={v.id}
+                    onChange={(e) => {
+                      const copy = [...variants];
+                      copy[idx] = { ...copy[idx], id: e.target.value };
+                      setVariants(copy);
+                    }}
+                  />
+                </label>
+
+                <label className="pf-option-field">
+                  <span>Nom affiché sur la boutique</span>
+                  <input
+                    className="admin-input pf-variant-label"
+                    placeholder="Housse bambou"
+                    value={v.label}
+                    onChange={(e) => {
+                      const copy = [...variants];
+                      copy[idx] = { ...copy[idx], label: e.target.value };
+                      setVariants(copy);
+                    }}
+                  />
+                </label>
+
+                <label className="pf-option-field">
+                  <span>Image de la variante</span>
+                  <input
+                    className="admin-input pf-variant-image"
+                    placeholder="https://..."
+                    value={v.imageUrl}
+                    onChange={(e) => {
+                      const copy = [...variants];
+                      copy[idx] = { ...copy[idx], imageUrl: e.target.value };
+                      setVariants(copy);
+                    }}
+                  />
+                </label>
+
                 <button
                   type="button"
                   className="btn btn-ghost pf-variant-remove"
@@ -545,7 +531,21 @@ export default function ProductEditForm({
                 </button>
               </div>
 
-              {/* Prix & TVA par pays pour cette variante */}
+              <label className="pf-option-field pf-option-description">
+                <span>Description affichée sur la boutique</span>
+                <textarea
+                  className="admin-textarea"
+                  rows={2}
+                  placeholder="Texte court pour expliquer cette variante au client."
+                  value={v.description}
+                  onChange={(e) => {
+                    const copy = [...variants];
+                    copy[idx] = { ...copy[idx], description: e.target.value };
+                    setVariants(copy);
+                  }}
+                />
+              </label>
+
               <div className="pf-table pf-table-variant">
                 <div className="pf-row pf-head">
                   <span>Pays</span>
@@ -553,6 +553,7 @@ export default function ProductEditForm({
                   <span>Prix HT</span>
                   <span>TVA</span>
                   <span>Taux %</span>
+                  <span>Prix TTC</span>
                   <span>Devise</span>
                 </div>
 
@@ -562,6 +563,9 @@ export default function ProductEditForm({
                 ).map((m) => {
                   const active = v.markets.includes(m.code);
                   const vat = v.vatByMarket[m.code];
+                  const priceHT = toNumber(v.pricesByMarket[m.code]);
+                  const vatRate = vat?.enabled ? toNumber(vat.rate) : 0;
+                  const priceTTC = priceHT + (priceHT * vatRate) / 100;
 
                   return (
                     <div key={m.code} className="pf-row">
@@ -651,6 +655,12 @@ export default function ProductEditForm({
                         }}
                       />
 
+                      <strong>
+                        {active && priceHT
+                          ? priceTTC.toFixed(2).replace(".", ",")
+                          : "—"}
+                      </strong>
+
                       <span>{m.currency}</span>
                     </div>
                   );
@@ -669,6 +679,7 @@ export default function ProductEditForm({
               {
                 id: "",
                 label: "",
+                description: "",
                 imageUrl: "",
                 markets: [],
                 pricesByMarket: {} as any,
@@ -694,37 +705,49 @@ export default function ProductEditForm({
         <div className="pf-addons-list">
           {addons.map((a, idx) => (
             <div key={idx} className="pf-addon-block">
-              <div className="pf-row pf-addon-row">
-                <input
-                  className="admin-input pf-addon-id"
-                  placeholder="ID interne"
-                  value={a.id}
-                  onChange={(e) => {
-                    const copy = [...addons];
-                    copy[idx] = { ...copy[idx], id: e.target.value };
-                    setAddons(copy);
-                  }}
-                />
-                <input
-                  className="admin-input pf-addon-label"
-                  placeholder="Label affiché"
-                  value={a.label}
-                  onChange={(e) => {
-                    const copy = [...addons];
-                    copy[idx] = { ...copy[idx], label: e.target.value };
-                    setAddons(copy);
-                  }}
-                />
-                <input
-                  className="admin-input pf-addon-image"
-                  placeholder="Image URL"
-                  value={a.imageUrl}
-                  onChange={(e) => {
-                    const copy = [...addons];
-                    copy[idx] = { ...copy[idx], imageUrl: e.target.value };
-                    setAddons(copy);
-                  }}
-                />
+              <div className="pf-option-head">
+                <label className="pf-option-field compact">
+                  <span>ID interne</span>
+                  <input
+                    className="admin-input pf-addon-id"
+                    placeholder="housse-bambou"
+                    value={a.id}
+                    onChange={(e) => {
+                      const copy = [...addons];
+                      copy[idx] = { ...copy[idx], id: e.target.value };
+                      setAddons(copy);
+                    }}
+                  />
+                </label>
+
+                <label className="pf-option-field">
+                  <span>Nom affiché sur la boutique</span>
+                  <input
+                    className="admin-input pf-addon-label"
+                    placeholder="Housse en fibres de bambou"
+                    value={a.label}
+                    onChange={(e) => {
+                      const copy = [...addons];
+                      copy[idx] = { ...copy[idx], label: e.target.value };
+                      setAddons(copy);
+                    }}
+                  />
+                </label>
+
+                <label className="pf-option-field">
+                  <span>Image de l’option</span>
+                  <input
+                    className="admin-input pf-addon-image"
+                    placeholder="https://..."
+                    value={a.imageUrl}
+                    onChange={(e) => {
+                      const copy = [...addons];
+                      copy[idx] = { ...copy[idx], imageUrl: e.target.value };
+                      setAddons(copy);
+                    }}
+                  />
+                </label>
+
                 <button
                   type="button"
                   className="btn btn-ghost pf-addon-remove"
@@ -736,7 +759,21 @@ export default function ProductEditForm({
                 </button>
               </div>
 
-              {/* Prix & TVA par pays pour cet addon */}
+              <label className="pf-option-field pf-option-description">
+                <span>Description affichée sur la boutique</span>
+                <textarea
+                  className="admin-textarea"
+                  rows={2}
+                  placeholder="Texte court pour expliquer cette option au client."
+                  value={a.description}
+                  onChange={(e) => {
+                    const copy = [...addons];
+                    copy[idx] = { ...copy[idx], description: e.target.value };
+                    setAddons(copy);
+                  }}
+                />
+              </label>
+
               <div className="pf-table pf-table-addon">
                 <div className="pf-row pf-head">
                   <span>Pays</span>
@@ -744,6 +781,7 @@ export default function ProductEditForm({
                   <span>Prix HT</span>
                   <span>TVA</span>
                   <span>Taux %</span>
+                  <span>Prix TTC</span>
                   <span>Devise</span>
                 </div>
 
@@ -753,6 +791,9 @@ export default function ProductEditForm({
                 ).map((m) => {
                   const active = a.markets.includes(m.code);
                   const vat = a.vatByMarket[m.code];
+                  const priceHT = toNumber(a.pricesByMarket[m.code]);
+                  const vatRate = vat?.enabled ? toNumber(vat.rate) : 0;
+                  const priceTTC = priceHT + (priceHT * vatRate) / 100;
 
                   return (
                     <div key={m.code} className="pf-row">
@@ -842,6 +883,12 @@ export default function ProductEditForm({
                         }}
                       />
 
+                      <strong>
+                        {active && priceHT
+                          ? priceTTC.toFixed(2).replace(".", ",")
+                          : "—"}
+                      </strong>
+
                       <span>{m.currency}</span>
                     </div>
                   );
@@ -860,6 +907,7 @@ export default function ProductEditForm({
               {
                 id: "",
                 label: "",
+                description: "",
                 imageUrl: "",
                 markets: [],
                 pricesByMarket: {} as any,

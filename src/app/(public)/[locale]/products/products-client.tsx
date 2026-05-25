@@ -127,6 +127,7 @@ type VatConfig = {
 type ProductVariant = {
   id: string;
   label: string;
+  description?: string;
   imageUrl?: string;
   markets: Market[];
   pricesByMarket: Record<Market, number>;
@@ -136,6 +137,7 @@ type ProductVariant = {
 type ProductAddon = {
   id: string;
   label: string;
+  description?: string;
   imageUrl?: string;
   markets: Market[];
   pricesByMarket: Record<Market, number>;
@@ -466,7 +468,12 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
                           />
                         </span>
                       )}
-                      <span className="variant-label">{v.label}</span>
+                      <span className="variant-label">
+                        {v.label}
+                        {v.description && (
+                          <small>{v.description}</small>
+                        )}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -490,11 +497,15 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
                   const addonPriceTTC = round2(
                     addonPriceHT + addonVatAmount
                   );
+                  const addonLabel =
+                    firstAddon?.label || T.extraCover;
+                  const addonDescription =
+                    firstAddon?.description || "";
 
                   return (
                     <>
                       <p className="product-addon-label">
-                        {T.extraCover} :
+                        {addonLabel}
                         {firstAddon && (
                           <span>
                             {" "}
@@ -507,6 +518,12 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
                           </span>
                         )}
                       </p>
+
+                      {addonDescription && (
+                        <p className="product-addon-description">
+                          {addonDescription}
+                        </p>
+                      )}
 
                       <div className="product-addon-toggle">
                         <button

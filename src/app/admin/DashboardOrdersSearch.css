@@ -25,9 +25,9 @@
   border-radius: 8px;
 
   border: 1px solid
-    rgba(255, 255, 255, 0.08);
+    rgba(255, 255, 255, 0.075);
 
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(2,6,23,.24);
 
   color: white;
 
@@ -56,11 +56,15 @@
   overflow-x: auto;
 
   border: 1px solid
-    rgba(255, 255, 255, 0.07);
+    rgba(255, 255, 255, 0.075);
 
   border-radius: 8px;
 
-  background: #0d1117;
+  background:
+    linear-gradient(180deg, rgba(15,23,42,.74), rgba(8,13,24,.96));
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035);
 }
 
 .dash-search-table {
@@ -74,6 +78,19 @@
 
 .dash-search-table .cell-command {
   min-width: 124px;
+}
+
+.dash-search-table thead th {
+  background: rgba(255,255,255,.026);
+  color: rgba(148,163,184,.78);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dash-search-table td {
+  border-bottom-color: rgba(255,255,255,.052);
 }
 
 .dash-search-eye {

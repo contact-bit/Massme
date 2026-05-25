@@ -41,9 +41,6 @@ export async function GET(req: Request) {
       return {
         id: doc.id,
         ...data,
-        // 🔥 normalisation : si pas présent => false
-        manageStock:
-          typeof data.manageStock === "boolean" ? data.manageStock : false,
       };
     }) as any[];
 
@@ -105,18 +102,14 @@ export async function POST(req: Request) {
       priceHT,
       weightKg,
       deliveryPackageCount,
-      stock,
       imageUrl,
-      manageStock,
     } = body as {
       nameFr?: string;
       descFr?: string;
       priceHT?: string | number;
       weightKg?: string | number;
       deliveryPackageCount?: string | number;
-      stock?: string | number;
       imageUrl?: string;
-      manageStock?: boolean;
     };
 
     if (!nameFr || !priceHT) {
@@ -125,13 +118,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    if (manageStock && !stock) {
-      return NextResponse.json(
-        { ok: false, error: "Stock obligatoire si gestion de stock activée" },
-        { status: 400 }
-      );
-    }
-
     const now = new Date().toISOString();
 
     const docRef = await dbAdmin.collection("products").add({
@@ -143,8 +129,6 @@ export async function POST(req: Request) {
         1,
         Math.round(Number(deliveryPackageCount ?? 1) || 1)
       ),
-      stock: Number(stock ?? 0),
-      manageStock: manageStock ?? false, // 🔥 écrit en base
       isActive: true,
       applyVAT: true,
       markets: ["FR"],

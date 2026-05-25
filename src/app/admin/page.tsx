@@ -65,12 +65,6 @@ type StatsResponse = {
     createdAt: string | null;
   }[];
 
-  lowStock: {
-    id: string;
-    name: string;
-    stock: number;
-  }[];
-
   alerts: {
     tone: "info" | "warn" | "danger";
     title: string;
@@ -130,7 +124,6 @@ type WidgetDefinition = {
     | "kpi"
     | "chart"
     | "lastOrders"
-    | "lowStock"
     | "search";
 };
 
@@ -490,15 +483,6 @@ export default function AdminDashboardPage() {
           defaultSize: "medium",
           kind: "lastOrders",
         },
-        {
-          id: "lowStock",
-          label: "Stocks faibles",
-          value: "",
-          foot: "",
-          defaultTone: "warning",
-          defaultSize: "medium",
-          kind: "lowStock",
-        },
       ];
     }, [data]);
 
@@ -692,7 +676,6 @@ export default function AdminDashboardPage() {
     kpis: k,
     alerts,
     lastOrders,
-    lowStock,
     series,
   } = data;
 
@@ -1096,41 +1079,6 @@ export default function AdminDashboardPage() {
                           </div>
                         </div>
                       ))}
-                  </div>
-                </>
-              )}
-
-              {def.kind === "lowStock" && (
-                <>
-                  <div className="dash-panel-head">
-                    <h2 className="dash-panel-title">
-                      Stocks faibles
-                    </h2>
-                  </div>
-
-                  <div className="dash-lowstock">
-                    {lowStock.length === 0 ? (
-                      <div className="muted">
-                        Aucun stock faible.
-                      </div>
-                    ) : (
-                      lowStock
-                        .slice(0, 8)
-                        .map((p) => (
-                          <div
-                            key={p.id}
-                            className="dash-lowstock-item"
-                          >
-                            <span className="truncate">
-                              {p.name}
-                            </span>
-
-                            <span className="dash-chip warn">
-                              {p.stock}
-                            </span>
-                          </div>
-                        ))
-                    )}
                   </div>
                 </>
               )}
@@ -1578,39 +1526,6 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* =====================================================
-          LOW STOCK
-      ===================================================== */}
-
-      {false && lowStock.length > 0 && (
-        <div className="dash-panel">
-          <div className="dash-panel-head">
-            <h2 className="dash-panel-title">
-              Stocks faibles
-            </h2>
-          </div>
-
-          <div className="dash-lowstock">
-            {lowStock
-              .slice(0, 8)
-              .map((p) => (
-                <div
-                  key={p.id}
-                  className="dash-lowstock-item"
-                >
-                  <span className="truncate">
-                    {p.name}
-                  </span>
-
-                  <span className="dash-chip warn">
-                    {p.stock}
-                  </span>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
 
       {/* =====================================================
           SEARCH ORDERS

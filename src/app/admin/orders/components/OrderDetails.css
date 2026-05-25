@@ -1070,6 +1070,106 @@
 }
 
 /* =========================================================
+   TABLE DETAIL UNIFICATION
+========================================================= */
+
+.od-page {
+  --detail-border: rgba(255,255,255,.058);
+  --detail-muted: rgba(148,163,184,.68);
+  --detail-text: rgba(248,250,252,.94);
+}
+
+.od-section {
+  border-color: var(--detail-border);
+  background: transparent;
+}
+
+.od-section-head {
+  min-height: 30px;
+  padding: .35rem .5rem;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.022);
+}
+
+.od-section-title {
+  color: rgba(226,232,240,.94);
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.od-info-grid,
+.od-address-grid,
+.od-meta-grid {
+  gap: .35rem;
+}
+
+.od-info-card,
+.od-address-card,
+.od-meta-card {
+  border-color: var(--detail-border);
+  background: rgba(255,255,255,.014);
+}
+
+.od-info-label,
+.od-meta-label,
+.od-address-field span {
+  color: var(--detail-muted);
+}
+
+.od-info-value,
+.od-meta-value,
+.od-address-title,
+.od-total-value,
+.od-table-price,
+.od-product-name {
+  color: var(--detail-text);
+}
+
+.od-address-text,
+.od-table td {
+  color: rgba(203,213,225,.78);
+}
+
+.od-table-wrap {
+  border: 1px solid var(--detail-border);
+  background: rgba(2,6,23,.18);
+}
+
+.od-table thead {
+  background: rgba(255,255,255,.026);
+}
+
+.od-table th {
+  padding: .42rem .5rem;
+  color: var(--detail-muted);
+  font-size: .56rem;
+  letter-spacing: .08em;
+}
+
+.od-table td {
+  padding: .42rem .5rem;
+  font-size: .66rem;
+  border-bottom-color: rgba(255,255,255,.052);
+}
+
+.od-meta-card-title {
+  min-height: 24px;
+  padding: .22rem .42rem;
+  color: rgba(226,232,240,.94);
+  font-size: .62rem;
+  letter-spacing: .08em;
+  background: rgba(255,255,255,.026);
+}
+
+.od-meta-row,
+.od-total-row,
+.log-detail-row {
+  border-bottom-color: rgba(255,255,255,.052);
+}
+
+/* =========================================================
    RESPONSIVE
 ========================================================= */
 

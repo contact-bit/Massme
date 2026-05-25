@@ -18,9 +18,6 @@ export default function ProductForm({
   const [price, setPrice] =
     useState("");
 
-  const [stock, setStock] =
-    useState("");
-
   const [imageUrl, setImageUrl] =
     useState("");
 
@@ -77,8 +74,6 @@ export default function ProductForm({
               },
 
               imageUrl,
-
-              stock,
 
               pricesByMarket: {
                 FR: price,
@@ -196,49 +191,23 @@ export default function ProductForm({
 
       </div>
 
-      {/* GRID */}
-      <div className="product-form-grid">
+      {/* IMAGE */}
+      <div className="product-form-field">
 
-        {/* IMAGE */}
-        <div className="product-form-field">
+        <label>
+          Image URL
+        </label>
 
-          <label>
-            Image URL
-          </label>
-
-          <input
-            className="product-form-input"
-            placeholder="https://..."
-            value={imageUrl}
-            onChange={(e) =>
-              setImageUrl(
-                e.target.value
-              )
-            }
-          />
-
-        </div>
-
-        {/* STOCK */}
-        <div className="product-form-field">
-
-          <label>
-            Stock
-          </label>
-
-          <input
-            type="number"
-            className="product-form-input"
-            placeholder="0"
-            value={stock}
-            onChange={(e) =>
-              setStock(
-                e.target.value
-              )
-            }
-          />
-
-        </div>
+        <input
+          className="product-form-input"
+          placeholder="https://..."
+          value={imageUrl}
+          onChange={(e) =>
+            setImageUrl(
+              e.target.value
+            )
+          }
+        />
 
       </div>
 

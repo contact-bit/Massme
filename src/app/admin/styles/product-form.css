@@ -961,6 +961,7 @@
     minmax(110px, .8fr)
     70px
     minmax(90px, .7fr)
+    minmax(92px, .7fr)
     70px;
   gap: .55rem;
   padding: .55rem .65rem;
@@ -1013,6 +1014,55 @@
   padding: 0;
   border: 0;
   align-items: end;
+}
+
+.pf-option-head {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, .75fr)
+    minmax(240px, 1.1fr)
+    minmax(280px, 1.35fr)
+    38px;
+  gap: .7rem;
+  align-items: end;
+}
+
+.pf-option-field {
+  display: grid;
+  gap: .35rem;
+  min-width: 0;
+}
+
+.pf-option-field span {
+  color: rgba(226,232,240,.68);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.pf-option-field.compact {
+  max-width: 190px;
+}
+
+.pf-option-description {
+  grid-column: 1 / -1;
+}
+
+.pf-option-description .admin-textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.pf-table .pf-row strong {
+  color: #f8fafc;
+  font-size: .82rem;
+}
+
+.pf-table .pf-row span:last-child {
+  color: rgba(148,163,184,.9);
+  font-size: .72rem;
+  font-weight: 800;
 }
 
 .pf-variant-remove,

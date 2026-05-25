@@ -26,14 +26,8 @@ export default function ProductForm({
     setDeliveryPackageCount,
   ] = useState("1");
 
-  const [stock, setStock] =
-    useState("");
-
   const [imageUrl, setImageUrl] =
     useState("");
-
-  const [manageStock, setManageStock] =
-    useState(false);
 
   const [loading, setLoading] =
     useState(false);
@@ -57,12 +51,6 @@ export default function ProductForm({
     if (!priceHT) {
       return setError(
         "Prix obligatoire"
-      );
-    }
-
-    if (manageStock && !stock) {
-      return setError(
-        "Stock requis si activé"
       );
     }
 
@@ -93,9 +81,7 @@ export default function ProductForm({
             priceHT,
             weightKg,
             deliveryPackageCount,
-            stock: stock || "0",
             imageUrl,
-            manageStock,
           }),
         }
       );
@@ -118,9 +104,7 @@ export default function ProductForm({
       setPriceHT("");
       setWeightKg("");
       setDeliveryPackageCount("1");
-      setStock("");
       setImageUrl("");
-      setManageStock(false);
 
       onSuccess();
     } catch (e: any) {
@@ -154,7 +138,7 @@ export default function ProductForm({
           <p className="product-form-description">
             Création avancée d’un
             produit avec gestion du
-            contenu, du stock et des
+            contenu et des
             médias.
           </p>
 
@@ -294,58 +278,7 @@ export default function ProductForm({
 
             </div>
 
-            <div className="pf-field">
-
-              <label>
-                Stock
-              </label>
-
-              <input
-                type="number"
-                className="pf-input"
-                placeholder="50"
-                value={stock}
-                onChange={(e) =>
-                  setStock(
-                    e.target.value
-                  )
-                }
-                disabled={!manageStock}
-              />
-
-            </div>
-
           </div>
-
-          {/* SWITCH */}
-          <label className="pf-switch">
-
-            <input
-              type="checkbox"
-              checked={manageStock}
-              onChange={(e) =>
-                setManageStock(
-                  e.target.checked
-                )
-              }
-            />
-
-            <span className="pf-switch-slider" />
-
-            <div className="pf-switch-text">
-
-              <strong>
-                Gestion du stock
-              </strong>
-
-              <span>
-                Active le suivi des
-                quantités disponibles
-              </span>
-
-            </div>
-
-          </label>
 
           {/* ERROR */}
           {error && (

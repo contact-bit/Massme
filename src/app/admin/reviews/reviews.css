@@ -1167,9 +1167,12 @@
 .reviews-list {
   gap: 0;
   overflow-x: auto;
-  border: 1px solid rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.075);
   border-radius: 8px;
-  background: #0d1117;
+  background:
+    linear-gradient(180deg, rgba(15,23,42,.74), rgba(8,13,24,.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035);
 }
 
 .reviews-table-head,
@@ -1197,19 +1200,20 @@
 }
 
 .reviews-table-head {
-  padding: 10px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-  background: rgba(255,255,255,.018);
-  color: var(--color-muted);
-  font-size: 11px;
-  font-weight: 600;
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.075);
+  background: rgba(255,255,255,.026);
+  color: rgba(148,163,184,.78);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .08em;
   text-transform: uppercase;
 }
 
 .reviews-review {
-  padding: 10px;
+  padding: 9px 10px;
   border: 0;
-  border-bottom: 1px solid rgba(255,255,255,.05);
+  border-bottom: 1px solid rgba(255,255,255,.052);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
@@ -1218,9 +1222,9 @@
 
 .reviews-review:hover {
   transform: none;
-  border-color: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.052);
   box-shadow: none;
-  background: rgba(255,255,255,.03);
+  background: rgba(255,255,255,.034);
 }
 
 .reviews-review-rating {
@@ -1240,6 +1244,7 @@
 .reviews-review-email {
   margin-top: 0;
   font-size: .78rem;
+  color: rgba(248,250,252,.92);
 }
 
 .reviews-review-order {
@@ -1250,12 +1255,14 @@
 
 .reviews-review-date {
   font-size: .7rem;
+  color: rgba(148,163,184,.72);
 }
 
 .reviews-review-comment {
   margin-top: 0;
   font-size: .76rem;
   line-height: 1.35;
+  color: rgba(203,213,225,.78);
 }
 
 .reviews-review-actions {
@@ -1264,10 +1271,11 @@
 }
 
 .reviews-review-actions .reviews-btn {
-  min-height: 28px;
+  min-height: 24px;
   padding: 0 .55rem;
   border-radius: .35rem;
-  font-size: .68rem;
+  font-size: .66rem;
+  font-weight: 800;
 }
 
 /* =========================================================

@@ -876,6 +876,24 @@
     rgba(255,255,255,.03);
 }
 
+.dash-table {
+  border-color: rgba(255,255,255,.075);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(15,23,42,.50), rgba(8,13,24,.72));
+}
+
+.dash-row {
+  min-height: 42px;
+  padding: .62rem .7rem;
+  border-top-color: rgba(255,255,255,.052);
+  font-size: .75rem;
+}
+
+.dash-row:hover {
+  background: rgba(255,255,255,.034);
+}
+
 /* =========================================================
    UTILS
 ========================================================= */

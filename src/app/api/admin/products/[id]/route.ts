@@ -200,7 +200,6 @@ export async function PATCH(req: Request) {
     /* ---------- BASIC ---------- */
     if ("imageUrl" in data) update.imageUrl = data.imageUrl || null;
     if ("isActive" in data) update.isActive = !!data.isActive;
-    if ("stock" in data) update.stock = Math.max(0, toInt(data.stock));
     if ("weightKg" in data) {
       update.weightKg =
         Math.round(Math.max(0, toNum(data.weightKg)) * 100) /
@@ -211,11 +210,6 @@ export async function PATCH(req: Request) {
         1,
         toInt(data.deliveryPackageCount || 1)
       );
-    }
-
-    // 🔥 nouveau : gestion du stock oui/non
-    if ("manageStock" in data) {
-      update.manageStock = !!data.manageStock;
     }
 
     /* ---------- I18N ---------- */
@@ -251,6 +245,7 @@ export async function PATCH(req: Request) {
         return {
           id: String(v.id || ""),
           label: String(v.label || ""),
+          description: String(v.description || ""),
           imageUrl: v.imageUrl ? String(v.imageUrl) : "",
           markets: priced.markets,
           pricesByMarket: priced.pricesByMarket,
@@ -269,6 +264,7 @@ export async function PATCH(req: Request) {
         return {
           id: String(a.id || ""),
           label: String(a.label || ""),
+          description: String(a.description || ""),
           imageUrl: a.imageUrl ? String(a.imageUrl) : "",
           markets: priced.markets,
           pricesByMarket: priced.pricesByMarket,

@@ -1192,6 +1192,14 @@ body {
 }
 
 .row.open::before {
+  display: none;
+}
+
+.row.open td:first-child {
+  position: relative;
+}
+
+.row.open td:first-child::before {
   content: "";
   position: absolute;
   inset: 6px auto 6px 0;
@@ -1297,4 +1305,98 @@ body {
 
 .log-btn.primary:hover {
   opacity: 0.9;
+}
+
+/* =========================================================
+   UNIFIED ADMIN TABLE DIRECTION
+========================================================= */
+
+.orders-table-wrap,
+.dash-orders-table {
+  overflow-x: auto;
+  border: 1px solid rgba(255,255,255,.075) !important;
+  border-radius: 8px !important;
+  background:
+    linear-gradient(180deg, rgba(15,23,42,.74), rgba(8,13,24,.96)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.orders-table-v2 {
+  min-width: 980px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.orders-table-v2 thead th {
+  padding: 9px 10px !important;
+  border-bottom: 1px solid rgba(255,255,255,.075) !important;
+  background: rgba(255,255,255,.026);
+  color: rgba(148,163,184,.78) !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.orders-table-v2 td {
+  padding: 9px 10px !important;
+  border-bottom: 1px solid rgba(255,255,255,.052);
+  vertical-align: middle;
+}
+
+.orders-table-v2 tbody tr {
+  border-bottom: 0 !important;
+}
+
+.orders-table-v2 tbody tr:not(.row-expanded):hover {
+  background: rgba(255,255,255,.034) !important;
+}
+
+.cell-main,
+.cell-strong {
+  color: rgba(248,250,252,.94);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cell-sub {
+  color: rgba(148,163,184,.72) !important;
+  font-size: 10.5px !important;
+  line-height: 1.25;
+}
+
+.cell-command {
+  gap: 7px;
+}
+
+.row.open {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(56,189,248,.12),
+      rgba(255,255,255,.052) 28%,
+      rgba(255,255,255,.03)
+    ) !important;
+}
+
+.row-expanded td {
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.expanded-content {
+  margin: 0 0 6px 18px !important;
+  padding: 6px 6px 6px 12px !important;
+  border-left: 4px solid rgba(56,189,248,.72) !important;
+  border-top: 1px solid rgba(255,255,255,.075) !important;
+  border-bottom: 1px solid rgba(255,255,255,.052) !important;
+  background:
+    linear-gradient(180deg, rgba(15,23,42,.72), rgba(15,23,42,.38)) !important;
+}
+
+.admin-icon-btn,
+.dash-search-eye {
+  border-radius: 6px !important;
 }

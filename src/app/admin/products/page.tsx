@@ -27,10 +27,6 @@ type Product = {
 
   isActive?: boolean;
 
-  stock?: number;
-
-  manageStock?: boolean;
-
   imageUrl?: string;
 };
 
@@ -292,9 +288,6 @@ export default function ProductsAdminPage() {
           </div>
         ) : (
           paged.map((p) => {
-            const stock =
-              p.stock ?? 0;
-
             return (
               <div
                 key={p.id}
@@ -335,14 +328,6 @@ export default function ProductsAdminPage() {
                       {moneyEUR(
                         getPrice(p)
                       )}
-                    </div>
-
-                    <div className="products-stock">
-
-                      {p.manageStock
-                        ? `Stock : ${stock}`
-                        : "Stock non géré"}
-
                     </div>
 
                   </div>

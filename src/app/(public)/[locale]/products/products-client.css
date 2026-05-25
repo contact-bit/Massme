@@ -731,14 +731,48 @@
 }
 
 .variant-label {
+  display:
+    grid;
+
+  gap:
+    .15rem;
+
   white-space:
-    nowrap;
+    normal;
 
   font-size:
     .84rem;
 
   font-weight:
     600;
+}
+
+.variant-label small {
+  color:
+    var(--vm-text-muted);
+
+  font-size:
+    .74rem;
+
+  font-weight:
+    500;
+
+  line-height:
+    1.35;
+}
+
+.product-addon-description {
+  margin:
+    -.35rem 0 .75rem;
+
+  color:
+    var(--vm-text-muted);
+
+  font-size:
+    .84rem;
+
+  line-height:
+    1.6;
 }
 
 /* =========================================================

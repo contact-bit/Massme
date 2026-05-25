@@ -348,52 +348,6 @@ export async function GET() {
       ).length;
 
     /* =====================================================
-       LOW STOCK
-    ===================================================== */
-
-    const lowStockSnap =
-      await productsCol
-        .where("stock", "<=", 3)
-        .orderBy("stock", "asc")
-        .limit(20)
-        .get();
-
-    const lowStock =
-      lowStockSnap.docs
-        .map((d) => {
-          const p: any = d.data();
-
-          const manageStock =
-            typeof p?.manageStock ===
-            "boolean"
-              ? p.manageStock
-              : false;
-
-          return {
-            id: d.id,
-
-            name:
-              p?.name?.fr ??
-              p?.name ??
-              "Produit",
-
-            stock: Number(
-              p?.stock ?? 0
-            ),
-
-            manageStock,
-          };
-        })
-
-        .filter((p) => p.manageStock)
-
-        .map((p) => ({
-          id: p.id,
-          name: p.name,
-          stock: p.stock,
-        }));
-
-    /* =====================================================
        LAST ORDERS
     ===================================================== */
 
@@ -581,16 +535,6 @@ export async function GET() {
       });
     }
 
-    if (lowStock.length > 0) {
-      alerts.push({
-        tone: "warn",
-
-        title: "Stock faible",
-
-        desc: `${lowStock.length} produit(s) ont un stock ≤ 3.`,
-      });
-    }
-
     /* =====================================================
        PAYLOAD
     ===================================================== */
@@ -655,8 +599,6 @@ export async function GET() {
       series,
 
       lastOrders,
-
-      lowStock,
 
       alerts,
     };
