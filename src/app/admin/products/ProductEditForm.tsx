@@ -117,6 +117,14 @@ export default function ProductEditForm({
 
   const [imageUrl, setImageUrl] = useState("");
   const [weightKg, setWeightKg] = useState("");
+  const [
+    deliveryPackageCount,
+    setDeliveryPackageCount,
+  ] = useState("1");
+  const [
+    deliveryNoteInstructions,
+    setDeliveryNoteInstructions,
+  ] = useState("");
   const [stock, setStock] = useState(0);
   const [manageStock, setManageStock] = useState<boolean>(true); // ✅ gestion du stock pour cet article
   const [isActive, setIsActive] = useState(true);
@@ -141,6 +149,12 @@ export default function ProductEditForm({
 
     setImageUrl(product.imageUrl || "");
     setWeightKg(String(product.weightKg ?? ""));
+    setDeliveryPackageCount(
+      String(product.deliveryPackageCount ?? 1)
+    );
+    setDeliveryNoteInstructions(
+      product.deliveryNoteInstructions || ""
+    );
     setStock(product.stock ?? 0);
     setManageStock(
       typeof product.manageStock === "boolean" ? product.manageStock : true
@@ -242,6 +256,8 @@ export default function ProductEditForm({
           description,
           imageUrl: imageUrl || null,
           weightKg,
+          deliveryPackageCount,
+          deliveryNoteInstructions,
           stock,
           manageStock, // ✅ envoyé au backend
           isActive,
@@ -458,6 +474,41 @@ export default function ProductEditForm({
               value={stock}
               onChange={(e) => setStock(Number(e.target.value))}
               disabled={!manageStock}
+            />
+          </div>
+
+          <div className="pf-field">
+            <label className="admin-label">
+              Colis par unité
+            </label>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              className="admin-input"
+              value={deliveryPackageCount}
+              onChange={(e) =>
+                setDeliveryPackageCount(
+                  e.target.value
+                )
+              }
+            />
+          </div>
+
+          <div className="pf-field pf-field-wide">
+            <label className="admin-label">
+              Indications BL
+            </label>
+            <textarea
+              className="admin-textarea"
+              rows={3}
+              value={deliveryNoteInstructions}
+              placeholder="Consignes reprises automatiquement sur le bon de livraison."
+              onChange={(e) =>
+                setDeliveryNoteInstructions(
+                  e.target.value
+                )
+              }
             />
           </div>
         </div>

@@ -85,6 +85,8 @@ type Product = {
 
   imageUrl?: string;
   weightKg?: number;
+  deliveryPackageCount?: number;
+  deliveryNoteInstructions?: string;
 
   isActive?: boolean;
 
@@ -889,6 +891,10 @@ export default function ProductPage() {
       priceHT,
       weightKg:
         Number(product.weightKg ?? 0) || 0,
+      deliveryPackageCount:
+        Number(product.deliveryPackageCount ?? 1) || 1,
+      deliveryNoteInstructions:
+        product.deliveryNoteInstructions || "",
 
       addons:
         safeAddons,

@@ -7,6 +7,10 @@ export type OrderItem = {
   // compat anciens formats
   price?: number | { eur?: number };
 
+  weightKg?: number;
+  deliveryPackageCount?: number;
+  deliveryNoteInstructions?: string;
+
   quantity?: number;
   description?: string;
 };

@@ -9,6 +9,8 @@ import { generateOrderNumber } from "@/server/orders/generateOrderNumber";
 type CartItem = {
   priceHT: number;
   weightKg?: number;
+  deliveryPackageCount?: number;
+  deliveryNoteInstructions?: string;
   quantity: number;
 };
 
@@ -116,6 +118,16 @@ function buildOrderFingerprint(input: {
       name: String(item.name),
       priceHT: Number(item.priceHT) || 0,
       weightKg: Number((item as any).weightKg) || 0,
+      deliveryPackageCount:
+        (item as any).deliveryPackageCount == null
+          ? 1
+          : Math.max(
+              0,
+              Number((item as any).deliveryPackageCount) || 0
+            ),
+      deliveryNoteInstructions: String(
+        (item as any).deliveryNoteInstructions || ""
+      ).trim(),
       quantity: Math.max(1, Number(item.quantity || 1)),
     }))
     .sort((a, b) => {
@@ -318,6 +330,16 @@ export async function POST(req: Request) {
       name: String(i.name),
       priceHT: Number(i.priceHT) || 0,
       weightKg: Number(i.weightKg) || 0,
+      deliveryPackageCount:
+        (i as any).deliveryPackageCount == null
+          ? 1
+          : Math.max(
+              0,
+              Number((i as any).deliveryPackageCount) || 0
+            ),
+      deliveryNoteInstructions: String(
+        (i as any).deliveryNoteInstructions || ""
+      ).trim(),
       quantity: Math.max(1, Number(i.quantity || 1)),
     }));
 

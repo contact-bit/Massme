@@ -82,6 +82,86 @@ async function findOrderSource(orderId: string) {
   return null;
 }
 
+function getBaseProductId(itemId: unknown) {
+  return asString(itemId).split(":")[0] || "";
+}
+
+function isAddonLine(itemId: unknown) {
+  return asString(itemId).includes(":addon:");
+}
+
+function asNumberOrString(value: unknown) {
+  return typeof value === "number" ||
+    typeof value === "string"
+    ? value
+    : undefined;
+}
+
+async function enrichItemsFromProducts(items: unknown) {
+  if (!Array.isArray(items)) return [];
+
+  const productIds = [
+    ...new Set(
+      items
+        .map((item) =>
+          getBaseProductId(asRecord(item).id)
+        )
+        .filter(Boolean)
+    ),
+  ];
+
+  const productMap = new Map<string, Record<string, unknown>>();
+
+  await Promise.all(
+    productIds.map(async (productId) => {
+      const snap = await dbAdmin
+        .collection("products")
+        .doc(productId)
+        .get();
+
+      if (snap.exists) {
+        productMap.set(
+          productId,
+          asRecord(snap.data())
+        );
+      }
+    })
+  );
+
+  return items.map((item) => {
+    const record = asRecord(item);
+    const product =
+      productMap.get(getBaseProductId(record.id)) || {};
+
+    if (isAddonLine(record.id)) {
+      return {
+        ...record,
+        deliveryPackageCount:
+          asNumberOrString(
+            record.deliveryPackageCount
+          ) ?? 0,
+      };
+    }
+
+    return {
+      ...record,
+      weightKg:
+        asNumberOrString(product.weightKg) ??
+        asNumberOrString(record.weightKg),
+      deliveryPackageCount:
+        asNumberOrString(
+          product.deliveryPackageCount
+        ) ??
+        asNumberOrString(
+          record.deliveryPackageCount
+        ),
+      deliveryNoteInstructions:
+        asString(product.deliveryNoteInstructions) ||
+        asString(record.deliveryNoteInstructions),
+    };
+  });
+}
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -107,10 +187,12 @@ export async function GET(req: Request) {
 
     const order = asRecord(source.snap.data());
     const orderNumber = getOrderNumber(order, orderId);
+    const items = await enrichItemsFromProducts(order.items);
 
     const pdf = await generateDeliveryNotePDF(
       {
         ...order,
+        items,
         orderNumber,
       },
       orderNumber

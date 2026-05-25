@@ -21,6 +21,16 @@ export default function ProductForm({
   const [weightKg, setWeightKg] =
     useState("");
 
+  const [
+    deliveryPackageCount,
+    setDeliveryPackageCount,
+  ] = useState("1");
+
+  const [
+    deliveryNoteInstructions,
+    setDeliveryNoteInstructions,
+  ] = useState("");
+
   const [stock, setStock] =
     useState("");
 
@@ -87,6 +97,8 @@ export default function ProductForm({
             descFr,
             priceHT,
             weightKg,
+            deliveryPackageCount,
+            deliveryNoteInstructions,
             stock: stock || "0",
             imageUrl,
             manageStock,
@@ -111,6 +123,8 @@ export default function ProductForm({
       setDescFr("");
       setPriceHT("");
       setWeightKg("");
+      setDeliveryPackageCount("1");
+      setDeliveryNoteInstructions("");
       setStock("");
       setImageUrl("");
       setManageStock(false);
@@ -268,6 +282,28 @@ export default function ProductForm({
             <div className="pf-field">
 
               <label>
+                Colis par unité
+              </label>
+
+              <input
+                type="number"
+                min="1"
+                step="1"
+                className="pf-input"
+                placeholder="1"
+                value={deliveryPackageCount}
+                onChange={(e) =>
+                  setDeliveryPackageCount(
+                    e.target.value
+                  )
+                }
+              />
+
+            </div>
+
+            <div className="pf-field">
+
+              <label>
                 Stock
               </label>
 
@@ -286,6 +322,23 @@ export default function ProductForm({
 
             </div>
 
+          </div>
+
+          <div className="pf-field">
+            <label>
+              Indications BL
+            </label>
+
+            <textarea
+              className="pf-input pf-textarea"
+              placeholder="Ex: protéger le coussin, joindre la notice, emballage renforcé..."
+              value={deliveryNoteInstructions}
+              onChange={(e) =>
+                setDeliveryNoteInstructions(
+                  e.target.value
+                )
+              }
+            />
           </div>
 
           {/* SWITCH */}

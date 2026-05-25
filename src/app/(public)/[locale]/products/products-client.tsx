@@ -149,6 +149,8 @@ type Product = {
   imageUrl?: string;
   isActive?: boolean;
   weightKg?: number;
+  deliveryPackageCount?: number;
+  deliveryNoteInstructions?: string;
 
   markets: Market[];
 
@@ -322,6 +324,10 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
       priceHT: mainPriceHT,
       weightKg:
         Number(p.weightKg ?? 0) || 0,
+      deliveryPackageCount:
+        Number(p.deliveryPackageCount ?? 1) || 1,
+      deliveryNoteInstructions:
+        p.deliveryNoteInstructions || "",
       quantity: 1,
       imageUrl: mainImage,
       description: desc,
@@ -343,6 +349,8 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
           name: addon.label,
           priceHT: addonPriceHT,
           weightKg: 0,
+          deliveryPackageCount: 0,
+          deliveryNoteInstructions: "",
           quantity: 1,
           imageUrl: mainImage,
           description: addon.label,

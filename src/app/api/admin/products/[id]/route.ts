@@ -206,6 +206,17 @@ export async function PATCH(req: Request) {
         Math.round(Math.max(0, toNum(data.weightKg)) * 100) /
         100;
     }
+    if ("deliveryPackageCount" in data) {
+      update.deliveryPackageCount = Math.max(
+        1,
+        toInt(data.deliveryPackageCount || 1)
+      );
+    }
+    if ("deliveryNoteInstructions" in data) {
+      update.deliveryNoteInstructions = String(
+        data.deliveryNoteInstructions || ""
+      ).trim();
+    }
 
     // 🔥 nouveau : gestion du stock oui/non
     if ("manageStock" in data) {
