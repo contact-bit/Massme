@@ -288,7 +288,7 @@ export default function EditMethodPanel({
               (tier, index) => (
                 <div
                   key={index}
-                  className="emp-grid"
+                  className="emp-grid emp-tier-row"
                 >
                   <div className="emp-field">
                     <label>
@@ -367,6 +367,25 @@ export default function EditMethodPanel({
                       }
                     />
                   </div>
+
+                  <button
+                    type="button"
+                    className="emp-close emp-tier-delete"
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        weightPriceTiers:
+                          (
+                            f.weightPriceTiers ||
+                            []
+                          ).filter(
+                            (_, i) => i !== index
+                          ),
+                      }))
+                    }
+                  >
+                    Supprimer
+                  </button>
                 </div>
               )
             )}
@@ -408,7 +427,7 @@ export default function EditMethodPanel({
 
           </div>
 
-          <div className="emp-field">
+          <div className="emp-field emp-field-compact">
 
             <label>
               Méthode

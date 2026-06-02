@@ -4,37 +4,14 @@ import { useMemo, useState } from "react";
 import type { Order } from "../orders/domain/types";
 import { getLogisticStatus } from "../orders/domain/logistics";
 import { ShippingStatusPill } from "../orders/components/ShippingStatusPill";
+import { ActionIconButton } from "../orders/components/ActionIconButton";
+import { IconEye } from "../orders/components/icons";
 
 type Props = {
   order: Order;
   toastIt: (msg: string) => void;
   onShip: (order: Order) => Promise<void>;
 };
-
-function getDeliveryQuantity(item: any) {
-  return Math.max(1, Number(item?.quantity || 1));
-}
-
-function getDeliveryWeight(item: any) {
-  return Math.max(0, Number(item?.weightKg || 0) || 0);
-}
-
-function getDeliveryPackageCount(item: any) {
-  if (item?.deliveryPackageCount == null) return 1;
-
-  return Math.max(
-    0,
-    Number(item.deliveryPackageCount) || 0
-  );
-}
-
-function formatDeliveryWeight(value: number) {
-  if (!value) return "";
-
-  return `${new Intl.NumberFormat("fr-FR", {
-    maximumFractionDigits: 2,
-  }).format(value)} kg`;
-}
 
 export default function LogisticsItem({
   order,
@@ -85,22 +62,6 @@ export default function LogisticsItem({
 
     return order.items;
   }, [order?.items]);
-
-  const deliveryPackageCount = items.reduce(
-    (sum, item) =>
-      sum +
-      getDeliveryPackageCount(item) *
-        getDeliveryQuantity(item),
-    0
-  );
-
-  const deliveryTotalWeight = items.reduce(
-    (sum, item) =>
-      sum +
-      getDeliveryWeight(item) *
-        getDeliveryQuantity(item),
-    0
-  );
 
   /* ================= SHIPPING ================= */
 
@@ -212,8 +173,25 @@ export default function LogisticsItem({
       >
         {/* COMMANDE */}
         <div className="log-col order">
-          <div className="log-id">
-            {displayId}
+          <div className="log-id-line">
+            <div className="log-id">
+              {displayId}
+            </div>
+
+            <span
+              onClick={(e) =>
+                e.stopPropagation()
+              }
+            >
+              <ActionIconButton
+                title="Voir"
+                onClick={() =>
+                  setOpen((v) => !v)
+                }
+                icon={<IconEye />}
+                variant="primary"
+              />
+            </span>
           </div>
 
           <div className="log-email">
@@ -221,7 +199,7 @@ export default function LogisticsItem({
           </div>
         </div>
 
-        {/* PASSAGE */}
+        {/* DATE */}
         <div className="log-col log-stack">
           <span className="log-main">
             {createdDate}
@@ -244,7 +222,7 @@ export default function LogisticsItem({
           {address?.country || "—"}
         </div>
 
-        {/* DELAI */}
+        {/* SERVICE DE LIVRAISON */}
         <div className="log-col log-delay-col">
           <span className="log-delay-pill">
             {shippingDelay}
@@ -272,11 +250,6 @@ export default function LogisticsItem({
         {/* STATUS */}
         <div className="log-col status">
           <ShippingStatusPill order={order} />
-        </div>
-
-        {/* TOGGLE */}
-        <div className="log-col arrow">
-          {open ? "−" : "+"}
         </div>
       </div>
 
@@ -432,22 +405,6 @@ export default function LogisticsItem({
           <div className="log-expanded-card">
             <div className="log-title">
               Bon de livraison
-            </div>
-
-            <div className="log-detail-row">
-              <span>Colis</span>
-              <strong>
-                {deliveryPackageCount || "—"}
-              </strong>
-            </div>
-
-            <div className="log-detail-row">
-              <span>Poids</span>
-              <strong>
-                {formatDeliveryWeight(
-                  deliveryTotalWeight
-                ) || "—"}
-              </strong>
             </div>
 
             <div className="log-doc-actions">

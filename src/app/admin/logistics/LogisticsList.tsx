@@ -156,7 +156,7 @@ export default function LogisticsList({
         </div>
 
         <div className="log-th">
-          Passage
+          Date
         </div>
 
         <div className="log-th">
@@ -168,7 +168,7 @@ export default function LogisticsList({
         </div>
 
         <div className="log-th">
-          Délais
+          Service de livraison
         </div>
 
         <div className="log-th">
@@ -177,10 +177,6 @@ export default function LogisticsList({
 
         <div className="log-th status">
           Statut
-        </div>
-
-        <div className="log-th arrow">
-          +
         </div>
       </div>
 

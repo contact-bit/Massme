@@ -196,10 +196,10 @@
   overflow: hidden;
 
   padding:
-    1.4rem;
+    1rem;
 
   border-radius:
-    28px;
+    8px;
 
   border:
     1px solid rgba(255,255,255,.06);
@@ -277,11 +277,10 @@
   display: grid;
 
   grid-template-columns:
-    minmax(0,1fr)
-    minmax(0,1fr);
+    repeat(2, minmax(160px, 240px));
 
   gap:
-    1rem;
+    .65rem;
 }
 
 .emp-grid > * {
@@ -302,7 +301,12 @@
   flex-direction: column;
 
   gap:
-    .7rem;
+    .32rem;
+}
+
+.emp-field-compact {
+  width:
+    min(260px, 100%);
 }
 
 /* =========================================================
@@ -314,7 +318,7 @@
     rgba(255,255,255,.84);
 
   font-size:
-    .8rem;
+    .66rem;
 
   font-weight:
     700;
@@ -333,13 +337,13 @@
     border-box;
 
   min-height:
-    56px;
+    38px;
 
   padding:
-    0 1rem;
+    0 .65rem;
 
   border-radius:
-    18px;
+    8px;
 
   border:
     1px solid rgba(255,255,255,.08);
@@ -358,7 +362,7 @@
     white;
 
   font-size:
-    .92rem;
+    .78rem;
 
   font-weight:
     500;
@@ -380,6 +384,30 @@
   width: fit-content;
   height: 34px;
   padding: 0 .8rem;
+}
+
+.emp-tier-row {
+  width: fit-content;
+  max-width: 100%;
+  grid-template-columns:
+    minmax(110px, 150px)
+    minmax(110px, 150px)
+    auto;
+  align-items: end;
+}
+
+.emp-tier-delete {
+  width: fit-content;
+  height: 34px;
+  padding: 0 .8rem;
+  border-color: rgba(248,113,113,.2);
+  background: rgba(248,113,113,.08);
+  color: #fca5a5;
+}
+
+.emp-tier-delete:hover {
+  background: rgba(248,113,113,.14);
+  border-color: rgba(248,113,113,.3);
 }
 
 /* =========================================================

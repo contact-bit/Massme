@@ -132,7 +132,7 @@
 }
 
 .log-list {
-  min-width: 920px;
+  min-width: 900px;
 }
 
 /* =========================================================
@@ -217,10 +217,9 @@
     .9fr
     1.25fr
     .75fr
-    1.25fr
-    .65fr
-    .9fr
-    36px;
+    1.45fr
+    .75fr
+    .9fr;
 
   gap: 10px;
 
@@ -297,10 +296,9 @@
     .9fr
     1.25fr
     .75fr
-    1.25fr
-    .65fr
-    .9fr
-    36px;
+    1.45fr
+    .75fr
+    .9fr;
 
   gap: 10px;
 
@@ -329,9 +327,20 @@
   align-items: flex-start;
 }
 
+.log-id-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.log-id-line .admin-icon-btn {
+  flex: 0 0 auto;
+}
+
 .log-id {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
 
   color: white;
 }
@@ -359,8 +368,8 @@
 }
 
 .log-main {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: rgba(255, 255, 255, 0.92);
   white-space: nowrap;
 }
@@ -396,15 +405,6 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-}
-
-.log-col.arrow {
-  justify-content: center;
-
-  font-size: 16px;
-  font-weight: 700;
-
-  color: var(--color-muted);
 }
 
 /* =========================================================

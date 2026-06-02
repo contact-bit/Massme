@@ -90,11 +90,23 @@ function isAddonLine(itemId: unknown) {
   return asString(itemId).includes(":addon:");
 }
 
-function asNumberOrString(value: unknown) {
-  return typeof value === "number" ||
-    typeof value === "string"
-    ? value
-    : undefined;
+function getAddonId(itemId: unknown) {
+  return asString(itemId).split(":addon:")[1] || "";
+}
+
+function findAddonCode(
+  product: Record<string, unknown>,
+  addonId: string
+) {
+  const addons = Array.isArray(product.addons)
+    ? product.addons
+    : [];
+
+  const addon = addons
+    .map(asRecord)
+    .find((entry) => asString(entry.id) === addonId);
+
+  return asString(addon?.productCode);
 }
 
 async function enrichItemsFromProducts(items: unknown) {
@@ -132,29 +144,26 @@ async function enrichItemsFromProducts(items: unknown) {
     const record = asRecord(item);
     const product =
       productMap.get(getBaseProductId(record.id)) || {};
+    const currentCode =
+      asString(record.sku) ||
+      asString(record.productCode);
 
     if (isAddonLine(record.id)) {
       return {
         ...record,
-        deliveryPackageCount:
-          asNumberOrString(
-            record.deliveryPackageCount
-          ) ?? 0,
+        sku:
+          currentCode ||
+          findAddonCode(product, getAddonId(record.id)) ||
+          undefined,
       };
     }
 
     return {
       ...record,
-      weightKg:
-        asNumberOrString(product.weightKg) ??
-        asNumberOrString(record.weightKg),
-      deliveryPackageCount:
-        asNumberOrString(
-          product.deliveryPackageCount
-        ) ??
-        asNumberOrString(
-          record.deliveryPackageCount
-        ),
+      sku:
+        currentCode ||
+        asString(product.productCode) ||
+        undefined,
     };
   });
 }

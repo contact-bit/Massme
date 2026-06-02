@@ -163,10 +163,10 @@
   overflow: hidden;
 
   padding:
-    1.4rem;
+    1rem;
 
   border-radius:
-    28px;
+    8px;
 
   border:
     1px solid rgba(255,255,255,.06);
@@ -244,11 +244,10 @@
   display: grid;
 
   grid-template-columns:
-    minmax(0,1fr)
-    minmax(0,1fr);
+    repeat(2, minmax(160px, 240px));
 
   gap:
-    1rem;
+    .65rem;
 }
 
 .amf-grid > * {
@@ -265,7 +264,7 @@
   flex-direction: column;
 
   gap:
-    .7rem;
+    .32rem;
 }
 
 .amf-field label {
@@ -273,7 +272,7 @@
     rgba(255,255,255,.84);
 
   font-size:
-    .8rem;
+    .66rem;
 
   font-weight:
     700;
@@ -291,13 +290,13 @@
     border-box;
 
   min-height:
-    56px;
+    38px;
 
   padding:
-    0 1rem;
+    0 .65rem;
 
   border-radius:
-    18px;
+    8px;
 
   border:
     1px solid rgba(255,255,255,.08);
@@ -316,7 +315,7 @@
     white;
 
   font-size:
-    .92rem;
+    .78rem;
 
   font-weight:
     500;
@@ -376,13 +375,14 @@
 
   z-index: 2;
 
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
 
-  grid-template-columns:
-    repeat(3, minmax(0,1fr));
+  max-width:
+    720px;
 
   gap:
-    1rem;
+    .55rem;
 }
 
 /* =========================================================
@@ -394,14 +394,17 @@
 
   overflow: hidden;
 
+  width:
+    min(210px, 100%);
+
   min-height:
-    120px;
+    64px;
 
   padding:
-    1.2rem;
+    .65rem .75rem;
 
   border-radius:
-    24px;
+    8px;
 
   border:
     1px solid rgba(255,255,255,.06);
@@ -481,7 +484,7 @@
     white;
 
   font-size:
-    .96rem;
+    .78rem;
 
   font-weight:
     800;
@@ -500,16 +503,16 @@
   z-index: 2;
 
   margin-top:
-    .7rem;
+    .28rem;
 
   color:
     rgba(148,163,184,.66);
 
   font-size:
-    .8rem;
+    .65rem;
 
   line-height:
-    1.6;
+    1.28;
 }
 
 /* =========================================================
@@ -525,7 +528,7 @@
   flex-wrap: wrap;
 
   gap:
-    .8rem;
+    .45rem;
 }
 
 /* =========================================================
@@ -541,16 +544,16 @@
   align-items: center;
 
   gap:
-    .7rem;
+    .45rem;
 
   min-height:
-    50px;
+    36px;
 
   padding:
-    0 1rem;
+    0 .7rem;
 
   border-radius:
-    18px;
+    8px;
 
   border:
     1px solid rgba(255,255,255,.06);
@@ -565,7 +568,7 @@
     white;
 
   font-size:
-    .84rem;
+    .74rem;
 
   font-weight:
     700;
@@ -724,6 +727,33 @@
   margin-top: .8rem;
 }
 
+.amf-tier-row {
+  width: fit-content;
+  max-width: 100%;
+  grid-template-columns:
+    minmax(110px, 150px)
+    minmax(110px, 150px)
+    auto;
+  align-items: end;
+}
+
+.amf-tier-delete {
+  min-height: 34px;
+  padding: 0 .7rem;
+  border: 1px solid rgba(248,113,113,.18);
+  border-radius: 12px;
+  background: rgba(248,113,113,.08);
+  color: #fca5a5;
+  font-size: .72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.amf-tier-delete:hover {
+  background: rgba(248,113,113,.14);
+  border-color: rgba(248,113,113,.28);
+}
+
 .amf-submit::before {
   content: "";
 
@@ -793,8 +823,8 @@
 @media (max-width: 980px) {
 
   .amf-types {
-    grid-template-columns:
-      1fr;
+    max-width:
+      100%;
   }
 }
 
@@ -824,13 +854,16 @@
 
   .amf-card {
     padding:
-      1.2rem;
+      1rem;
 
     border-radius:
-      24px;
+      8px;
   }
 
   .amf-type {
+    width:
+      100%;
+
     min-height:
       auto;
   }

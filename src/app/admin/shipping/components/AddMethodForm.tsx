@@ -332,7 +332,7 @@ export default function AddMethodForm({
             (tier, index) => (
               <div
                 key={index}
-                className="amf-grid"
+                className="amf-grid amf-tier-row"
               >
                 <div className="amf-field">
                   <label>
@@ -395,6 +395,22 @@ export default function AddMethodForm({
                     }
                   />
                 </div>
+
+                <button
+                  type="button"
+                  className="amf-tier-delete"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      weightPriceTiers:
+                        form.weightPriceTiers.filter(
+                          (_, i) => i !== index
+                        ),
+                    })
+                  }
+                >
+                  Supprimer
+                </button>
               </div>
             )
           )}

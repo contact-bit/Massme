@@ -14,11 +14,6 @@ type Address = {
   country?: string;
 };
 
-type DeliveryNote = {
-  packageCount?: number | string | null;
-  weight?: string | null;
-};
-
 type Order = {
   email?: string;
   orderNumber?: string;
@@ -28,8 +23,6 @@ type Order = {
     productCode?: string;
     name?: any;
     quantity?: number;
-    weightKg?: number | string;
-    deliveryPackageCount?: number | string;
     description?: string;
   }>;
   shippingAddress?: Address | null;
@@ -40,7 +33,6 @@ type Order = {
     type?: string;
   } | null;
   relayPoint?: any;
-  deliveryNote?: DeliveryNote | null;
 };
 
 function safeString(value: unknown) {
@@ -80,27 +72,6 @@ function formatDate(date: Date) {
 
 function getQuantity(item: Order["items"][number]) {
   return Math.max(1, Number(item?.quantity || 1));
-}
-
-function getItemWeight(item: Order["items"][number]) {
-  return Math.max(0, Number(item?.weightKg || 0) || 0);
-}
-
-function getItemPackageCount(item: Order["items"][number]) {
-  if (item?.deliveryPackageCount == null) return 1;
-
-  return Math.max(
-    0,
-    Number(item.deliveryPackageCount) || 0
-  );
-}
-
-function formatWeightKg(value: number) {
-  if (!value) return "";
-
-  return `${new Intl.NumberFormat("fr-FR", {
-    maximumFractionDigits: 2,
-  }).format(value)} kg`;
 }
 
 async function loadLogo(pdfDoc: PDFDocument) {
@@ -178,27 +149,9 @@ export async function generateDeliveryNotePDF(
   const M = 42;
   const orderNumber = order.orderNumber || orderId;
   const issueDate = opts.issueDate || new Date();
-  const delivery = order.deliveryNote || {};
   const shipping = order.shippingAddress || {};
   const relay = order.relayPoint || null;
   const items = Array.isArray(order.items) ? order.items : [];
-  const totalQuantity = items.reduce(
-    (sum, item) =>
-      sum + getItemPackageCount(item) * getQuantity(item),
-    0
-  );
-  const totalWeightKg = items.reduce(
-    (sum, item) => sum + getItemWeight(item) * getQuantity(item),
-    0
-  );
-  const deliveryPackageCount =
-    totalQuantity > 0
-      ? String(totalQuantity)
-      : safeString(delivery.packageCount);
-  const deliveryWeight =
-    totalWeightKg > 0
-      ? formatWeightKg(totalWeightKg)
-      : safeString(delivery.weight);
 
   const logo = await loadLogo(pdfDoc);
   if (logo) {
@@ -313,8 +266,6 @@ export async function generateDeliveryNotePDF(
   const info = [
     ["Transport", safeString(order.shippingMethod?.name) || "—"],
     ["Délai", safeString(order.shippingMethod?.delay) || "—"],
-    ["Colis", deliveryPackageCount || "—"],
-    ["Poids", deliveryWeight || "—"],
   ];
 
   let infoY = cardY + 76;
@@ -359,13 +310,6 @@ export async function generateDeliveryNotePDF(
     font: bold,
     color: rgb(1, 1, 1),
   });
-  page.drawText("Poids", {
-    x: W - M - 92,
-    y: y + 8,
-    size: 8,
-    font: bold,
-    color: rgb(1, 1, 1),
-  });
   page.drawText("Qté", {
     x: W - M - 36,
     y: y + 8,
@@ -378,7 +322,6 @@ export async function generateDeliveryNotePDF(
 
   for (const item of items) {
     const quantity = getQuantity(item);
-    const itemWeight = getItemWeight(item);
 
     page.drawText(getItemReference(item).slice(0, 24) || "—", {
       x: M + 10,
@@ -393,14 +336,6 @@ export async function generateDeliveryNotePDF(
       y,
       size: 8.5,
       font: bold,
-      color: INK,
-    });
-
-    page.drawText(itemWeight ? formatWeightKg(itemWeight) : "—", {
-      x: W - M - 92,
-      y,
-      size: 8.5,
-      font: regular,
       color: INK,
     });
 
@@ -426,7 +361,7 @@ export async function generateDeliveryNotePDF(
     y -= 20;
   }
 
-  page.drawText("Document à joindre au colis. Ne pas utiliser comme facture.", {
+  page.drawText("Document à joindre à l’expédition. Ne pas utiliser comme facture.", {
     x: M,
     y: 36,
     size: 8,
