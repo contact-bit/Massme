@@ -19,6 +19,7 @@ type VATConfig = {
 
 export type Addon = {
   id: string;
+  productCode?: string;
 
   label: string;
 
@@ -41,6 +42,8 @@ export type Addon = {
 
 export type CartItem = {
   id: string;
+  sku?: string;
+  productCode?: string;
 
   name: string;
 

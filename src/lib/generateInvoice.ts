@@ -237,6 +237,8 @@ type ShippingAddress = {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  isProfessional?: boolean;
+  vatNumber?: string;
   address?: string;
   postalCode?: string;
   city?: string;
@@ -244,6 +246,9 @@ type ShippingAddress = {
 };
 
 type OrderItem = {
+  id?: string;
+  sku?: string;
+  productCode?: string;
   name?: any;
   description?: string;
   price?: number | { eur?: number };
@@ -327,6 +332,9 @@ const getItemName = (it: OrderItem) => {
   if (typeof it.name === "string") return it.name;
   return it.name?.fr || it.name?.en || "Produit";
 };
+
+const getItemReference = (it: OrderItem) =>
+  String(it.sku || it.productCode || it.id || "").trim();
 
 /** Livraison : on lit shippingPrice (HT) */
 const getShippingPrice = (order: Order) => {
@@ -470,7 +478,7 @@ export async function generateInvoicePDF(
   });
 
   const clientBoxYTop = headerY - 16;
-  const clientBoxH = 95;
+  const clientBoxH = 112;
   const clientBoxY = clientBoxYTop - clientBoxH;
   page.drawRectangle({
     x: rightX,
@@ -523,6 +531,18 @@ export async function generateInvoicePDF(
   const phone = a.phone || billing.phone;
   if (phone) {
     page.drawText(`Tél : ${safeString(phone)}`, {
+      x: rightX + 12,
+      y: cy,
+      size: 9,
+      font: regular,
+      color: INK,
+    });
+    cy -= 13;
+  }
+
+  const vatNumber = safeString(billing.vatNumber);
+  if (vatNumber) {
+    page.drawText(`TVA intracom. : ${vatNumber}`, {
       x: rightX + 12,
       y: cy,
       size: 9,
@@ -650,6 +670,7 @@ export async function generateInvoicePDF(
     const qty = Number(it.quantity || 1);
     const unit = getItemUnitPrice(it);
     return {
+      reference: getItemReference(it),
       name: getItemName(it),
       qty,
       unit,
@@ -660,6 +681,7 @@ export async function generateInvoicePDF(
   const shippingHT = getShippingPrice(order);
   if (shippingHT > 0) {
     rows.push({
+      reference: "",
       name: t.SHIPPING,
       qty: 1,
       unit: shippingHT,
@@ -680,7 +702,7 @@ export async function generateInvoicePDF(
       color: rgb(1, 1, 1),
     });
     let x = tableX;
-    page.drawText("", {
+    page.drawText(r.reference || "—", {
       x: x + 6,
       y: y + 7,
       size: 8.5,

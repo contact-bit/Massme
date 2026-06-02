@@ -12,6 +12,9 @@ export default function ProductForm({
   const [nameFr, setNameFr] =
     useState("");
 
+  const [productCode, setProductCode] =
+    useState("");
+
   const [descFr, setDescFr] =
     useState("");
 
@@ -77,6 +80,7 @@ export default function ProductForm({
 
           body: JSON.stringify({
             nameFr,
+            productCode,
             descFr,
             priceHT,
             weightKg,
@@ -100,6 +104,7 @@ export default function ProductForm({
 
       /* RESET */
       setNameFr("");
+      setProductCode("");
       setDescFr("");
       setPriceHT("");
       setWeightKg("");
@@ -165,6 +170,25 @@ export default function ProductForm({
               value={nameFr}
               onChange={(e) =>
                 setNameFr(
+                  e.target.value
+                )
+              }
+            />
+
+          </div>
+
+          <div className="pf-field">
+
+            <label>
+              Code produit
+            </label>
+
+            <input
+              className="pf-input"
+              placeholder="LM000202"
+              value={productCode}
+              onChange={(e) =>
+                setProductCode(
                   e.target.value
                 )
               }

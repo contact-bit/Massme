@@ -27,6 +27,7 @@ type VatConfig = {
 
 type ProductVariant = {
   id: string;
+  productCode: string;
   label: string;
   description: string;
   imageUrl: string;
@@ -37,6 +38,7 @@ type ProductVariant = {
 
 type ProductAddon = {
   id: string;
+  productCode: string;
   label: string;
   description: string;
   imageUrl: string;
@@ -118,6 +120,7 @@ export default function ProductEditForm({
   const [adminPassword, setAdminPassword] = useState("");
 
   const [imageUrl, setImageUrl] = useState("");
+  const [productCode, setProductCode] = useState("");
   const [weightKg, setWeightKg] = useState("");
   const [
     deliveryPackageCount,
@@ -144,6 +147,7 @@ export default function ProductEditForm({
     if (!product) return;
 
     setImageUrl(product.imageUrl || "");
+    setProductCode(String(product.productCode || ""));
     setWeightKg(String(product.weightKg ?? ""));
     setDeliveryPackageCount(
       String(product.deliveryPackageCount ?? 1)
@@ -188,6 +192,7 @@ export default function ProductEditForm({
 
             return {
               id: String(vv.id || ""),
+              productCode: String(vv.productCode || ""),
               label: String(vv.label || ""),
               description: String(vv.description || ""),
               imageUrl: String(vv.imageUrl || ""),
@@ -217,6 +222,7 @@ export default function ProductEditForm({
 
             return {
               id: String(aa.id || ""),
+              productCode: String(aa.productCode || ""),
               label: String(aa.label || ""),
               description: String(aa.description || ""),
               imageUrl: String(aa.imageUrl || ""),
@@ -245,6 +251,7 @@ export default function ProductEditForm({
         data: {
           name,
           description,
+          productCode,
           imageUrl: imageUrl || null,
           weightKg,
           deliveryPackageCount,
@@ -271,6 +278,7 @@ export default function ProductEditForm({
             .filter((v) => v.id && v.label)
             .map((v) => ({
               id: v.id,
+              productCode: v.productCode,
               label: v.label,
               description: v.description,
               imageUrl: v.imageUrl,
@@ -300,6 +308,7 @@ export default function ProductEditForm({
             .filter((a) => a.id && a.label)
             .map((a) => ({
               id: a.id,
+              productCode: a.productCode,
               label: a.label,
               description: a.description,
               imageUrl: a.imageUrl,
@@ -416,6 +425,16 @@ export default function ProductEditForm({
             />
           </div>
 
+          <div className="pf-field">
+            <label className="admin-label">Code produit</label>
+            <input
+              className="admin-input"
+              placeholder="LM000202"
+              value={productCode}
+              onChange={(e) => setProductCode(e.target.value)}
+            />
+          </div>
+
           <div className="pf-field pf-field-wide">
             <label className="admin-label">Description</label>
             <textarea
@@ -487,6 +506,23 @@ export default function ProductEditForm({
                     onChange={(e) => {
                       const copy = [...variants];
                       copy[idx] = { ...copy[idx], id: e.target.value };
+                      setVariants(copy);
+                    }}
+                  />
+                </label>
+
+                <label className="pf-option-field compact">
+                  <span>Code produit</span>
+                  <input
+                    className="admin-input"
+                    placeholder="LM000202"
+                    value={v.productCode}
+                    onChange={(e) => {
+                      const copy = [...variants];
+                      copy[idx] = {
+                        ...copy[idx],
+                        productCode: e.target.value,
+                      };
                       setVariants(copy);
                     }}
                   />
@@ -684,6 +720,7 @@ export default function ProductEditForm({
                 markets: [],
                 pricesByMarket: {} as any,
                 vatByMarket: {} as any,
+                productCode: "",
               },
             ])
           }
@@ -715,6 +752,23 @@ export default function ProductEditForm({
                     onChange={(e) => {
                       const copy = [...addons];
                       copy[idx] = { ...copy[idx], id: e.target.value };
+                      setAddons(copy);
+                    }}
+                  />
+                </label>
+
+                <label className="pf-option-field compact">
+                  <span>Code housse</span>
+                  <input
+                    className="admin-input"
+                    placeholder="LM020001"
+                    value={a.productCode}
+                    onChange={(e) => {
+                      const copy = [...addons];
+                      copy[idx] = {
+                        ...copy[idx],
+                        productCode: e.target.value,
+                      };
                       setAddons(copy);
                     }}
                   />
@@ -912,6 +966,7 @@ export default function ProductEditForm({
                 markets: [],
                 pricesByMarket: {} as any,
                 vatByMarket: {} as any,
+                productCode: "",
               },
             ])
           }

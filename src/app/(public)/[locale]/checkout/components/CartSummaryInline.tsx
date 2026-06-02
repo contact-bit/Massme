@@ -44,6 +44,7 @@ type CartItem = {
 
 type ProtectiveCaseProduct = {
   id: string;
+  productCode?: string;
 
   name: string;
 
@@ -148,6 +149,8 @@ export default function CartSummaryInline() {
         setProtectiveCase({
           id:
             addon.id,
+          productCode:
+            addon.productCode || "",
 
           name:
             addon.label ||
@@ -245,6 +248,12 @@ export default function CartSummaryInline() {
     addItem({
       id:
         protectiveCase.id,
+      sku:
+        protectiveCase.productCode ||
+        undefined,
+      productCode:
+        protectiveCase.productCode ||
+        undefined,
 
       name:
         protectiveCase.name,

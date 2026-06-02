@@ -98,6 +98,7 @@ export async function POST(req: Request) {
 
     const {
       nameFr,
+      productCode,
       descFr,
       priceHT,
       weightKg,
@@ -105,6 +106,7 @@ export async function POST(req: Request) {
       imageUrl,
     } = body as {
       nameFr?: string;
+      productCode?: string;
       descFr?: string;
       priceHT?: string | number;
       weightKg?: string | number;
@@ -122,6 +124,7 @@ export async function POST(req: Request) {
 
     const docRef = await dbAdmin.collection("products").add({
       name: { fr: String(nameFr) },
+      productCode: String(productCode || "").trim(),
       description: { fr: String(descFr || "") },
       imageUrl: imageUrl || null,
       weightKg: Math.max(0, Number(weightKg ?? 0) || 0),

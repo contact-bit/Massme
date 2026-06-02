@@ -9,7 +9,6 @@ import type { Order } from "../domain/types";
 import {
   moneyEUR,
   formatAddress,
-  compactId,
   copyText,
 } from "../domain/utils";
 
@@ -40,6 +39,12 @@ type ContactDraft = {
   phone: string;
 };
 
+type PaymentFeeMethod = {
+  id: string;
+  provider: string;
+  label: string;
+};
+
 /* =========================================================
    DATE SAFE
 ========================================================= */
@@ -60,26 +65,6 @@ function toDateSafe(value: any): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-function getRemainingTime(scheduledAt?: any) {
-  const date = toDateSafe(scheduledAt);
-
-  if (!date) return null;
-
-  const diff = date.getTime() - Date.now();
-
-  if (diff <= 0) return "Prêt à envoyer";
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor(
-    (diff / (1000 * 60 * 60)) % 24
-  );
-  const minutes = Math.floor(
-    (diff / (1000 * 60)) % 60
-  );
-
-  return `${days}j ${hours}h ${minutes}m`;
-}
-
 function addressToDraft(value: any): AddressDraft {
   const name =
     value?.name ||
@@ -96,31 +81,51 @@ function addressToDraft(value: any): AddressDraft {
   };
 }
 
-/* ========================================================= */
+function formatAddressBlock(value: any) {
+  if (!value) return "";
 
-function getDeliveryQuantity(item: any) {
-  return Math.max(1, Number(item?.quantity || 1));
+  const name =
+    value?.name ||
+    [value?.firstName, value?.lastName]
+      .filter(Boolean)
+      .join(" ");
+
+  const cityLine = [
+    value?.postalCode,
+    value?.city,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return [
+    name,
+    value?.address,
+    cityLine,
+    value?.country,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
-function getDeliveryWeight(item: any) {
-  return Math.max(0, Number(item?.weightKg || 0) || 0);
-}
+function getLocalizedName(value: any) {
+  if (typeof value === "string") return value;
 
-function getDeliveryPackageCount(item: any) {
-  if (item?.deliveryPackageCount == null) return 1;
-
-  return Math.max(
-    0,
-    Number(item.deliveryPackageCount) || 0
+  return (
+    value?.fr ||
+    value?.en ||
+    value?.label ||
+    ""
   );
 }
 
-function formatDeliveryWeight(value: number) {
-  if (!value) return "";
+function paymentProviderFallbackLabel(
+  provider: string
+) {
+  if (provider === "stripe") return "Stripe";
+  if (provider === "paypal") return "PayPal";
+  if (provider === "manual") return "Virement bancaire";
 
-  return `${new Intl.NumberFormat("fr-FR", {
-    maximumFractionDigits: 2,
-  }).format(value)} kg`;
+  return provider || "Paiement";
 }
 
 export function OrderDetails({
@@ -130,16 +135,8 @@ export function OrderDetails({
   order: Order;
   onCopyAddress: () => void;
 }) {
-  const [sendingReview, setSendingReview] =
-    useState(false);
-
   const [sendingInvoice, setSendingInvoice] =
     useState(false);
-
-  const [localReview, setLocalReview] =
-    useState(
-      (order as any)?.reviewEmail || null
-    );
 
   const [localInvoice, setLocalInvoice] =
     useState(
@@ -202,25 +199,69 @@ export function OrderDetails({
   const [feeDraft, setFeeDraft] =
     useState("");
 
+  const [feeMethodDraft, setFeeMethodDraft] =
+    useState("");
+
+  const [paymentFeeMethods, setPaymentFeeMethods] =
+    useState<PaymentFeeMethod[]>([]);
+
   const [savingFee, setSavingFee] =
     useState(false);
 
   const [, setFeeTick] = useState(0);
 
-  /* =========================================================
-     SYNC REVIEW
-  ========================================================= */
-
   useEffect(() => {
-    const incoming =
-      (order as any)?.reviewEmail;
+    let alive = true;
 
-    if (localReview?.status === "sent") {
-      return;
+    async function loadPaymentMethods() {
+      try {
+        const res = await fetch(
+          "/api/admin/payment-methods",
+          { cache: "no-store" }
+        );
+
+        const data = await res.json();
+
+        if (!alive || !res.ok || !data?.ok) {
+          return;
+        }
+
+        const methods: PaymentFeeMethod[] =
+          (data.methods || [])
+            .map((method: any) => {
+              const provider = String(
+                method?.provider || "manual"
+              ).toLowerCase();
+
+              const label =
+                getLocalizedName(method?.name) ||
+                paymentProviderFallbackLabel(provider);
+
+              return {
+                id: String(method?.id || provider),
+                provider,
+                label,
+              };
+            })
+            .filter(
+              (method: PaymentFeeMethod) =>
+                method.id && method.label
+            );
+
+        setPaymentFeeMethods(methods);
+      } catch {
+        if (alive) {
+          setPaymentFeeMethods([]);
+        }
+      }
     }
 
-    setLocalReview(incoming || null);
-  }, [order]);
+    loadPaymentMethods();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     setLocalShippingAddress(
@@ -244,12 +285,6 @@ export function OrderDetails({
     );
 
   }, [order]);
-
-  const review =
-    localReview?.status === "sent"
-      ? localReview
-      : (order as any)?.reviewEmail ||
-        localReview;
 
   const invoice =
     localInvoice?.status === "sent"
@@ -299,14 +334,94 @@ export function OrderDetails({
   const paymentFee =
     getPaymentFee(order, total);
 
+  const storedFeeProvider =
+    String(
+      (order as any)?.payment?.feeProvider ||
+        (order as any)?.payment?.provider ||
+        (order as any)?.paymentMethod?.provider ||
+        (order as any)?.paymentProvider ||
+        ""
+    ).toLowerCase();
+
+  const storedFeeMethodId =
+    String(
+      (order as any)?.payment?.feeMethodId ||
+        (order as any)?.paymentMethod?.id ||
+        ""
+    );
+
+  const fallbackPaymentFeeMethods =
+    [
+      {
+        id: "stripe",
+        provider: "stripe",
+        label: "Stripe",
+      },
+      {
+        id: "paypal",
+        provider: "paypal",
+        label: "PayPal",
+      },
+      {
+        id: "manual",
+        provider: "manual",
+        label: "Virement bancaire",
+      },
+    ];
+
+  const feeMethodOptions =
+    [
+      ...paymentFeeMethods,
+      ...fallbackPaymentFeeMethods,
+    ].reduce<PaymentFeeMethod[]>(
+      (acc, method) => {
+        const key = `${method.provider}:${method.label.toLowerCase()}`;
+
+        if (
+          acc.some(
+            (existing) =>
+              `${existing.provider}:${existing.label.toLowerCase()}` ===
+              key
+          )
+        ) {
+          return acc;
+        }
+
+        acc.push(method);
+
+        return acc;
+      },
+      []
+    );
+
   const netTotal =
     total -
     (paymentFee?.amount || 0);
 
-  const displayId =
-    (order as any).orderNumber ||
-    (order as any).number ||
-    compactId(order.id);
+  const vatRate =
+    Number(
+      (order as any)?.totals?.vatRate ??
+        (order as any)?.shippingMethod?.vatRate ??
+        20
+    ) || 20;
+
+  const itemVat = (amount: number) =>
+    amount * (vatRate / 100);
+
+  const shippingVat =
+    shipping * (vatRate / 100);
+
+  const totalVat =
+    Number((order as any)?.totals?.totalVAT) ||
+    itemVat(subtotal + shipping);
+
+  const shippingMethodName =
+    (order as any)?.shippingMethod?.name ||
+    "Expédition";
+
+  const shippingMethodDelay =
+    (order as any)?.shippingMethod?.delay ||
+    "—";
 
   const phone =
     localPhone || "—";
@@ -330,22 +445,6 @@ const heardFromLabelMap: Record<string, string> = {
   const heardFromLabel =
   heardFromLabelMap[heardFrom] ||
   heardFrom;
-
-  const deliveryPackageCount = items.reduce(
-    (sum, item) =>
-      sum +
-      getDeliveryPackageCount(item) *
-        getDeliveryQuantity(item),
-    0
-  );
-
-  const deliveryTotalWeight = items.reduce(
-    (sum, item) =>
-      sum +
-      getDeliveryWeight(item) *
-        getDeliveryQuantity(item),
-    0
-  );
 
   /* =========================================================
      SEND INVOICE
@@ -585,11 +684,20 @@ const heardFromLabelMap: Record<string, string> = {
   }
 
   function startFeeEdit() {
+    const currentMethod =
+      feeMethodOptions.find(
+        (method) =>
+          method.id === storedFeeMethodId ||
+          method.provider === storedFeeProvider ||
+          method.label === paymentFee?.label
+      ) || feeMethodOptions[0];
+
     setFeeDraft(
       paymentFee?.amount
         ? String(paymentFee.amount)
         : ""
     );
+    setFeeMethodDraft(currentMethod?.id || "");
 
     setEditingFee(true);
   }
@@ -605,6 +713,18 @@ const heardFromLabelMap: Record<string, string> = {
       if (!Number.isFinite(amount) || amount < 0) {
         throw new Error(
           "Montant commission invalide"
+        );
+      }
+
+      const selectedMethod =
+        feeMethodOptions.find(
+          (method) =>
+            method.id === feeMethodDraft
+        );
+
+      if (!selectedMethod) {
+        throw new Error(
+          "Méthode de paiement obligatoire"
         );
       }
 
@@ -627,6 +747,9 @@ const heardFromLabelMap: Record<string, string> = {
           body: JSON.stringify({
             paymentFee: {
               amount,
+              methodId: selectedMethod.id,
+              provider: selectedMethod.provider,
+              label: selectedMethod.label,
             },
           }),
         }
@@ -646,6 +769,15 @@ const heardFromLabelMap: Record<string, string> = {
         fee: data.paymentFee.amount,
         feeCurrency: data.paymentFee.currency,
         feeSource: data.paymentFee.source,
+        feeProvider:
+          data.paymentFee.provider ||
+          selectedMethod.provider,
+        feeLabel:
+          data.paymentFee.label ||
+          selectedMethod.label,
+        feeMethodId:
+          data.paymentFee.methodId ||
+          selectedMethod.id,
         feeDetectedAt: new Date(),
       };
 
@@ -797,84 +929,6 @@ const heardFromLabelMap: Record<string, string> = {
     )}&mode=${mode}`;
   }
 
-  function deliveryNoteHref(mode: "preview" | "download") {
-    return `/api/admin/orders/delivery-note?orderId=${encodeURIComponent(
-      order.id
-    )}&mode=${mode}`;
-  }
-
-  /* =========================================================
-     SEND REVIEW
-  ========================================================= */
-
-  async function sendReviewNow(
-    orderId: string
-  ) {
-    try {
-      setSendingReview(true);
-
-      const res = await fetch(
-        "/api/admin/reviews/send",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            orderId,
-          }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!data?.ok) {
-        throw new Error();
-      }
-
-      const now = new Date();
-
-      setLocalReview((prev: any) => ({
-        ...prev,
-        status: "sent",
-        sentAt: now,
-        scheduledAt: null,
-      }));
-    } catch (e) {
-      console.error(e);
-
-      alert("❌ Erreur envoi email");
-    } finally {
-      setSendingReview(false);
-    }
-  }
-
-  /* =========================================================
-     REVIEW STATUS
-  ========================================================= */
-
-  function renderReviewStatus() {
-    if (!review?.status) return "—";
-
-    switch (review.status) {
-      case "scheduled":
-        return "⏳ Programmé";
-
-      case "sending":
-        return "📤 Envoi...";
-
-      case "sent":
-        return "✅ Envoyé";
-
-      case "error":
-        return "❌ Erreur";
-
-      default:
-        return review.status;
-    }
-  }
-
   function renderInvoiceStatus() {
     if (!invoice?.status) return "—";
 
@@ -908,35 +962,125 @@ const heardFromLabelMap: Record<string, string> = {
 
         <div className="od-section-head">
           <h2 className="od-section-title">
-            Informations générales
+            Détail commande
           </h2>
         </div>
 
         <div className="od-section-body">
 
-          <div className="od-info-grid">
+          <div className="od-detail-grid">
 
-            <div className="od-info-card od-info-card-email">
-              <div className="od-info-label">
-                Commande
+            <div className="od-detail-card">
+              <div className="od-detail-title">
+                Général
               </div>
 
-              <div className="od-info-value">
-                {displayId}
+              <div className="od-detail-line">
+                <span>Site</span>
+                <strong>{site}</strong>
               </div>
+
+              <div className="od-detail-line">
+                <span>Média</span>
+                <strong>{heardFromLabel}</strong>
+              </div>
+
+              <div className="od-detail-line od-detail-invoice">
+                <span>Facture</span>
+
+                <strong>
+                  <span className="od-invoice-status">
+                    {renderInvoiceStatus()}
+                  </span>
+
+                  <span className="od-invoice-actions">
+                    <a
+                      className="btn-secondary od-mini-action"
+                      href={invoiceHref("preview")}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Voir
+                    </a>
+
+                    <a
+                      className="btn-secondary od-mini-action"
+                      href={invoiceHref("download")}
+                    >
+                      PDF
+                    </a>
+
+                    <button
+                      className={
+                        invoice?.status ===
+                        "sent"
+                          ? "btn-secondary od-mini-action"
+                          : "btn-primary od-mini-action"
+                      }
+                      disabled={sendingInvoice}
+                      onClick={() =>
+                        sendInvoiceNow(order.id)
+                      }
+                    >
+                      {sendingInvoice
+                        ? "..."
+                        : invoice?.status ===
+                          "sent"
+                        ? "Renvoyer"
+                        : "Envoyer"}
+                    </button>
+                  </span>
+                </strong>
+              </div>
+
+              {heardFromOther && (
+                <div className="od-detail-line">
+                  <span>Détail</span>
+                  <strong>{heardFromOther}</strong>
+                </div>
+              )}
             </div>
 
-            <div className="od-info-card">
-              <div className="od-info-label">
-                Email
+            <div className="od-detail-card">
+              <div className="od-detail-title-row">
+                <div className="od-detail-title">
+                  Adresse facturation
+                </div>
+
+                {editingAddress !==
+                  "billingAddress" && (
+                  <button
+                    className="btn-secondary od-mini-action"
+                    onClick={() =>
+                      startAddressEdit(
+                        "billingAddress"
+                      )
+                    }
+                  >
+                    Modifier
+                  </button>
+                )}
               </div>
 
-              <div className="od-info-value">
-                <div className="od-info-edit">
-                  {editingContact ===
-                  "email" ? (
-                    <>
-                      <label className="od-address-field">
+              <div className="od-address-text">
+                {editingAddress ===
+                "billingAddress"
+                  ? renderAddressEditor(
+                      "billingAddress"
+                    )
+                  : formatAddressBlock(
+                      billingAddress
+                    ) || "—"}
+              </div>
+
+              {editingAddress !==
+                "billingAddress" && (
+                <>
+                  <div className="od-contact-row">
+                    <span>Adresse e-mail</span>
+                    {editingContact ===
+                    "email" ? (
+                      <span className="od-contact-edit">
                         <input
                           value={contactDraft.email}
                           onChange={(e) =>
@@ -946,238 +1090,97 @@ const heardFromLabelMap: Record<string, string> = {
                             )
                           }
                         />
-                      </label>
 
-                      <button
-                        className="btn-primary"
-                        disabled={savingContact}
-                        onClick={saveContact}
-                      >
-                        OK
-                      </button>
+                        <button
+                          className="btn-primary"
+                          disabled={savingContact}
+                          onClick={saveContact}
+                        >
+                          OK
+                        </button>
 
-                      <button
-                        className="btn-secondary"
-                        disabled={savingContact}
-                        onClick={() =>
-                          setEditingContact(null)
-                        }
-                      >
-                        Annuler
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <span>
-                        {localEmail || "—"}
+                        <button
+                          className="btn-secondary"
+                          disabled={savingContact}
+                          onClick={() =>
+                            setEditingContact(null)
+                          }
+                        >
+                          Annuler
+                        </button>
                       </span>
+                    ) : (
+                      <strong>
+                        {localEmail || "—"}
+                        <button
+                          className="btn-secondary od-mini-action"
+                          onClick={() =>
+                            startContactEdit(
+                              "email"
+                            )
+                          }
+                        >
+                          Modifier
+                        </button>
+                      </strong>
+                    )}
+                  </div>
 
-                      <button
-                        className="btn-secondary"
-                        onClick={() =>
-                          startContactEdit(
-                            "email"
-                          )
-                        }
-                      >
-                        Modifier email
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+                  <div className="od-contact-row">
+                    <span>Téléphone</span>
+                    {editingContact ===
+                    "phone" ? (
+                      <span className="od-contact-edit">
+                        <input
+                          value={contactDraft.phone}
+                          onChange={(e) =>
+                            updateContactDraft(
+                              "phone",
+                              e.target.value
+                            )
+                          }
+                        />
 
-<div className="od-info-card">
-  <div className="od-info-label">
-    Téléphone
-  </div>
+                        <button
+                          className="btn-primary"
+                          disabled={savingContact}
+                          onClick={saveContact}
+                        >
+                          OK
+                        </button>
 
-  <div className="od-info-value">
-    <div className="od-info-edit">
-      {editingContact ===
-      "phone" ? (
-        <>
-          <label className="od-address-field">
-            <input
-              value={contactDraft.phone}
-              onChange={(e) =>
-                updateContactDraft(
-                  "phone",
-                  e.target.value
-                )
-              }
-            />
-          </label>
-
-          <button
-            className="btn-primary"
-            disabled={savingContact}
-            onClick={saveContact}
-          >
-            OK
-          </button>
-
-          <button
-            className="btn-secondary"
-            disabled={savingContact}
-            onClick={() =>
-              setEditingContact(null)
-            }
-          >
-            Annuler
-          </button>
-        </>
-      ) : (
-        <>
-          <span>{phone}</span>
-
-          <button
-            className="btn-secondary"
-            onClick={() =>
-              startContactEdit(
-                "phone"
-              )
-            }
-          >
-            Modifier
-          </button>
-        </>
-      )}
-    </div>
-  </div>
-</div>
-
-
-<div className="od-info-card">
-  <div className="od-info-label">
-    Site
-  </div>
-
-  <div className="od-info-value">
-    {site}
-  </div>
-</div>
-
-<div className="od-info-card">
-  <div className="od-info-label">
-    Média
-  </div>
-
-  <div className="od-info-value">
-    {heardFromLabel}
-  </div>
-</div>
-
-{heardFromOther && (
-  <div className="od-info-card">
-    <div className="od-info-label">
-      Détail média
-    </div>
-
-    <div className="od-info-value">
-      {heardFromOther}
-    </div>
-  </div>
-)}
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* =====================================================
-         ADDRESSES
-      ===================================================== */}
-
-      <section className="od-section">
-
-        <div className="od-section-head">
-          <h2 className="od-section-title">
-            Adresses
-          </h2>
-        </div>
-
-        <div className="od-section-body">
-
-          <div className="od-address-grid">
-
-            <div className="od-address-card">
-
-              <div className="od-address-title">
-                Livraison
-              </div>
-
-              <div className="od-address-text">
-                {editingAddress ===
-                "shippingAddress"
-                  ? renderAddressEditor(
-                      "shippingAddress"
-                    )
-                  : formatAddress(
-                      shippingAddress
-                    ) || "—"}
-              </div>
-
-              {editingAddress !==
-                "shippingAddress" && (
-                <div className="od-inline-actions">
-                  <button
-                    className="btn-secondary"
-                    onClick={() =>
-                      startAddressEdit(
-                        "shippingAddress"
-                      )
-                    }
-                  >
-                    Modifier
-                  </button>
-
-                  <button
-                    className="btn-secondary"
-                    onClick={
-                      copyCurrentShippingAddress
-                    }
-                  >
-                    Copier
-                  </button>
-                </div>
+                        <button
+                          className="btn-secondary"
+                          disabled={savingContact}
+                          onClick={() =>
+                            setEditingContact(null)
+                          }
+                        >
+                          Annuler
+                        </button>
+                      </span>
+                    ) : (
+                      <strong>
+                        {phone}
+                        <button
+                          className="btn-secondary od-mini-action"
+                          onClick={() =>
+                            startContactEdit(
+                              "phone"
+                            )
+                          }
+                        >
+                          Modifier
+                        </button>
+                      </strong>
+                    )}
+                  </div>
+                </>
               )}
-
-            </div>
-
-            <div className="od-address-card">
-
-              <div className="od-address-title">
-                Facturation
-              </div>
-
-              <div className="od-address-text">
-                {editingAddress ===
-                "billingAddress"
-                  ? renderAddressEditor(
-                      "billingAddress"
-                    )
-                  : formatAddress(
-                      billingAddress
-                    ) || "—"}
-              </div>
 
               {editingAddress !==
                 "billingAddress" && (
                 <div className="od-inline-actions">
-                  <button
-                    className="btn-secondary"
-                    onClick={() =>
-                      startAddressEdit(
-                        "billingAddress"
-                      )
-                    }
-                  >
-                    Modifier
-                  </button>
-
                   <button
                     className="btn-secondary"
                     onClick={
@@ -1191,34 +1194,80 @@ const heardFromLabelMap: Record<string, string> = {
 
             </div>
 
+            <div className="od-detail-card">
+              <div className="od-detail-title-row">
+                <div className="od-detail-title">
+                  Adresse expédition
+                </div>
+
+                {editingAddress !==
+                  "shippingAddress" && (
+                  <button
+                    className="btn-secondary od-mini-action"
+                    onClick={() =>
+                      startAddressEdit(
+                        "shippingAddress"
+                      )
+                    }
+                  >
+                    Modifier
+                  </button>
+                )}
+              </div>
+
+              <div className="od-address-text">
+                {editingAddress ===
+                "shippingAddress"
+                  ? renderAddressEditor(
+                      "shippingAddress"
+                    )
+                  : formatAddressBlock(
+                      shippingAddress
+                    ) || "—"}
+              </div>
+
+              {editingAddress !==
+                "shippingAddress" && (
+                <div className="od-inline-actions">
+                  <button
+                    className="btn-secondary"
+                    onClick={
+                      copyCurrentShippingAddress
+                    }
+                  >
+                    Copier
+                  </button>
+                </div>
+              )}
+            </div>
+
           </div>
 
         </div>
 
       </section>
 
-      {/* =====================================================
-         PRODUCTS
-      ===================================================== */}
-
       <section className="od-section">
-
-        <div className="od-section-head">
-          <h2 className="od-section-title">
-            Produits
-          </h2>
-        </div>
 
         <div className="od-table-wrap">
 
-          <table className="od-table">
+          <table className="od-table od-order-table">
+
+            <colgroup>
+              <col className="od-col-item" />
+              <col className="od-col-price" />
+              <col className="od-col-qty" />
+              <col className="od-col-total" />
+              <col className="od-col-vat" />
+            </colgroup>
 
             <thead>
               <tr>
-                <th>Produit</th>
+                <th>Article(s)</th>
                 <th>Prix</th>
                 <th>Qté</th>
                 <th>Total</th>
+                <th>TVA</th>
               </tr>
             </thead>
 
@@ -1227,7 +1276,7 @@ const heardFromLabelMap: Record<string, string> = {
               {items.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     style={{
                       textAlign: "center",
                     }}
@@ -1251,32 +1300,31 @@ const heardFromLabelMap: Record<string, string> = {
                   const price =
                     getItemPrice(it);
 
+                  const lineTotal =
+                    price * qty;
+
                   return (
                     <tr key={idx}>
 
                       <td>
-
                         <div className="od-product-name">
                           {name}
                         </div>
-
-                        <div className="od-product-sub">
-                          Produit boutique
-                        </div>
-
                       </td>
 
                       <td className="od-table-price">
                         {moneyEUR(price)}
                       </td>
 
-                      <td>
-                        x{qty}
+                      <td>x {qty}</td>
+
+                      <td className="od-table-price">
+                        {moneyEUR(lineTotal)}
                       </td>
 
                       <td className="od-table-price">
                         {moneyEUR(
-                          price * qty
+                          itemVat(lineTotal)
                         )}
                       </td>
 
@@ -1285,34 +1333,44 @@ const heardFromLabelMap: Record<string, string> = {
                 })
               )}
 
+              <tr className="od-shipping-row">
+                <td colSpan={5}>
+                  Expédition
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div className="od-product-name">
+                    {shippingMethodName}
+                  </div>
+                </td>
+
+                <td>
+                  {shippingMethodDelay}
+                </td>
+
+                <td />
+
+                <td className="od-table-price">
+                  {moneyEUR(shipping)}
+                </td>
+
+                <td className="od-table-price">
+                  {moneyEUR(shippingVat)}
+                </td>
+              </tr>
+
             </tbody>
 
           </table>
 
-        </div>
-
-      </section>
-
-      {/* =====================================================
-         TOTALS
-      ===================================================== */}
-
-      <section className="od-section">
-
-        <div className="od-section-head">
-          <h2 className="od-section-title">
-            Totaux
-          </h2>
-        </div>
-
-        <div className="od-section-body">
-
-          <div className="od-totals">
+          <div className="od-totals od-totals-inline">
 
             <div className="od-total-row">
 
               <div className="od-total-label">
-                Sous-total
+                Total articles
               </div>
 
               <div className="od-total-value">
@@ -1324,7 +1382,7 @@ const heardFromLabelMap: Record<string, string> = {
             <div className="od-total-row">
 
               <div className="od-total-label">
-                Livraison
+                Expédition
               </div>
 
               <div className="od-total-value">
@@ -1336,10 +1394,33 @@ const heardFromLabelMap: Record<string, string> = {
             <div className="od-total-row">
 
               <div className="od-total-label">
-                Commission
+                TVA
+              </div>
+
+              <div className="od-total-value">
+                {moneyEUR(totalVat)}
+              </div>
+
+            </div>
+
+            <div className="od-total-row od-total-final">
+
+              <div className="od-total-label">
+                Total payé
+              </div>
+
+              <div className="od-total-value">
+                {moneyEUR(total)}
+              </div>
+
+            </div>
+
+            <div className="od-total-row">
+
+              <div className="od-total-label">
                 {paymentFee
-                  ? ` ${paymentFee.label}`
-                  : ""}
+                  ? `Frais ${paymentFee.label}`
+                  : "Frais"}
               </div>
 
               <div
@@ -1351,6 +1432,27 @@ const heardFromLabelMap: Record<string, string> = {
               >
                 {editingFee ? (
                   <span className="od-total-inline-action">
+                    <select
+                      className="od-fee-method-select"
+                      value={feeMethodDraft}
+                      onChange={(e) =>
+                        setFeeMethodDraft(
+                          e.target.value
+                        )
+                      }
+                    >
+                      {feeMethodOptions.map(
+                        (method) => (
+                          <option
+                            key={method.id}
+                            value={method.id}
+                          >
+                            {method.label}
+                          </option>
+                        )
+                      )}
+                    </select>
+
                     <input
                       className="od-fee-input"
                       value={feeDraft}
@@ -1415,18 +1517,6 @@ const heardFromLabelMap: Record<string, string> = {
 
             </div>
 
-            <div className="od-total-row od-total-final">
-
-              <div className="od-total-label">
-                Total
-              </div>
-
-              <div className="od-total-value">
-                {moneyEUR(total)}
-              </div>
-
-            </div>
-
             {paymentFee && (
               <div className="od-total-row od-total-net">
 
@@ -1440,241 +1530,6 @@ const heardFromLabelMap: Record<string, string> = {
 
               </div>
             )}
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* =====================================================
-         META
-      ===================================================== */}
-
-      <section className="od-section">
-
-        <div className="od-section-head">
-          <h2 className="od-section-title">
-            Facture & avis
-          </h2>
-        </div>
-
-        <div className="od-section-body">
-
-          <div className="od-meta-grid">
-
-            {/* INVOICE */}
-
-            <div className="od-meta-card">
-              <div className="od-meta-card-title">
-                Facture
-              </div>
-
-              <div className="od-meta-row">
-
-                <div className="od-meta-label">
-                  Statut facture
-                </div>
-
-                <div className="od-meta-value">
-                  {renderInvoiceStatus()}
-                </div>
-
-              </div>
-
-              {(sendingInvoice ||
-                invoice?.status ===
-                  "sent") && (
-                <div className="od-meta-row">
-
-                  <div className="od-meta-label">
-                    Dernier envoi
-                  </div>
-
-                  <div className="od-meta-value">
-                    {toDateSafe(
-                      invoice?.lastSentAt ||
-                        invoice?.sentAt
-                    )?.toLocaleString(
-                      "fr-FR"
-                    ) || "—"}
-                  </div>
-
-                </div>
-              )}
-
-              <div className="od-inline-actions">
-                <a
-                  className="btn-secondary"
-                  href={invoiceHref("preview")}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Prévisualiser
-                </a>
-
-                <a
-                  className="btn-secondary"
-                  href={invoiceHref("download")}
-                >
-                  Télécharger
-                </a>
-
-                <button
-                  className={
-                    invoice?.status ===
-                    "sent"
-                      ? "btn-secondary"
-                      : "btn-primary"
-                  }
-                  disabled={sendingInvoice}
-                  onClick={() =>
-                    sendInvoiceNow(order.id)
-                  }
-                >
-                  {sendingInvoice
-                    ? "Envoi..."
-                    : invoice?.status ===
-                      "sent"
-                    ? "Renvoyer"
-                    : "Envoyer"}
-                </button>
-              </div>
-
-            </div>
-
-            {/* DELIVERY NOTE */}
-
-            <div className="od-meta-card">
-              <div className="od-meta-card-title">
-                Bon de livraison
-              </div>
-
-              <div className="od-meta-row">
-                <div className="od-meta-label">
-                  Colis
-                </div>
-
-                <div className="od-meta-value">
-                  {deliveryPackageCount || "—"}
-                </div>
-              </div>
-
-              <div className="od-meta-row">
-                <div className="od-meta-label">
-                  Poids
-                </div>
-
-                <div className="od-meta-value">
-                  {formatDeliveryWeight(
-                    deliveryTotalWeight
-                  ) || "—"}
-                </div>
-              </div>
-
-              <div className="od-inline-actions">
-                <a
-                  className="btn-secondary"
-                  href={deliveryNoteHref("preview")}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Prévisualiser
-                </a>
-
-                <a
-                  className="btn-secondary"
-                  href={deliveryNoteHref("download")}
-                >
-                  Télécharger
-                </a>
-              </div>
-
-            </div>
-
-            {/* REVIEW */}
-
-            <div className="od-meta-card">
-              <div className="od-meta-card-title">
-                Avis client
-              </div>
-
-              <div className="od-meta-row">
-
-                <div className="od-meta-label">
-                  Statut email
-                </div>
-
-                <div className="od-meta-value">
-                  {renderReviewStatus()}
-                </div>
-
-              </div>
-
-              {(sendingReview ||
-                review?.status ===
-                  "sent") && (
-                <div className="od-meta-row">
-
-                  <div className="od-meta-label">
-                    Dernier envoi
-                  </div>
-
-                  <div className="od-meta-value">
-                    {toDateSafe(
-                      review?.sentAt
-                    )?.toLocaleString(
-                      "fr-FR"
-                    ) || "—"}
-                  </div>
-
-                </div>
-              )}
-
-              {!sendingReview &&
-                review?.status ===
-                  "scheduled" &&
-                toDateSafe(
-                  review?.scheduledAt
-                ) && (
-                  <div className="od-meta-row">
-
-                    <div className="od-meta-label">
-                      Prévu dans
-                    </div>
-
-                    <div className="od-meta-value">
-                      {getRemainingTime(
-                        review?.scheduledAt
-                      )}
-                    </div>
-
-                  </div>
-                )}
-
-              <div className="od-inline-actions">
-                <button
-                  className={
-                    review?.status ===
-                    "sent"
-                      ? "btn-secondary"
-                      : "btn-primary"
-                  }
-                  disabled={sendingReview}
-                  onClick={() =>
-                    sendReviewNow(order.id)
-                  }
-                >
-                  {sendingReview
-                    ? "Envoi..."
-                    : review?.status ===
-                      "sent"
-                    ? "Renvoyer"
-                    : "Envoyer"}
-                </button>
-              </div>
-
-            </div>
 
           </div>
 

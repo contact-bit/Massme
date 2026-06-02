@@ -14,6 +14,8 @@ export type BillingCustomer = {
   lastName: string;
   email: string;
   phone: string;
+  isProfessional: boolean;
+  vatNumber: string;
   address: string;
   postalCode: string;
   city: string;
@@ -76,6 +78,8 @@ export type StripeCheckoutPayload = {
     firstName: string;
     lastName: string;
     phone: string;
+    isProfessional: boolean;
+    vatNumber: string;
     address: string;
     postalCode: string;
     city: string;

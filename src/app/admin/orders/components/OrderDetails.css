@@ -834,12 +834,13 @@
 
   gap:
     .35rem;
+
+  flex-wrap:
+    wrap;
 }
 
+.od-fee-method-select,
 .od-fee-input {
-  width:
-    70px;
-
   min-height:
     22px;
 
@@ -866,6 +867,19 @@
 
   background:
     rgba(2,6,23,.42);
+}
+
+.od-fee-method-select {
+  width:
+    132px;
+
+  text-align:
+    left;
+}
+
+.od-fee-input {
+  width:
+    70px;
 }
 
 /* =========================================================
@@ -904,10 +918,13 @@
   display: grid;
 
   grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+    repeat(2, minmax(0, 1fr));
 
   gap:
     .35rem;
+
+  align-items:
+    start;
 }
 
 .od-delivery-form {
@@ -1142,14 +1159,14 @@
 }
 
 .od-table th {
-  padding: .42rem .5rem;
+  padding: .34rem .45rem;
   color: var(--detail-muted);
   font-size: .56rem;
   letter-spacing: .08em;
 }
 
 .od-table td {
-  padding: .42rem .5rem;
+  padding: .28rem .45rem;
   font-size: .66rem;
   border-bottom-color: rgba(255,255,255,.052);
 }
@@ -1169,6 +1186,486 @@
   border-bottom-color: rgba(255,255,255,.052);
 }
 
+.od-meta-card {
+  box-sizing:
+    border-box;
+
+  min-height:
+    0;
+
+  padding:
+    0;
+
+  gap:
+    0;
+
+  background:
+    rgba(255,255,255,.012);
+}
+
+.od-meta-card-title {
+  box-sizing:
+    border-box;
+
+  min-height:
+    24px;
+
+  padding:
+    .16rem .42rem;
+
+  border-bottom:
+    1px solid rgba(255,255,255,.07);
+
+  background:
+    rgba(255,255,255,.032);
+}
+
+.od-meta-row {
+  box-sizing:
+    border-box;
+
+  min-height:
+    23px;
+
+  padding:
+    .1rem .42rem;
+
+  gap:
+    .6rem;
+}
+
+.od-meta-label {
+  font-size:
+    .61rem;
+}
+
+.od-meta-value {
+  font-size:
+    .65rem;
+}
+
+.od-meta-status {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  min-height:
+    22px;
+
+  padding:
+    0 .5rem;
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.035);
+
+  white-space:
+    nowrap;
+}
+
+.od-meta-actions {
+  box-sizing:
+    border-box;
+
+  justify-content:
+    flex-end;
+
+  margin-top:
+    0;
+
+  padding:
+    .22rem .42rem .28rem;
+
+  border-top:
+    1px solid rgba(255,255,255,.052);
+
+  background:
+    rgba(2,6,23,.13);
+}
+
+.od-meta-actions .btn-primary,
+.od-meta-actions .btn-secondary {
+  min-height:
+    26px;
+
+  padding:
+    0 .58rem;
+
+  font-size:
+    .6rem;
+}
+
+/* =========================================================
+   ORDER DETAIL MOCKUP LAYOUT
+========================================================= */
+
+.od-detail-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(150px, .72fr)
+    minmax(240px, 1.28fr)
+    minmax(240px, 1.28fr);
+
+  gap:
+    .4rem;
+
+  align-items:
+    start;
+}
+
+.od-detail-card {
+  box-sizing:
+    border-box;
+
+  min-width:
+    0;
+
+  width:
+    100%;
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  padding:
+    .4rem .48rem;
+
+  border:
+    1px solid var(--detail-border);
+
+  background:
+    rgba(255,255,255,.012);
+}
+
+.od-order-table {
+  width:
+    min(100%, 1180px);
+
+  table-layout:
+    fixed;
+}
+
+.od-col-item {
+  width:
+    44%;
+}
+
+.od-col-price {
+  width:
+    14%;
+}
+
+.od-col-qty {
+  width:
+    8%;
+}
+
+.od-col-total {
+  width:
+    16%;
+}
+
+.od-col-vat {
+  width:
+    12%;
+}
+
+.od-order-table th,
+.od-order-table td {
+  white-space:
+    normal;
+}
+
+.od-order-table .od-product-name {
+  max-width:
+    440px;
+
+  line-height:
+    1.15;
+}
+
+.od-detail-title-row {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap:
+    .45rem;
+
+  min-height:
+    20px;
+
+  margin-bottom:
+    .14rem;
+}
+
+.od-detail-title {
+  color:
+    rgba(248,250,252,.96);
+
+  font-size:
+    .72rem;
+
+  font-weight:
+    900;
+
+  line-height:
+    1.1;
+
+  letter-spacing:
+    -.015em;
+}
+
+.od-detail-line,
+.od-contact-row {
+  display: grid;
+
+  grid-template-columns:
+    minmax(64px, auto) minmax(0, 1fr);
+
+  align-items: start;
+
+  gap:
+    .45rem;
+
+  padding:
+    .11rem 0;
+
+  border-bottom:
+    1px solid rgba(255,255,255,.04);
+
+  color:
+    var(--detail-muted);
+
+  font-size:
+    .62rem;
+}
+
+.od-detail-line:last-child,
+.od-contact-row:last-child {
+  border-bottom:
+    0;
+}
+
+.od-detail-line strong,
+.od-contact-row strong {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap:
+    .28rem;
+
+  flex-wrap:
+    wrap;
+
+  min-width:
+    0;
+
+  color:
+    var(--detail-text);
+
+  font-weight:
+    800;
+
+  text-align:
+    right;
+
+  overflow-wrap:
+    anywhere;
+}
+
+.od-detail-invoice strong {
+  justify-content:
+    flex-end;
+}
+
+.od-invoice-status {
+  color:
+    rgba(203,213,225,.74);
+
+  font-size:
+    .58rem;
+
+  font-weight:
+    800;
+}
+
+.od-invoice-actions {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    flex-end;
+
+  gap:
+    .18rem;
+
+  flex-wrap:
+    wrap;
+}
+
+.od-detail-card .od-address-text {
+  min-height:
+    0;
+
+  padding:
+    .1rem 0 .14rem;
+
+  font-size:
+    .68rem;
+
+  line-height:
+    1.32;
+}
+
+.od-detail-card > .od-inline-actions {
+  justify-content:
+    flex-end;
+
+  margin-top:
+    .08rem;
+
+  padding:
+    .12rem 0 0;
+}
+
+.od-contact-edit {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap:
+    .25rem;
+
+  min-width:
+    0;
+}
+
+.od-contact-edit input {
+  width:
+    min(220px, 100%);
+
+  min-height:
+    24px;
+
+  padding:
+    0 .38rem;
+
+  border:
+    1px solid rgba(255,255,255,.09);
+
+  border-radius:
+    .35rem;
+
+  color:
+    rgba(248,250,252,.94);
+
+  background:
+    rgba(15,23,42,.72);
+}
+
+.od-mini-action {
+  min-height:
+    20px !important;
+
+  padding:
+    0 .36rem !important;
+
+  font-size:
+    .54rem !important;
+
+  white-space:
+    nowrap;
+}
+
+.od-order-table th:first-child,
+.od-order-table td:first-child {
+  text-align:
+    left;
+}
+
+.od-order-table th:not(:first-child),
+.od-order-table td:not(:first-child) {
+  text-align:
+    right;
+}
+
+.od-order-table td:nth-child(2) {
+  color:
+    rgba(248,250,252,.88);
+}
+
+.od-order-table td:nth-child(3) {
+  color:
+    rgba(248,250,252,.82);
+
+  font-weight:
+    800;
+}
+
+.od-shipping-row td {
+  padding-top:
+    .32rem;
+
+  padding-bottom:
+    .32rem;
+
+  color:
+    rgba(226,232,240,.92) !important;
+
+  font-size:
+    .6rem !important;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+
+  background:
+    rgba(255,255,255,.032);
+}
+
+.od-totals-inline {
+  width:
+    min(450px, 100%);
+
+  margin:
+    .28rem 0 .05rem auto;
+
+  padding-top:
+    .28rem;
+
+  border-top:
+    3px double rgba(226,232,240,.32);
+}
+
 /* =========================================================
    RESPONSIVE
 ========================================================= */
@@ -1183,6 +1680,32 @@
   .od-meta-grid {
     gap:
       .35rem;
+  }
+}
+
+@media (max-width: 860px) {
+
+  .od-meta-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .od-meta-card:first-child {
+    grid-column:
+      1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+
+  .od-detail-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .od-detail-card:first-child {
+    grid-column:
+      1 / -1;
   }
 }
 
@@ -1212,9 +1735,6 @@
   }
 
   .od-meta-grid {
-    grid-template-columns:
-      1fr;
-
     gap:
       .55rem;
   }
@@ -1222,13 +1742,13 @@
   .od-section-head,
   .od-section-body {
     padding:
-      1.1rem;
+      .65rem;
   }
 
   .od-table th,
   .od-table td {
     padding:
-      .9rem;
+      .55rem;
   }
 
   .od-actions {
@@ -1242,5 +1762,39 @@
   .od-actions button {
     width:
       100%;
+  }
+}
+
+@media (max-width: 560px) {
+
+  .od-detail-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .od-detail-card:first-child {
+    grid-column:
+      auto;
+  }
+
+  .od-meta-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .od-meta-card:first-child {
+    grid-column:
+      auto;
+  }
+
+  .od-meta-actions {
+    justify-content:
+      stretch;
+  }
+
+  .od-meta-actions .btn-primary,
+  .od-meta-actions .btn-secondary {
+    flex:
+      1 1 auto;
   }
 }

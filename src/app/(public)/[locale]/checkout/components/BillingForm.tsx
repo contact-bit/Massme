@@ -7,6 +7,8 @@ type BillingCustomer = {
   lastName: string;
   email: string;
   phone: string;
+  isProfessional: boolean;
+  vatNumber: string;
   address: string;
   postalCode: string;
   city: string;
@@ -31,7 +33,7 @@ export default function BillingForm({
 
   const updateField = (
     field: keyof BillingCustomer,
-    value: string
+    value: string | boolean
   ) => {
     setBillingCustomer({
       ...billingCustomer,
@@ -206,6 +208,70 @@ export default function BillingForm({
         </p>
 
       </div>
+
+      {/* =========================================
+          PROFESSIONAL
+      ========================================= */}
+
+      <label className="billing-form-professional">
+
+        <input
+          type="checkbox"
+          checked={
+            billingCustomer.isProfessional
+          }
+          onChange={(e) =>
+            updateField(
+              "isProfessional",
+              e.target.checked
+            )
+          }
+        />
+
+        <span className="billing-form-professional-check" />
+
+        <span className="billing-form-professional-content">
+          <strong>
+            Je suis professionnel
+          </strong>
+
+          <small>
+            Ajouter les informations de TVA
+            intracommunautaire à la commande.
+          </small>
+        </span>
+
+      </label>
+
+      {billingCustomer.isProfessional && (
+        <div className="billing-form-field billing-form-field-large">
+
+          <label className="billing-form-label">
+            TVA intracommunautaire
+          </label>
+
+          <input
+            className="billing-form-input"
+            value={
+              billingCustomer.vatNumber
+            }
+            onChange={(e) =>
+              updateField(
+                "vatNumber",
+                e.target.value
+              )
+            }
+            placeholder="FR12345678901"
+            autoComplete="off"
+          />
+
+          <p className="billing-form-help">
+            Ce numéro sera rattaché aux
+            informations de facturation.
+          </p>
+
+        </div>
+      )}
 
       {/* =========================================
           ADDRESS

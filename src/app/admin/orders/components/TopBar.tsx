@@ -40,11 +40,6 @@ export function TopBar({
           </button>
         )}
 
-        {/* ACTIONS */}
-        <a className="btn-secondary" href="/admin/export">
-          Exports
-        </a>
-
         <button
           className="btn-primary"
           onClick={onRefresh}

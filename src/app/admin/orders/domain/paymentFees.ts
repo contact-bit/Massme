@@ -33,6 +33,28 @@ function pickStoredFee(order: Order): number {
   );
 }
 
+function providerLabel(provider: string) {
+  const normalized = provider.toLowerCase();
+
+  if (normalized === "stripe") {
+    return "Stripe";
+  }
+
+  if (normalized === "paypal") {
+    return "PayPal";
+  }
+
+  if (
+    normalized === "bank_transfer" ||
+    normalized === "transfer" ||
+    normalized === "manual"
+  ) {
+    return "Virement bancaire";
+  }
+
+  return provider || "paiement";
+}
+
 export function getPaymentProvider(order: Order): string {
   const o = order as Record<string, unknown>;
   const payment =
@@ -56,6 +78,9 @@ export function getPaymentFee(
   order: Order,
   totalTTC: number
 ): FeeInfo | null {
+  const o = order as Record<string, unknown>;
+  const payment =
+    (o.payment || {}) as Record<string, unknown>;
   const provider = getPaymentProvider(order);
 
   if (!provider) {
@@ -65,10 +90,20 @@ export function getPaymentFee(
   const storedFee = pickStoredFee(order);
 
   if (storedFee > 0) {
+    const feeProvider = String(
+      payment.feeProvider ||
+        payment.provider ||
+        provider
+    ).toLowerCase();
+
+    const feeLabel =
+      String(payment.feeLabel || "").trim() ||
+      providerLabel(feeProvider);
+
     return {
       amount: round2(storedFee),
-      label: "Réelle",
-      provider,
+      label: feeLabel,
+      provider: feeProvider || provider,
     };
   }
 

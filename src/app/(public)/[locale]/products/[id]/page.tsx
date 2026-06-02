@@ -41,6 +41,7 @@ type RawVAT = {
 
 type Addon = {
   id: string;
+  productCode?: string;
 
   label: string;
 
@@ -66,6 +67,7 @@ type Addon = {
 
 type Product = {
   id: string;
+  productCode?: string;
 
   name:
     Partial<
@@ -876,6 +878,12 @@ export default function ProductPage() {
 
     addItem({
       id: product.id,
+      sku:
+        product.productCode ||
+        undefined,
+      productCode:
+        product.productCode ||
+        undefined,
 
       name,
 

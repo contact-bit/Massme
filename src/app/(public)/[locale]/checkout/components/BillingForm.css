@@ -331,6 +331,117 @@
 }
 
 /* =====================================================
+   PROFESSIONAL
+===================================================== */
+
+.billing-form-professional {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    auto minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: .85rem;
+
+  padding:
+    .9rem 1rem;
+
+  border:
+    1px solid rgba(148,163,184,.12);
+
+  border-radius:
+    20px;
+
+  background:
+    rgba(8,15,28,.62);
+
+  cursor:
+    pointer;
+}
+
+.billing-form-professional input {
+  position: absolute;
+
+  opacity: 0;
+
+  pointer-events: none;
+}
+
+.billing-form-professional-check {
+  width: 24px;
+  height: 24px;
+
+  border:
+    1px solid rgba(148,163,184,.28);
+
+  border-radius:
+    8px;
+
+  background:
+    rgba(15,23,42,.9);
+}
+
+.billing-form-professional input:checked + .billing-form-professional-check {
+  border-color:
+    rgba(56,189,248,.55);
+
+  background:
+    linear-gradient(
+      135deg,
+      #38bdf8,
+      #2563eb
+    );
+
+  box-shadow:
+    0 0 0 4px rgba(56,189,248,.12);
+}
+
+.billing-form-professional input:checked + .billing-form-professional-check::after {
+  content: "✓";
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  color: white;
+
+  font-size: .78rem;
+
+  font-weight: 900;
+}
+
+.billing-form-professional-content {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: .18rem;
+}
+
+.billing-form-professional-content strong {
+  color: white;
+
+  font-size: .92rem;
+}
+
+.billing-form-professional-content small {
+  color:
+    rgba(148,163,184,.86);
+
+  font-size: .78rem;
+
+  line-height: 1.45;
+}
+
+/* =====================================================
    TRUST BAR
 ===================================================== */
 

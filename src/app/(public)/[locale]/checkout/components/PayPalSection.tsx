@@ -30,6 +30,8 @@ type BillingCustomer = {
   lastName: string;
   email: string;
   phone: string;
+  isProfessional: boolean;
+  vatNumber: string;
   address: string;
   postalCode: string;
   city: string;
@@ -331,6 +333,14 @@ export default function PayPalSection({
 
                     phone:
                       billingCustomer.phone.trim(),
+
+                    isProfessional:
+                      billingCustomer.isProfessional,
+
+                    vatNumber:
+                      billingCustomer.isProfessional
+                        ? billingCustomer.vatNumber.trim()
+                        : "",
 
                     address:
                       billingCustomer.address,

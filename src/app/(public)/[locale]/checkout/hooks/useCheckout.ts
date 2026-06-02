@@ -85,6 +85,8 @@ export default function useCheckout() {
     lastName: "",
     email: "",
     phone: "",
+    isProfessional: false,
+    vatNumber: "",
     address: "",
     postalCode: "",
     city: "",
@@ -415,6 +417,11 @@ export default function useCheckout() {
             {
               ...billingCustomer,
 
+              vatNumber:
+                billingCustomer.isProfessional
+                  ? billingCustomer.vatNumber.trim()
+                  : "",
+
               name:
                 fullName,
             },
@@ -536,6 +543,14 @@ export default function useCheckout() {
 
               phone:
                 billingCustomer.phone.trim(),
+
+              isProfessional:
+                billingCustomer.isProfessional,
+
+              vatNumber:
+                billingCustomer.isProfessional
+                  ? billingCustomer.vatNumber.trim()
+                  : "",
 
               address:
                 billingCustomer.address,

@@ -24,6 +24,8 @@ type Order = {
   orderNumber?: string;
   items?: Array<{
     id?: string;
+    sku?: string;
+    productCode?: string;
     name?: any;
     quantity?: number;
     weightKg?: number | string;
@@ -62,6 +64,10 @@ function getName(address?: Address | null) {
 function getItemName(item: Order["items"][number]) {
   if (typeof item?.name === "string") return item.name;
   return item?.name?.fr || item?.name?.en || "Produit";
+}
+
+function getItemReference(item: Order["items"][number]) {
+  return safeString(item?.sku || item?.productCode || item?.id);
 }
 
 function formatDate(date: Date) {
@@ -374,7 +380,7 @@ export async function generateDeliveryNotePDF(
     const quantity = getQuantity(item);
     const itemWeight = getItemWeight(item);
 
-    page.drawText(safeString(item?.id).slice(0, 24) || "—", {
+    page.drawText(getItemReference(item).slice(0, 24) || "—", {
       x: M + 10,
       y,
       size: 8,

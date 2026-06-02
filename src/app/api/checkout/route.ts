@@ -15,6 +15,8 @@ type CartItem = {
 
 type CleanItem = CartItem & {
   id: string;
+  sku?: string;
+  productCode?: string;
   name: string;
 };
 
@@ -114,6 +116,7 @@ function buildOrderFingerprint(input: {
   const normalizedItems = [...input.items]
     .map((item) => ({
       id: String(item.id),
+      sku: String((item as any).sku || (item as any).productCode || "").trim(),
       name: String(item.name),
       priceHT: Number(item.priceHT) || 0,
       weightKg: Number((item as any).weightKg) || 0,
@@ -222,6 +225,11 @@ function buildLineItems(params: {
         currency: "eur",
         product_data: {
           name: item.name,
+          metadata: item.sku
+            ? {
+                sku: item.sku,
+              }
+            : undefined,
         },
         unit_amount: Math.round(item.priceHT * 100),
       },
@@ -323,6 +331,8 @@ export async function POST(req: Request) {
 
     const cleanItems: CleanItem[] = items.map((i: any) => ({
       id: String(i.id),
+      sku: String(i.sku || i.productCode || "").trim() || undefined,
+      productCode: String(i.productCode || i.sku || "").trim() || undefined,
       name: String(i.name),
       priceHT: Number(i.priceHT) || 0,
       weightKg: Number(i.weightKg) || 0,

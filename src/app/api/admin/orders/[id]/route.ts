@@ -161,13 +161,41 @@ if (roleOrResponse instanceof Response) {
       }
 
       const fee = Math.round(rawFee * 100) / 100;
+      const feeProvider =
+        typeof body.paymentFee.provider === "string"
+          ? body.paymentFee.provider
+              .trim()
+              .toLowerCase()
+          : "";
+      const feeLabel =
+        typeof body.paymentFee.label === "string"
+          ? body.paymentFee.label.trim()
+          : "";
+      const feeMethodId =
+        typeof body.paymentFee.methodId === "string"
+          ? body.paymentFee.methodId.trim()
+          : "";
 
-      const updates = {
+      const updates: Record<string, any> = {
         "payment.fee": fee,
         "payment.feeCurrency": "EUR",
         "payment.feeSource": "manual_admin",
         "payment.feeDetectedAt": new Date(),
       };
+
+      if (feeProvider) {
+        updates["payment.feeProvider"] =
+          feeProvider;
+      }
+
+      if (feeLabel) {
+        updates["payment.feeLabel"] = feeLabel;
+      }
+
+      if (feeMethodId) {
+        updates["payment.feeMethodId"] =
+          feeMethodId;
+      }
 
       await dbAdmin.collection("pending_orders").doc(id).set(updates, {
         merge: true,
@@ -185,6 +213,9 @@ if (roleOrResponse instanceof Response) {
           amount: fee,
           currency: "EUR",
           source: "manual_admin",
+          provider: feeProvider,
+          label: feeLabel,
+          methodId: feeMethodId,
         },
       });
     }

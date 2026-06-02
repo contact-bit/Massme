@@ -299,6 +299,250 @@
 }
 
 /* =========================================================
+   REVIEW EMAILS TABLE
+========================================================= */
+
+.reviews-email-section {
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(15,23,42,.74), rgba(8,13,24,.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035);
+  overflow: hidden;
+}
+
+.reviews-email-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .75rem .85rem;
+  border-bottom: 1px solid rgba(255,255,255,.075);
+  background: rgba(255,255,255,.018);
+}
+
+.reviews-email-table {
+  overflow-x: auto;
+}
+
+.reviews-unified-table {
+  min-width: 1120px;
+}
+
+.reviews-unified-table .reviews-btn {
+  min-height: 24px;
+  padding: 0 .55rem;
+  border-radius: .35rem;
+  font-size: .66rem;
+}
+
+.reviews-unified-table .row {
+  cursor: pointer;
+}
+
+.reviews-row-expanded td {
+  padding: 0 !important;
+}
+
+.reviews-expanded {
+  margin-left: 18px;
+  padding: .45rem;
+  border-left: 3px solid rgba(56,189,248,.72);
+  background:
+    linear-gradient(180deg, rgba(8,13,24,.82), rgba(5,10,20,.96));
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+  gap: .4rem;
+}
+
+.reviews-expanded-minimal {
+  grid-template-columns:
+    minmax(0, 1.25fr)
+    minmax(0, .95fr);
+}
+
+.reviews-expanded-card {
+  border: 1px solid rgba(255,255,255,.058);
+  background: rgba(255,255,255,.012);
+  padding: .45rem .5rem;
+  min-width: 0;
+}
+
+.reviews-expanded-card h3 {
+  margin: 0 0 .35rem;
+  color: rgba(248,250,252,.96);
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: -.015em;
+}
+
+.reviews-expanded-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .14rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  color: rgba(148,163,184,.70);
+  font-size: .62rem;
+}
+
+.reviews-expanded-row strong {
+  color: rgba(248,250,252,.94);
+  font-size: .64rem;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.reviews-expanded-comment,
+.reviews-expanded-products {
+  color: rgba(203,213,225,.82);
+  font-size: .68rem;
+  line-height: 1.45;
+}
+
+.reviews-email-table-head,
+.reviews-email-row {
+  min-width: 1240px;
+  display: grid;
+  grid-template-columns:
+    .85fr
+    1.35fr
+    .8fr
+    1.1fr
+    .75fr
+    minmax(0, 1.6fr)
+    1.35fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.reviews-email-table-head {
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.075);
+  color: rgba(148,163,184,.78);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,.026);
+}
+
+.reviews-email-row {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.052);
+}
+
+.reviews-email-row:hover {
+  background: rgba(255,255,255,.034);
+}
+
+.reviews-email-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 0 .55rem;
+  border-radius: 999px;
+  color: rgba(226,232,240,.92);
+  font-size: .66rem;
+  font-weight: 850;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  white-space: nowrap;
+}
+
+.reviews-email-status.status-scheduled {
+  color: #fbbf24;
+  border-color: rgba(251,191,36,.18);
+  background: rgba(251,191,36,.10);
+}
+
+.reviews-email-status.status-sent {
+  color: #6ee7b7;
+  border-color: rgba(34,197,94,.18);
+  background: rgba(34,197,94,.10);
+}
+
+.reviews-email-status.status-error {
+  color: #fca5a5;
+  border-color: rgba(239,68,68,.18);
+  background: rgba(239,68,68,.10);
+}
+
+.reviews-email-client {
+  display: flex;
+  flex-direction: column;
+  gap: .12rem;
+  min-width: 0;
+}
+
+.reviews-email-client strong,
+.reviews-email-order {
+  color: rgba(248,250,252,.94);
+  font-size: .76rem;
+  font-weight: 850;
+}
+
+.reviews-email-review {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  min-width: 0;
+}
+
+.reviews-email-review strong {
+  color: #facc15;
+  font-size: .76rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.reviews-email-review span {
+  color: rgba(148,163,184,.74);
+  font-size: .7rem;
+  font-weight: 750;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reviews-email-client span,
+.reviews-email-date,
+.reviews-email-items {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(148,163,184,.74);
+  font-size: .7rem;
+  font-weight: 650;
+}
+
+.reviews-email-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: .3rem;
+  flex-wrap: wrap;
+}
+
+.reviews-email-actions .reviews-btn {
+  min-height: 24px;
+  padding: 0 .55rem;
+  border-radius: .35rem;
+  font-size: .66rem;
+}
+
+.reviews-meta-inline {
+  padding: .55rem .75rem;
+  border-bottom: 1px solid rgba(255,255,255,.052);
+}
+
+/* =========================================================
    CARD HEAD
 ========================================================= */
 
@@ -352,6 +596,39 @@
 
   gap:
     .8rem;
+}
+
+.reviews-view-control {
+  min-width: 230px;
+  padding: .45rem .55rem;
+  border: 1px solid rgba(255,255,255,.075);
+  background: rgba(255,255,255,.026);
+  display: grid;
+  gap: .26rem;
+}
+
+.reviews-view-control span {
+  color: rgba(148,163,184,.78);
+  font-size: .58rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.reviews-view-control select {
+  min-height: 28px;
+  border: 1px solid rgba(255,255,255,.09);
+  background: rgba(2,6,23,.52);
+  color: rgba(248,250,252,.96);
+  padding: 0 .45rem;
+  font-size: .76rem;
+  font-weight: 850;
+}
+
+.reviews-view-control small {
+  color: rgba(148,163,184,.72);
+  font-size: .68rem;
+  line-height: 1.3;
 }
 
 /* =========================================================
@@ -1399,6 +1676,12 @@
   .reviews-tab {
     flex-shrink:
       0;
+  }
+
+  .reviews-card-actions,
+  .reviews-view-control {
+    width:
+      100%;
   }
 
   .reviews-actions,

@@ -199,6 +199,9 @@ export async function PATCH(req: Request) {
 
     /* ---------- BASIC ---------- */
     if ("imageUrl" in data) update.imageUrl = data.imageUrl || null;
+    if ("productCode" in data) {
+      update.productCode = String(data.productCode || "").trim();
+    }
     if ("isActive" in data) update.isActive = !!data.isActive;
     if ("weightKg" in data) {
       update.weightKg =
@@ -244,6 +247,7 @@ export async function PATCH(req: Request) {
 
         return {
           id: String(v.id || ""),
+          productCode: String(v.productCode || "").trim(),
           label: String(v.label || ""),
           description: String(v.description || ""),
           imageUrl: v.imageUrl ? String(v.imageUrl) : "",
@@ -263,6 +267,7 @@ export async function PATCH(req: Request) {
 
         return {
           id: String(a.id || ""),
+          productCode: String(a.productCode || "").trim(),
           label: String(a.label || ""),
           description: String(a.description || ""),
           imageUrl: a.imageUrl ? String(a.imageUrl) : "",

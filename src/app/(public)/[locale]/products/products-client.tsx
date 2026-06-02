@@ -126,6 +126,7 @@ type VatConfig = {
 
 type ProductVariant = {
   id: string;
+  productCode?: string;
   label: string;
   description?: string;
   imageUrl?: string;
@@ -136,6 +137,7 @@ type ProductVariant = {
 
 type ProductAddon = {
   id: string;
+  productCode?: string;
   label: string;
   description?: string;
   imageUrl?: string;
@@ -146,6 +148,7 @@ type ProductAddon = {
 
 type Product = {
   id: string;
+  productCode?: string;
   name: Partial<Record<Locale, string>>;
   description?: Partial<Record<Locale, string>>;
   imageUrl?: string;
@@ -321,6 +324,14 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
     // ligne principale
     addItem({
       id: hasVariants && selectedVariant ? `${p.id}:${selectedVariant.id}` : p.id,
+      sku:
+        selectedVariant?.productCode ||
+        p.productCode ||
+        undefined,
+      productCode:
+        selectedVariant?.productCode ||
+        p.productCode ||
+        undefined,
       name: mainName,
       priceHT: mainPriceHT,
       weightKg:
@@ -345,6 +356,12 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
 
         addItem({
           id: `${p.id}:addon:${addon.id}`,
+          sku:
+            addon.productCode ||
+            undefined,
+          productCode:
+            addon.productCode ||
+            undefined,
           name: addon.label,
           priceHT: addonPriceHT,
           weightKg: 0,
