@@ -41,6 +41,16 @@ export default function AdminTopbar() {
     router.replace("/admin/login");
   }
 
+  function submitSearch() {
+    const term = q.trim();
+
+    if (!term) return;
+
+    router.push(
+      `/admin?search=${encodeURIComponent(term)}`
+    );
+  }
+
   return (
     <header className="admin-topbar">
       <div className="admin-topbar-inner">
@@ -62,8 +72,13 @@ export default function AdminTopbar() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  submitSearch();
+                }
+              }}
               className="admin-search-input"
-              placeholder="Rechercher (commande, email, produit)…"
+              placeholder="Rechercher (commande, facture, email)…"
             />
             <span className="admin-search-kbd">⌘K</span>
           </div>

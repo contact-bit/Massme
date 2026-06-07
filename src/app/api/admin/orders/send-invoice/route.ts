@@ -7,6 +7,7 @@ import {
   generateInvoicePDF,
   type Locale,
 } from "@/lib/generateInvoice";
+import { ensureInvoiceNumberForOrder } from "@/server/orders/generateInvoiceNumber";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +42,21 @@ function getOrderNumber(
     asString(invoiceEmail.orderNumber) ||
     orderId
   );
+}
+
+function getInvoiceNumber(
+  order: Record<string, unknown>
+) {
+  const invoiceEmail =
+    pickRecord(order, "invoiceEmail");
+
+  const invoiceNumber =
+    asString(order.invoiceNumber) ||
+    asString(invoiceEmail.invoiceNumber);
+
+  return /^FID\d{5,}$/.test(invoiceNumber)
+    ? invoiceNumber
+    : "";
 }
 
 function getOrderEmail(
@@ -141,6 +157,11 @@ export async function POST(req: Request) {
     }
 
     const orderNumber = getOrderNumber(order, orderId);
+    const invoiceNumber =
+      getInvoiceNumber(order) ||
+      (await ensureInvoiceNumberForOrder(
+        sourceRef
+      ));
     const rawLocale = asString(order.locale);
     const locale = isLocale(rawLocale)
       ? rawLocale
@@ -154,10 +175,12 @@ export async function POST(req: Request) {
         ...order,
         email,
         orderNumber,
+        invoiceNumber,
       },
       orderNumber,
       {
         locale,
+        invoiceNumber,
         paidLabel: true,
       }
     );
@@ -169,6 +192,7 @@ export async function POST(req: Request) {
           lastAttemptAt: FieldValue.serverTimestamp(),
           email,
           orderNumber,
+          invoiceNumber,
         },
       },
       { merge: true }
@@ -177,7 +201,7 @@ export async function POST(req: Request) {
     const res = await new Resend(process.env.RESEND_API_KEY).emails.send({
       from,
       to: email,
-      subject: `Votre facture - Commande ${orderNumber}`,
+      subject: `Votre facture ${invoiceNumber} - Commande ${orderNumber}`,
       html: `
         <div style="font-family:Arial,sans-serif;padding:24px;color:#111">
           <h2>Votre facture Vitrectomed</h2>
@@ -188,7 +212,7 @@ export async function POST(req: Request) {
       `,
       attachments: [
         {
-          filename: `facture-${orderNumber}.pdf`,
+          filename: `facture-${invoiceNumber}.pdf`,
           content: pdf.toString("base64"),
           contentType: "application/pdf",
         },
@@ -204,6 +228,7 @@ export async function POST(req: Request) {
         lastSentAt: new Date(),
         email,
         orderNumber,
+        invoiceNumber,
         resendId,
         lastError: null,
         resendCount: FieldValue.increment(1),
@@ -217,6 +242,7 @@ export async function POST(req: Request) {
       resendId,
       email,
       orderNumber,
+      invoiceNumber,
     });
   } catch (e: unknown) {
     console.error("[admin/send-invoice] error:", e);

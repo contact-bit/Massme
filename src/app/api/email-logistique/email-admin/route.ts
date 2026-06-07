@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { Resend } from "resend";
 import { generateInvoicePDF } from "@/lib/generateInvoice";
+import { ensureInvoiceNumberForOrder } from "@/server/orders/generateInvoiceNumber";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -10,10 +11,6 @@ export const runtime = "nodejs";
 function resolveOrderNumber(rawOrder: any, orderId: string) {
   if (typeof rawOrder?.orderNumber === "string" && rawOrder.orderNumber.trim().length > 0) {
     return rawOrder.orderNumber.trim();
-  }
-
-  if (typeof rawOrder?.invoiceNumber === "string" && rawOrder.invoiceNumber.trim().length > 0) {
-    return rawOrder.invoiceNumber.trim();
   }
 
   return orderId;
@@ -27,7 +24,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing payload" }, { status: 400 });
     }
 
-    const snap = await dbAdmin.collection("pending_orders").doc(orderId).get();
+    const ref = dbAdmin.collection("pending_orders").doc(orderId);
+    const snap = await ref.get();
     const rawOrder = snap.data();
 
     if (!rawOrder) {
@@ -35,6 +33,11 @@ export async function POST(req: Request) {
     }
 
     const orderNumber = resolveOrderNumber(rawOrder, orderId);
+    const invoiceNumber =
+      typeof rawOrder?.invoiceNumber === "string" &&
+      /^FID\d{5,}$/.test(rawOrder.invoiceNumber.trim())
+        ? rawOrder.invoiceNumber.trim()
+        : await ensureInvoiceNumberForOrder(ref);
 
     console.log("ADMIN ORDER DEBUG", {
       orderId,
@@ -46,7 +49,7 @@ export async function POST(req: Request) {
     const order = {
       ...rawOrder,
       orderNumber,
-      invoiceNumber: orderNumber,
+      invoiceNumber,
       items: Array.isArray(rawOrder.items)
         ? rawOrder.items.map((item: any) => ({
             name: item.name || "Produit",
@@ -85,7 +88,11 @@ export async function POST(req: Request) {
     let pdfBase64 = "";
 
     try {
-      const pdfBuffer = await generateInvoicePDF(order, orderNumber);
+      const pdfBuffer = await generateInvoicePDF(
+        order,
+        orderNumber,
+        { invoiceNumber }
+      );
       pdfBase64 = pdfBuffer.toString("base64");
     } catch (err) {
       console.error("❌ Erreur génération facture PDF :", err);
@@ -174,7 +181,7 @@ export async function POST(req: Request) {
       attachments: pdfBase64
         ? [
             {
-              filename: `facture-${orderNumber}.pdf`,
+              filename: `facture-${invoiceNumber}.pdf`,
               content: pdfBase64,
               contentType: "application/pdf",
             },

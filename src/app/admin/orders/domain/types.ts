@@ -51,6 +51,7 @@ export type Order = {
   // NUMÉRO
   orderNumber?: string;
   __orderNumber?: string;
+  invoiceNumber?: string;
 
   /* =========================================================
      🔥 STRIPE / LEGACY

@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { useOrders } from "./orders/hooks/useOrders";
 import { StatusPill } from "./orders/components/StatusPill";
@@ -78,6 +79,9 @@ type Props = {
 export default function DashboardOrdersSearch({
   embedded = false,
 }: Props) {
+  const searchParams =
+    useSearchParams();
+
   const {
     orders,
     loading,
@@ -94,6 +98,15 @@ export default function DashboardOrdersSearch({
   useEffect(() => {
     initOnce();
   }, [initOnce]);
+
+  useEffect(() => {
+    const term =
+      searchParams.get("search") || "";
+
+    if (term) {
+      setQ(term);
+    }
+  }, [searchParams]);
 
   /* =========================================================
      FILTERED
@@ -134,6 +147,21 @@ export default function DashboardOrdersSearch({
 
           String(
             o?.orderNumber ||
+              ""
+          )
+            .toLowerCase()
+            .includes(term) ||
+
+          String(
+            o?.invoiceNumber ||
+              ""
+          )
+            .toLowerCase()
+            .includes(term) ||
+
+          String(
+            o?.invoiceEmail
+              ?.invoiceNumber ||
               ""
           )
             .toLowerCase()
@@ -196,7 +224,7 @@ export default function DashboardOrdersSearch({
         {/* SEARCH */}
         <input
           className="dash-orders-search"
-          placeholder="Commande, email, ville, produit..."
+          placeholder="Commande, facture, email, ville, produit..."
           value={q}
           onChange={(e) =>
             setQ(
@@ -243,6 +271,11 @@ export default function DashboardOrdersSearch({
                         0,
                         6
                       );
+                    const invoiceNumber =
+                      o?.invoiceNumber ||
+                      o?.invoiceEmail
+                        ?.invoiceNumber ||
+                      "";
 
                     const paymentStatus =
                       o?.payment
@@ -257,8 +290,16 @@ export default function DashboardOrdersSearch({
                       <tr key={o.id}>
                         <td>
                           <div className="cell-command">
-                            <span className="cell-main mono">
-                              {displayId}
+                            <span className="dash-command-ids">
+                              <span className="cell-main mono">
+                                {displayId}
+                              </span>
+
+                              {invoiceNumber && (
+                                <span className="cell-sub mono">
+                                  {invoiceNumber}
+                                </span>
+                              )}
                             </span>
 
                             <a

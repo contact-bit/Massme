@@ -9,6 +9,7 @@ import { createOrUpdateOrder } from "@/server/shipstation/client";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 import { scheduleReviewEmailForOrder } from "@/server/reviewEmailScheduler";
 import { sendOrderEmails, OrderEmailPayload } from "@/lib/mailer";
+import { ensureInvoiceNumberForOrder } from "@/server/orders/generateInvoiceNumber";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -703,6 +704,8 @@ if (after?.emails?.sent && after?.invoiceEmail?.status === "sent") {
       (typeof after.orderNumber === "string" && after.orderNumber.length > 0
         ? after.orderNumber
         : (session.metadata?.order_number as string | undefined)) || orderId;
+    const invoiceNumber =
+      await ensureInvoiceNumberForOrder(ref);
 
     const emailOrderPayload: OrderEmailPayload = {
       id: after.id || orderId,
@@ -715,9 +718,11 @@ if (after?.emails?.sent && after?.invoiceEmail?.status === "sent") {
       orderData: {
         ...after,
         orderNumber: orderNumberForEmail,
+        invoiceNumber,
       },
       locale,
       orderNumber: orderNumberForEmail,
+      invoiceNumber,
     };
 
     const mailResult = await sendOrderEmails({
@@ -740,6 +745,8 @@ if (after?.emails?.sent && after?.invoiceEmail?.status === "sent") {
           sentAt: new Date(),
           provider: "stripe",
           orderNumber: mailResult?.orderNumber ?? orderNumberForEmail,
+          invoiceNumber:
+            mailResult?.invoiceNumber ?? invoiceNumber,
           to: emailForInvoice,
         },
       },

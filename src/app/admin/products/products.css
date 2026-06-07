@@ -9,85 +9,14 @@
 .products-page {
   position: relative;
 
-  min-height: 100vh;
+  min-height: auto;
 
   display: flex;
   flex-direction: column;
 
   gap: 1.5rem;
 
-  overflow: hidden;
-}
-
-/* =========================================================
-   BACKGROUND
-========================================================= */
-
-.products-bg-grid {
-  position: fixed;
-
-  inset: 0;
-
-  z-index: 0;
-
-  opacity: .05;
-
-  pointer-events: none;
-
-  background-image:
-    linear-gradient(
-      rgba(255,255,255,.04) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(255,255,255,.04) 1px,
-      transparent 1px
-    );
-
-  background-size:
-    80px 80px;
-
-  mask-image:
-    radial-gradient(
-      circle at center,
-      black,
-      transparent 90%
-    );
-}
-
-.products-bg-glow {
-  position: fixed;
-
-  border-radius: 999px;
-
-  filter: blur(120px);
-
-  pointer-events: none;
-
-  z-index: 0;
-}
-
-.products-bg-glow-1 {
-  top: -140px;
-  left: -140px;
-
-  width: 460px;
-  height: 460px;
-
-  background:
-    rgba(0,208,255,.10);
-}
-
-.products-bg-glow-2 {
-  right: -180px;
-  bottom: -180px;
-
-  width: 520px;
-  height: 520px;
-
-  background:
-    rgba(139,92,246,.08);
+  overflow: visible;
 }
 
 /* =========================================================

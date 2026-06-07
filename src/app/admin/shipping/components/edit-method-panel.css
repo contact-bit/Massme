@@ -826,3 +826,37 @@
       flex-start;
   }
 }
+
+/* Compact admin structure */
+.emp {
+  width: 100%;
+  max-width: 860px;
+  gap: .85rem;
+}
+
+.emp-card {
+  width: 100%;
+  padding: .85rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,.16);
+}
+
+.emp-card-head {
+  margin-bottom: .75rem;
+}
+
+.emp-title {
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.emp-grid {
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .amf-grid,
+  .emp-grid {
+    grid-template-columns: 1fr;
+  }
+}

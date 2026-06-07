@@ -341,6 +341,29 @@ export default function PaymentsAdminPage() {
   return (
     <main className="pap">
 
+      <header className="pap-page-head">
+        <div>
+          <h1>Moyens de paiement</h1>
+          <p>
+            Gérez les moyens de paiement affichés sur la boutique.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className={`pap-create-toggle ${
+            showCreate ? "active" : ""
+          }`}
+          onClick={() =>
+            setShowCreate(!showCreate)
+          }
+        >
+          {showCreate
+            ? "Fermer"
+            : "Nouvelle méthode"}
+        </button>
+      </header>
+
       {/* =====================================================
           COUNTRIES
       ===================================================== */}
@@ -416,35 +439,6 @@ export default function PaymentsAdminPage() {
       ===================================================== */}
 
       <section className="pap-section">
-
-        <div className="pap-create-head">
-
-          <div>
-
-            
-          </div>
-
-          <button
-            type="button"
-            className={`pap-create-toggle ${
-              showCreate
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              setShowCreate(
-                !showCreate
-              )
-            }
-          >
-
-            {showCreate
-              ? "Fermer"
-              : "Nouvelle méthode"}
-
-          </button>
-
-        </div>
 
         {showCreate && (
 

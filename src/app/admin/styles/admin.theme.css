@@ -1,0 +1,758 @@
+/* =========================================================
+   ADMIN THEMES
+========================================================= */
+
+.admin-font-root {
+  color-scheme: dark;
+}
+
+/* =========================================================
+   SHARED ADMIN BACKGROUND - PRODUCT PAGE REFERENCE
+========================================================= */
+
+html:not([data-admin-theme="light"]) .admin-root {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0, 208, 255, .1),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(139, 92, 246, .08),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      #040712 0%,
+      #08111f 35%,
+      #091522 70%,
+      #040712 100%
+    ) !important;
+  background-attachment: fixed !important;
+  background-size: 100% 100vh !important;
+}
+
+html:not([data-admin-theme="light"]) .admin-root::before {
+  opacity: 1 !important;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0, 208, 255, .1),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(59, 130, 246, .08),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(139, 92, 246, .08),
+      transparent 28%
+    ) !important;
+}
+
+html:not([data-admin-theme="light"]) .admin-root::after {
+  opacity: .05 !important;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .04) 1px, transparent 1px) !important;
+  background-size: 80px 80px !important;
+  mask-image: radial-gradient(circle at center, black, transparent 90%) !important;
+}
+
+/* =========================================================
+   LIGHT DESIGN TOKENS
+========================================================= */
+
+html[data-admin-theme="light"] .admin-font-root {
+  color-scheme: light;
+
+  --light-text: #142033;
+  --light-text-soft: #42536a;
+  --light-text-muted: #66768a;
+  --light-line: rgba(45, 64, 86, .14);
+  --light-line-strong: rgba(45, 64, 86, .22);
+  --light-surface: rgba(255, 255, 255, .88);
+  --light-surface-soft: rgba(239, 247, 252, .9);
+  --light-surface-raised: rgba(255, 255, 255, .96);
+  --light-blue: #087eae;
+  --light-blue-soft: rgba(14, 165, 233, .11);
+  --light-shadow: 0 10px 28px rgba(49, 77, 103, .09);
+
+  --color-bg: #eaf4fa;
+  --color-bg-alt: #f7fbfe;
+  --color-surface: var(--light-surface);
+  --color-surface-alt: var(--light-surface-soft);
+  --color-surface-hover: #e5f2f9;
+  --color-border: var(--light-line);
+  --color-border-strong: var(--light-line-strong);
+  --color-text: var(--light-text);
+  --color-text-soft: var(--light-text-soft);
+  --color-text-muted: var(--light-text-muted);
+  --color-primary: #0784b8;
+  --color-primary-hover: #036b98;
+  --color-primary-soft: var(--light-blue-soft);
+  --shadow-sm: 0 6px 18px rgba(49, 77, 103, .07);
+  --shadow-md: var(--light-shadow);
+  --shadow-lg: 0 22px 50px rgba(49, 77, 103, .13);
+}
+
+/* =========================================================
+   PAGE ATMOSPHERE
+========================================================= */
+
+html[data-admin-theme="light"] .admin-root,
+html[data-admin-theme="light"] .admin-login-page,
+html[data-admin-theme="light"] .admin-login-container {
+  color: var(--light-text) !important;
+  background:
+    linear-gradient(
+      180deg,
+      #f7fcff 0%,
+      #d8edf8 35%,
+      #bddfec 70%,
+      #edf8fd 100%
+    ) !important;
+}
+
+html[data-admin-theme="light"],
+html[data-admin-theme="light"] body,
+html[data-admin-theme="light"] .admin-font-root {
+  min-height: 100%;
+  background:
+    linear-gradient(
+      180deg,
+      #f7fcff 0%,
+      #d8edf8 35%,
+      #bddfec 70%,
+      #edf8fd 100%
+    ) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .admin-layout,
+  .admin-layout-main,
+  .admin-main,
+  .admin-container
+) {
+  background: transparent !important;
+}
+
+html[data-admin-theme="light"] .admin-root::before {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(14, 165, 233, .26),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(59, 130, 246, .2),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(14, 165, 233, .18),
+      transparent 28%
+    ) !important;
+}
+
+html[data-admin-theme="light"] .admin-root::after {
+  opacity: .32;
+  background-image:
+    linear-gradient(rgba(51, 65, 85, .026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51, 65, 85, .026) 1px, transparent 1px) !important;
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+html[data-admin-theme="light"] :is(
+  .admin-navbar,
+  .admin-navbar.scrolled,
+  .admin-topbar
+) {
+  border-color: var(--light-line) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .94), rgba(235, 246, 252, .9)) !important;
+  box-shadow: 0 8px 28px rgba(49, 77, 103, .09) !important;
+}
+
+html[data-admin-theme="light"] :is(
+  .admin-navbar::before,
+  .admin-navbar::after,
+  .admin-topbar::before,
+  .admin-topbar::after
+) {
+  opacity: .1;
+}
+
+html[data-admin-theme="light"] .admin-nav {
+  border-color: var(--light-line) !important;
+  background: linear-gradient(180deg, #edf7fc, #e2f1f8) !important;
+  box-shadow: inset 0 1px 0 #fff, 0 4px 14px rgba(49, 77, 103, .06) !important;
+}
+
+html[data-admin-theme="light"] .admin-nav-link {
+  color: #526174 !important;
+}
+
+html[data-admin-theme="light"] .admin-nav-link:hover {
+  color: var(--light-text) !important;
+  background: rgba(255, 255, 255, .76) !important;
+}
+
+html[data-admin-theme="light"] .admin-nav-link.active,
+html[data-admin-theme="light"] .admin-nav-link.active span {
+  border-color: rgba(8, 126, 174, .23) !important;
+  background: rgba(14, 165, 233, .12) !important;
+  color: #075f86 !important;
+  box-shadow: none !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-menu {
+  border-color: var(--light-line) !important;
+  background: linear-gradient(180deg, #fbfeff, #e7f3f9) !important;
+  box-shadow: -18px 0 45px rgba(49, 77, 103, .16) !important;
+}
+
+html[data-admin-theme="light"] :is(
+  .admin-mobile-link,
+  .admin-logo-text strong,
+  .admin-logo-text span
+) {
+  color: var(--light-text) !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-link.active {
+  border-color: rgba(8, 126, 174, .24) !important;
+  background: var(--light-blue-soft) !important;
+  color: #075f86 !important;
+}
+
+html[data-admin-theme="light"] :is(
+  .admin-theme-toggle,
+  .admin-burger,
+  .admin-mobile-close,
+  .admin-role-pill
+) {
+  border-color: var(--light-line) !important;
+  background: linear-gradient(180deg, #fff, #e9f4fa) !important;
+  color: #334155 !important;
+}
+
+html[data-admin-theme="light"] .admin-logout {
+  border-color: rgba(185, 28, 28, .18) !important;
+  background: rgba(254, 226, 226, .78) !important;
+  color: #b91c1c !important;
+}
+
+/* =========================================================
+   SURFACES
+========================================================= */
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .admin-card,
+  .admin-panel,
+  .dashboard-card,
+  .dashboard-panel,
+  .dash-card,
+  .kpi-card,
+  .orders-table-wrap,
+  .logistics-table-card,
+  .products-header,
+  .products-filters,
+  .products-card,
+  .products-empty,
+  .products-pagination,
+  .reviews-hero,
+  .reviews-card,
+  .reviews-stat,
+  .reviews-email-section,
+  .reviews-view-control,
+  .shipping-tabs,
+  .shipping-card,
+  .shipping-method,
+  .shipping-edit-panel,
+  .shipping-empty,
+  .pap-tabs,
+  .pap-card,
+  .pap-row,
+  .pap-edit,
+  .pap-empty,
+  .od-page,
+  .od-top,
+  .od-section,
+  .od-info-card,
+  .od-address-card,
+  .od-meta-card,
+  .od-table-wrap,
+  .log-expanded,
+  .log-expanded-card,
+  .reviews-expanded-card,
+  .amf-card,
+  .emp-card,
+  .apmf-card,
+  .epmp-card,
+  .product-form,
+  .product-form-card,
+  .product-form-section,
+  .pf-card,
+  .edit-card,
+  .edit-section,
+  .export-card,
+  .export-panel,
+  .export-filters,
+  .export-columns,
+  .admin-login-card,
+  .admin-login-feature
+) {
+  border-color: var(--light-line) !important;
+  background:
+    linear-gradient(145deg, var(--light-surface-raised), rgba(229, 242, 249, .9)) !important;
+  color: var(--light-text) !important;
+  box-shadow: inset 0 1px 0 #fff, var(--light-shadow) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .shipping-method:hover,
+  .pap-row:hover,
+  .products-card:hover,
+  .od-info-card:hover,
+  .od-address-card:hover,
+  .od-meta-card:hover
+) {
+  border-color: rgba(8, 126, 174, .26) !important;
+  background: linear-gradient(145deg, #fff, #e2f2fa) !important;
+  box-shadow: 0 12px 30px rgba(8, 126, 174, .1) !important;
+}
+
+html[data-admin-theme="light"] :is(
+  .products-bg-grid,
+  .products-bg-glow,
+  .reviews-hero::before
+) {
+  opacity: .07 !important;
+}
+
+/* =========================================================
+   TYPOGRAPHY
+========================================================= */
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  h1, h2, h3, h4, h5, h6,
+  .cell-main,
+  .cell-strong,
+  .log-main,
+  .log-id,
+  .log-title,
+  .log-info-line strong,
+  .shipping-method-title,
+  .pap-name,
+  .products-title,
+  .products-name,
+  .products-price,
+  .reviews-title,
+  .reviews-card-title,
+  .reviews-stat-value,
+  .reviews-email-client strong,
+  .reviews-email-order,
+  .reviews-review-email,
+  .reviews-review-order,
+  .od-info-value,
+  .od-meta-value,
+  .od-address-title,
+  .od-address-text,
+  .od-table td,
+  .od-table-price,
+  .od-total-value,
+  .od-product-name
+) {
+  color: var(--light-text) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  p,
+  small,
+  .cell-sub,
+  .log-sub,
+  .log-muted,
+  .log-info-line span,
+  .admin-hint,
+  .shipping-section-note,
+  .shipping-method-bottom,
+  .pap-section-note,
+  .pap-bottom,
+  .products-subtitle,
+  .reviews-subtitle,
+  .reviews-card-subtitle,
+  .reviews-stat-label,
+  .reviews-email-client span,
+  .reviews-email-date,
+  .reviews-email-items,
+  .od-product-sub,
+  .od-info-label,
+  .od-meta-label
+) {
+  color: var(--light-text-muted) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .dash-title,
+  .dash-alert-title,
+  .dash-value,
+  .dash-panel-title,
+  .shipping-page-head h1,
+  .pap-page-head h1,
+  .log-name,
+  .log-price,
+  .log-detail-row strong,
+  .reviews-expanded-card h3,
+  .reviews-expanded-row strong,
+  .reviews-expanded-comment,
+  .reviews-expanded-products
+) {
+  color: var(--light-text) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .dash-label,
+  .dash-mini-link,
+  .reviews-review-date,
+  .reviews-expanded-row
+) {
+  color: var(--light-text-muted) !important;
+}
+
+html[data-admin-theme="light"] .log-expanded,
+html[data-admin-theme="light"] .log-expanded-card,
+html[data-admin-theme="light"] .log-address,
+html[data-admin-theme="light"] .log-detail-lines {
+  color: var(--light-text) !important;
+}
+
+html[data-admin-theme="light"] .log-info-line,
+html[data-admin-theme="light"] .log-info-line span,
+html[data-admin-theme="light"] .log-info-line strong,
+html[data-admin-theme="light"] .log-address span,
+html[data-admin-theme="light"] .log-address strong,
+html[data-admin-theme="light"] .log-detail-lines span,
+html[data-admin-theme="light"] .log-detail-lines strong {
+  color: var(--light-text) !important;
+}
+
+html[data-admin-theme="light"] .log-info-line > span {
+  color: var(--light-text-muted) !important;
+}
+
+/* =========================================================
+   TABLES AND OPEN DETAILS
+========================================================= */
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .orders-table-v2 thead th,
+  .log-table-header,
+  .od-table thead,
+  .log-detail-table th,
+  .reviews-email-table-head
+) {
+  border-color: var(--light-line) !important;
+  background: linear-gradient(180deg, #edf6fb, #e3f0f7) !important;
+  color: #42546a !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .orders-table-v2 td,
+  .log-row-wrap,
+  .log-row-main,
+  .log-info-line,
+  .od-table td,
+  .od-total-row,
+  .od-meta-row,
+  .reviews-email-row
+) {
+  border-color: rgba(45, 64, 86, .11) !important;
+  color: var(--light-text) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .orders-table-v2 tbody tr:hover,
+  .log-row-main:hover,
+  .od-table tbody tr:hover,
+  .reviews-email-row:hover
+) {
+  background: rgba(14, 165, 233, .065) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .row.open,
+  .log-row-wrap.open
+) {
+  background:
+    linear-gradient(90deg, rgba(14, 165, 233, .13), rgba(255, 255, 255, .78) 30%, rgba(230, 243, 249, .88)) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .row-expanded,
+  .reviews-row-expanded,
+  .reviews-expanded,
+  .od-section-body
+) {
+  border-color: var(--light-line) !important;
+  background: linear-gradient(180deg, #f7fcff, #eaf5fa) !important;
+  color: var(--light-text) !important;
+}
+
+/* =========================================================
+   FORMS
+========================================================= */
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  input,
+  textarea,
+  select
+) {
+  border-color: rgba(45, 64, 86, .2) !important;
+  background: linear-gradient(180deg, #fff, #f3f9fc) !important;
+  color: var(--light-text) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  input,
+  textarea
+)::placeholder {
+  color: #8290a1 !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  input:focus,
+  textarea:focus,
+  select:focus
+) {
+  border-color: rgba(8, 126, 174, .48) !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, .1) !important;
+  outline: none !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root label {
+  color: var(--light-text-soft) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .amf-provider,
+  .amf-type,
+  .emp-type,
+  .apmf-provider,
+  .epmp-provider,
+  .shipping-tab,
+  .pap-tab
+) {
+  border-color: var(--light-line) !important;
+  background: linear-gradient(180deg, #fff, #e8f3f9) !important;
+  color: var(--light-text-soft) !important;
+  box-shadow: none !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .amf-provider.active,
+  .amf-type.active,
+  .emp-type.active,
+  .apmf-provider.active,
+  .epmp-provider.active,
+  .shipping-tab.active,
+  .pap-tab.active
+) {
+  border-color: rgba(8, 126, 174, .3) !important;
+  background: linear-gradient(180deg, #e0f3fc, #cceaf7) !important;
+  color: #075f86 !important;
+}
+
+/* =========================================================
+   BUTTONS AND PAGINATION
+========================================================= */
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .btn-secondary,
+  .admin-icon-btn,
+  .log-mini-btn,
+  .log-btn,
+  .shipping-btn-ghost,
+  .pap-btn-ghost,
+  .products-btn-secondary,
+  .products-btn-edit,
+  .products-page-btn,
+  .reviews-btn-ghost,
+  .reviews-status-button,
+  .admin-pagination,
+  .pagination,
+  .log-page-pagination,
+  .products-pagination
+) {
+  border-color: var(--light-line) !important;
+  background: linear-gradient(180deg, #fff, #e8f3f9) !important;
+  color: #334155 !important;
+  box-shadow: none !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .btn-primary,
+  .shipping-create-toggle,
+  .pap-create-toggle,
+  .products-btn-primary,
+  .reviews-btn-primary
+),
+html[data-admin-theme="light"] .admin-font-root :is(
+  .btn-primary,
+  .shipping-create-toggle,
+  .pap-create-toggle,
+  .products-btn-primary,
+  .reviews-btn-primary
+) :is(span, strong) {
+  border-color: rgba(3, 105, 161, .35) !important;
+  background: linear-gradient(180deg, #1596c8, #087eae) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(8, 126, 174, .17) !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .btn-danger,
+  .shipping-btn-danger,
+  .pap-btn-danger,
+  .products-btn-delete,
+  .reviews-btn-danger
+) {
+  border-color: rgba(185, 28, 28, .2) !important;
+  background: rgba(254, 226, 226, .85) !important;
+  color: #b91c1c !important;
+}
+
+/* =========================================================
+   STATUS AND BADGES
+========================================================= */
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .status-approved,
+  .reviews-email-status.status-sent,
+  .log-status.success,
+  .log-ship-btn
+) {
+  border-color: rgba(22, 101, 52, .2) !important;
+  background: rgba(220, 252, 231, .9) !important;
+  color: #166534 !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .status-pending,
+  .reviews-email-status.status-scheduled,
+  .log-status.warning
+) {
+  border-color: rgba(146, 64, 14, .2) !important;
+  background: rgba(254, 243, 199, .92) !important;
+  color: #92400e !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .status-rejected,
+  .reviews-email-status.status-error,
+  .shipping-off-badge,
+  .pap-off
+) {
+  border-color: rgba(185, 28, 28, .2) !important;
+  background: rgba(254, 226, 226, .9) !important;
+  color: #b91c1c !important;
+}
+
+html[data-admin-theme="light"] .log-delay-pill {
+  border-color: rgba(8, 126, 174, .24) !important;
+  background: rgba(224, 242, 254, .92) !important;
+  color: #075f86 !important;
+}
+
+html[data-admin-theme="light"] .log-doc-icon-btn {
+  border-color: rgba(8, 126, 174, .24) !important;
+  background: linear-gradient(180deg, #f0f9ff, #dff2fc) !important;
+  color: #036b98 !important;
+}
+
+/* =========================================================
+   READABILITY EXCEPTIONS
+========================================================= */
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .shipping-order-badge,
+  .pap-order-badge,
+  .shipping-drag-handle,
+  .pap-drag-handle,
+  .shipping-method-type,
+  .pap-provider
+) {
+  border-color: var(--light-line) !important;
+  background: linear-gradient(180deg, #f8fcff, #e5f1f7) !important;
+  color: #42546a !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .log-page-btn,
+  .log-page-indicator,
+  .products-page-indicator,
+  .products-page-btn
+) {
+  color: #334155 !important;
+}
+
+/* =========================================================
+   LIGHT MODE - SHARED ADMIN BACKGROUND
+========================================================= */
+
+html[data-admin-theme="light"],
+html[data-admin-theme="light"] body,
+html[data-admin-theme="light"] .admin-font-root,
+html[data-admin-theme="light"] .admin-root {
+  background-color: #d8edf8 !important;
+  background-image:
+    radial-gradient(
+      circle at top left,
+      rgba(14, 165, 233, .22),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(96, 165, 250, .16),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      #f8fcff 0%,
+      #d8edf8 35%,
+      #bddfec 70%,
+      #edf8fd 100%
+    ) !important;
+  background-attachment: fixed !important;
+  background-repeat: repeat-y !important;
+  background-size: 100% 100vh !important;
+}
+
+html[data-admin-theme="light"] .admin-font-root :is(
+  .admin-shell,
+  .admin-layout,
+  .admin-layout-main,
+  .admin-main,
+  .admin-container,
+  main,
+  .admin-page,
+  .orders-page,
+  .products-page,
+  .logistics-page,
+  .shipping-page,
+  .shipping-container,
+  .pap,
+  .cp-page,
+  .reviews-page
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+}

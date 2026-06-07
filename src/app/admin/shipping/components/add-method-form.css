@@ -873,3 +873,25 @@
       100%;
   }
 }
+
+/* Compact admin structure */
+.amf {
+  width: 100%;
+  max-width: 720px;
+  gap: .8rem;
+}
+
+.amf-card {
+  width: 100%;
+  padding: .85rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,.16);
+}
+
+.amf-card-head {
+  margin-bottom: .75rem;
+}
+
+.amf-grid {
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+}

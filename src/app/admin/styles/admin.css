@@ -20,6 +20,21 @@
 
 /* 6. PAGES SPÉCIALES (login à la fin) */
 @import "./admin-login.css";
+@import "./admin.theme.css";
 
+.admin-font-root {
+  --font-admin:
+    var(--font-admin-inter),
+    "Inter",
+    sans-serif;
 
+  min-height: 100vh;
+  font-family: var(--font-admin);
+}
 
+.admin-font-root,
+.admin-font-root *,
+.admin-font-root *::before,
+.admin-font-root *::after {
+  font-family: var(--font-admin) !important;
+}

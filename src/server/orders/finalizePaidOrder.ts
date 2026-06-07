@@ -4,6 +4,7 @@ import { dbAdmin } from "@/lib/firebase.admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { scheduleReviewEmailForOrder } from "@/server/reviewEmailScheduler";
 import { sendOrderEmails } from "@/lib/mailer";
+import { ensureInvoiceNumberForOrder } from "@/server/orders/generateInvoiceNumber";
 
 type FinalizePaidOrderInput = {
   orderId: string;
@@ -84,6 +85,9 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
       ? order.invoiceNumber.trim()
       : null;
 
+  const invoiceNumber =
+    await ensureInvoiceNumberForOrder(ref);
+
   /* ================= UPDATE ORDER ================= */
 
   await ref.set(
@@ -93,6 +97,7 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
       locale: safeLocale,
       ...(email ? { email } : {}),
       ...(orderNumber ? { orderNumber } : {}),
+      invoiceNumber,
       payment: {
         ...(order?.payment || {}),
         ...payment,
@@ -125,9 +130,14 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
           payment_status: "paid",
           provider,
           created_at: order?.createdAt || new Date(),
-          orderData: order,
+          orderData: {
+            ...order,
+            orderNumber: orderNumber || orderId,
+            invoiceNumber,
+          },
           locale: safeLocale, // ✅ FIX ICI
           orderNumber: orderNumber || orderId,
+          invoiceNumber,
         },
         clientEmail: email,
       });
@@ -141,6 +151,8 @@ export async function finalizePaidOrder(input: FinalizePaidOrderInput) {
           invoiceEmail: {
             status: "sent",
             sentAt: FieldValue.serverTimestamp(),
+            orderNumber: orderNumber || orderId,
+            invoiceNumber,
           },
         },
         { merge: true }

@@ -392,7 +392,7 @@ export async function POST(req: Request) {
     const orderId = reusable?.id ?? orderRef.id;
 
     let orderNumber: string =
-      reusable?.data?.orderNumber || reusable?.data?.invoiceNumber || "";
+      reusable?.data?.orderNumber || "";
 
     if (reusable) {
       console.log("[checkout] reusing pending order:", orderId, orderNumber);

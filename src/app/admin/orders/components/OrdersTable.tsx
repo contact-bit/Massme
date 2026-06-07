@@ -9,7 +9,6 @@ import type { Order } from "../domain/types";
 
 import {
   compactId,
-  formatDateFR,
   moneyEUR,
 } from "../domain/utils";
 
@@ -122,6 +121,32 @@ export default function OrdersTable({
             const shipDate =
               getShipDate(o);
 
+            const createdDate =
+              o.__created ?? null;
+
+            const createdDateLabel =
+              createdDate
+                ? createdDate.toLocaleDateString(
+                    "fr-FR",
+                    {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    }
+                  )
+                : "—";
+
+            const createdTimeLabel =
+              createdDate
+                ? createdDate.toLocaleTimeString(
+                    "fr-FR",
+                    {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )
+                : "";
+
             const total =
               (o as any).total ??
               (o as any).__total ??
@@ -219,10 +244,15 @@ export default function OrdersTable({
 
                   <td>
 
-                    <div className="cell-sub">
-                      {formatDateFR(
-                        o.__created ??
-                          null
+                    <div className="order-date-cell">
+                      <span className="cell-main">
+                        {createdDateLabel}
+                      </span>
+
+                      {createdTimeLabel && (
+                        <span className="cell-sub">
+                          {createdTimeLabel}
+                        </span>
                       )}
                     </div>
 

@@ -5,6 +5,7 @@ import {
   generateInvoicePDF,
   type Locale,
 } from "@/lib/generateInvoice";
+import { ensureInvoiceNumberForOrder } from "@/server/orders/generateInvoiceNumber";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,6 +40,21 @@ function getOrderNumber(
     asString(invoiceEmail.orderNumber) ||
     orderId
   );
+}
+
+function getInvoiceNumber(
+  order: Record<string, unknown>
+) {
+  const invoiceEmail =
+    pickRecord(order, "invoiceEmail");
+
+  const invoiceNumber =
+    asString(order.invoiceNumber) ||
+    asString(invoiceEmail.invoiceNumber);
+
+  return /^FID\d{5,}$/.test(invoiceNumber)
+    ? invoiceNumber
+    : "";
 }
 
 function getOrderEmail(
@@ -132,6 +148,11 @@ export async function GET(req: Request) {
 
     const order = asRecord(source.snap.data());
     const orderNumber = getOrderNumber(order, orderId);
+    const invoiceNumber =
+      getInvoiceNumber(order) ||
+      (await ensureInvoiceNumberForOrder(
+        source.ref
+      ));
     const email = getOrderEmail(order);
     const rawLocale = asString(order.locale);
     const locale = isLocale(rawLocale)
@@ -143,15 +164,17 @@ export async function GET(req: Request) {
         ...order,
         email,
         orderNumber,
+        invoiceNumber,
       },
       orderNumber,
       {
         locale,
+        invoiceNumber,
         paidLabel: true,
       }
     );
 
-    const filename = `facture-${orderNumber}.pdf`;
+    const filename = `facture-${invoiceNumber}.pdf`;
     const body = new Uint8Array(pdf);
 
     return new NextResponse(body, {

@@ -15,6 +15,7 @@ export type OrderEmailPayload = {
   orderData?: any;
   locale?: "fr" | "en" | "es" | "de" | "it" | "nl";
   orderNumber?: string;
+  invoiceNumber?: string;
 };
 
 /* =========================================================
@@ -50,9 +51,6 @@ function resolveOrderNumber(order: OrderEmailPayload): string {
     typeof order?.orderData?.orderNumber === "string" &&
     order.orderData.orderNumber.trim()
       ? order.orderData.orderNumber.trim()
-      : typeof order?.orderData?.invoiceNumber === "string" &&
-        order.orderData.invoiceNumber.trim()
-      ? order.orderData.invoiceNumber.trim()
       : null;
 
   const fromRoot =
@@ -63,8 +61,33 @@ function resolveOrderNumber(order: OrderEmailPayload): string {
   return fromOrderData || fromRoot || order.id || "UNKNOWN_ORDER";
 }
 
-function buildInvoiceFilename(orderNumber: string) {
-  return `facture-${orderNumber}.pdf`;
+function resolveInvoiceNumber(order: OrderEmailPayload) {
+  const invoiceEmail =
+    order?.orderData?.invoiceEmail &&
+    typeof order.orderData.invoiceEmail === "object"
+      ? order.orderData.invoiceEmail
+      : {};
+
+  const candidates = [
+    order?.orderData?.invoiceNumber,
+    invoiceEmail?.invoiceNumber,
+    order?.invoiceNumber,
+  ];
+
+  for (const candidate of candidates) {
+    if (
+      typeof candidate === "string" &&
+      /^FID\d{5,}$/.test(candidate.trim())
+    ) {
+      return candidate.trim();
+    }
+  }
+
+  return resolveOrderNumber(order);
+}
+
+function buildInvoiceFilename(invoiceNumber: string) {
+  return `facture-${invoiceNumber}.pdf`;
 }
 
 /* =========================================================
@@ -78,6 +101,7 @@ async function buildInvoiceAttachment(order: OrderEmailPayload) {
   try {
     const locale = (order.locale || orderData?.locale || "fr") as any;
     const orderNumber = resolveOrderNumber(order);
+    const invoiceNumber = resolveInvoiceNumber(order);
 
     const pdfBuffer = await generateInvoicePDF(
       {
@@ -96,14 +120,19 @@ async function buildInvoiceAttachment(order: OrderEmailPayload) {
           totalTTC: Number(orderData?.totals?.totalTTC || 0),
         },
         orderNumber,
+        invoiceNumber,
       },
       orderNumber,
-      { locale, paidLabel: true }
+      {
+        locale,
+        invoiceNumber,
+        paidLabel: true,
+      }
     );
 
     return {
       attachment: {
-        filename: buildInvoiceFilename(orderNumber),
+        filename: buildInvoiceFilename(invoiceNumber),
         content: pdfBuffer.toString("base64"),
         contentType: "application/pdf",
       },
@@ -134,6 +163,7 @@ export async function sendOrderEmails({
   const created = toDate(order.created_at);
   const amountText = formatMoney(order.amount_total, order.currency);
   const orderNumber = resolveOrderNumber(order);
+  const invoiceNumber = resolveInvoiceNumber(order);
 
   const providerLabel =
     order.provider === "stripe"
@@ -243,6 +273,7 @@ Montant: ${amountText}
   return {
     ok: true,
     orderNumber,
+    invoiceNumber,
     invoice: {
       attached: Boolean(invoiceResult.attachment),
       error: invoiceResult.error,

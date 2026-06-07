@@ -47,7 +47,6 @@ const T = {
   primaryFaint: "rgba(99,102,241,0.12)",
   radius: "12px",
   radiusSm: "8px",
-  mono: "'Geist Mono', monospace",
 };
 
 const S: Record<string, React.CSSProperties> = {
@@ -63,7 +62,6 @@ const S: Record<string, React.CSSProperties> = {
   sub: {
     fontSize: "12px",
     color: T.textMuted,
-    fontFamily: T.mono,
   },
 
   headerRight: { display: "flex", alignItems: "center", gap: "10px" },
@@ -99,14 +97,13 @@ const S: Record<string, React.CSSProperties> = {
 
   pageInfo: {
     fontSize: "12px",
-    fontFamily: T.mono,
     padding: "0 8px",
   },
 
   card: {
-    background: T.surface,
-    border: `1px solid ${T.border}`,
-    borderRadius: T.radius,
+    background: "transparent",
+    border: "none",
+    borderRadius: "0",
     overflow: "hidden",
   },
 

@@ -490,8 +490,7 @@
 }
 
 .edit-meta-value.mono {
-  font-family:
-    monospace;
+  font-family: var(--font-admin);
 
   font-size:
     .86rem;

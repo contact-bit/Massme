@@ -839,6 +839,12 @@
     wrap;
 }
 
+.od-fee-amount {
+  min-width: 76px;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .od-fee-method-select,
 .od-fee-input {
   min-height:
@@ -1506,6 +1512,17 @@
 
   font-weight:
     800;
+}
+
+.od-invoice-number-line strong {
+  color:
+    rgba(148,163,184,.74);
+
+  font-size:
+    .64rem;
+
+  letter-spacing:
+    0;
 }
 
 .od-invoice-actions {

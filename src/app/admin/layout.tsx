@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { Inter } from "next/font/google";
 
 import { CartProvider } from "@/context/CartContext";
 
@@ -10,6 +11,12 @@ import "./styles/admin.css";
 import AdminShell from "./components/AdminShell";
 
 type AdminRole = "admin" | "logistics";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-admin-inter",
+});
 
 /* ================= AUTH ================= */
 
@@ -35,6 +42,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const isLoginPage = pathname === "/admin/login";
   const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const storedTheme =
+      localStorage.getItem("admin_theme") ===
+      "light"
+        ? "light"
+        : "dark";
+
+    document.documentElement.dataset.adminTheme =
+      storedTheme;
+  }, []);
 
   /* ================= AUTH CHECK ================= */
 
@@ -68,28 +86,32 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <CartProvider>
-      {isLoginPage ? (
-        children
-      ) : (
-        <div className="admin-root min-h-screen flex">
+      <div
+        className={`${inter.variable} admin-font-root`}
+      >
+        {isLoginPage ? (
+          children
+        ) : (
+          <div className="admin-root min-h-screen flex">
 
-          {/* SHELL (navbar / layout global) */}
-          <AdminShell>
+            {/* SHELL (navbar / layout global) */}
+            <AdminShell>
 
-            {/* MAIN CONTENT — FULL WIDTH */}
-            <main className="w-full">
+              {/* MAIN CONTENT — FULL WIDTH */}
+              <main className="w-full">
 
-              {/* CONTAINER CLEAN (PAS DE max-w ici) */}
-              <div className="w-full px-5 md:px-8 xl:px-10 py-5 md:py-6 flex flex-col gap-6">
-                {children}
-              </div>
+                {/* CONTAINER CLEAN (PAS DE max-w ici) */}
+                <div className="w-full px-5 md:px-8 xl:px-10 py-5 md:py-6 flex flex-col gap-6">
+                  {children}
+                </div>
 
-            </main>
+              </main>
 
-          </AdminShell>
+            </AdminShell>
 
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </CartProvider>
   );
 }

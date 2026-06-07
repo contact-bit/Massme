@@ -4,6 +4,7 @@ import { assertAdmin } from "@/server/adminAuth";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 import { sendOrderEmails } from "@/lib/mailer";
 import { createOrUpdateOrder } from "@/server/shipstation/client";
+import { ensureInvoiceNumberForOrder } from "@/server/orders/generateInvoiceNumber";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -366,6 +367,11 @@ export async function POST(
     if (!refreshedOrder?.emails?.sent && customerEmail) {
       try {
         const amountTotalCents = toCentsFromTotals(refreshedOrder);
+        const invoiceNumber =
+          refreshedOrder?.invoiceNumber ||
+          (await ensureInvoiceNumberForOrder(
+            orderRef
+          ));
 
         const mailResult = await sendOrderEmails({
           order: {
@@ -376,10 +382,14 @@ export async function POST(
             payment_status: "paid",
             provider: "bank_transfer",
             created_at: refreshedOrder?.createdAt || new Date(),
-            orderData: refreshedOrder,
+            orderData: {
+              ...refreshedOrder,
+              invoiceNumber,
+            },
             locale: refreshedOrder?.locale || "fr",
             orderNumber:
               refreshedOrder?.orderNumber || refreshedOrder?.reference || id,
+            invoiceNumber,
           },
           clientEmail: customerEmail,
         });
@@ -402,6 +412,8 @@ export async function POST(
               provider: "bank_transfer",
               orderNumber:
                 mailResult?.orderNumber ?? refreshedOrder?.orderNumber ?? id,
+              invoiceNumber:
+                mailResult?.invoiceNumber ?? invoiceNumber,
             },
           },
           { merge: true }

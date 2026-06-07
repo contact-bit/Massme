@@ -202,14 +202,7 @@ export default function ProductsAdminPage() {
   );
 
   return (
-    <main className="products-page">
-
-      {/* BG */}
-      <div className="products-bg-grid" />
-
-      <div className="products-bg-glow products-bg-glow-1" />
-
-      <div className="products-bg-glow products-bg-glow-2" />
+    <main className="admin-page products-page">
 
       {/* HEADER */}
       <div className="products-header">

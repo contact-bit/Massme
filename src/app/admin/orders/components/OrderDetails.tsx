@@ -142,6 +142,15 @@ export function OrderDetails({
     useState(
       (order as any)?.invoiceEmail || null
     );
+  const [
+    localInvoiceNumber,
+    setLocalInvoiceNumber,
+  ] = useState(
+    (order as any)?.invoiceNumber ||
+      (order as any)?.invoiceEmail
+        ?.invoiceNumber ||
+      ""
+  );
 
   const [localShippingAddress, setLocalShippingAddress] =
     useState(
@@ -284,6 +293,13 @@ export function OrderDetails({
         ""
     );
 
+    setLocalInvoiceNumber(
+      (order as any)?.invoiceNumber ||
+        (order as any)?.invoiceEmail
+          ?.invoiceNumber ||
+        ""
+    );
+
   }, [order]);
 
   const invoice =
@@ -291,6 +307,76 @@ export function OrderDetails({
       ? localInvoice
       : (order as any)?.invoiceEmail ||
         localInvoice;
+
+  const invoiceNumber =
+    localInvoiceNumber ||
+    (order as any)?.invoiceNumber ||
+    invoice?.invoiceNumber ||
+    "";
+
+  const orderSequence = Number(
+    String(
+      (order as any)?.orderNumber || ""
+    ).match(/^ID(\d+)$/)?.[1] || 0
+  );
+
+  const invoiceSequence = Number(
+    String(invoiceNumber).match(
+      /^FID(\d+)$/
+    )?.[1] || 0
+  );
+
+  const shouldLoadInvoiceNumber =
+    Boolean(order.id) &&
+    (!invoiceNumber ||
+      (orderSequence > 0 &&
+        invoiceSequence > 0 &&
+        invoiceSequence < orderSequence));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!shouldLoadInvoiceNumber) {
+      return;
+    }
+
+    async function loadInvoiceNumber() {
+      try {
+        const res = await fetch(
+          `/api/admin/orders/invoice-number?orderId=${encodeURIComponent(
+            order.id
+          )}`,
+          { cache: "no-store" }
+        );
+
+        const data = await res.json();
+
+        if (
+          !cancelled &&
+          res.ok &&
+          data?.invoiceNumber
+        ) {
+          setLocalInvoiceNumber(
+            data.invoiceNumber
+          );
+
+          setLocalInvoice((prev: any) => ({
+            ...(prev || {}),
+            invoiceNumber:
+              data.invoiceNumber,
+          }));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    loadInvoiceNumber();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [order.id, shouldLoadInvoiceNumber]);
 
   const shippingAddress =
     localShippingAddress ||
@@ -486,6 +572,12 @@ const heardFromLabelMap: Record<string, string> = {
         status: "sent",
         sentAt: now,
         lastSentAt: now,
+        orderNumber:
+          data?.orderNumber ??
+          prev?.orderNumber,
+        invoiceNumber:
+          data?.invoiceNumber ??
+          prev?.invoiceNumber,
       }));
     } catch (e) {
       console.error(e);
@@ -804,8 +896,23 @@ const heardFromLabelMap: Record<string, string> = {
   }
 
   async function copyCurrentBillingAddress() {
+    const billingEmail =
+      localEmail ||
+      (order as any)?.billingAddress
+        ?.email ||
+      (order as any)?.customerEmail ||
+      (order as any)?.email ||
+      "";
+
     await copyText(
-      formatAddress(billingAddress) || ""
+      [
+        formatAddress(billingAddress),
+        billingEmail
+          ? `Email : ${billingEmail}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n")
     );
   }
 
@@ -930,7 +1037,9 @@ const heardFromLabelMap: Record<string, string> = {
   }
 
   function renderInvoiceStatus() {
-    if (!invoice?.status) return "—";
+    if (!invoice?.status) {
+      return "—";
+    }
 
     switch (invoice.status) {
       case "sending":
@@ -983,6 +1092,13 @@ const heardFromLabelMap: Record<string, string> = {
               <div className="od-detail-line">
                 <span>Média</span>
                 <strong>{heardFromLabel}</strong>
+              </div>
+
+              <div className="od-detail-line od-invoice-number-line">
+                <span>N° facture</span>
+                <strong>
+                  {invoiceNumber || "Création..."}
+                </strong>
               </div>
 
               <div className="od-detail-line od-detail-invoice">
@@ -1485,13 +1601,15 @@ const heardFromLabelMap: Record<string, string> = {
                   </span>
                 ) : paymentFee ? (
                   <span className="od-total-inline-action">
-                    -{moneyEUR(paymentFee.amount)}
                     <button
                       className="btn-secondary"
                       onClick={startFeeEdit}
                     >
                       Modifier
                     </button>
+                    <span className="od-fee-amount">
+                      -{moneyEUR(paymentFee.amount)}
+                    </span>
                   </span>
                 ) : (
                     <span className="od-total-inline-action">

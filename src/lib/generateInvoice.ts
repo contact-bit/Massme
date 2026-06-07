@@ -22,6 +22,7 @@ type I18nDict = {
   CLIENT: string;
   DATE: string;
   INVOICE_NO: string;
+  ORDER_NO: string;
   YOUR_ORDER: string;
   EMAIL: string;
   REFERENCE: string;
@@ -53,6 +54,7 @@ export const I18N: Record<Locale, I18nDict> = {
     CLIENT: "Client",
     DATE: "Date :",
     INVOICE_NO: "N° Facture :",
+    ORDER_NO: "Commande :",
     YOUR_ORDER: "Votre commande",
     EMAIL: "Email client :",
     REFERENCE: "Référence",
@@ -84,6 +86,7 @@ export const I18N: Record<Locale, I18nDict> = {
     CLIENT: "Customer",
     DATE: "Date:",
     INVOICE_NO: "Invoice No:",
+    ORDER_NO: "Order:",
     YOUR_ORDER: "Your order",
     EMAIL: "Customer email:",
     REFERENCE: "Reference",
@@ -114,6 +117,7 @@ export const I18N: Record<Locale, I18nDict> = {
     CLIENT: "Cliente",
     DATE: "Fecha:",
     INVOICE_NO: "N° Factura:",
+    ORDER_NO: "Pedido:",
     YOUR_ORDER: "Su pedido",
     EMAIL: "Email del cliente:",
     REFERENCE: "Referencia",
@@ -144,6 +148,7 @@ export const I18N: Record<Locale, I18nDict> = {
     CLIENT: "Kunde",
     DATE: "Datum:",
     INVOICE_NO: "Rechnungsnummer:",
+    ORDER_NO: "Bestellung:",
     YOUR_ORDER: "Ihre Bestellung",
     EMAIL: "Kunden-E-Mail:",
     REFERENCE: "Referenz",
@@ -174,6 +179,7 @@ export const I18N: Record<Locale, I18nDict> = {
     CLIENT: "Cliente",
     DATE: "Data:",
     INVOICE_NO: "N° Fattura:",
+    ORDER_NO: "Ordine:",
     YOUR_ORDER: "Il tuo ordine",
     EMAIL: "Email cliente:",
     REFERENCE: "Riferimento",
@@ -204,6 +210,7 @@ export const I18N: Record<Locale, I18nDict> = {
     CLIENT: "Klant",
     DATE: "Datum:",
     INVOICE_NO: "Factuurnummer:",
+    ORDER_NO: "Bestelling:",
     YOUR_ORDER: "Uw bestelling",
     EMAIL: "Klant e-mail:",
     REFERENCE: "Referentie",
@@ -271,6 +278,10 @@ type Order = {
   shippingPrice?: number;
   totals?: OrderTotals;
   orderNumber?: string;
+  invoiceNumber?: string;
+  invoiceEmail?: {
+    invoiceNumber?: string;
+  };
 };
 
 type GenOpts = {
@@ -391,12 +402,15 @@ export async function generateInvoicePDF(
   const issueDate = opts.issueDate ?? new Date();
   const VAT = order.totals?.vatRate ?? opts.vatRate ?? 0.2;
 
-  // 🔥 Source unique de vérité : numéro métier
   const invoiceNumber =
-    order.orderNumber ?? opts.invoiceNumber ?? orderId;
+    opts.invoiceNumber ??
+    order.invoiceNumber ??
+    order.invoiceEmail?.invoiceNumber ??
+    orderId;
 
   // Ce qui s'affiche comme "Votre commande"
-  const displayId = invoiceNumber;
+  const displayId =
+    order.orderNumber ?? orderId;
 
   /* HEADER TOP */
   let yTop = H - M;
@@ -610,8 +624,16 @@ export async function generateInvoicePDF(
     font: bold,
     color: BLUE_DARK,
   });
-  page.drawText(displayId, {
+  const orderLabelW = bold.widthOfTextAtSize(t.ORDER_NO, 8);
+  page.drawText(t.ORDER_NO, {
     x: leftX + 180,
+    y: metaY + 26,
+    size: 8,
+    font: bold,
+    color: MUTED,
+  });
+  page.drawText(displayId, {
+    x: leftX + 180 + orderLabelW + 6,
     y: metaY + 26,
     size: 8.5,
     font: regular,

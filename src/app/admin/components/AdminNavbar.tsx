@@ -14,6 +14,8 @@ import {
   X,
   LogOut,
   ChevronRight,
+  Moon,
+  Sun,
 } from "lucide-react";
 
 import { LOGO_URL } from "@/components/navbar/navbar.data";
@@ -36,6 +38,9 @@ export default function AdminNavbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<
+    "dark" | "light"
+  >("dark");
 
   const [role, setRole] = useState<AdminRole>("admin");
 
@@ -49,6 +54,16 @@ export default function AdminNavbar() {
     if (storedRole) {
       setRole(storedRole);
     }
+
+    const storedTheme =
+      localStorage.getItem("admin_theme") ===
+      "light"
+        ? "light"
+        : "dark";
+
+    setTheme(storedTheme);
+    document.documentElement.dataset.adminTheme =
+      storedTheme;
 
     const onScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -135,8 +150,23 @@ export default function AdminNavbar() {
   }
 
   function logout() {
-    localStorage.clear();
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_role");
+    localStorage.removeItem("admin_password");
     router.replace("/admin/login");
+  }
+
+  function toggleTheme() {
+    const nextTheme =
+      theme === "dark" ? "light" : "dark";
+
+    setTheme(nextTheme);
+    localStorage.setItem(
+      "admin_theme",
+      nextTheme
+    );
+    document.documentElement.dataset.adminTheme =
+      nextTheme;
   }
 
   if (!mounted) return null;
@@ -195,8 +225,27 @@ export default function AdminNavbar() {
 
           {/* RIGHT */}
           <div className="admin-navbar-right">
-
-
+            <button
+              type="button"
+              className="admin-theme-toggle"
+              onClick={toggleTheme}
+              title={
+                theme === "dark"
+                  ? "Activer le mode clair"
+                  : "Activer le mode sombre"
+              }
+              aria-label={
+                theme === "dark"
+                  ? "Activer le mode clair"
+                  : "Activer le mode sombre"
+              }
+            >
+              {theme === "dark" ? (
+                <Sun size={18} />
+              ) : (
+                <Moon size={18} />
+              )}
+            </button>
 
             <button
               className="admin-logout"

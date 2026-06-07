@@ -432,6 +432,32 @@
   min-width: fit-content;
 }
 
+.admin-theme-toggle {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 1rem;
+  background: rgba(255,255,255,.05);
+  color: #fbbf24;
+  cursor: pointer;
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    border-color .2s ease,
+    color .2s ease;
+}
+
+.admin-theme-toggle:hover {
+  transform: translateY(-1px);
+  border-color: rgba(56,189,248,.32);
+  background: rgba(56,189,248,.1);
+  color: #fde68a;
+}
+
 /* =========================================================
    ROLE
 ========================================================= */
@@ -987,4 +1013,295 @@
   .admin-mobile-menu {
     width: 100%;
   }
+}
+
+/* =========================================================
+   MOBILE MENU - LIGHT MODE
+========================================================= */
+
+html[data-admin-theme="light"] .admin-mobile-menu {
+  border-left-color: rgba(45,64,86,.16) !important;
+  background:
+    linear-gradient(
+      180deg,
+      #f8fcff 0%,
+      #d8edf8 35%,
+      #bddfec 70%,
+      #edf8fd 100%
+    ) !important;
+  box-shadow:
+    -14px 0 44px rgba(49,77,103,.2) !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-menu::before {
+  opacity: 1 !important;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(14,165,233,.28),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(96,165,250,.18),
+      transparent 38%
+    ) !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-top,
+html[data-admin-theme="light"] .admin-mobile-links,
+html[data-admin-theme="light"] .admin-mobile-logout {
+  position: relative;
+  z-index: 2;
+}
+
+html[data-admin-theme="light"] .admin-mobile-close {
+  border: 1px solid rgba(45,64,86,.16) !important;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.96),
+      rgba(225,240,248,.94)
+    ) !important;
+  color: #26364a !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.96),
+    0 6px 16px rgba(49,77,103,.1) !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-link {
+  border-color: rgba(45,64,86,.14) !important;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.92),
+      rgba(224,240,248,.88)
+    ) !important;
+  color: #334155 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.96),
+    0 7px 18px rgba(49,77,103,.08) !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-link span,
+html[data-admin-theme="light"] .admin-mobile-link svg {
+  color: #334155 !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-link:hover {
+  border-color: rgba(8,126,174,.3) !important;
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #d8eef8
+    ) !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-link.active {
+  border-color: rgba(8,126,174,.34) !important;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(224,242,254,.98),
+      rgba(186,230,253,.9)
+    ) !important;
+  color: #075f86 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 8px 20px rgba(8,126,174,.12) !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-link.active span,
+html[data-admin-theme="light"] .admin-mobile-link.active svg {
+  color: #075f86 !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-logout {
+  border-color: rgba(185,28,28,.2) !important;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(254,242,242,.96),
+      rgba(254,226,226,.92)
+    ) !important;
+  color: #b91c1c !important;
+  box-shadow: 0 7px 18px rgba(185,28,28,.08) !important;
+}
+
+html[data-admin-theme="light"] .admin-mobile-logout span,
+html[data-admin-theme="light"] .admin-mobile-logout svg {
+  color: #b91c1c !important;
+}
+
+html[data-admin-theme="light"] .admin-backdrop {
+  background: rgba(51,65,85,.3) !important;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+html[data-admin-theme="light"] .admin-burger {
+  border-color: rgba(45,64,86,.18) !important;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.96),
+      rgba(218,238,247,.94)
+    ) !important;
+  color: #26364a !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    0 6px 16px rgba(49,77,103,.12) !important;
+}
+
+html[data-admin-theme="light"] .admin-burger svg {
+  color: #26364a !important;
+  stroke: #26364a !important;
+}
+
+html[data-admin-theme="light"] .admin-burger:hover {
+  border-color: rgba(8,126,174,.32) !important;
+  background: linear-gradient(180deg, #fff, #d4edf8) !important;
+  color: #075f86 !important;
+}
+
+/* LIGHT BACKGROUND - SAME COMPOSITION AS DARK MODE */
+html[data-admin-theme="light"] body,
+html[data-admin-theme="light"] .admin-font-root,
+html[data-admin-theme="light"] .admin-root {
+  background-color: #d8edf8 !important;
+  background-image:
+    radial-gradient(
+      circle at top left,
+      rgba(14,165,233,.22),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(96,165,250,.16),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      #f8fcff 0%,
+      #d8edf8 35%,
+      #bddfec 70%,
+      #edf8fd 100%
+    ) !important;
+  background-attachment: fixed !important;
+  background-repeat: repeat-y !important;
+  background-size: 100% 100vh !important;
+}
+
+html[data-admin-theme="light"] .admin-root::before {
+  opacity: 1 !important;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(14,165,233,.22),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(59,130,246,.14),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(96,165,250,.14),
+      transparent 28%
+    ) !important;
+}
+
+html[data-admin-theme="light"] .admin-root::after {
+  opacity: .12 !important;
+  background-image:
+    linear-gradient(rgba(51,65,85,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51,65,85,.05) 1px, transparent 1px) !important;
+  background-size: 80px 80px !important;
+  mask-image: radial-gradient(circle at center, black, transparent 90%) !important;
+}
+
+html[data-admin-theme="light"] :is(
+  .admin-layout,
+  .admin-layout-main,
+  .admin-main,
+  .admin-container,
+  .admin-container > main,
+  .admin-page,
+  .products-page,
+  .logistics-page,
+  .shipping-page,
+  .pap,
+  .reviews-page
+) {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* ORDER DETAILS - HIGH CONTRAST LIGHT MODE */
+html[data-admin-theme="light"] .od-page {
+  --detail-text: #111827 !important;
+  --detail-muted: #475569 !important;
+  --detail-border: rgba(15,23,42,.14) !important;
+  color: #111827 !important;
+}
+
+html[data-admin-theme="light"] .od-page :is(
+  .od-section-title,
+  .od-detail-title,
+  .od-info-value,
+  .od-meta-value,
+  .od-meta-card-title,
+  .od-address-title,
+  .od-address-text,
+  .od-detail-line strong,
+  .od-contact-row strong,
+  .od-product-name,
+  .od-table-price,
+  .od-table td,
+  .od-total-label,
+  .od-total-value,
+  .od-fee-amount
+) {
+  color: #111827 !important;
+}
+
+html[data-admin-theme="light"] .od-page :is(
+  .od-info-label,
+  .od-meta-label,
+  .od-address-field span,
+  .od-detail-line,
+  .od-contact-row,
+  .od-invoice-status,
+  .od-invoice-number-line strong,
+  .od-table th
+) {
+  color: #475569 !important;
+}
+
+html[data-admin-theme="light"] .od-page :is(
+  .od-order-table td:nth-child(2),
+  .od-order-table td:nth-child(3),
+  .od-shipping-row td
+) {
+  color: #111827 !important;
+}
+
+html[data-admin-theme="light"] .od-page :is(
+  .od-section,
+  .od-detail-card,
+  .od-table-wrap,
+  .od-meta-card
+) {
+  border-color: rgba(15,23,42,.14) !important;
+}
+
+html[data-admin-theme="light"] .od-page :is(
+  .od-detail-line,
+  .od-contact-row,
+  .od-meta-row,
+  .od-total-row
+) {
+  border-bottom-color: rgba(15,23,42,.1) !important;
 }

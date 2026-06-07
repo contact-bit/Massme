@@ -417,6 +417,157 @@ export function useOrders(
             e?.message ??
               "Erreur mise à jour livraison"
           );
+
+        }
+      },
+      [toastIt]
+    );
+
+  const updateShippingAddress =
+    useCallback(
+      async (
+        order: Order,
+        shippingAddress: Record<string, unknown>
+      ) => {
+        const pass =
+          requirePassOrRedirect();
+
+        if (!pass) return;
+
+        try {
+          const res =
+            await fetch(
+              `/api/admin/orders/${encodeURIComponent(
+                order.id
+              )}`,
+              {
+                method: "PATCH",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  "x-admin-password":
+                    pass,
+                },
+
+                body: JSON.stringify({
+                  shippingAddress,
+                }),
+              }
+            );
+
+          const data = await res
+            .json()
+            .catch(() => null);
+
+          if (!res.ok || !data?.ok) {
+            throw new Error(
+              data?.error ||
+                `HTTP ${res.status}`
+            );
+          }
+
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === order.id
+                ? {
+                    ...o,
+                    shippingAddress,
+                  }
+                : o
+            )
+          );
+
+          toastIt(
+            "Informations de livraison mises à jour ✅"
+          );
+        } catch (e: any) {
+          toastIt(
+            "Erreur mise à jour livraison ❌"
+          );
+
+          alert(
+            e?.message ??
+              "Erreur mise à jour livraison"
+          );
+
+          throw e;
+        }
+      },
+      [toastIt]
+    );
+
+  const updateBillingAddress =
+    useCallback(
+      async (
+        order: Order,
+        billingAddress: Record<string, unknown>
+      ) => {
+        const pass =
+          requirePassOrRedirect();
+
+        if (!pass) return;
+
+        try {
+          const res =
+            await fetch(
+              `/api/admin/orders/${encodeURIComponent(
+                order.id
+              )}`,
+              {
+                method: "PATCH",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  "x-admin-password":
+                    pass,
+                },
+
+                body: JSON.stringify({
+                  billingAddress,
+                }),
+              }
+            );
+
+          const data = await res
+            .json()
+            .catch(() => null);
+
+          if (!res.ok || !data?.ok) {
+            throw new Error(
+              data?.error ||
+                `HTTP ${res.status}`
+            );
+          }
+
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === order.id
+                ? {
+                    ...o,
+                    billingAddress,
+                  }
+                : o
+            )
+          );
+
+          toastIt(
+            "Adresse de facturation mise à jour ✅"
+          );
+        } catch (e: any) {
+          toastIt(
+            "Erreur mise à jour facturation ❌"
+          );
+
+          alert(
+            e?.message ??
+              "Erreur mise à jour facturation"
+          );
+
+          throw e;
         }
       },
       [toastIt]
@@ -440,5 +591,7 @@ export function useOrders(
 
     deleteOrder,
     updateShippingStatus,
+    updateShippingAddress,
+    updateBillingAddress,
   };
 }

@@ -321,6 +321,29 @@ export default function ShippingAdminPage() {
       {/* CONTAINER */}
       <div className="shipping-container">
 
+        <header className="shipping-page-head">
+          <div>
+            <h1>Livraison</h1>
+            <p>
+              Gérez les méthodes, tarifs et délais affichés sur la boutique.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className={`shipping-create-toggle ${
+              showCreate ? "active" : ""
+            }`}
+            onClick={() =>
+              setShowCreate(!showCreate)
+            }
+          >
+            {showCreate
+              ? "Fermer"
+              : "Nouvelle méthode"}
+          </button>
+        </header>
+
         {/* COUNTRIES */}
         <section className="shipping-tabs">
 
@@ -379,31 +402,6 @@ export default function ShippingAdminPage() {
 
         {/* CREATE */}
         <section className="shipping-create-section">
-
-          <div className="shipping-create-head">
-
-            <div>
-            </div>
-
-            <button
-              type="button"
-              className={`shipping-create-toggle ${
-                showCreate
-                  ? "active"
-                  : ""
-              }`}
-              onClick={() =>
-                setShowCreate(
-                  !showCreate
-                )
-              }
-            >
-              {showCreate
-                ? "Fermer"
-                : "Nouvelle méthode"}
-            </button>
-
-          </div>
 
           {showCreate && (
             <div className="shipping-card">

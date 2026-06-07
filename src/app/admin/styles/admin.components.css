@@ -1,5 +1,5 @@
 :root {
-  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  --font-sans: var(--font-admin-inter), "Inter", sans-serif;
 
   /* TEXT */
   --text-xs: 12px;
@@ -472,7 +472,7 @@ body {
 
 .oc-id {
   font-weight: 700;
-  font-family: monospace;
+  font-family: var(--font-admin);
 }
 
 .oc-email {
@@ -1369,6 +1369,13 @@ body {
 
 .cell-command {
   gap: 7px;
+}
+
+.order-date-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .row.open {

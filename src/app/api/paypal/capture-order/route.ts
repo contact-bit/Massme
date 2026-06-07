@@ -7,6 +7,7 @@ import { sendOrderEmails } from "@/lib/mailer"; // ⬅️ sendReviewEmail suppri
 import { createOrUpdateOrder } from "@/server/shipstation/client";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 import { generateOrderNumber } from "@/server/orders/generateOrderNumber";
+import { ensureInvoiceNumberForOrder } from "@/server/orders/generateInvoiceNumber";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -446,6 +447,10 @@ export async function POST(req: Request) {
     const clientEmail = normalizeEmail(orderData?.email) || existingEmail;
 
     if (clientEmail && orderData) {
+      const invoiceNumber =
+        await ensureInvoiceNumberForOrder(
+          orderRef
+        );
       const totalTTC = Number(orderData?.totals?.totalTTC ?? 0);
       const amountTotalCents = totalTTC > 0 ? toCents(totalTTC) : toCents(capturedValue);
 
@@ -457,9 +462,13 @@ export async function POST(req: Request) {
         payment_status: "paid",
         created_at: orderData.createdAt || orderData.created_at || new Date(),
         provider: "paypal" as const,
-        orderData,
+        orderData: {
+          ...orderData,
+          invoiceNumber,
+        },
         locale: orderData?.locale || "fr",
         orderNumber,
+        invoiceNumber,
       };
 
       if (!alreadySent) {
@@ -486,6 +495,9 @@ export async function POST(req: Request) {
                 sentAt: new Date(),
                 provider: "paypal",
                 orderNumber: mailResult?.orderNumber ?? orderNumber,
+                invoiceNumber:
+                  mailResult?.invoiceNumber ??
+                  invoiceNumber,
               },
             },
             { merge: true }

@@ -790,3 +790,50 @@
   }
 }
 
+/* Shared settings form structure */
+.apmf {
+  width: 100%;
+  max-width: 720px;
+  gap: .8rem;
+}
+
+.apmf-title {
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.apmf-card {
+  width: 100%;
+  padding: .85rem;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.16);
+}
+
+.apmf-card-head {
+  margin-bottom: .75rem;
+}
+
+.apmf-providers {
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: .55rem;
+}
+
+.apmf-provider {
+  min-height: 42px;
+  border-radius: 6px;
+  font-size: .72rem;
+}
+
+.apmf-grid {
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+}
+
+@media (max-width: 720px) {
+  .apmf-grid,
+  .apmf-providers {
+    grid-template-columns: 1fr;
+  }
+}

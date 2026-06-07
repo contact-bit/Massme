@@ -80,6 +80,13 @@
   min-width: 124px;
 }
 
+.dash-command-ids {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .dash-search-table thead th {
   background: rgba(255,255,255,.026);
   color: rgba(148,163,184,.78);

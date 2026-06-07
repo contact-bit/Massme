@@ -69,7 +69,10 @@ if (roleOrResponse instanceof Response) {
     };
 
     if (Object.keys(addressUpdates).length > 0) {
-      if (role !== "admin") {
+      if (
+        role !== "admin" &&
+        role !== "logistics"
+      ) {
         return NextResponse.json(
           { error: "Unauthorized" },
           { status: 401 }

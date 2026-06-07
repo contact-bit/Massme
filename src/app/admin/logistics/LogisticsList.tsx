@@ -16,6 +16,10 @@ type Props = {
   onShip: (
     order: Order
   ) => Promise<void>;
+  onUpdateShippingAddress: (
+    order: Order,
+    shippingAddress: Record<string, unknown>
+  ) => Promise<void>;
 };
 
 export default function LogisticsList({
@@ -24,6 +28,7 @@ export default function LogisticsList({
   error,
   toastIt,
   onShip,
+  onUpdateShippingAddress,
 }: Props) {
   /* ================= ELIGIBLE ================= */
 
@@ -167,7 +172,7 @@ export default function LogisticsList({
           Pays
         </div>
 
-        <div className="log-th">
+        <div className="log-th log-delay-head">
           Service de livraison
         </div>
 
@@ -177,6 +182,14 @@ export default function LogisticsList({
 
         <div className="log-th status">
           Statut
+        </div>
+
+        <div className="log-th log-doc-head">
+          Bon de livraison
+        </div>
+
+        <div className="log-th log-action-head">
+          Action
         </div>
       </div>
 
@@ -191,6 +204,9 @@ export default function LogisticsList({
             order={o}
             toastIt={toastIt}
             onShip={onShip}
+            onUpdateShippingAddress={
+              onUpdateShippingAddress
+            }
           />
         ))
       )}

@@ -934,7 +934,7 @@ export default function AdminReviewsPage() {
   ===================================================== */
 
   return (
-    <main className="reviews-page">
+    <main className="admin-page reviews-page">
 
       {/* SETTINGS */}
       <section className="reviews-card">
@@ -1214,25 +1214,33 @@ export default function AdminReviewsPage() {
             <div className="reviews-view-control">
               <span>Statut</span>
 
-              <select
-                value={status}
-                onChange={(e) =>
-                  setStatus(
-                    e.target.value as ReviewView
-                  )
-                }
+              <div
+                className="reviews-status-buttons"
+                role="group"
+                aria-label="Filtrer les avis par statut"
               >
                 {reviewStatusOptions.map(
                   (option) => (
-                    <option
+                    <button
+                      type="button"
                       key={option.value}
-                      value={option.value}
+                      className={`reviews-status-button status-${option.value} ${
+                        status === option.value
+                          ? "active"
+                          : ""
+                      }`}
+                      aria-pressed={
+                        status === option.value
+                      }
+                      onClick={() =>
+                        setStatus(option.value)
+                      }
                     >
                       {option.label}
-                    </option>
+                    </button>
                   )
                 )}
-              </select>
+              </div>
 
               <small>
                 {getStatusTitle(status).description}
