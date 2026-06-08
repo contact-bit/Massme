@@ -638,24 +638,6 @@ export default function PaymentsAdminPage() {
 
                         </div>
 
-                        <div className="pap-meta">
-
-                          <div className="pap-meta-item">
-
-                            <span>
-                              Pays
-                            </span>
-
-                            <strong>
-                              {
-                                method.country
-                              }
-                            </strong>
-
-                          </div>
-
-                        </div>
-
                       </div>
 
                       {/* ACTIONS */}

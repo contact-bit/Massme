@@ -186,12 +186,8 @@ export default function EditPaymentMethodPanel({
 
         <div>
 
-          <div className="epmp-kicker">
-            Modification
-          </div>
-
           <h2 className="epmp-title">
-            Modifier
+            Modification
           </h2>
 
           <div className="epmp-meta">
@@ -216,18 +212,6 @@ export default function EditPaymentMethodPanel({
 
       {/* PROVIDER */}
       <section className="epmp-card">
-
-        <div className="epmp-card-head">
-
-          <div className="epmp-card-kicker">
-            PROVIDER
-          </div>
-
-          <h3>
-            Méthode
-          </h3>
-
-        </div>
 
         <div className="epmp-providers">
 

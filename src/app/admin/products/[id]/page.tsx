@@ -76,7 +76,11 @@ export default function EditProductPage({
               </h1>
 
               <p className="edit-product-description">
-                Produit #{id}
+                {loading
+                  ? "Chargement du code produit..."
+                  : String(product?.productCode || "").trim()
+                    ? `Code produit : ${String(product.productCode).trim()}`
+                    : "Code produit non renseigné"}
               </p>
 
             </div>

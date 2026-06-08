@@ -211,9 +211,9 @@ export default function LogisticsPage() {
 
         {/* TABLE */}
         <div className="logistics-list-block">
-          <div className="log-list-header">
+          <div className="admin-table-list-header log-list-header">
             <div>
-              <div className="log-list-count">
+              <div className="admin-table-list-count log-list-count">
                 {logisticsRows.length} résultat
                 {logisticsRows.length !== 1
                   ? "s"
@@ -221,10 +221,10 @@ export default function LogisticsPage() {
               </div>
             </div>
 
-            <div className="log-list-header-right">
-              <div className="log-page-pagination">
+            <div className="admin-table-list-header-right log-list-header-right">
+              <div className="admin-table-pagination log-page-pagination">
                 <button
-                  className="log-page-btn"
+                  className="admin-table-pagination-btn log-page-btn"
                   disabled={
                     pagination.currentPage <= 1
                   }
@@ -237,13 +237,13 @@ export default function LogisticsPage() {
                   ←
                 </button>
 
-                <span className="log-page-indicator">
+                <span className="admin-table-pagination-indicator log-page-indicator">
                   {pagination.currentPage} /{" "}
                   {pagination.totalPages || 1}
                 </span>
 
                 <button
-                  className="log-page-btn"
+                  className="admin-table-pagination-btn log-page-btn"
                   disabled={
                     pagination.currentPage >=
                     pagination.totalPages

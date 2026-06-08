@@ -145,22 +145,23 @@ export function OrdersList({
   return (
     <div style={S.block}>
       {/* HEADER */}
-      <div style={S.header}>
+      <div className="admin-table-list-header" style={S.header}>
         <div>
-          <div style={S.sub}>
+          <div className="admin-table-list-count" style={S.sub}>
             {filteredCount} résultat{filteredCount !== 1 ? "s" : ""}
           </div>
         </div>
 
-        <div style={S.headerRight}>
+        <div className="admin-table-list-header-right" style={S.headerRight}>
           {selection.selectedIds.length > 0 && (
             <div style={S.selectedBadge}>
               {selection.selectedIds.length} sélectionné
             </div>
           )}
 
-          <div style={S.pagination}>
+          <div className="admin-table-pagination orders-page-pagination" style={S.pagination}>
             <button
+              className="admin-table-pagination-btn orders-page-btn"
               style={S.pageBtn}
               disabled={currentPage <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -168,11 +169,12 @@ export function OrdersList({
               ←
             </button>
 
-            <span style={S.pageInfo}>
+            <span className="admin-table-pagination-indicator orders-page-indicator" style={S.pageInfo}>
               {currentPage} / {totalPages || 1}
             </span>
 
             <button
+              className="admin-table-pagination-btn orders-page-btn"
               style={S.pageBtn}
               disabled={currentPage >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}

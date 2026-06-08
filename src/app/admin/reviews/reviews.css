@@ -364,6 +364,11 @@
     minmax(0, .95fr);
 }
 
+.reviews-expanded-products-only {
+  grid-template-columns:
+    minmax(0, 1fr);
+}
+
 .reviews-expanded-card {
   border: 1px solid rgba(255,255,255,.058);
   background: rgba(255,255,255,.012);

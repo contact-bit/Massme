@@ -943,10 +943,6 @@ export default function AdminReviewsPage() {
 
           <div>
 
-            <div className="reviews-section-kicker">
-              SETTINGS
-            </div>
-
             <h2 className="reviews-card-title">
               Envoi du mail d’avis
             </h2>
@@ -1469,14 +1465,22 @@ export default function AdminReviewsPage() {
                     {isOpen && (
                       <tr className="row-expanded reviews-row-expanded">
                         <td colSpan={6}>
-                          <div className="reviews-expanded reviews-expanded-minimal">
-                            <div className="reviews-expanded-card">
-                              <h3>Commentaire</h3>
-                              <div className="reviews-expanded-comment">
-                                {review?.comment ||
-                                  "Aucun commentaire pour cette commande."}
+                          <div
+                            className={`reviews-expanded reviews-expanded-minimal ${
+                              status === "email_pending"
+                                ? "reviews-expanded-products-only"
+                                : ""
+                            }`}
+                          >
+                            {status !== "email_pending" && (
+                              <div className="reviews-expanded-card">
+                                <h3>Commentaire</h3>
+                                <div className="reviews-expanded-comment">
+                                  {review?.comment ||
+                                    "Aucun commentaire pour cette commande."}
+                                </div>
                               </div>
-                            </div>
+                            )}
 
                             <div className="reviews-expanded-card">
                               <h3>Produits concernés</h3>

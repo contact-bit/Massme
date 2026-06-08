@@ -165,12 +165,8 @@ export default function EditMethodPanel({
 
         <div>
 
-          <div className="emp-kicker">
-            Modification
-          </div>
-
           <h2 className="emp-title">
-            Modifier la méthode
+            Modification
           </h2>
 
           <div className="emp-meta">
