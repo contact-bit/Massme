@@ -2793,3 +2793,10 @@ html[data-admin-theme="light"] .export-alert-error {
   color: #7f1d1d !important;
   -webkit-text-fill-color: #7f1d1d !important;
 }
+
+/* REVIEWS SEND BUTTON - LIGHT MODE */
+html[data-admin-theme="light"] .reviews-btn-send,
+html[data-admin-theme="light"] .reviews-btn-send:is(:hover, :active, :disabled) {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}

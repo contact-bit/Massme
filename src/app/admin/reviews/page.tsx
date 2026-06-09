@@ -825,6 +825,17 @@ export default function AdminReviewsPage() {
       [status]
     );
 
+  const showEmailStatus =
+    status !== "approved";
+
+  const showReview =
+    status !== "email_pending";
+
+  const tableColumnCount =
+    4 +
+    Number(showEmailStatus) +
+    Number(showReview);
+
   const emailLabel =
     useMemo(
       () => {
@@ -1286,9 +1297,13 @@ export default function AdminReviewsPage() {
               <tr>
                 <th>Commande</th>
                 <th>Client</th>
-                <th>Email avis</th>
-                <th>Avis</th>
-                <th>Envoi</th>
+                {showEmailStatus && <th>Email avis</th>}
+                {showReview && <th>Avis</th>}
+                <th>
+                  {status === "approved"
+                    ? "Posté le"
+                    : "Envoi"}
+                </th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -1308,7 +1323,9 @@ export default function AdminReviewsPage() {
                     : false;
 
                 const dateLabel =
-                  row.status === "scheduled"
+                  status === "approved" && review
+                    ? formatDate(review.createdAt) || "—"
+                    : row.status === "scheduled"
                     ? row.scheduledAt
                       ? `${formatDate(row.scheduledAt)} • ${getRemainingTime(row.scheduledAt)}`
                       : "Programmé"
@@ -1367,32 +1384,32 @@ export default function AdminReviewsPage() {
                         </div>
                       </td>
 
-                      <td>
-                        <span className={`reviews-email-status status-${row.status}`}>
-                          {getReviewEmailLabel(row.status)}
-                        </span>
-                      </td>
+                      {showEmailStatus && (
+                        <td>
+                          <span className={`reviews-email-status status-${row.status}`}>
+                            {getReviewEmailLabel(row.status)}
+                          </span>
+                        </td>
+                      )}
 
-                      <td>
-                        <div className="reviews-email-review">
-                          {review ? (
-                            <>
-                              <strong>
-                                {review.rating ?? "?"} ★
-                              </strong>
-                              <span>
-                                {getStatusLabel(review.status)}
-                              </span>
-                            </>
-                          ) : (
-                            <span>
-                              {status === "email_pending"
-                                ? "En attente client"
-                                : "Aucun avis"}
-                            </span>
-                          )}
-                        </div>
-                      </td>
+                      {showReview && (
+                        <td>
+                          <div className="reviews-email-review">
+                            {review ? (
+                              <>
+                                <strong>
+                                  {review.rating ?? "?"} ★
+                                </strong>
+                                <span>
+                                  {getStatusLabel(review.status)}
+                                </span>
+                              </>
+                            ) : (
+                              <span>Aucun avis</span>
+                            )}
+                          </div>
+                        </td>
+                      )}
 
                       <td>
                         <div className="cell-sub">
@@ -1444,7 +1461,7 @@ export default function AdminReviewsPage() {
                               className={
                                 row.status === "sent"
                                   ? "reviews-btn reviews-btn-ghost"
-                                  : "reviews-btn reviews-btn-primary"
+                                  : "reviews-btn reviews-btn-primary reviews-btn-send"
                               }
                               disabled={sending}
                               onClick={() =>
@@ -1464,7 +1481,7 @@ export default function AdminReviewsPage() {
 
                     {isOpen && (
                       <tr className="row-expanded reviews-row-expanded">
-                        <td colSpan={6}>
+                        <td colSpan={tableColumnCount}>
                           <div
                             className={`reviews-expanded reviews-expanded-minimal ${
                               status === "email_pending"
