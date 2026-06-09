@@ -17,6 +17,30 @@ function isValidEmail(email: string) {
   return !!email && email.includes("@");
 }
 
+function getReviewBaseUrl() {
+  const value =
+    process.env.APP_BASE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_URL ||
+    "";
+
+  if (!value) {
+    throw new Error("missing_base_url");
+  }
+
+  const url = new URL(value);
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    (url.protocol !== "https:" ||
+      ["localhost", "127.0.0.1", "::1"].includes(url.hostname))
+  ) {
+    throw new Error("invalid_production_base_url");
+  }
+
+  return url;
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -181,13 +205,7 @@ export async function sendReviewEmailNow(
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) throw new Error("missing_resend_api_key");
 
-  const baseUrl =
-    (process.env.APP_BASE_URL ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.NEXT_PUBLIC_URL ||
-      "").replace(/\/+$/, "");
-
-  if (!baseUrl) throw new Error("missing_base_url");
+  const baseUrl = getReviewBaseUrl();
 
   const from =
     process.env.REVIEW_EMAIL_FROM ||
@@ -245,11 +263,15 @@ export async function sendReviewEmailNow(
    URL (COMPATIBLE API + FRONT)
 ========================================================= */
 
-const reviewBase =
-  `${baseUrl}/${locale}/review` +
-  `?order_id=${encodeURIComponent(orderId)}` +
-  `&token=${encodeURIComponent(token)}` +
-  `&email=${encodeURIComponent(email)}`;
+const reviewUrl = new URL(
+  `/${encodeURIComponent(locale)}/review`,
+  baseUrl
+);
+
+reviewUrl.searchParams.set("order_id", orderId);
+reviewUrl.searchParams.set("token", token);
+
+const reviewBase = reviewUrl.toString();
 
 // ⭐ IMPORTANT: garder "rating" (ton front l'utilise déjà)
 const stars = [1, 2, 3, 4, 5].map(
