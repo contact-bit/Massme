@@ -206,18 +206,19 @@ export default function DashboardOrdersSearch({
 
   const content = (
     <>
-      {/* HEADER */}
-      <div className="dash-panel-head">
-        <h2 className="dash-panel-title">
-          Recherche commandes
-        </h2>
+      {!embedded && (
+        <div className="dash-panel-head">
+          <h2 className="dash-panel-title">
+            Recherche commandes
+          </h2>
 
-        <div className="dash-panel-meta">
-          {hasSearch
-            ? `${filtered.length} résultats`
-            : "Tapez pour rechercher"}
+          <div className="dash-panel-meta">
+            {hasSearch
+              ? `${filtered.length} résultats`
+              : "Tapez pour rechercher"}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* TOOLBAR */}
       <div className="dash-orders-toolbar">

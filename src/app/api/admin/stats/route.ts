@@ -46,6 +46,22 @@ function addDays(d: Date, n: number) {
   return x;
 }
 
+function addMonths(d: Date, n: number) {
+  const x = new Date(d);
+  x.setUTCMonth(x.getUTCMonth() + n);
+  return x;
+}
+
+function startOfMonth(d: Date) {
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)
+  );
+}
+
+function startOfYear(d: Date) {
+  return new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+}
+
 /* =========================================================
    NORMALIZE STATUS
 ========================================================= */
@@ -286,6 +302,185 @@ export async function GET() {
             orderTotalEUR(o),
         };
       });
+
+    type DashboardPeriod =
+      | "day"
+      | "7d"
+      | "month"
+      | "year"
+      | "all";
+
+    function buildPeriod(period: DashboardPeriod) {
+      const earliestMs = Math.min(
+        ...allOrders
+          .map((order) => order._ms)
+          .filter((ms) => ms > 0),
+        todayStart.getTime()
+      );
+
+      let start = todayStart;
+      let previousStart: Date | null = null;
+      let points: Array<{
+        label: string;
+        start: number;
+        end: number;
+      }> = [];
+
+      if (period === "day") {
+        previousStart = addDays(todayStart, -1);
+        points = Array.from({ length: 24 }, (_, hour) => {
+          const pointStart =
+            todayStart.getTime() + hour * 3600000;
+
+          return {
+            label: `${String(hour).padStart(2, "0")}h`,
+            start: pointStart,
+            end: pointStart + 3600000,
+          };
+        });
+      } else if (period === "7d") {
+        start = addDays(todayStart, -6);
+        previousStart = addDays(start, -7);
+        points = Array.from({ length: 7 }, (_, index) => {
+          const day = addDays(start, index);
+
+          return {
+            label: new Intl.DateTimeFormat("fr-FR", {
+              day: "2-digit",
+              month: "2-digit",
+            }).format(day),
+            start: day.getTime(),
+            end: addDays(day, 1).getTime(),
+          };
+        });
+      } else if (period === "month") {
+        start = startOfMonth(todayStart);
+        previousStart = addMonths(start, -1);
+        const days =
+          Math.floor(
+            (todayStart.getTime() - start.getTime()) / 86400000
+          ) + 1;
+
+        points = Array.from({ length: days }, (_, index) => {
+          const day = addDays(start, index);
+
+          return {
+            label: new Intl.DateTimeFormat("fr-FR", {
+              day: "2-digit",
+              month: "2-digit",
+            }).format(day),
+            start: day.getTime(),
+            end: addDays(day, 1).getTime(),
+          };
+        });
+      } else if (period === "year") {
+        start = startOfYear(todayStart);
+        previousStart = addMonths(start, -12);
+        points = Array.from({ length: 12 }, (_, index) => {
+          const month = addMonths(start, index);
+
+          return {
+            label: new Intl.DateTimeFormat("fr-FR", {
+              month: "short",
+            }).format(month),
+            start: month.getTime(),
+            end: addMonths(month, 1).getTime(),
+          };
+        });
+      } else {
+        start = startOfMonth(new Date(earliestMs));
+        const monthCount =
+          (todayStart.getUTCFullYear() - start.getUTCFullYear()) *
+            12 +
+          todayStart.getUTCMonth() -
+          start.getUTCMonth() +
+          1;
+
+        points = Array.from(
+          { length: Math.max(monthCount, 1) },
+          (_, index) => {
+            const month = addMonths(start, index);
+
+            return {
+              label: new Intl.DateTimeFormat("fr-FR", {
+                month: "short",
+                year: "2-digit",
+              }).format(month),
+              start: month.getTime(),
+              end: addMonths(month, 1).getTime(),
+            };
+          }
+        );
+      }
+
+      const end = now.getTime();
+      const periodOrders = allOrders.filter(
+        (order) =>
+          order._ms >= start.getTime() && order._ms <= end
+      );
+      const paidOrders = periodOrders.filter(
+        (order) => order._status === "paid"
+      );
+      const pendingOrders = periodOrders.filter(
+        (order) => order._status === "pending_payment"
+      );
+      const revenue = paidOrders.reduce(
+        (sum, order) => sum + order._total,
+        0
+      );
+
+      const previousEnd = start.getTime();
+      const previousRevenue = previousStart
+        ? allOrders
+            .filter(
+              (order) =>
+                order._status === "paid" &&
+                order._ms >= previousStart!.getTime() &&
+                order._ms < previousEnd
+            )
+            .reduce((sum, order) => sum + order._total, 0)
+        : 0;
+
+      return {
+        revenue: Number(revenue.toFixed(2)),
+        previousRevenue: Number(previousRevenue.toFixed(2)),
+        revenueDeltaPct:
+          period === "all"
+            ? 0
+            : Number(pct(revenue, previousRevenue).toFixed(1)),
+        ordersCount: periodOrders.length,
+        paidOrdersCount: paidOrders.length,
+        pendingCount: pendingOrders.length,
+        aov: Number(
+          (paidOrders.length ? revenue / paidOrders.length : 0).toFixed(
+            2
+          )
+        ),
+        series: points.map((point) => {
+          const orders = allOrders.filter(
+            (order) =>
+              order._ms >= point.start && order._ms < point.end
+          );
+          const pointRevenue = orders
+            .filter((order) => order._status === "paid")
+            .reduce((sum, order) => sum + order._total, 0);
+
+          return {
+            day: point.label,
+            revenue: Number(pointRevenue.toFixed(2)),
+            orders: orders.length,
+          };
+        }),
+      };
+    }
+
+    const periods = {
+      day: buildPeriod("day"),
+      "7d": buildPeriod("7d"),
+      month: buildPeriod("month"),
+      year: buildPeriod("year"),
+      all: buildPeriod("all"),
+    };
 
     const nowMs = now.getTime();
 
@@ -597,6 +792,7 @@ export async function GET() {
       },
 
       series,
+      periods,
 
       lastOrders,
 

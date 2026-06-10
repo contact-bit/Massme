@@ -1,27 +1,50 @@
 "use client";
 
+import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   useCallback,
   useEffect,
   useMemo,
   useState,
 } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  FiActivity,
+  FiBarChart2,
+  FiDownload,
+  FiEye,
+  FiEyeOff,
+  FiGrid,
+  FiMaximize2,
+  FiMinimize2,
+  FiRefreshCw,
+  FiSettings,
+  FiTrendingUp,
+  FiX,
+} from "react-icons/fi";
 
 import DashboardOrdersSearch from "./DashboardOrdersSearch";
-
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  Tooltip,
-} from "recharts";
 
 type StatsResponse = {
   kpis: {
     productsCount: number;
     activeProducts: number;
-
     paymentMethodsCount: number;
     activePaymentMethods: number;
     shippingMethodsCount: number;
@@ -29,33 +52,26 @@ type StatsResponse = {
     reviewsCount: number;
     approvedReviews: number;
     pendingReviews: number;
-
     ordersCount: number;
     paidOrdersCount: number;
     pendingCount: number;
-
     toPrepareCount: number;
     shippedCount: number;
-
     revenueLast7: number;
     revenuePrev7: number;
-
     revenueToday: number;
     revenueYesterday: number;
-
     aov: number;
   };
-
   deltas: {
     revenue7dPct: number;
     revenueDayPct: number;
   };
-
   series: {
     day: string;
     revenue: number;
+    orders?: number;
   }[];
-
   lastOrders: {
     id: string;
     orderNumber?: string;
@@ -64,207 +80,436 @@ type StatsResponse = {
     email: string;
     createdAt: string | null;
   }[];
-
   alerts: {
     tone: "info" | "warn" | "danger";
     title: string;
     desc: string;
   }[];
+  periods: Record<DashboardPeriod, PeriodStats>;
 };
 
-/* =========================================================
-   HELPERS
-========================================================= */
+type DashboardPeriod = "day" | "7d" | "month" | "year" | "all";
+type RevenueChartType = "area" | "line" | "bar";
+type WidgetTone = "default" | "blue" | "cyan" | "green" | "orange" | "violet";
+type WidgetIntensity = "soft" | "normal" | "strong";
+type DashboardDensity = "compact" | "comfortable";
+type DashboardPreset = "essential" | "sales" | "operations" | "complete";
+type WidgetStyle = {
+  tone: WidgetTone;
+  intensity: WidgetIntensity;
+};
+type WidgetId =
+  | "alerts"
+  | "search"
+  | "revenueYear"
+  | "revenue7d"
+  | "orders"
+  | "paidOrders"
+  | "pendingOrders"
+  | "aov"
+  | "revenueChart"
+  | "orderStatus"
+  | "toPrepare"
+  | "shipped"
+  | "operationsProgress"
+  | "operationsChart"
+  | "products"
+  | "activeProducts"
+  | "payments"
+  | "activePayments"
+  | "shipping"
+  | "countries"
+  | "reviews"
+  | "approvedReviews"
+  | "pendingReviews"
+  | "lastOrders";
 
-function eur(n?: number) {
+const widgetGroups: Array<{
+  label: string;
+  widgets: Array<{ id: WidgetId; label: string }>;
+}> = [
+  {
+    label: "Accès",
+    widgets: [
+      { id: "alerts", label: "Alertes" },
+      { id: "search", label: "Recherche commandes" },
+      { id: "lastOrders", label: "Dernières commandes" },
+    ],
+  },
+  {
+    label: "Ventes",
+    widgets: [
+      { id: "revenueYear", label: "CA principal" },
+      { id: "revenue7d", label: "CA secondaire" },
+      { id: "orders", label: "Commandes" },
+      { id: "paidOrders", label: "Commandes payées" },
+      { id: "pendingOrders", label: "Commandes en attente" },
+      { id: "aov", label: "Panier moyen" },
+      { id: "revenueChart", label: "Graphique CA" },
+      { id: "orderStatus", label: "État commandes" },
+    ],
+  },
+  {
+    label: "Opérations",
+    widgets: [
+      { id: "toPrepare", label: "À préparer" },
+      { id: "shipped", label: "Expédiées" },
+      { id: "operationsProgress", label: "Progression" },
+      { id: "operationsChart", label: "Volumes" },
+    ],
+  },
+  {
+    label: "Boutique",
+    widgets: [
+      { id: "products", label: "Produits" },
+      { id: "activeProducts", label: "Produits actifs" },
+      { id: "payments", label: "Paiements" },
+      { id: "activePayments", label: "Paiements actifs" },
+      { id: "shipping", label: "Livraison" },
+      { id: "countries", label: "Pays" },
+      { id: "reviews", label: "Avis" },
+      { id: "approvedReviews", label: "Avis publiés" },
+      { id: "pendingReviews", label: "Avis à modérer" },
+    ],
+  },
+];
+
+const defaultVisibleWidgets = widgetGroups.flatMap((group) =>
+  group.widgets.map((widget) => widget.id)
+);
+
+const dashboardPresets: Array<{
+  id: DashboardPreset;
+  label: string;
+  widgets: WidgetId[];
+}> = [
+  {
+    id: "essential",
+    label: "Essentiel",
+    widgets: [
+      "alerts",
+      "search",
+      "revenueYear",
+      "orders",
+      "pendingOrders",
+      "revenueChart",
+      "toPrepare",
+      "lastOrders",
+    ],
+  },
+  {
+    id: "sales",
+    label: "Ventes",
+    widgets: [
+      "search",
+      "revenueYear",
+      "revenue7d",
+      "orders",
+      "paidOrders",
+      "pendingOrders",
+      "aov",
+      "revenueChart",
+      "orderStatus",
+      "reviews",
+      "approvedReviews",
+      "lastOrders",
+    ],
+  },
+  {
+    id: "operations",
+    label: "Opérations",
+    widgets: [
+      "alerts",
+      "search",
+      "orders",
+      "pendingOrders",
+      "toPrepare",
+      "shipped",
+      "operationsProgress",
+      "operationsChart",
+      "shipping",
+      "countries",
+      "lastOrders",
+    ],
+  },
+  {
+    id: "complete",
+    label: "Complet",
+    widgets: defaultVisibleWidgets,
+  },
+];
+
+type PeriodStats = {
+  revenue: number;
+  previousRevenue: number;
+  revenueDeltaPct: number;
+  ordersCount: number;
+  paidOrdersCount: number;
+  pendingCount: number;
+  aov: number;
+  series: {
+    day: string;
+    revenue: number;
+    orders: number;
+  }[];
+};
+
+const periodOptions: Array<{
+  value: DashboardPeriod;
+  label: string;
+  shortLabel: string;
+}> = [
+  { value: "day", label: "Aujourd’hui", shortLabel: "1 jour" },
+  { value: "7d", label: "7 derniers jours", shortLabel: "7 jours" },
+  { value: "month", label: "Mois en cours", shortLabel: "1 mois" },
+  { value: "year", label: "Année en cours", shortLabel: "1 an" },
+  { value: "all", label: "Depuis le début", shortLabel: "Total" },
+];
+
+function periodLabel(period: DashboardPeriod) {
+  return (
+    periodOptions.find((option) => option.value === period)?.label ||
+    period
+  );
+}
+
+function eur(value?: number) {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
-  }).format(n ?? 0);
+    maximumFractionDigits: 0,
+  }).format(value ?? 0);
 }
 
-function shortDate(iso: string | null) {
-  if (!iso) return "—";
+function shortDate(value: string | null) {
+  if (!value) return "—";
 
   return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(iso));
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
-type WidgetSize =
-  | "small"
-  | "medium"
-  | "large";
+function statusLabel(status: string) {
+  if (status === "paid") return "Payée";
+  if (status === "pending_payment") return "En attente";
+  if (status === "shipped") return "Expédiée";
+  return status || "Inconnu";
+}
 
-type WidgetTone =
-  | "neutral"
-  | "primary"
-  | "success"
-  | "warning"
-  | "danger"
-  | "highlight";
+function Delta({ value }: { value: number }) {
+  const positive = value >= 0;
 
-type WidgetConfig = {
-  id: string;
-  size: WidgetSize;
-  tone: WidgetTone;
-  visible: boolean;
-};
+  return (
+    <span
+      className={`dash-pro-delta ${
+        positive ? "positive" : "negative"
+      }`}
+    >
+      {positive ? "+" : ""}
+      {value.toLocaleString("fr-FR")} %
+    </span>
+  );
+}
 
-type WidgetDefinition = {
-  id: string;
+function MetricCard({
+  label,
+  value,
+  detail,
+  tone = "blue",
+  delta,
+  control,
+  className = "",
+}: {
   label: string;
   value: string | number;
-  foot: string;
+  detail: string;
+  tone?: "blue" | "cyan" | "green" | "orange" | "violet";
+  delta?: number;
   href?: string;
-  defaultTone: WidgetTone;
-  defaultSize: WidgetSize;
-  kind?:
-    | "kpi"
-    | "chart"
-    | "lastOrders"
-    | "search";
-};
-
-function widgetClass(
-  config: WidgetConfig
-) {
-  return [
-    "dash-card",
-    `tone-${config.tone}`,
-    `size-${config.size}`,
-  ].join(" ");
-}
-
-function normalizeLayout(
-  value: unknown,
-  definitions: WidgetDefinition[]
-): WidgetConfig[] {
-  const byId = new Map(
-    definitions.map((d) => [d.id, d])
+  control?: ReactNode;
+  className?: string;
+}) {
+  const content = (
+    <>
+      <div className="dash-pro-metric-head">
+        <span>{label}</span>
+        {control}
+      </div>
+      <strong>{value}</strong>
+      <div className="dash-pro-metric-foot">
+        <span>{detail}</span>
+        {typeof delta === "number" && (
+          <Delta value={delta} />
+        )}
+      </div>
+    </>
   );
 
-  const incoming = Array.isArray(value)
-    ? value
-    : [];
-
-  const seen = new Set<string>();
-
-  const parsed = incoming
-    .map((item: any) => {
-      const def = byId.get(
-        String(item?.id || "")
-      );
-
-      if (!def || seen.has(def.id)) {
-        return null;
-      }
-
-      seen.add(def.id);
-
-      const size: WidgetSize =
-        item?.size === "medium" ||
-        item?.size === "large" ||
-        item?.size === "small"
-          ? item.size
-          : def.defaultSize;
-
-      const tone: WidgetTone =
-        item?.tone === "primary" ||
-        item?.tone === "success" ||
-        item?.tone === "warning" ||
-        item?.tone === "danger" ||
-        item?.tone === "highlight" ||
-        item?.tone === "neutral"
-          ? item.tone
-          : def.defaultTone;
-
-      return {
-        id: def.id,
-        size,
-        tone,
-        visible:
-          item?.visible === false
-            ? false
-            : true,
-      };
-    })
-    .filter(Boolean) as WidgetConfig[];
-
-  for (const def of definitions) {
-    if (!seen.has(def.id)) {
-      parsed.push({
-        id: def.id,
-        size: def.defaultSize,
-        tone: def.defaultTone,
-        visible: true,
-      });
-    }
-  }
-
-  return parsed;
+  return (
+    <article className={`dash-pro-metric tone-${tone} ${className}`}>
+      {content}
+    </article>
+  );
 }
 
-/* =========================================================
-   PAGE
-========================================================= */
+function PeriodSelect({
+  value,
+  onChange,
+  compact = false,
+}: {
+  value: DashboardPeriod;
+  onChange: (period: DashboardPeriod) => void;
+  compact?: boolean;
+}) {
+  return (
+    <select
+      className={`dash-pro-period-select ${
+        compact ? "compact" : ""
+      }`}
+      value={value}
+      aria-label="Choisir une période"
+      onClick={(event) => event.stopPropagation()}
+      onChange={(event) =>
+        onChange(event.target.value as DashboardPeriod)
+      }
+    >
+      {periodOptions.map((option) => (
+        <option value={option.value} key={option.value}>
+          {compact ? option.shortLabel : option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function PeriodTabs({
+  value,
+  onChange,
+}: {
+  value: DashboardPeriod;
+  onChange: (period: DashboardPeriod) => void;
+}) {
+  return (
+    <div
+      className="dash-pro-period-tabs"
+      role="group"
+      aria-label="Période du graphique"
+    >
+      {periodOptions.map((option) => (
+        <button
+          type="button"
+          key={option.value}
+          className={value === option.value ? "active" : ""}
+          aria-pressed={value === option.value}
+          onClick={() => onChange(option.value)}
+        >
+          {option.shortLabel}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ChartTypeTabs({
+  value,
+  onChange,
+}: {
+  value: RevenueChartType;
+  onChange: (type: RevenueChartType) => void;
+}) {
+  const options = [
+    { value: "area" as const, label: "Aire", icon: <FiActivity /> },
+    {
+      value: "line" as const,
+      label: "Courbe",
+      icon: <FiTrendingUp />,
+    },
+    {
+      value: "bar" as const,
+      label: "Barres",
+      icon: <FiBarChart2 />,
+    },
+  ];
+
+  return (
+    <div
+      className="dash-pro-chart-tabs"
+      role="group"
+      aria-label="Type de graphique"
+    >
+      {options.map((option) => (
+        <button
+          type="button"
+          key={option.value}
+          title={option.label}
+          aria-label={option.label}
+          aria-pressed={value === option.value}
+          className={value === option.value ? "active" : ""}
+          onClick={() => onChange(option.value)}
+        >
+          {option.icon}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SectionHead({ title }: { title: string }) {
+  return (
+    <div className="dash-pro-section-head">
+      <h2>{title}</h2>
+    </div>
+  );
+}
 
 export default function AdminDashboardPage() {
   const [data, setData] =
     useState<StatsResponse | null>(null);
-
   const [loading, setLoading] =
     useState(true);
-
-  const [err, setErr] =
+  const [error, setError] =
     useState<string | null>(null);
-
-  const [
-    editDashboard,
-    setEditDashboard,
-  ] = useState(false);
-
-  const [
-    dashboardWidgets,
-    setDashboardWidgets,
-  ] = useState<WidgetConfig[]>([]);
-
-  const [
-    draggedWidget,
-    setDraggedWidget,
-  ] = useState<string | null>(null);
-
-  const [
-    savingDashboard,
-    setSavingDashboard,
-  ] = useState(false);
-
-  /* ================= FETCH ================= */
+  const [chartPeriod, setChartPeriod] =
+    useState<DashboardPeriod>("month");
+  const [primaryPeriod, setPrimaryPeriod] =
+    useState<DashboardPeriod>("year");
+  const [secondaryPeriod, setSecondaryPeriod] =
+    useState<DashboardPeriod>("7d");
+  const [chartType, setChartType] =
+    useState<RevenueChartType>("area");
+  const [showWidgetPanel, setShowWidgetPanel] =
+    useState(false);
+  const [visibleWidgets, setVisibleWidgets] =
+    useState<WidgetId[]>(defaultVisibleWidgets);
+  const [widgetStyles, setWidgetStyles] =
+    useState<Partial<Record<WidgetId, WidgetStyle>>>({});
+  const [density, setDensity] =
+    useState<DashboardDensity>("comfortable");
 
   const refresh = useCallback(async () => {
     try {
       setLoading(true);
-      setErr(null);
+      setError(null);
 
-      const res = await fetch(
-        "/api/admin/stats",
-        {
-          cache: "no-store",
-        }
-      );
+      const response = await fetch("/api/admin/stats", {
+        cache: "no-store",
+      });
+      const json = await response.json();
 
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(
-          json?.error || "Erreur API"
-        );
+      if (!response.ok) {
+        throw new Error(json?.error || "Erreur API");
       }
 
       setData(json);
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Impossible de charger le dashboard."
+      );
     } finally {
       setLoading(false);
     }
@@ -275,396 +520,215 @@ export default function AdminDashboardPage() {
   }, [refresh]);
 
   useEffect(() => {
-    let cancelled = false;
+    const savedChart = localStorage.getItem(
+      "dashboard_chart_period"
+    ) as DashboardPeriod | null;
+    const savedPrimary = localStorage.getItem(
+      "dashboard_primary_period"
+    ) as DashboardPeriod | null;
+    const savedSecondary = localStorage.getItem(
+      "dashboard_secondary_period"
+    ) as DashboardPeriod | null;
+    const savedChartType = localStorage.getItem(
+      "dashboard_chart_type"
+    ) as RevenueChartType | null;
+    const savedWidgets = localStorage.getItem(
+      "dashboard_visible_widgets"
+    );
+    const savedStyles = localStorage.getItem(
+      "dashboard_widget_styles"
+    );
+    const savedDensity = localStorage.getItem(
+      "dashboard_density"
+    );
+    const valid = new Set(
+      periodOptions.map((option) => option.value)
+    );
 
-    async function loadDashboard() {
+    if (savedChart && valid.has(savedChart)) {
+      setChartPeriod(savedChart);
+    }
+    if (savedPrimary && valid.has(savedPrimary)) {
+      setPrimaryPeriod(savedPrimary);
+    }
+    if (savedSecondary && valid.has(savedSecondary)) {
+      setSecondaryPeriod(savedSecondary);
+    }
+    if (
+      savedChartType === "area" ||
+      savedChartType === "line" ||
+      savedChartType === "bar"
+    ) {
+      setChartType(savedChartType);
+    }
+    if (savedWidgets) {
       try {
-        const res = await fetch(
-          "/api/admin/settings/dashboard",
-          {
-            cache: "no-store",
-          }
-        );
-
-        const json = await res.json();
-
-        if (
-          !cancelled &&
-          res.ok &&
-          json?.ok
-        ) {
-          setDashboardWidgets(
-            json.widgets || []
+        const parsed = JSON.parse(savedWidgets);
+        if (Array.isArray(parsed)) {
+          setVisibleWidgets(
+            parsed.filter((id): id is WidgetId =>
+              defaultVisibleWidgets.includes(id as WidgetId)
+            )
           );
         }
       } catch {
-        if (!cancelled) {
-          setDashboardWidgets([]);
-        }
+        setVisibleWidgets(defaultVisibleWidgets);
       }
     }
-
-    loadDashboard();
-
-    return () => {
-      cancelled = true;
-    };
+    if (savedStyles) {
+      try {
+        setWidgetStyles(JSON.parse(savedStyles));
+      } catch {
+        setWidgetStyles({});
+      }
+    }
+    if (savedDensity === "compact" || savedDensity === "comfortable") {
+      setDensity(savedDensity);
+    }
   }, []);
 
-  const widgetDefinitions =
-    useMemo<WidgetDefinition[]>(() => {
-      const k = data?.kpis;
-
-      return [
-        {
-          id: "orders",
-          label: "Commandes",
-          value: k?.ordersCount ?? 0,
-          foot: "Total des commandes",
-          href: "/admin/orders",
-          defaultTone: "primary",
-          defaultSize: "small",
-        },
-        {
-          id: "paid",
-          label: "Payées",
-          value: k?.paidOrdersCount ?? 0,
-          foot: "Commandes validées",
-          defaultTone: "success",
-          defaultSize: "small",
-        },
-        {
-          id: "pending",
-          label: "En attente",
-          value: k?.pendingCount ?? 0,
-          foot: "Paiement non validé",
-          defaultTone: "warning",
-          defaultSize: "small",
-        },
-        {
-          id: "prepare",
-          label: "À préparer",
-          value: k?.toPrepareCount ?? 0,
-          foot: "Commandes à expédier",
-          defaultTone: "warning",
-          defaultSize: "small",
-        },
-        {
-          id: "shipped",
-          label: "Expédiées",
-          value: k?.shippedCount ?? 0,
-          foot: "Déjà envoyées",
-          defaultTone: "success",
-          defaultSize: "small",
-        },
-        {
-          id: "revenue7",
-          label: "CA 7 jours",
-          value: eur(k?.revenueLast7),
-          foot: "7 derniers jours",
-          defaultTone: "highlight",
-          defaultSize: "medium",
-        },
-        {
-          id: "today",
-          label: "Aujourd’hui",
-          value: eur(k?.revenueToday),
-          foot: "Revenus du jour",
-          defaultTone: "neutral",
-          defaultSize: "small",
-        },
-        {
-          id: "yesterday",
-          label: "Hier",
-          value: eur(k?.revenueYesterday),
-          foot: "Revenus de la veille",
-          defaultTone: "neutral",
-          defaultSize: "small",
-        },
-        {
-          id: "aov",
-          label: "Panier moyen",
-          value: eur(k?.aov),
-          foot: "Moyenne par commande",
-          defaultTone: "neutral",
-          defaultSize: "small",
-        },
-        {
-          id: "products",
-          label: "Produits",
-          value: k?.productsCount ?? 0,
-          foot: `${k?.activeProducts ?? 0} actifs`,
-          defaultTone: "neutral",
-          defaultSize: "small",
-        },
-        {
-          id: "payments",
-          label: "Paiement",
-          value: k?.paymentMethodsCount ?? 0,
-          foot: "Méthodes configurées",
-          href: "/admin/payment-methods",
-          defaultTone: "neutral",
-          defaultSize: "small",
-        },
-        {
-          id: "paymentsActive",
-          label: "Paiements actifs",
-          value: k?.activePaymentMethods ?? 0,
-          foot: "Méthodes activées",
-          defaultTone: "success",
-          defaultSize: "small",
-        },
-        {
-          id: "shipping",
-          label: "Livraison",
-          value: k?.shippingMethodsCount ?? 0,
-          foot: "Méthodes configurées",
-          href: "/admin/shipping",
-          defaultTone: "neutral",
-          defaultSize: "small",
-        },
-        {
-          id: "countries",
-          label: "Pays",
-          value: k?.adminCountriesCount ?? 0,
-          foot: "Pays configurés",
-          defaultTone: "neutral",
-          defaultSize: "small",
-        },
-        {
-          id: "reviews",
-          label: "Avis",
-          value: k?.reviewsCount ?? 0,
-          foot: "Avis clients",
-          href: "/admin/reviews",
-          defaultTone: "neutral",
-          defaultSize: "small",
-        },
-        {
-          id: "reviewsApproved",
-          label: "Publiés",
-          value: k?.approvedReviews ?? 0,
-          foot: "Avis visibles",
-          defaultTone: "success",
-          defaultSize: "small",
-        },
-        {
-          id: "reviewsPending",
-          label: "Avis en attente",
-          value: k?.pendingReviews ?? 0,
-          foot: "À modérer",
-          defaultTone: "warning",
-          defaultSize: "small",
-        },
-        {
-          id: "ordersSearch",
-          label: "Recherche commandes",
-          value: "",
-          foot: "",
-          defaultTone: "neutral",
-          defaultSize: "large",
-          kind: "search",
-        },
-        {
-          id: "revenueChart",
-          label: "Revenus",
-          value: "",
-          foot: "",
-          defaultTone: "highlight",
-          defaultSize: "large",
-          kind: "chart",
-        },
-        {
-          id: "lastOrders",
-          label: "Dernières commandes",
-          value: "",
-          foot: "",
-          defaultTone: "neutral",
-          defaultSize: "medium",
-          kind: "lastOrders",
-        },
-      ];
-    }, [data]);
-
-  const widgetLayout = useMemo(
-    () =>
-      normalizeLayout(
-        dashboardWidgets,
-        widgetDefinitions
-      ),
-    [dashboardWidgets, widgetDefinitions]
-  );
-
-  const widgetDefinitionById = useMemo(
-    () =>
-      new Map(
-        widgetDefinitions.map((w) => [
-          w.id,
-          w,
-        ])
-      ),
-    [widgetDefinitions]
-  );
-
-  function updateWidget(
-    id: string,
-    patch: Partial<WidgetConfig>
+  function updatePeriod(
+    key: "chart" | "primary" | "secondary",
+    value: DashboardPeriod
   ) {
-    setDashboardWidgets((prev) =>
-      normalizeLayout(
-        prev,
-        widgetDefinitions
-      ).map((w) =>
-        w.id === id
-          ? {
-              ...w,
-              ...patch,
-            }
-          : w
-      )
+    localStorage.setItem(`dashboard_${key}_period`, value);
+
+    if (key === "chart") setChartPeriod(value);
+    if (key === "primary") setPrimaryPeriod(value);
+    if (key === "secondary") setSecondaryPeriod(value);
+  }
+
+  function updateChartType(value: RevenueChartType) {
+    localStorage.setItem("dashboard_chart_type", value);
+    setChartType(value);
+  }
+
+  function toggleWidget(id: WidgetId) {
+    setVisibleWidgets((current) => {
+      const next = current.includes(id)
+        ? current.filter((widgetId) => widgetId !== id)
+        : [...current, id];
+
+      localStorage.setItem(
+        "dashboard_visible_widgets",
+        JSON.stringify(next)
+      );
+
+      return next;
+    });
+  }
+
+  function showWidget(id: WidgetId) {
+    return visibleWidgets.includes(id);
+  }
+
+  function setAllWidgets(visible: boolean) {
+    const next = visible ? defaultVisibleWidgets : [];
+    setVisibleWidgets(next);
+    localStorage.setItem(
+      "dashboard_visible_widgets",
+      JSON.stringify(next)
     );
   }
 
-  function moveWidget(
-    targetId: string,
-    sourceId = draggedWidget
+  function resetWidgetStyles() {
+    setWidgetStyles({});
+    localStorage.removeItem("dashboard_widget_styles");
+  }
+
+  function applyPreset(preset: DashboardPreset) {
+    const next =
+      dashboardPresets.find((item) => item.id === preset)?.widgets ||
+      defaultVisibleWidgets;
+    setVisibleWidgets(next);
+    localStorage.setItem(
+      "dashboard_visible_widgets",
+      JSON.stringify(next)
+    );
+  }
+
+  function isPresetActive(preset: DashboardPreset) {
+    const widgets =
+      dashboardPresets.find((item) => item.id === preset)?.widgets || [];
+    return (
+      widgets.length === visibleWidgets.length &&
+      widgets.every((id) => visibleWidgets.includes(id))
+    );
+  }
+
+  function updateDensity(value: DashboardDensity) {
+    setDensity(value);
+    localStorage.setItem("dashboard_density", value);
+  }
+
+  function updateGlobalPeriod(value: DashboardPeriod) {
+    updatePeriod("chart", value);
+    updatePeriod("primary", value);
+    updatePeriod("secondary", value);
+  }
+
+  function updateWidgetStyle(
+    id: WidgetId,
+    key: keyof WidgetStyle,
+    value: WidgetTone | WidgetIntensity
   ) {
-    if (
-      !sourceId ||
-      sourceId === targetId
-    ) {
-      setDraggedWidget(null);
-      return;
-    }
-
-    const current = [...widgetLayout];
-    const from = current.findIndex(
-      (w) => w.id === sourceId
-    );
-    const to = current.findIndex(
-      (w) => w.id === targetId
-    );
-
-    if (from < 0 || to < 0) {
-      setDraggedWidget(null);
-      return;
-    }
-
-    const [moved] = current.splice(
-      from,
-      1
-    );
-
-    current.splice(to, 0, moved);
-
-      setDashboardWidgets(current);
-    setDraggedWidget(null);
+    setWidgetStyles((current) => {
+      const next = {
+        ...current,
+        [id]: {
+          tone: current[id]?.tone || "default",
+          intensity: current[id]?.intensity || "normal",
+          [key]: value,
+        },
+      };
+      localStorage.setItem(
+        "dashboard_widget_styles",
+        JSON.stringify(next)
+      );
+      return next;
+    });
   }
 
-  const visibleWidgets =
-    widgetLayout.filter(
-      (w) => w.visible
-    );
-
-  const hiddenWidgets =
-    widgetLayout.filter(
-      (w) => !w.visible
-    );
-
-  async function saveDashboard() {
-    setSavingDashboard(true);
-
-    try {
-      const payload = normalizeLayout(
-        dashboardWidgets,
-        widgetDefinitions
-      );
-
-      const res = await fetch(
-        "/api/admin/settings/dashboard",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            widgets: payload,
-          }),
-        }
-      );
-
-      const json = await res.json();
-
-      if (!res.ok || !json?.ok) {
-        throw new Error(
-          json?.message ||
-            "Erreur sauvegarde"
-        );
-      }
-
-      setDashboardWidgets(
-        json.widgets || payload
-      );
-      setEditDashboard(false);
-    } finally {
-      setSavingDashboard(false);
-    }
+  function widgetClass(id: WidgetId) {
+    const style = widgetStyles[id];
+    return [
+      "dash-pro-widget-surface",
+      style?.tone && style.tone !== "default"
+        ? `tone-${style.tone}`
+        : "",
+      `intensity-${style?.intensity || "normal"}`,
+    ]
+      .filter(Boolean)
+      .join(" ");
   }
 
-  /* =========================================================
-     LOADING
-  ========================================================= */
+  const chartTooltip = useMemo(
+    () => ({
+      background: "#07111f",
+      border: "1px solid rgba(148,163,184,.18)",
+      borderRadius: 12,
+      fontSize: 12,
+      color: "#fff",
+    }),
+    []
+  );
 
   if (loading) {
     return (
-      <div className="admin-page">
-        <div className="dash-head">
-          <div>
-            <h1 className="admin-page-title">
-              Dashboard
-            </h1>
-
-            <p className="dash-sub">
-              Chargement des statistiques...
-            </p>
-          </div>
-        </div>
-
-        <div className="dash-skeleton-grid">
-          <div className="dash-skel" />
-          <div className="dash-skel" />
-          <div className="dash-skel" />
-          <div className="dash-skel" />
+      <div className="admin-page dash-pro-page">
+        <div className="dash-pro-loading">
+          Chargement du pilotage…
         </div>
       </div>
     );
   }
 
-  /* =========================================================
-     ERROR
-  ========================================================= */
-
-  if (err || !data) {
+  if (error || !data) {
     return (
-      <div className="admin-page">
-        <div className="dash-head">
-          <div>
-            <h1 className="admin-page-title">
-              Dashboard
-            </h1>
-          </div>
-        </div>
-
+      <div className="admin-page dash-pro-page">
         <div className="dash-error">
-          <div className="dash-error-title">
-            {err}
-          </div>
-
-          <button
-            className="btn-secondary"
-            onClick={refresh}
-          >
+          <strong>{error}</strong>
+          <button className="btn-secondary" onClick={refresh}>
             Réessayer
           </button>
         </div>
@@ -672,866 +736,669 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const {
-    kpis: k,
-    alerts,
-    lastOrders,
-    series,
-  } = data;
+  const { kpis: k, lastOrders, alerts } = data;
+  const primaryStats = data.periods[primaryPeriod];
+  const secondaryStats = data.periods[secondaryPeriod];
+  const chartStats = data.periods[chartPeriod];
 
-  /* =========================================================
-     UI
-  ========================================================= */
+  const operations = [
+    {
+      label: "À préparer",
+      value: k.toPrepareCount,
+      max: Math.max(k.toPrepareCount + k.shippedCount, 1),
+      tone: "orange",
+    },
+    {
+      label: "Expédiées",
+      value: k.shippedCount,
+      max: Math.max(k.toPrepareCount + k.shippedCount, 1),
+      tone: "cyan",
+    },
+    {
+      label: "Avis à modérer",
+      value: k.pendingReviews,
+      max: Math.max(k.reviewsCount, 1),
+      tone: "violet",
+    },
+  ];
+  const showSalesCharts =
+    showWidget("revenueChart") || showWidget("orderStatus");
+  const showSalesMetrics =
+    showWidget("revenueYear") ||
+    showWidget("revenue7d") ||
+    showWidget("orders") ||
+    showWidget("paidOrders") ||
+    showWidget("pendingOrders") ||
+    showWidget("aov");
+  const showOperations =
+    showWidget("toPrepare") ||
+    showWidget("shipped") ||
+    showWidget("operationsProgress") ||
+    showWidget("operationsChart");
+  const showStore =
+    showWidget("products") ||
+    showWidget("activeProducts") ||
+    showWidget("payments") ||
+    showWidget("activePayments") ||
+    showWidget("shipping") ||
+    showWidget("countries") ||
+    showWidget("reviews") ||
+    showWidget("approvedReviews") ||
+    showWidget("pendingReviews");
+  const hasVisibleWidgets = visibleWidgets.length > 0;
 
   return (
-    <div className="admin-page">
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
-
-      <div className="dash-head">
-        <div>
-          <h1 className="admin-page-title">
-            Dashboard
-          </h1>
-
-          <p className="dash-sub">
-            Vue globale de l’activité
-          </p>
+    <div className={`admin-page dash-pro-page density-${density}`}>
+      <header className="dash-pro-hero">
+        <div className="dash-pro-title">
+          <h1>Dashboard</h1>
+          <span>{visibleWidgets.length} widgets</span>
         </div>
 
-        <div className="dash-actions">
+        <div className="dash-pro-actions">
+          <PeriodSelect
+            compact
+            value={chartPeriod}
+            onChange={updateGlobalPeriod}
+          />
           <button
-            className="btn-secondary"
-            onClick={refresh}
-          >
-            Actualiser
-          </button>
-
-          <button
-            className="btn-secondary"
+            className="dash-pro-icon-action"
             onClick={() =>
-              setEditDashboard(
-                (v) => !v
+              updateDensity(
+                density === "compact" ? "comfortable" : "compact"
               )
             }
+            title={density === "compact" ? "Vue confortable" : "Vue compacte"}
+            aria-label={density === "compact" ? "Vue confortable" : "Vue compacte"}
           >
-            {editDashboard
-              ? "Terminer"
-              : "Personnaliser"}
+            {density === "compact" ? <FiMaximize2 /> : <FiMinimize2 />}
           </button>
-
-          {editDashboard && (
-            <button
-              className="btn-primary"
-              onClick={saveDashboard}
-              disabled={savingDashboard}
-            >
-              {savingDashboard
-                ? "Sauvegarde..."
-                : "Enregistrer"}
-            </button>
-          )}
-
-          <a
-            className="btn-secondary"
+          <button
+            className={`dash-pro-icon-action ${
+              showWidgetPanel ? "active" : ""
+            }`}
+            onClick={() => setShowWidgetPanel((current) => !current)}
+            title="Widgets"
+            aria-label="Widgets"
+          >
+            <FiSettings />
+          </button>
+          <button
+            className="dash-pro-icon-action"
+            onClick={refresh}
+            title="Actualiser"
+            aria-label="Actualiser"
+          >
+            <FiRefreshCw />
+          </button>
+          <Link
+            className="dash-pro-icon-action"
             href="/admin/export"
+            title="Exports"
+            aria-label="Exports"
           >
-            Exports
-          </a>
-
-          <a
-            className="btn-primary"
-            href="/admin/orders"
-          >
-            Commandes
-          </a>
+            <FiDownload />
+          </Link>
         </div>
-      </div>
+      </header>
 
-      {/* =====================================================
-          ALERTS
-      ===================================================== */}
-
-      {alerts.length > 0 && (
-        <div className="dash-alerts">
-          {alerts.map((a, i) => (
-            <div
-              key={i}
-              className={`dash-alert tone-${a.tone}`}
-            >
-              <div className="dash-alert-title">
-                {a.title}
-              </div>
-
-              <div className="dash-alert-desc">
-                {a.desc}
-              </div>
+      {showWidgetPanel && (
+        <section className="dash-pro-widget-panel">
+          <div className="dash-pro-widget-panel-head">
+            <div className="dash-pro-widget-panel-title">
+              <FiGrid />
+              <strong>Personnalisation</strong>
+              <span>{visibleWidgets.length}/{defaultVisibleWidgets.length}</span>
             </div>
-          ))}
-        </div>
+            <div>
+              <button type="button" onClick={() => setAllWidgets(true)}>
+                Tout afficher
+              </button>
+              <button type="button" onClick={() => setAllWidgets(false)}>
+                Tout masquer
+              </button>
+              <button type="button" onClick={resetWidgetStyles}>
+                Style initial
+              </button>
+              <button
+                type="button"
+                className="icon"
+                onClick={() => setShowWidgetPanel(false)}
+                aria-label="Fermer"
+              >
+                <FiX />
+              </button>
+            </div>
+          </div>
+
+          <div className="dash-pro-presets">
+            {dashboardPresets.map((preset) => (
+              <button
+                type="button"
+                key={preset.id}
+                className={isPresetActive(preset.id) ? "active" : ""}
+                aria-pressed={isPresetActive(preset.id)}
+                onClick={() => applyPreset(preset.id)}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="dash-pro-widget-groups">
+            {widgetGroups.map((group) => (
+              <div className="dash-pro-widget-group" key={group.label}>
+                <strong>{group.label}</strong>
+                <div>
+                  {group.widgets.map((widget) => {
+                    const visible = showWidget(widget.id);
+                    const style = widgetStyles[widget.id];
+
+                    return (
+                      <div
+                        key={widget.id}
+                        className="dash-pro-widget-control"
+                      >
+                        <button
+                          type="button"
+                          className={visible ? "active" : ""}
+                          aria-pressed={visible}
+                          onClick={() => toggleWidget(widget.id)}
+                        >
+                          {visible ? <FiEye /> : <FiEyeOff />}
+                          {widget.label}
+                        </button>
+                        <select
+                          aria-label={`Couleur ${widget.label}`}
+                          value={style?.tone || "default"}
+                          onChange={(event) =>
+                            updateWidgetStyle(
+                              widget.id,
+                              "tone",
+                              event.target.value as WidgetTone
+                            )
+                          }
+                        >
+                          <option value="default">Auto</option>
+                          <option value="blue">Bleu</option>
+                          <option value="cyan">Cyan</option>
+                          <option value="green">Vert</option>
+                          <option value="orange">Orange</option>
+                          <option value="violet">Violet</option>
+                        </select>
+                        <select
+                          aria-label={`Intensité ${widget.label}`}
+                          value={style?.intensity || "normal"}
+                          onChange={(event) =>
+                            updateWidgetStyle(
+                              widget.id,
+                              "intensity",
+                              event.target.value as WidgetIntensity
+                            )
+                          }
+                        >
+                          <option value="soft">Doux</option>
+                          <option value="normal">Normal</option>
+                          <option value="strong">Fort</option>
+                        </select>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
-      {/* =====================================================
-          KPI
-      ===================================================== */}
+      {!hasVisibleWidgets && (
+        <section className="dash-pro-empty-dashboard">
+          <FiGrid />
+          <strong>Dashboard vide</strong>
+          <button type="button" onClick={() => applyPreset("essential")}>
+            Afficher l’essentiel
+          </button>
+        </section>
+      )}
 
-      <div
-        className={`dash-kpis ${
-          editDashboard ? "is-editing" : ""
-        }`}
-      >
-        {visibleWidgets.map((config) => {
-          const def =
-            widgetDefinitionById.get(
-              config.id
-            );
-
-          if (!def) {
-            return null;
-          }
-
-          const isKpi =
-            !def.kind ||
-            def.kind === "kpi";
-
-          return (
-            <div
-              key={config.id}
-              className={
-                isKpi
-                  ? widgetClass(config)
-                  : [
-                      "dash-panel",
-                      "dash-widget-panel",
-                      `tone-${config.tone}`,
-                      `size-${config.size}`,
-                    ].join(" ")
-              }
-              draggable={editDashboard}
-              onDragStart={(e) => {
-                if (!editDashboard) {
-                  return;
-                }
-
-                e.dataTransfer.effectAllowed =
-                  "move";
-                e.dataTransfer.setData(
-                  "text/plain",
-                  config.id
-                );
-                setDraggedWidget(
-                  config.id
-                );
-              }}
-              onDragOver={(e) => {
-                if (!editDashboard) {
-                  return;
-                }
-
-                e.preventDefault();
-                e.dataTransfer.dropEffect =
-                  "move";
-              }}
-              onDrop={(e) => {
-                if (!editDashboard) {
-                  return;
-                }
-
-                e.preventDefault();
-                moveWidget(
-                  config.id,
-                  e.dataTransfer.getData(
-                    "text/plain"
-                  )
-                );
-              }}
-              onDragEnd={() =>
-                setDraggedWidget(null)
-              }
+      {hasVisibleWidgets && alerts.length > 0 && showWidget("alerts") && (
+        <section className="dash-pro-alerts">
+          {alerts.map((alert, index) => (
+            <article
+              key={`${alert.title}-${index}`}
+              className={`dash-pro-alert tone-${alert.tone} ${widgetClass("alerts")}`}
             >
-              {editDashboard && (
-                <div className="dash-widget-edit">
-                  <button
-                    type="button"
-                    className="dash-widget-grip"
-                    title="Déplacer"
-                  >
-                    ≡
-                  </button>
+              <strong>{alert.title}</strong>
+              <p>{alert.desc}</p>
+            </article>
+          ))}
+        </section>
+      )}
 
-                  <button
-                    type="button"
-                    className="dash-widget-hide"
-                    title="Masquer"
-                    onClick={() =>
-                      updateWidget(
-                        config.id,
-                        {
-                          visible:
-                            false,
-                        }
-                      )
-                    }
-                  >
-                    Masquer
-                  </button>
+      {showWidget("search") && (
+        <section className="dash-pro-section dash-pro-search-section">
+          <SectionHead title="Recherche" />
+          <article className={`dash-pro-panel dash-pro-search-panel ${widgetClass("search")}`}>
+            <DashboardOrdersSearch embedded />
+          </article>
+        </section>
+      )}
 
-                  <select
-                    value={config.size}
-                    onChange={(e) =>
-                      updateWidget(
-                        config.id,
-                        {
-                          size: e.target
-                            .value as WidgetSize,
-                        }
-                      )
-                    }
-                  >
-                    <option value="small">
-                      Petit
-                    </option>
-                    <option value="medium">
-                      Moyen
-                    </option>
-                    <option value="large">
-                      Large
-                    </option>
-                  </select>
-
-                  <select
-                    value={config.tone}
-                    onChange={(e) =>
-                      updateWidget(
-                        config.id,
-                        {
-                          tone: e.target
-                            .value as WidgetTone,
-                        }
-                      )
-                    }
-                  >
-                    <option value="neutral">
-                      Neutre
-                    </option>
-                    <option value="primary">
-                      Bleu
-                    </option>
-                    <option value="success">
-                      Vert
-                    </option>
-                    <option value="warning">
-                      Orange
-                    </option>
-                    <option value="danger">
-                      Rouge
-                    </option>
-                    <option value="highlight">
-                      Accent
-                    </option>
-                  </select>
-                </div>
-              )}
-
-              {isKpi && (
-                <>
-                  <div className="dash-card-top">
-                    <div className="dash-label">
-                      {def.label}
-                    </div>
-
-                    {def.href && (
-                      <a
-                        href={def.href}
-                        className="dash-mini-link"
-                      >
-                        Voir
-                      </a>
-                    )}
-                  </div>
-
-                  <div className="dash-value">
-                    {def.value}
-                  </div>
-
-                  <div className="dash-foot">
-                    {def.foot}
-                  </div>
-                </>
-              )}
-
-              {def.kind === "chart" && (
-                <>
-                  <div className="dash-panel-head">
-                    <h2 className="dash-panel-title">
-                      Revenus
-                    </h2>
-
-                    <div className="dash-panel-meta">
-                      {eur(k.revenueLast7)}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      width: "100%",
-                      height: 280,
-                    }}
-                  >
-                    <ResponsiveContainer>
-                      <AreaChart data={series}>
-                        <defs>
-                          <linearGradient
-                            id="rev-widget"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="0%"
-                              stopColor="#6366f1"
-                              stopOpacity={0.35}
-                            />
-
-                            <stop
-                              offset="100%"
-                              stopColor="#6366f1"
-                              stopOpacity={0}
-                            />
-                          </linearGradient>
-                        </defs>
-
-                        <XAxis
-                          dataKey="day"
-                          tick={{
-                            fill: "#888",
-                            fontSize: 12,
-                          }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-
-                        <Tooltip
-                          contentStyle={{
-                            background: "#111",
-                            border:
-                              "1px solid #333",
-                            borderRadius: 12,
-                            fontSize: 12,
-                          }}
-                        />
-
-                        <Area
-                          type="monotone"
-                          dataKey="revenue"
-                          stroke="#6366f1"
-                          strokeWidth={2.5}
-                          fill="url(#rev-widget)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </>
-              )}
-
-              {def.kind === "lastOrders" && (
-                <>
-                  <div className="dash-panel-head">
-                    <h2 className="dash-panel-title">
-                      Dernières commandes
-                    </h2>
-
-                    <a
-                      href="/admin/orders"
-                      className="dash-mini-link"
-                    >
-                      Tout voir
-                    </a>
-                  </div>
-
-                  <div className="dash-orders">
-                    {lastOrders
-                      .slice(0, 5)
-                      .map((o) => (
-                        <div
-                          key={o.id}
-                          className="dash-row"
-                        >
-                          <div className="mono">
-                            {o.orderNumber ||
-                              o.id.slice(0, 6)}
-                          </div>
-
-                          <div className="truncate">
-                            {o.email}
-                          </div>
-
-                          <div className="strong">
-                            {eur(o.total)}
-                          </div>
-
-                          <div className="muted">
-                            {shortDate(
-                              o.createdAt
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </>
-              )}
-
-              {def.kind === "search" && (
-                <DashboardOrdersSearch embedded />
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {editDashboard &&
-        hiddenWidgets.length > 0 && (
-          <div className="dash-hidden-widgets">
-            <span>Cartes masquées</span>
-
-            {hiddenWidgets.map((config) => {
-              const def =
-                widgetDefinitionById.get(
-                  config.id
-                );
-
-              if (!def) {
-                return null;
-              }
-
-              return (
-                <button
-                  key={config.id}
-                  type="button"
-                  onClick={() =>
-                    updateWidget(
-                      config.id,
-                      {
-                        visible: true,
-                      }
-                    )
-                  }
-                >
-                  + {def.label}
-                </button>
-              );
-            })}
-          </div>
+      {showSalesMetrics && (
+      <section className="dash-pro-metrics">
+        {showWidget("revenueYear") && (
+          <MetricCard
+            label="Chiffre d’affaires"
+            value={eur(primaryStats.revenue)}
+            detail={periodLabel(primaryPeriod)}
+            delta={
+              primaryPeriod === "all"
+                ? undefined
+                : primaryStats.revenueDeltaPct
+            }
+            tone="blue"
+            className={widgetClass("revenueYear")}
+            control={
+              <PeriodSelect
+                compact
+                value={primaryPeriod}
+                onChange={(value) => updatePeriod("primary", value)}
+              />
+            }
+          />
         )}
+        {showWidget("revenue7d") && (
+          <MetricCard
+            label="Chiffre d’affaires 2"
+            value={eur(secondaryStats.revenue)}
+            detail={periodLabel(secondaryPeriod)}
+            tone="cyan"
+            className={widgetClass("revenue7d")}
+            delta={
+              secondaryPeriod === "all"
+                ? undefined
+                : secondaryStats.revenueDeltaPct
+            }
+            control={
+              <PeriodSelect
+                compact
+                value={secondaryPeriod}
+                onChange={(value) => updatePeriod("secondary", value)}
+              />
+            }
+          />
+        )}
+        {showWidget("orders") && (
+          <MetricCard
+            label="Commandes"
+            value={chartStats.ordersCount}
+            detail={periodLabel(chartPeriod)}
+            tone="blue"
+            className={widgetClass("orders")}
+            href="/admin/orders"
+          />
+        )}
+        {showWidget("paidOrders") && (
+          <MetricCard
+            label="Payées"
+            value={chartStats.paidOrdersCount}
+            detail={periodLabel(chartPeriod)}
+            tone="green"
+            className={widgetClass("paidOrders")}
+            href="/admin/orders"
+          />
+        )}
+        {showWidget("pendingOrders") && (
+          <MetricCard
+            label="En attente"
+            value={chartStats.pendingCount}
+            detail={periodLabel(chartPeriod)}
+            tone="orange"
+            className={widgetClass("pendingOrders")}
+            href="/admin/orders"
+          />
+        )}
+        {showWidget("aov") && (
+          <MetricCard
+            label="Panier moyen"
+            value={eur(chartStats.aov)}
+            detail={periodLabel(chartPeriod)}
+            tone="violet"
+            className={widgetClass("aov")}
+          />
+        )}
+      </section>
+      )}
 
-      <div className="dash-kpis" hidden>
-        <div className="dash-card primary">
-          <div className="dash-card-top">
-            <div className="dash-label">
-              Commandes
-            </div>
-
-            <a
-              href="/admin/orders"
-              className="dash-mini-link"
-            >
-              Voir
-            </a>
-          </div>
-
-          <div className="dash-value">
-            {k.ordersCount}
-          </div>
-
-          <div className="dash-foot">
-            Total des commandes
-          </div>
-        </div>
-
-        <div className="dash-card success">
-          <div className="dash-label">
-            Payées
-          </div>
-
-          <div className="dash-value">
-            {k.paidOrdersCount}
-          </div>
-
-          <div className="dash-foot">
-            Commandes validées
-          </div>
-        </div>
-
-        <div className="dash-card warning">
-          <div className="dash-label">
-            En attente
-          </div>
-
-          <div className="dash-value">
-            {k.pendingCount}
-          </div>
-
-          <div className="dash-foot">
-            Paiement non validé
-          </div>
-        </div>
-
-        <div className="dash-card warning">
-          <div className="dash-label">
-            À préparer
-          </div>
-
-          <div className="dash-value">
-            {k.toPrepareCount}
-          </div>
-
-          <div className="dash-foot">
-            Commandes à expédier
-          </div>
-        </div>
-
-        <div className="dash-card success">
-          <div className="dash-label">
-            Expédiées
-          </div>
-
-          <div className="dash-value">
-            {k.shippedCount}
-          </div>
-
-          <div className="dash-foot">
-            Déjà envoyées
-          </div>
-        </div>
-
-        <div className="dash-card highlight">
-          <div className="dash-label">
-            CA 7 jours
-          </div>
-
-          <div className="dash-value">
-            {eur(k.revenueLast7)}
-          </div>
-
-          <div className="dash-foot">
-            7 derniers jours
-          </div>
-        </div>
-
-        <div className="dash-card">
-          <div className="dash-label">
-            Aujourd’hui
-          </div>
-
-          <div className="dash-value">
-            {eur(k.revenueToday)}
-          </div>
-
-          <div className="dash-foot">
-            Revenus du jour
-          </div>
-        </div>
-
-        <div className="dash-card">
-          <div className="dash-label">
-            Hier
-          </div>
-
-          <div className="dash-value">
-            {eur(k.revenueYesterday)}
-          </div>
-
-          <div className="dash-foot">
-            Revenus de la veille
-          </div>
-        </div>
-
-        <div className="dash-card">
-          <div className="dash-label">
-            Panier moyen
-          </div>
-
-          <div className="dash-value">
-            {eur(k.aov)}
-          </div>
-
-          <div className="dash-foot">
-            Moyenne par commande
-          </div>
-        </div>
-
-        <div className="dash-card">
-          <div className="dash-label">
-            Produits
-          </div>
-
-          <div className="dash-value">
-            {k.productsCount}
-          </div>
-
-          <div className="dash-foot">
-            {k.activeProducts} actifs
-          </div>
-        </div>
-
-        <div className="dash-card">
-          <div className="dash-card-top">
-            <div className="dash-label">
-              Paiement
-            </div>
-
-            <a
-              href="/admin/payment-methods"
-              className="dash-mini-link"
-            >
-              Voir
-            </a>
-          </div>
-
-          <div className="dash-value">
-            {k.paymentMethodsCount}
-          </div>
-
-          <div className="dash-foot">
-            Méthodes configurées
-          </div>
-        </div>
-
-        <div className="dash-card success">
-          <div className="dash-label">
-            Paiements actifs
-          </div>
-
-          <div className="dash-value">
-            {k.activePaymentMethods}
-          </div>
-
-          <div className="dash-foot">
-            Méthodes activées
-          </div>
-        </div>
-
-        <div className="dash-card">
-          <div className="dash-card-top">
-            <div className="dash-label">
-              Livraison
-            </div>
-
-            <a
-              href="/admin/shipping"
-              className="dash-mini-link"
-            >
-              Voir
-            </a>
-          </div>
-
-          <div className="dash-value">
-            {k.shippingMethodsCount}
-          </div>
-
-          <div className="dash-foot">
-            Méthodes configurées
-          </div>
-        </div>
-
-        <div className="dash-card">
-          <div className="dash-label">
-            Pays
-          </div>
-
-          <div className="dash-value">
-            {k.adminCountriesCount}
-          </div>
-
-          <div className="dash-foot">
-            Pays configurés
-          </div>
-        </div>
-
-        <div className="dash-card">
-          <div className="dash-card-top">
-            <div className="dash-label">
-              Avis
-            </div>
-
-            <a
-              href="/admin/reviews"
-              className="dash-mini-link"
-            >
-              Voir
-            </a>
-          </div>
-
-          <div className="dash-value">
-            {k.reviewsCount}
-          </div>
-
-          <div className="dash-foot">
-            Avis clients
-          </div>
-        </div>
-
-        <div className="dash-card success">
-          <div className="dash-label">
-            Publiés
-          </div>
-
-          <div className="dash-value">
-            {k.approvedReviews}
-          </div>
-
-          <div className="dash-foot">
-            Avis visibles
-          </div>
-        </div>
-
-        <div className="dash-card warning">
-          <div className="dash-label">
-            Avis en attente
-          </div>
-
-          <div className="dash-value">
-            {k.pendingReviews}
-          </div>
-
-          <div className="dash-foot">
-            À modérer
-          </div>
-        </div>
-      </div>
-
-      {/* =====================================================
-          GRID
-      ===================================================== */}
-
-      <div className="dash-grid" hidden>
-        {/* GRAPH */}
-        <div className="dash-panel">
-          <div className="dash-panel-head">
-            <h2 className="dash-panel-title">
-              Revenus
-            </h2>
-
-            <div className="dash-panel-meta">
-              {eur(k.revenueLast7)}
-            </div>
-          </div>
-
+      {showSalesCharts && (
+        <section className="dash-pro-section">
+          <SectionHead title="Ventes" />
           <div
-            style={{
-              width: "100%",
-              height: 280,
-            }}
+            className={`dash-pro-commerce-grid ${
+              showWidget("revenueChart") !== showWidget("orderStatus")
+                ? "single"
+                : ""
+            }`}
           >
-            <ResponsiveContainer>
-              <AreaChart data={series}>
-                <defs>
-                  <linearGradient
-                    id="rev"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
+          {showWidget("revenueChart") && (
+            <article className={`dash-pro-panel dash-pro-revenue-panel ${widgetClass("revenueChart")}`}>
+            <div className="dash-pro-panel-head">
+              <h3>Chiffre d’affaires</h3>
+              <div className="dash-pro-chart-controls">
+                <strong>{eur(chartStats.revenue)}</strong>
+                <PeriodTabs
+                  value={chartPeriod}
+                  onChange={(value) =>
+                    updatePeriod("chart", value)
+                  }
+                />
+                <ChartTypeTabs
+                  value={chartType}
+                  onChange={updateChartType}
+                />
+              </div>
+            </div>
+
+            <div className="dash-pro-chart">
+              <ResponsiveContainer>
+                {chartType === "bar" ? (
+                  <BarChart data={chartStats.series}>
+                    <CartesianGrid stroke="rgba(148,163,184,.1)" vertical={false} />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#7f91a8", fontSize: 11 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#7f91a8", fontSize: 11 }} tickFormatter={(value) => `${value} €`} width={58} />
+                    <Tooltip contentStyle={chartTooltip} formatter={(value) => eur(Number(value))} />
+                    <Bar dataKey="revenue" fill="#38bdf8" radius={[7, 7, 2, 2]} />
+                  </BarChart>
+                ) : chartType === "line" ? (
+                  <LineChart data={chartStats.series}>
+                    <CartesianGrid stroke="rgba(148,163,184,.1)" vertical={false} />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#7f91a8", fontSize: 11 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#7f91a8", fontSize: 11 }} tickFormatter={(value) => `${value} €`} width={58} />
+                    <Tooltip contentStyle={chartTooltip} formatter={(value) => eur(Number(value))} />
+                    <Line type="monotone" dataKey="revenue" stroke="#38bdf8" strokeWidth={3} dot={{ fill: "#38bdf8", r: 3 }} activeDot={{ r: 5 }} />
+                  </LineChart>
+                ) : (
+                  <AreaChart data={chartStats.series}>
+                    <defs>
+                      <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.42} />
+                        <stop offset="100%" stopColor="#38bdf8" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="rgba(148,163,184,.1)" vertical={false} />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#7f91a8", fontSize: 11 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#7f91a8", fontSize: 11 }} tickFormatter={(value) => `${value} €`} width={58} />
+                    <Tooltip contentStyle={chartTooltip} formatter={(value) => eur(Number(value))} />
+                    <Area type="monotone" dataKey="revenue" stroke="#38bdf8" strokeWidth={3} fill="url(#revenueFill)" />
+                  </AreaChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          </article>
+          )}
+
+          {showWidget("orderStatus") && (
+            <article className={`dash-pro-panel dash-pro-orders-panel ${widgetClass("orderStatus")}`}>
+            <div className="dash-pro-panel-head">
+              <h3>État des commandes</h3>
+              <strong>{chartStats.ordersCount}</strong>
+            </div>
+
+            <div className="dash-pro-donut">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={[
+                      {
+                        name: "Payées",
+                        value: chartStats.paidOrdersCount,
+                        color: "#22c55e",
+                      },
+                      {
+                        name: "En attente",
+                        value: chartStats.pendingCount,
+                        color: "#f59e0b",
+                      },
+                    ]}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={64}
+                    outerRadius={90}
+                    paddingAngle={5}
                   >
-                    <stop
-                      offset="0%"
-                      stopColor="#6366f1"
-                      stopOpacity={0.35}
-                    />
+                    {[
+                      {
+                        name: "Payées",
+                        color: "#22c55e",
+                      },
+                      {
+                        name: "En attente",
+                        color: "#f59e0b",
+                      },
+                    ].map((entry) => (
+                      <Cell
+                        key={entry.name}
+                        fill={entry.color}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={chartTooltip} />
+                </PieChart>
+              </ResponsiveContainer>
 
-                    <stop
-                      offset="100%"
-                      stopColor="#6366f1"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
+              <div className="dash-pro-donut-center">
+                <strong>{chartStats.ordersCount}</strong>
+                <span>commandes</span>
+              </div>
+            </div>
 
-                <XAxis
-                  dataKey="day"
-                  tick={{
-                    fill: "#888",
-                    fontSize: 12,
-                  }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <Tooltip
-                  contentStyle={{
-                    background: "#111",
-                    border: "1px solid #333",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#6366f1"
-                  strokeWidth={2.5}
-                  fill="url(#rev)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="dash-pro-legend">
+              {[
+                {
+                  name: "Payées",
+                  value: chartStats.paidOrdersCount,
+                  color: "#22c55e",
+                },
+                {
+                  name: "En attente",
+                  value: chartStats.pendingCount,
+                  color: "#f59e0b",
+                },
+              ].map((entry) => (
+                <div key={entry.name}>
+                  <span
+                    style={{ background: entry.color }}
+                  />
+                  <small>{entry.name}</small>
+                  <strong>{entry.value}</strong>
+                </div>
+              ))}
+            </div>
+          </article>
+          )}
           </div>
-        </div>
+        </section>
+      )}
 
-        {/* LAST ORDERS */}
-        <div className="dash-panel">
-          <div className="dash-panel-head">
-            <h2 className="dash-panel-title">
-              Dernières commandes
-            </h2>
-
-            <a
-              href="/admin/orders"
-              className="dash-mini-link"
-            >
-              Tout voir
-            </a>
+      {showOperations && (
+        <section className="dash-pro-section">
+          <SectionHead title="Opérations" />
+          <div className="dash-pro-metrics">
+            {showWidget("toPrepare") && (
+              <MetricCard
+                label="À préparer"
+                value={k.toPrepareCount}
+                detail="Commandes"
+                tone="orange"
+                className={widgetClass("toPrepare")}
+                href="/admin/logistics"
+              />
+            )}
+            {showWidget("shipped") && (
+              <MetricCard
+                label="Expédiées"
+                value={k.shippedCount}
+                detail="Commandes"
+                tone="cyan"
+                className={widgetClass("shipped")}
+                href="/admin/logistics"
+              />
+            )}
           </div>
 
-          <div className="dash-orders">
-            {lastOrders
-              .slice(0, 5)
-              .map((o) => (
+          {(showWidget("operationsProgress") ||
+            showWidget("operationsChart")) && (
+          <div
+            className={`dash-pro-operations-grid ${
+              showWidget("operationsProgress") !==
+              showWidget("operationsChart")
+                ? "single"
+                : ""
+            }`}
+          >
+          {showWidget("operationsProgress") && (
+            <article className={`dash-pro-panel ${widgetClass("operationsProgress")}`}>
+            <div className="dash-pro-panel-head">
+              <h3>Progression</h3>
+            </div>
+
+            <div className="dash-pro-progress-list">
+              {operations.map((item) => (
                 <div
-                  key={o.id}
-                  className="dash-row"
+                  className={`dash-pro-progress tone-${item.tone}`}
+                  key={item.label}
                 >
-                  <div className="mono">
-                    {o.orderNumber ||
-                      o.id.slice(0, 6)}
+                  <div>
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
                   </div>
-
-                  <div className="truncate">
-                    {o.email}
-                  </div>
-
-                  <div className="strong">
-                    {eur(o.total)}
-                  </div>
-
-                  <div className="muted">
-                    {shortDate(
-                      o.createdAt
-                    )}
+                  <div className="dash-pro-progress-track">
+                    <span
+                      style={{
+                        width: `${Math.max(
+                          item.value
+                            ? (item.value / item.max) * 100
+                            : 0,
+                          item.value ? 8 : 0
+                        )}%`,
+                      }}
+                    />
                   </div>
                 </div>
               ))}
+            </div>
+          </article>
+          )}
+
+          {showWidget("operationsChart") && (
+            <article className={`dash-pro-panel ${widgetClass("operationsChart")}`}>
+            <div className="dash-pro-panel-head">
+              <h3>Volumes</h3>
+            </div>
+
+            <div className="dash-pro-chart dash-pro-chart-small">
+              <ResponsiveContainer>
+                <BarChart
+                  data={operations.map((item) => ({
+                    name: item.label,
+                    value: item.value,
+                  }))}
+                >
+                  <CartesianGrid
+                    stroke="rgba(148,163,184,.1)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#7f91a8", fontSize: 10 }}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#7f91a8", fontSize: 10 }}
+                  />
+                  <Tooltip contentStyle={chartTooltip} />
+                  <Bar
+                    dataKey="value"
+                    fill="#22d3ee"
+                    radius={[8, 8, 2, 2]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </article>
+          )}
           </div>
-        </div>
-      </div>
+          )}
+        </section>
+      )}
 
-      {/* =====================================================
-          SEARCH ORDERS
-      ===================================================== */}
+      {showStore && (
+        <section className="dash-pro-section">
+          <SectionHead title="Boutique" />
+          <div className="dash-pro-health-grid">
+            {showWidget("products") && (
+              <MetricCard label="Produits" value={k.productsCount} detail="Total" tone="violet" href="/admin/products" className={widgetClass("products")} />
+            )}
+            {showWidget("activeProducts") && (
+              <MetricCard label="Produits actifs" value={k.activeProducts} detail="Actifs" tone="green" href="/admin/products" className={widgetClass("activeProducts")} />
+            )}
+            {showWidget("payments") && (
+              <MetricCard label="Paiements" value={k.paymentMethodsCount} detail="Méthodes" tone="blue" href="/admin/payment-methods" className={widgetClass("payments")} />
+            )}
+            {showWidget("activePayments") && (
+              <MetricCard label="Paiements actifs" value={k.activePaymentMethods} detail="Actifs" tone="green" href="/admin/payment-methods" className={widgetClass("activePayments")} />
+            )}
+            {showWidget("shipping") && (
+              <MetricCard label="Livraison" value={k.shippingMethodsCount} detail="Méthodes" tone="cyan" href="/admin/shipping" className={widgetClass("shipping")} />
+            )}
+            {showWidget("countries") && (
+              <MetricCard label="Pays" value={k.adminCountriesCount} detail="Disponibles" tone="cyan" href="/admin/shipping" className={widgetClass("countries")} />
+            )}
+            {showWidget("reviews") && (
+              <MetricCard label="Avis" value={k.reviewsCount} detail="Total" tone="orange" href="/admin/reviews" className={widgetClass("reviews")} />
+            )}
+            {showWidget("approvedReviews") && (
+              <MetricCard label="Avis publiés" value={k.approvedReviews} detail="Publiés" tone="green" href="/admin/reviews" className={widgetClass("approvedReviews")} />
+            )}
+            {showWidget("pendingReviews") && (
+              <MetricCard label="Avis à modérer" value={k.pendingReviews} detail="En attente" tone="orange" href="/admin/reviews" className={widgetClass("pendingReviews")} />
+            )}
+          </div>
+        </section>
+      )}
 
-      {false && <DashboardOrdersSearch />}
+      {showWidget("lastOrders") && (
+        <section className="dash-pro-section">
+          <SectionHead title="Dernières commandes" />
+          <article className={`dash-pro-panel dash-pro-orders-list ${widgetClass("lastOrders")}`}>
+            {lastOrders.length === 0 ? (
+              <div className="dash-pro-inline-empty">
+                Aucune commande
+              </div>
+            ) : lastOrders.slice(0, 6).map((order) => (
+              <Link
+                href={`/admin/orders?open=${encodeURIComponent(order.id)}`}
+                key={order.id}
+                className="dash-pro-order-row"
+              >
+                <div>
+                  <strong>{order.orderNumber || order.id.slice(0, 6)}</strong>
+                  <span>{order.email || "Client"}</span>
+                </div>
+                <span className={`dash-pro-status status-${order.status}`}>
+                  {statusLabel(order.status)}
+                </span>
+                <strong>{eur(order.total)}</strong>
+                <time>{shortDate(order.createdAt)}</time>
+              </Link>
+            ))}
+          </article>
+        </section>
+      )}
     </div>
   );
 }

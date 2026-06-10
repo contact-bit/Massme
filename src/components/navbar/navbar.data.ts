@@ -81,7 +81,7 @@ const FR_TRANSLATIONS = {
     comfort: "Coussin vitrectomie",
 
     menu: "Menu",
-  },
+  },  
 
   dropdowns: {
     pathologies: {
