@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import type { Order } from "../orders/domain/types";
 
@@ -30,6 +30,9 @@ export default function LogisticsList({
   onShip,
   onUpdateShippingAddress,
 }: Props) {
+  const [openId, setOpenId] =
+    useState<string | null>(null);
+
   /* ================= ELIGIBLE ================= */
 
   const logisticsEligible =
@@ -202,6 +205,14 @@ export default function LogisticsList({
           <LogisticsItem
             key={o.id}
             order={o}
+            open={openId === o.id}
+            onToggle={() =>
+              setOpenId((current) =>
+                current === o.id
+                  ? null
+                  : o.id
+              )
+            }
             toastIt={toastIt}
             onShip={onShip}
             onUpdateShippingAddress={

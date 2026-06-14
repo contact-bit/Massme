@@ -42,11 +42,6 @@ export default function EditPaymentMethodPanel({
       data.provider
     );
 
-  const [isActive, setIsActive] =
-    useState(
-      data.isActive
-    );
-
   const [
     sortOrder,
     setSortOrder,
@@ -121,8 +116,6 @@ export default function EditPaymentMethodPanel({
             body: JSON.stringify(
               {
                 provider,
-
-                isActive,
 
                 sortOrder:
                   sortOrder ===
@@ -368,42 +361,6 @@ export default function EditPaymentMethodPanel({
                 )
               }
             />
-
-          </div>
-
-          <div className="epmp-toggle-wrap">
-
-            <label className="epmp-toggle">
-
-              <input
-                type="checkbox"
-                checked={
-                  isActive
-                }
-                onChange={(e) =>
-                  setIsActive(
-                    e.target
-                      .checked
-                  )
-                }
-              />
-
-              <span className="epmp-switch" />
-
-              <div className="epmp-toggle-content">
-
-                <strong>
-                  Actif
-                </strong>
-
-                <span>
-                  Visible dans
-                  le checkout
-                </span>
-
-              </div>
-
-            </label>
 
           </div>
 

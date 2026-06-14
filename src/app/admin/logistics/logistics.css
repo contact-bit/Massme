@@ -550,26 +550,35 @@
 }
 
 .log-ship-btn {
-  min-height: 26px;
-  padding: 0 .5rem;
-  border: 1px solid rgba(52,211,153,.35);
-  border-radius: .35rem;
-  background: rgba(52,211,153,.16);
-  color: rgba(209,250,229,.96);
-  font-size: .62rem;
-  font-weight: 800;
+  min-height: 30px;
+  padding: 0 .7rem;
+  border: 1px solid rgba(56,189,248,.42);
+  border-radius: 7px;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 850;
+  box-shadow: 0 5px 14px rgba(37,99,235,.22);
   cursor: pointer;
   white-space: nowrap;
+  transition:
+    transform .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease,
+    filter .18s ease;
 }
 
-.log-ship-btn:hover {
-  border-color: rgba(52,211,153,.58);
-  background: rgba(52,211,153,.22);
+.log-ship-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(125,211,252,.72);
+  box-shadow: 0 8px 18px rgba(37,99,235,.3);
+  filter: brightness(1.06);
 }
 
 .log-ship-btn:disabled {
   cursor: wait;
   opacity: .68;
+  filter: saturate(.65);
 }
 
 /* =========================================================
@@ -1123,6 +1132,79 @@
 }
 
 /* =========================================================
+   MAIN TABLE - SAME DIRECTION AS ORDERS
+========================================================= */
+
+.log-table-header,
+.log-row-main {
+  grid-template-columns:
+    1.05fr
+    .88fr
+    1.55fr
+    .55fr
+    1.2fr
+    .72fr
+    .88fr
+    .82fr
+    .78fr;
+  gap: 0;
+  padding: 0 !important;
+}
+
+.log-table-header .log-th,
+.log-row-main > .log-col {
+  box-sizing: border-box;
+  padding: 9px 10px;
+}
+
+.log-table-header .log-th {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  color: rgba(148,163,184,.78);
+  font-size: 11.5px !important;
+  line-height: 1.2;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.log-row-main > .log-col {
+  min-height: 62px;
+  font-size: 15px !important;
+  line-height: 1.35 !important;
+}
+
+.log-row-main :is(.log-id, .log-main),
+.log-row-main > .log-col:not(.order):not(.status):not(.log-doc-col):not(.log-action-col) {
+  font-size: 15px !important;
+  line-height: 1.3 !important;
+  font-weight: 700 !important;
+}
+
+.log-row-main :is(.log-sub, .log-email, .log-items-line) {
+  font-size: 12.5px !important;
+  line-height: 1.3 !important;
+}
+
+.log-row-main :is(.status-pill, .log-status, .log-delay-pill, .log-ship-btn) {
+  font-size: 12px !important;
+}
+
+.log-delay-pill {
+  min-height: 28px;
+}
+
+.log-action-head,
+.log-action-col {
+  justify-content: flex-end;
+}
+
+.log-doc-head,
+.log-doc-col {
+  justify-content: center;
+}
+
+/* =========================================================
    LIGHT MODE - DELIVERY DETAIL READABILITY
 ========================================================= */
 
@@ -1175,4 +1257,151 @@ html[data-admin-theme="light"] .log-mini-btn:hover {
   background: #dff1fa !important;
   color: #075f86 !important;
   -webkit-text-fill-color: #075f86 !important;
+}
+
+/* OPEN DETAIL - MATCH ORDERS */
+.log-expanded {
+  margin: 0 0 6px 18px;
+  padding: 6px 6px 6px 12px;
+  border-left: 4px solid rgba(56,189,248,.72);
+  border-top: 1px solid rgba(255,255,255,.075);
+  border-bottom: 1px solid rgba(255,255,255,.052);
+  background: linear-gradient(180deg, rgba(15,23,42,.74), rgba(8,13,24,.96));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+  animation: log-expand .2s ease;
+}
+
+.log-expanded::before {
+  display: none;
+}
+
+.log-expanded-card {
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.log-expanded :is(
+  .log-title,
+  .log-address,
+  .log-detail-row,
+  .log-info-line,
+  .log-product-row,
+  button,
+  input
+) {
+  font-family: var(--font-admin-inter), Inter, sans-serif;
+}
+
+.log-expanded .log-title {
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.log-expanded :is(.log-address, .log-detail-row, .log-info-line, .log-product-row) {
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.log-expanded :is(.log-muted, .log-detail-row span, .log-info-line > span) {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+@keyframes log-expand {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .log-expanded {
+    margin-left: 10px;
+    padding-left: 8px;
+  }
+}
+
+/* MOBILE TABLE SAFETY - NEVER OVERLAP COLUMNS */
+.logistics-table-card {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+}
+
+.log-list {
+  min-width: 1300px;
+}
+
+.log-table-header,
+.log-row-main {
+  grid-template-columns:
+    150px
+    130px
+    minmax(210px, 1.4fr)
+    100px
+    minmax(190px, 1.2fr)
+    120px
+    140px
+    150px
+    110px;
+}
+
+.log-table-header .log-th,
+.log-row-main > .log-col,
+.log-row-main .log-stack,
+.log-row-main :is(.log-id-line, .log-main, .log-sub, .log-items-line) {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.log-table-header .log-th {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.log-row-main :is(.log-main, .log-sub, .log-items-line),
+.log-row-main > .log-col:not(.status):not(.log-doc-col):not(.log-action-col) {
+  text-overflow: ellipsis;
+}
+
+.log-row-main :is(.log-main, .log-sub, .log-items-line) {
+  display: block;
+  white-space: nowrap;
+}
+
+.log-row-main .log-delay-pill,
+.log-row-main :is(.status-pill, .log-status) {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-row-main .log-doc-actions-main {
+  flex-wrap: nowrap;
+}
+
+.log-expanded,
+.log-expanded-card,
+.log-expanded :is(.log-address, .log-detail-row, .log-info-line, .log-product-row) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 980px) {
+  .log-list {
+    min-width: 1300px;
+  }
+
+  .log-row-main {
+    gap: 0;
+  }
 }

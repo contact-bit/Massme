@@ -763,11 +763,6 @@ export default function AdminReviewsPage() {
   const [openId, setOpenId] =
     useState<string | null>(null);
 
-  const [
-    showSettings,
-    setShowSettings,
-  ] = useState(false);
-
   const {
     draftSettings,
     setDraftSettings,
@@ -968,39 +963,19 @@ export default function AdminReviewsPage() {
 
           <div className="reviews-card-actions">
 
-            <div className="reviews-live">
-
-              {settingsLoading
-                ? "Chargement..."
-                : settingsSaving
-                ? "Sauvegarde..."
-                : "Connecté"}
-
-            </div>
-
-            <button
-              type="button"
-              className={`reviews-create-toggle ${
-                showSettings
-                  ? "active"
-                  : ""
-              }`}
-              onClick={() =>
-                setShowSettings(
-                  !showSettings
-                )
-              }
-            >
-              {showSettings
-                ? "Fermer"
-                : "Réglages"}
-            </button>
+            {(settingsLoading || settingsSaving) && (
+              <div className="reviews-live">
+                {settingsLoading
+                  ? "Chargement..."
+                  : "Sauvegarde..."}
+              </div>
+            )}
 
           </div>
 
         </div>
 
-        {showSettings && draftSettings && (
+        {draftSettings && (
           <>
 
             <label className="reviews-switch">

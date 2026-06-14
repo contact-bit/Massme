@@ -28,6 +28,13 @@ import { getShipDate } from "../domain/logistics";
 
 import { OrderDetails } from "./OrderDetails";
 
+const heardFromLabels: Record<string, string> = {
+  internet: "Internet",
+  social: "Réseaux sociaux",
+  medical: "Recommandation médicale",
+  other: "Autre",
+};
+
 type Props = {
   orders: Order[];
 
@@ -54,6 +61,10 @@ export default function OrdersTable({
 }: Props) {
   const [openId, setOpenId] =
     useState<string | null>(null);
+  const [sendingInvoices, setSendingInvoices] =
+    useState<Record<string, boolean>>({});
+  const [sentInvoices, setSentInvoices] =
+    useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!activeId) return;
@@ -68,6 +79,39 @@ export default function OrdersTable({
     onOpen(id);
   }
 
+  async function sendInvoice(orderId: string) {
+    try {
+      setSendingInvoices((current) => ({
+        ...current,
+        [orderId]: true,
+      }));
+
+      const response = await fetch("/api/admin/orders/send-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data?.ok) {
+        throw new Error(data?.error || "invoice_send_failed");
+      }
+
+      setSentInvoices((current) => ({
+        ...current,
+        [orderId]: true,
+      }));
+    } catch (error) {
+      console.error(error);
+      alert("Erreur envoi facture");
+    } finally {
+      setSendingInvoices((current) => ({
+        ...current,
+        [orderId]: false,
+      }));
+    }
+  }
+
   return (
     <div className="orders-table-wrap">
 
@@ -80,7 +124,7 @@ export default function OrdersTable({
         <thead>
           <tr>
 
-            <th>Commande</th>
+            <th>N°</th>
 
             <th>Date</th>
 
@@ -192,6 +236,26 @@ export default function OrdersTable({
               `${firstName} ${lastName}`.trim() ||
               o.__email ||
               "—";
+
+            const heardFrom =
+              (o as any)?.heardFrom || "—";
+
+            const heardFromLabel =
+              heardFromLabels[heardFrom] || heardFrom;
+
+            const heardFromOther =
+              (o as any)?.heardFromOther || "";
+
+            const invoice =
+              (o as any)?.invoiceEmail || null;
+
+            const invoiceNumber =
+              (o as any)?.invoiceNumber ||
+              invoice?.invoiceNumber ||
+              "Création...";
+
+            const invoiceSent =
+              sentInvoices[o.id] || invoice?.status === "sent";
 
             return (
               <React.Fragment
@@ -363,6 +427,64 @@ export default function OrdersTable({
 
                   </td>
 
+                </tr>
+
+                <tr
+                  className={`row-general-info ${
+                    isOpen ? "open" : ""
+                  }`}
+                  onClick={() => toggle(o.id)}
+                >
+                  <td colSpan={8}>
+                    <div className="row-general-info-line">
+                      <span>
+                        Site <strong>vitrectomed.com</strong>
+                      </span>
+                      <span>
+                        Média <strong>{heardFromLabel}</strong>
+                      </span>
+                      {heardFromOther && (
+                        <span>
+                          Détail <strong>{heardFromOther}</strong>
+                        </span>
+                      )}
+                      <span>
+                        N° facture <strong>{invoiceNumber}</strong>
+                      </span>
+                      <span
+                        className="row-invoice-actions"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <a
+                          href={`/api/admin/orders/invoice?orderId=${encodeURIComponent(
+                            o.id
+                          )}&mode=preview`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Voir
+                        </a>
+                        <a
+                          href={`/api/admin/orders/invoice?orderId=${encodeURIComponent(
+                            o.id
+                          )}&mode=download`}
+                        >
+                          PDF
+                        </a>
+                        <button
+                          type="button"
+                          disabled={sendingInvoices[o.id]}
+                          onClick={() => sendInvoice(o.id)}
+                        >
+                          {sendingInvoices[o.id]
+                            ? "..."
+                            : invoiceSent
+                            ? "Renvoyer"
+                            : "Envoyer"}
+                        </button>
+                      </span>
+                    </div>
+                  </td>
                 </tr>
 
                 {/* =================================

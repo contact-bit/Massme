@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "@/app/admin/styles/product-form.css";
 
 /* =====================================================
@@ -100,6 +100,31 @@ const toNumber = (v: unknown) => {
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
 };
 
+function ToggleButton({
+  active,
+  disabled = false,
+  onToggle,
+  activeLabel = "Activé",
+  inactiveLabel = "Désactivé",
+}: {
+  active: boolean;
+  disabled?: boolean;
+  onToggle: () => void;
+  activeLabel?: string;
+  inactiveLabel?: string;
+}) {
+  return (
+    <button
+      type="button"
+      className={`pf-toggle-button ${active ? "is-active" : ""}`}
+      disabled={disabled}
+      onClick={onToggle}
+    >
+      {active ? activeLabel : inactiveLabel}
+    </button>
+  );
+}
+
 /* =====================================================
    COMPONENT
 ===================================================== */
@@ -107,10 +132,12 @@ export default function ProductEditForm({
   product,
   onClose,
   onUpdated,
+  onDirtyChange,
 }: {
   product: any;
   onClose: () => void;
   onUpdated: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }) {
   const [activeLang, setActiveLang] = useState<Lang>("fr");
   const activeMarket: Market | null = MARKET_BY_LANG[activeLang] || null;
@@ -126,8 +153,6 @@ export default function ProductEditForm({
     deliveryPackageCount,
     setDeliveryPackageCount,
   ] = useState("1");
-  const [isActive, setIsActive] = useState(true);
-
   const [name, setName] = useState<Record<Lang, string>>(emptyLangRecord);
   const [description, setDescription] =
     useState<Record<Lang, string>>(emptyLangRecord);
@@ -141,10 +166,60 @@ export default function ProductEditForm({
 
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [addons, setAddons] = useState<ProductAddon[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const initialSnapshot = useRef<string | null>(null);
+  const allowNavigation = useRef(false);
+
+  const formSnapshot = useMemo(
+    () =>
+      JSON.stringify({
+        imageUrl,
+        productCode,
+        weightKg,
+        deliveryPackageCount,
+        name,
+        description,
+        markets,
+        pricesByMarket,
+        vatByMarket,
+        variants,
+        addons,
+      }),
+    [
+      imageUrl,
+      productCode,
+      weightKg,
+      deliveryPackageCount,
+      name,
+      description,
+      markets,
+      pricesByMarket,
+      vatByMarket,
+      variants,
+      addons,
+    ]
+  );
+
+  const isDirty =
+    isInitialized &&
+    initialSnapshot.current !== null &&
+    formSnapshot !== initialSnapshot.current;
+
+  const confirmLeave = useCallback(
+    () =>
+      !isDirty ||
+      window.confirm(
+        "Des modifications ne sont pas enregistrées. Pour les conserver, saisissez le mot de passe admin puis cliquez sur Enregistrer en bas de page. Quitter quand même ?"
+      ),
+    [isDirty]
+  );
 
   /* ---------------- INIT ---------------- */
   useEffect(() => {
     if (!product) return;
+
+    setIsInitialized(false);
+    initialSnapshot.current = null;
 
     setImageUrl(product.imageUrl || "");
     setProductCode(String(product.productCode || ""));
@@ -152,8 +227,6 @@ export default function ProductEditForm({
     setDeliveryPackageCount(
       String(product.deliveryPackageCount ?? 1)
     );
-    setIsActive(product.isActive ?? true);
-
     setName({ ...emptyLangRecord(), ...(product.name || {}) });
     setDescription({ ...emptyLangRecord(), ...(product.description || {}) });
 
@@ -233,7 +306,65 @@ export default function ProductEditForm({
           })
         : []
     );
+
+    setIsInitialized(true);
   }, [product]);
+
+  useEffect(() => {
+    if (isInitialized && initialSnapshot.current === null) {
+      initialSnapshot.current = formSnapshot;
+    }
+  }, [formSnapshot, isInitialized]);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!isDirty || allowNavigation.current) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    const handleLinkClick = (event: MouseEvent) => {
+      if (!isDirty || allowNavigation.current) return;
+
+      const target = event.target as HTMLElement | null;
+      const link = target?.closest("a[href]") as HTMLAnchorElement | null;
+
+      if (!link || link.target === "_blank" || link.href === window.location.href) {
+        return;
+      }
+
+      if (!confirmLeave()) {
+        event.preventDefault();
+        event.stopPropagation();
+      } else {
+        allowNavigation.current = true;
+      }
+    };
+
+    const handlePopState = () => {
+      if (!isDirty || allowNavigation.current) return;
+
+      if (confirmLeave()) {
+        allowNavigation.current = true;
+      } else {
+        window.history.forward();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+    document.addEventListener("click", handleLinkClick, true);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+      document.removeEventListener("click", handleLinkClick, true);
+    };
+  }, [confirmLeave, isDirty]);
 
   /* ---------------- SAVE ---------------- */
   const handleSave = async (e: React.FormEvent) => {
@@ -255,7 +386,6 @@ export default function ProductEditForm({
           imageUrl: imageUrl || null,
           weightKg,
           deliveryPackageCount,
-          isActive,
           markets,
           pricesByMarket: Object.fromEntries(
             markets.map((m) => [m, toNumber(pricesByMarket[m])])
@@ -350,6 +480,9 @@ export default function ProductEditForm({
 
       if (!res.ok) throw new Error("Erreur serveur");
 
+      allowNavigation.current = true;
+      initialSnapshot.current = formSnapshot;
+      onDirtyChange?.(false);
       onUpdated();
       onClose();
     } catch (e: any) {
@@ -371,6 +504,7 @@ export default function ProductEditForm({
             Modifiez les textes, prix, variantes et options par pays.
           </p>
         </div>
+
       </div>
 
       {/* LANG */}
@@ -404,104 +538,120 @@ export default function ProductEditForm({
       </div>
 
       <section className="pf-card pf-card-compact">
-        <div className="pf-field-grid">
-          <div className="pf-field">
-            <label className="admin-label">Nom</label>
-            <input
-              className="admin-input"
-              value={name[activeLang]}
-              onChange={(e) =>
-                setName((p) => ({ ...p, [activeLang]: e.target.value }))
-              }
-            />
+        <div className="pf-content-editor">
+          <div className="pf-content-fields">
+            <div className="pf-field">
+              <label className="admin-label">Nom</label>
+              <input
+                className="admin-input"
+                value={name[activeLang]}
+                onChange={(e) =>
+                  setName((p) => ({ ...p, [activeLang]: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="pf-field">
+              <label className="admin-label">Description</label>
+              <textarea
+                className="admin-textarea"
+                rows={6}
+                value={description[activeLang]}
+                onChange={(e) =>
+                  setDescription((p) => ({
+                    ...p,
+                    [activeLang]: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="pf-content-fields-row">
+              <div className="pf-field">
+                <label className="admin-label">Référence interne</label>
+                <input
+                  className="admin-input"
+                  placeholder="Ex : SKU-001"
+                  value={productCode}
+                  onChange={(e) => setProductCode(e.target.value)}
+                />
+              </div>
+
+              <div className="pf-field">
+                <label className="admin-label">Image URL</label>
+                <input
+                  className="admin-input"
+                  placeholder="https://..."
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="pf-field">
-            <label className="admin-label">Image URL</label>
-            <input
-              className="admin-input"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-            />
-          </div>
+          <aside className="pf-content-preview">
+            <div className="pf-content-preview-label">
+              Aperçu
+              <span>{LANG_META[activeLang].code}</span>
+            </div>
 
-          <div className="pf-field">
-            <label className="admin-label">Code produit</label>
-            <input
-              className="admin-input"
-              placeholder="LM000202"
-              value={productCode}
-              onChange={(e) => setProductCode(e.target.value)}
-            />
-          </div>
+            <div className="pf-content-preview-image">
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt=""
+                />
+              ) : (
+                <span>Image produit</span>
+              )}
+            </div>
 
-          <div className="pf-field pf-field-wide">
-            <label className="admin-label">Description</label>
-            <textarea
-              className="admin-textarea"
-              rows={4}
-              value={description[activeLang]}
-              onChange={(e) =>
-                setDescription((p) => ({ ...p, [activeLang]: e.target.value }))
-              }
-            />
-          </div>
+            <div className="pf-content-preview-body">
+              {productCode && (
+                <span className="pf-content-preview-code">
+                  {productCode}
+                </span>
+              )}
 
-          <div className="pf-field">
-            <label className="admin-label">
-              Poids unitaire (kg)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              className="admin-input"
-              value={weightKg}
-              onChange={(e) =>
-                setWeightKg(e.target.value)
-              }
-            />
-          </div>
+              <h3>
+                {name[activeLang] || "Titre du produit"}
+              </h3>
 
-          <div className="pf-field">
-            <label className="admin-label">
-              Colis par unité
-            </label>
-            <input
-              type="number"
-              min="1"
-              step="1"
-              className="admin-input"
-              value={deliveryPackageCount}
-              onChange={(e) =>
-                setDeliveryPackageCount(
-                  e.target.value
-                )
-              }
-            />
-          </div>
-
+              <p>
+                {description[activeLang] ||
+                  "La description du produit apparaîtra ici."}
+              </p>
+            </div>
+          </aside>
         </div>
       </section>
 
       {/* VARIANTES */}
-      <section className="pf-card">
-        <h3>Variantes</h3>
+      <details className="pf-card pf-collapsible">
+        <summary className="pf-collapsible-summary">
+          <span>
+            <strong>Variantes</strong>
+            <small>Tailles, couleurs ou autres déclinaisons</small>
+          </span>
+          <span className="pf-collapsible-count">{variants.length}</span>
+        </summary>
 
-        {variants.length === 0 && (
-          <p className="pf-help">
-            Exemple : Blanc [Fibres de bambou], Rouge [Simili cuir], etc.
-          </p>
-        )}
+        <div className="pf-collapsible-content">
+          {variants.length === 0 && (
+            <p className="pf-help">
+              Ajoutez uniquement les déclinaisons réellement proposées.
+            </p>
+          )}
 
-        <div className="pf-variants-list">
-          {variants.map((v, idx) => (
-            <div key={idx} className="pf-variant-block">
+          <div className="pf-variants-list">
+            {variants.map((v, idx) => (
+              <div key={idx} className="pf-variant-block">
               <div className="pf-option-head">
                 <label className="pf-option-field compact">
                   <span>ID interne</span>
                   <input
                     className="admin-input pf-variant-id"
-                    placeholder="bambou"
+                    placeholder="Ex : bleu"
                     value={v.id}
                     onChange={(e) => {
                       const copy = [...variants];
@@ -512,10 +662,10 @@ export default function ProductEditForm({
                 </label>
 
                 <label className="pf-option-field compact">
-                  <span>Code produit</span>
+                  <span>Référence interne</span>
                   <input
                     className="admin-input"
-                    placeholder="LM000202"
+                    placeholder="Ex : SKU-001-BLEU"
                     value={v.productCode}
                     onChange={(e) => {
                       const copy = [...variants];
@@ -532,7 +682,7 @@ export default function ProductEditForm({
                   <span>Nom affiché sur la boutique</span>
                   <input
                     className="admin-input pf-variant-label"
-                    placeholder="Housse bambou"
+                    placeholder="Ex : Bleu"
                     value={v.label}
                     onChange={(e) => {
                       const copy = [...variants];
@@ -585,12 +735,12 @@ export default function ProductEditForm({
               <div className="pf-table pf-table-variant">
                 <div className="pf-row pf-head">
                   <span>Pays</span>
-                  <span>Actif</span>
-                  <span>Prix HT</span>
+                  <span>Vente</span>
+                  <span>Prix hors taxe</span>
+                  <span>Taxe</span>
                   <span>TVA</span>
-                  <span>Taux %</span>
-                  <span>Prix TTC</span>
-                  <span>Devise</span>
+                  <span>Prix client</span>
+                  <span>Monnaie</span>
                 </div>
 
                 {(activeMarket
@@ -609,10 +759,11 @@ export default function ProductEditForm({
                         <strong>{m.code}</strong> {m.label}
                       </span>
 
-                      <input
-                        type="checkbox"
-                        checked={active}
-                        onChange={() => {
+                      <ToggleButton
+                        active={active}
+                        activeLabel="En vente"
+                        inactiveLabel="Masqué"
+                        onToggle={() => {
                           const copy = [...variants];
                           const current = copy[idx];
                           const nextMarkets = active
@@ -644,11 +795,12 @@ export default function ProductEditForm({
                         }}
                       />
 
-                      <input
-                        type="checkbox"
+                      <ToggleButton
                         disabled={!active}
-                        checked={vat?.enabled ?? false}
-                        onChange={(e) => {
+                        active={vat?.enabled ?? false}
+                        activeLabel="Avec TVA"
+                        inactiveLabel="Sans TVA"
+                        onToggle={() => {
                           const copy = [...variants];
                           const current = copy[idx];
                           copy[idx] = {
@@ -659,7 +811,7 @@ export default function ProductEditForm({
                                 ...(current.vatByMarket[m.code] || {
                                   rate: "",
                                 }),
-                                enabled: e.target.checked,
+                                enabled: !(vat?.enabled ?? false),
                               },
                             },
                           };
@@ -667,29 +819,32 @@ export default function ProductEditForm({
                         }}
                       />
 
-                      <input
-                        type="number"
-                        step="0.01"
-                        disabled={!active || !vat?.enabled}
-                        value={vat?.rate ?? ""}
-                        onChange={(e) => {
-                          const copy = [...variants];
-                          const current = copy[idx];
-                          copy[idx] = {
-                            ...current,
-                            vatByMarket: {
-                              ...current.vatByMarket,
-                              [m.code]: {
-                                ...(current.vatByMarket[m.code] || {
-                                  enabled: false,
-                                }),
-                                rate: e.target.value,
+                      <div className="pf-percent-input">
+                        <input
+                          type="number"
+                          step="0.01"
+                          disabled={!active || !vat?.enabled}
+                          value={vat?.rate ?? ""}
+                          onChange={(e) => {
+                            const copy = [...variants];
+                            const current = copy[idx];
+                            copy[idx] = {
+                              ...current,
+                              vatByMarket: {
+                                ...current.vatByMarket,
+                                [m.code]: {
+                                  ...(current.vatByMarket[m.code] || {
+                                    enabled: false,
+                                  }),
+                                  rate: e.target.value,
+                                },
                               },
-                            },
-                          };
-                          setVariants(copy);
-                        }}
-                      />
+                            };
+                            setVariants(copy);
+                          }}
+                        />
+                        <span>%</span>
+                      </div>
 
                       <strong>
                         {active && priceHT
@@ -702,106 +857,55 @@ export default function ProductEditForm({
                   );
                 })}
               </div>
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-secondary pf-variant-add"
+            onClick={() =>
+              setVariants((prev) => [
+                ...prev,
+                {
+                  id: "",
+                  label: "",
+                  description: "",
+                  imageUrl: "",
+                  markets: [],
+                  pricesByMarket: {} as any,
+                  vatByMarket: {} as any,
+                  productCode: "",
+                },
+              ])
+            }
+          >
+            + Ajouter une variante
+          </button>
         </div>
+      </details>
 
-        <button
-          type="button"
-          className="btn btn-secondary pf-variant-add"
-          onClick={() =>
-            setVariants((prev) => [
-              ...prev,
-              {
-                id: "",
-                label: "",
-                description: "",
-                imageUrl: "",
-                markets: [],
-                pricesByMarket: {} as any,
-                vatByMarket: {} as any,
-                productCode: "",
-              },
-            ])
-          }
-        >
-          + Ajouter une variante
-        </button>
-      </section>
+      {/* COMPLEMENTARY PRODUCTS */}
+      <details className="pf-card pf-collapsible">
+        <summary className="pf-collapsible-summary">
+          <span>
+            <strong>Produits complémentaires</strong>
+            <small>Options proposées avec ce produit</small>
+          </span>
+          <span className="pf-collapsible-count">{addons.length}</span>
+        </summary>
 
-      {/* OPTIONS / HOUSSES */}
-      <section className="pf-card">
-        <h3>Options / Housses</h3>
+        <div className="pf-collapsible-content">
+          {addons.length === 0 && (
+            <p className="pf-help">
+              Ajoutez un produit complémentaire seulement si nécessaire.
+            </p>
+          )}
 
-        {addons.length === 0 && (
-          <p className="pf-help">
-            Exemple : “Housse supplémentaire bambou”, “Housse simili‑cuir”, etc.
-          </p>
-        )}
-
-        <div className="pf-addons-list">
-          {addons.map((a, idx) => (
-            <div key={idx} className="pf-addon-block">
-              <div className="pf-option-head">
-                <label className="pf-option-field compact">
-                  <span>ID interne</span>
-                  <input
-                    className="admin-input pf-addon-id"
-                    placeholder="housse-bambou"
-                    value={a.id}
-                    onChange={(e) => {
-                      const copy = [...addons];
-                      copy[idx] = { ...copy[idx], id: e.target.value };
-                      setAddons(copy);
-                    }}
-                  />
-                </label>
-
-                <label className="pf-option-field compact">
-                  <span>Code housse</span>
-                  <input
-                    className="admin-input"
-                    placeholder="LM020001"
-                    value={a.productCode}
-                    onChange={(e) => {
-                      const copy = [...addons];
-                      copy[idx] = {
-                        ...copy[idx],
-                        productCode: e.target.value,
-                      };
-                      setAddons(copy);
-                    }}
-                  />
-                </label>
-
-                <label className="pf-option-field">
-                  <span>Nom affiché sur la boutique</span>
-                  <input
-                    className="admin-input pf-addon-label"
-                    placeholder="Housse en fibres de bambou"
-                    value={a.label}
-                    onChange={(e) => {
-                      const copy = [...addons];
-                      copy[idx] = { ...copy[idx], label: e.target.value };
-                      setAddons(copy);
-                    }}
-                  />
-                </label>
-
-                <label className="pf-option-field">
-                  <span>Image de l’option</span>
-                  <input
-                    className="admin-input pf-addon-image"
-                    placeholder="https://..."
-                    value={a.imageUrl}
-                    onChange={(e) => {
-                      const copy = [...addons];
-                      copy[idx] = { ...copy[idx], imageUrl: e.target.value };
-                      setAddons(copy);
-                    }}
-                  />
-                </label>
-
+          <div className="pf-addons-list">
+            {addons.map((a, idx) => (
+              <div key={idx} className="pf-addon-block">
+              <div className="pf-addon-toolbar">
                 <button
                   type="button"
                   className="btn btn-ghost pf-addon-remove"
@@ -813,30 +917,149 @@ export default function ProductEditForm({
                 </button>
               </div>
 
-              <label className="pf-option-field pf-option-description">
-                <span>Description affichée sur la boutique</span>
-                <textarea
-                  className="admin-textarea"
-                  rows={2}
-                  placeholder="Texte court pour expliquer cette option au client."
-                  value={a.description}
-                  onChange={(e) => {
-                    const copy = [...addons];
-                    copy[idx] = { ...copy[idx], description: e.target.value };
-                    setAddons(copy);
-                  }}
-                />
-              </label>
+              <div className="pf-addon-editor">
+                <div className="pf-addon-fields">
+                  <label className="pf-option-field">
+                    <span>Nom affiché sur la boutique</span>
+                    <input
+                      className="admin-input pf-addon-label"
+                      placeholder="Ex : Accessoire complémentaire"
+                      value={a.label}
+                      onChange={(e) => {
+                        const copy = [...addons];
+                        copy[idx] = { ...copy[idx], label: e.target.value };
+                        setAddons(copy);
+                      }}
+                    />
+                  </label>
+
+                  <label className="pf-option-field">
+                    <span>Description affichée sur la boutique</span>
+                    <textarea
+                      className="admin-textarea"
+                      rows={6}
+                      placeholder="Texte court pour expliquer cette option au client."
+                      value={a.description}
+                      onChange={(e) => {
+                        const copy = [...addons];
+                        copy[idx] = { ...copy[idx], description: e.target.value };
+                        setAddons(copy);
+                      }}
+                    />
+                  </label>
+
+                  <div className="pf-addon-fields-row">
+                    <label className="pf-option-field">
+                      <span>ID interne</span>
+                      <input
+                        className="admin-input pf-addon-id"
+                        placeholder="Ex : accessoire-01"
+                        value={a.id}
+                        onChange={(e) => {
+                          const copy = [...addons];
+                          copy[idx] = { ...copy[idx], id: e.target.value };
+                          setAddons(copy);
+                        }}
+                      />
+                    </label>
+
+                    <label className="pf-option-field">
+                      <span>Référence interne</span>
+                      <input
+                        className="admin-input"
+                        placeholder="Ex : SKU-ACC-001"
+                        value={a.productCode}
+                        onChange={(e) => {
+                          const copy = [...addons];
+                          copy[idx] = {
+                            ...copy[idx],
+                            productCode: e.target.value,
+                          };
+                          setAddons(copy);
+                        }}
+                      />
+                    </label>
+
+                    <label className="pf-option-field">
+                      <span>Image de l’option</span>
+                      <input
+                        className="admin-input pf-addon-image"
+                        placeholder="https://..."
+                        value={a.imageUrl}
+                        onChange={(e) => {
+                          const copy = [...addons];
+                          copy[idx] = { ...copy[idx], imageUrl: e.target.value };
+                          setAddons(copy);
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <aside className="pf-addon-checkout-preview">
+                  <div className="pf-addon-checkout-preview-label">
+                    Simulation checkout
+                  </div>
+
+                  <div className="pf-addon-checkout-module">
+                    <div className="pf-addon-checkout-kicker">
+                      Complétez votre commande
+                    </div>
+
+                    <div className="pf-addon-checkout-product">
+                      <div className="pf-addon-checkout-image">
+                        {a.imageUrl ? (
+                          <img
+                            src={a.imageUrl}
+                            alt=""
+                          />
+                        ) : (
+                          <span>Image</span>
+                        )}
+                      </div>
+
+                      <div className="pf-addon-checkout-copy">
+                        <h3>
+                          {a.label || "Produit complémentaire"}
+                        </h3>
+                        <p>
+                          {a.description ||
+                            "Une suggestion utile à ajouter à la commande."}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pf-addon-checkout-action">
+                      <span>
+                        {(() => {
+                          const market = activeMarket || "FR";
+                          const priceHT = toNumber(a.pricesByMarket[market]);
+                          const vat = a.vatByMarket[market];
+                          const vatRate = vat?.enabled ? toNumber(vat.rate) : 0;
+                          const priceTTC = priceHT + (priceHT * vatRate) / 100;
+
+                          return priceHT
+                            ? `${priceTTC.toFixed(2).replace(".", ",")} € TTC`
+                            : "Prix TTC à définir";
+                        })()}
+                      </span>
+                      <button type="button">
+                        + Ajouter à ma commande
+                      </button>
+                    </div>
+                  </div>
+                </aside>
+              </div>
 
               <div className="pf-table pf-table-addon">
                 <div className="pf-row pf-head">
                   <span>Pays</span>
-                  <span>Actif</span>
-                  <span>Prix HT</span>
+                  <span>Vente</span>
+                  <span>Prix hors taxe</span>
+                  <span>Taxe</span>
                   <span>TVA</span>
-                  <span>Taux %</span>
-                  <span>Prix TTC</span>
-                  <span>Devise</span>
+                  <span>Prix client</span>
+                  <span>Monnaie</span>
                 </div>
 
                 {(activeMarket
@@ -855,10 +1078,11 @@ export default function ProductEditForm({
                         <strong>{m.code}</strong> {m.label}
                       </span>
 
-                      <input
-                        type="checkbox"
-                        checked={active}
-                        onChange={() => {
+                      <ToggleButton
+                        active={active}
+                        activeLabel="En vente"
+                        inactiveLabel="Masqué"
+                        onToggle={() => {
                           const copy = [...addons];
                           const current = copy[idx];
                           const nextMarkets = active
@@ -890,11 +1114,12 @@ export default function ProductEditForm({
                         }}
                       />
 
-                      <input
-                        type="checkbox"
+                      <ToggleButton
                         disabled={!active}
-                        checked={vat?.enabled ?? false}
-                        onChange={(e) => {
+                        active={vat?.enabled ?? false}
+                        activeLabel="Avec TVA"
+                        inactiveLabel="Sans TVA"
+                        onToggle={() => {
                           const copy = [...addons];
                           const current = copy[idx];
                           copy[idx] = {
@@ -905,7 +1130,7 @@ export default function ProductEditForm({
                                 ...(current.vatByMarket[m.code] || {
                                   rate: "",
                                 }),
-                                enabled: e.target.checked,
+                                enabled: !(vat?.enabled ?? false),
                               },
                             },
                           };
@@ -913,29 +1138,32 @@ export default function ProductEditForm({
                         }}
                       />
 
-                      <input
-                        type="number"
-                        step="0.01"
-                        disabled={!active || !vat?.enabled}
-                        value={vat?.rate ?? ""}
-                        onChange={(e) => {
-                          const copy = [...addons];
-                          const current = copy[idx];
-                          copy[idx] = {
-                            ...current,
-                            vatByMarket: {
-                              ...current.vatByMarket,
-                              [m.code]: {
-                                ...(current.vatByMarket[m.code] || {
-                                  enabled: false,
-                                }),
-                                rate: e.target.value,
+                      <div className="pf-percent-input">
+                        <input
+                          type="number"
+                          step="0.01"
+                          disabled={!active || !vat?.enabled}
+                          value={vat?.rate ?? ""}
+                          onChange={(e) => {
+                            const copy = [...addons];
+                            const current = copy[idx];
+                            copy[idx] = {
+                              ...current,
+                              vatByMarket: {
+                                ...current.vatByMarket,
+                                [m.code]: {
+                                  ...(current.vatByMarket[m.code] || {
+                                    enabled: false,
+                                  }),
+                                  rate: e.target.value,
+                                },
                               },
-                            },
-                          };
-                          setAddons(copy);
-                        }}
-                      />
+                            };
+                            setAddons(copy);
+                          }}
+                        />
+                        <span>%</span>
+                      </div>
 
                       <strong>
                         {active && priceHT
@@ -948,45 +1176,85 @@ export default function ProductEditForm({
                   );
                 })}
               </div>
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
 
-        <button
-          type="button"
-          className="btn btn-secondary pf-addon-add"
-          onClick={() =>
-            setAddons((prev) => [
-              ...prev,
-              {
-                id: "",
-                label: "",
-                description: "",
-                imageUrl: "",
-                markets: [],
-                pricesByMarket: {} as any,
-                vatByMarket: {} as any,
-                productCode: "",
-              },
-            ])
-          }
-        >
-          + Ajouter une option / housse
-        </button>
-      </section>
+          <button
+            type="button"
+            className="btn btn-secondary pf-addon-add"
+            onClick={() =>
+              setAddons((prev) => [
+                ...prev,
+                {
+                  id: "",
+                  label: "",
+                  description: "",
+                  imageUrl: "",
+                  markets: [],
+                  pricesByMarket: {} as any,
+                  vatByMarket: {} as any,
+                  productCode: "",
+                },
+              ])
+            }
+          >
+            + Ajouter un produit complémentaire
+          </button>
+        </div>
+      </details>
 
       {/* PRIX + TVA PRODUIT */}
       <section className="pf-card">
         <h3>Prix & TVA par pays</h3>
 
+        <div className="pf-shipping-summary">
+          <span className="pf-shipping-summary-title">
+            Expédition
+          </span>
+
+          <label className="pf-shipping-summary-field">
+            <span>Poids</span>
+            <input
+              type="number"
+              step="0.01"
+              className="admin-input"
+              placeholder="1,20"
+              value={weightKg}
+              onChange={(e) =>
+                setWeightKg(e.target.value)
+              }
+            />
+            <small>kg</small>
+          </label>
+
+          <label className="pf-shipping-summary-field">
+            <span>Colis</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              className="admin-input"
+              placeholder="1"
+              value={deliveryPackageCount}
+              onChange={(e) =>
+                setDeliveryPackageCount(
+                  e.target.value
+                )
+              }
+            />
+            <small>par unité</small>
+          </label>
+        </div>
+
         <div className="pf-table">
           <div className="pf-row pf-head">
             <span>Pays</span>
-            <span>Actif</span>
-            <span>Prix HT</span>
+            <span>Vente</span>
+            <span>Prix hors taxe</span>
+            <span>Taxe</span>
             <span>TVA</span>
-            <span>Taux %</span>
-            <span>Devise</span>
+            <span>Monnaie</span>
           </div>
 
           {(activeMarket
@@ -1002,10 +1270,11 @@ export default function ProductEditForm({
                   <strong>{m.code}</strong> {m.label}
                 </span>
 
-                <input
-                  type="checkbox"
-                  checked={active}
-                  onChange={() =>
+                <ToggleButton
+                  active={active}
+                  activeLabel="En vente"
+                  inactiveLabel="Masqué"
+                  onToggle={() =>
                     setMarkets((p) =>
                       active ? p.filter((x) => x !== m.code) : [...p, m.code]
                     )
@@ -1025,36 +1294,40 @@ export default function ProductEditForm({
                   }
                 />
 
-                <input
-                  type="checkbox"
+                <ToggleButton
                   disabled={!active}
-                  checked={vat?.enabled ?? false}
-                  onChange={(e) =>
+                  active={vat?.enabled ?? false}
+                  activeLabel="Avec TVA"
+                  inactiveLabel="Sans TVA"
+                  onToggle={() =>
                     setVatByMarket((p) => ({
                       ...p,
                       [m.code]: {
                         ...p[m.code],
-                        enabled: e.target.checked,
+                        enabled: !(vat?.enabled ?? false),
                       },
                     }))
                   }
                 />
 
-                <input
-                  type="number"
-                  step="0.01"
-                  disabled={!active || !vat?.enabled}
-                  value={vat?.rate ?? ""}
-                  onChange={(e) =>
-                    setVatByMarket((p) => ({
-                      ...p,
-                      [m.code]: {
-                        ...p[m.code],
-                        rate: e.target.value,
-                      },
-                    }))
-                  }
-                />
+                <div className="pf-percent-input">
+                  <input
+                    type="number"
+                    step="0.01"
+                    disabled={!active || !vat?.enabled}
+                    value={vat?.rate ?? ""}
+                    onChange={(e) =>
+                      setVatByMarket((p) => ({
+                        ...p,
+                        [m.code]: {
+                          ...p[m.code],
+                          rate: e.target.value,
+                        },
+                      }))
+                    }
+                  />
+                  <span>%</span>
+                </div>
 
                 <span>{m.currency}</span>
               </div>
@@ -1063,32 +1336,37 @@ export default function ProductEditForm({
         </div>
       </section>
 
-      <label className="admin-switch">
-        <input
-          type="checkbox"
-          checked={isActive}
-          onChange={(e) => setIsActive(e.target.checked)}
-        />
-        Produit actif
-      </label>
-
-      <label className="admin-label">Mot de passe admin</label>
-      <input
-        type="password"
-        className="admin-input"
-        value={adminPassword}
-        onChange={(e) => setAdminPassword(e.target.value)}
-      />
-
       {error && <p className="admin-error">{error}</p>}
 
-      <div className="admin-form-actions">
-        <button type="button" className="btn btn-ghost" onClick={onClose}>
-          Annuler
-        </button>
-        <button className="btn btn-primary" disabled={loading}>
-          {loading ? "Enregistrement…" : "Enregistrer"}
-        </button>
+      <div className="pf-save-bar">
+        <div className="pf-save-controls">
+          <label className="pf-admin-password">
+            <span>Mot de passe admin</span>
+            <input
+              type="password"
+              className="admin-input"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+            />
+          </label>
+
+          <div className="admin-form-actions pf-final-actions">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                if (!confirmLeave()) return;
+                allowNavigation.current = true;
+                onClose();
+              }}
+            >
+              Annuler
+            </button>
+            <button className="btn btn-primary" disabled={loading}>
+              {loading ? "Enregistrement…" : "Enregistrer"}
+            </button>
+          </div>
+        </div>
       </div>
     </form>
   );

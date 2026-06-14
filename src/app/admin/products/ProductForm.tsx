@@ -166,7 +166,7 @@ export default function ProductForm({
 
             <input
               className="pf-input"
-              placeholder="Ex: Coussin Vitrectomie Premium"
+              placeholder="Ex : Nom du produit"
               value={nameFr}
               onChange={(e) =>
                 setNameFr(
@@ -180,12 +180,12 @@ export default function ProductForm({
           <div className="pf-field">
 
             <label>
-              Code produit
+              Référence interne
             </label>
 
             <input
               className="pf-input"
-              placeholder="LM000202"
+              placeholder="Ex : SKU-001"
               value={productCode}
               onChange={(e) =>
                 setProductCode(

@@ -1,5 +1,12 @@
 export type OrderItem = {
+  id?: string;
+  sku?: string;
+  productCode?: string;
   name?: any;
+  image?: string;
+  imageUrl?: string;
+  thumbnail?: string;
+  photo?: string;
 
   // 🔥 TON FORMAT FIRESTORE
   priceHT?: number;

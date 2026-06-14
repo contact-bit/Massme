@@ -763,12 +763,14 @@
 }
 
 .edit-product-back {
-  min-height: 34px;
-  padding: 0 .8rem;
+  width: auto;
+  min-height: 30px;
+  padding: 0 .65rem;
+  gap: .35rem;
   border-radius: 999px;
   border-color: rgba(255,255,255,.08);
   background: rgba(255,255,255,.035);
-  font-size: .78rem;
+  font-size: .72rem;
 }
 
 .edit-product-card {
@@ -809,5 +811,10 @@
 @media (max-width: 980px) {
   .edit-product-head {
     align-items: stretch;
+  }
+
+  .edit-product-back {
+    width: auto;
+    align-self: flex-start;
   }
 }

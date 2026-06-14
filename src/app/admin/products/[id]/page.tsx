@@ -33,6 +33,21 @@ export default function EditProductPage({
 
   const [loading, setLoading] =
     useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] =
+    useState(false);
+
+  const leavePage = () => {
+    if (
+      hasUnsavedChanges &&
+      !window.confirm(
+        "Des modifications ne sont pas enregistrées. Pour les conserver, saisissez le mot de passe admin puis cliquez sur Enregistrer en bas de page. Quitter quand même ?"
+      )
+    ) {
+      return;
+    }
+
+    router.push("/admin/products");
+  };
 
   useEffect(() => {
     async function loadProduct() {
@@ -87,11 +102,7 @@ export default function EditProductPage({
 
             <button
               className="edit-product-back"
-              onClick={() =>
-                router.push(
-                  "/admin/products"
-                )
-              }
+              onClick={leavePage}
             >
               <span>
                 ←
@@ -142,6 +153,7 @@ export default function EditProductPage({
                     "/admin/products"
                   )
                 }
+                onDirtyChange={setHasUnsavedChanges}
               />
             )}
 

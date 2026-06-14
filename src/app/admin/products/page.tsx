@@ -28,6 +28,13 @@ type Product = {
   isActive?: boolean;
 
   imageUrl?: string;
+  productCode?: string;
+  weightKg?: number;
+  deliveryPackageCount?: number;
+  markets?: string[];
+  variants?: unknown[];
+  addons?: unknown[];
+  pricesByMarket?: Record<string, number>;
 };
 
 function getName(p: Product) {
@@ -39,9 +46,17 @@ function getName(p: Product) {
 }
 
 function getPrice(p: Product) {
+  if (typeof p.pricesByMarket?.FR === "number") {
+    return p.pricesByMarket.FR;
+  }
+
   return typeof p.price === "number"
     ? p.price
     : p.price?.eur || 0;
+}
+
+function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
+  return `${count} ${count > 1 ? pluralLabel : singular}`;
 }
 
 function moneyEUR(n: number) {
@@ -79,6 +94,9 @@ export default function ProductsAdminPage() {
 
   const [page, setPage] =
     useState(1);
+
+  const [togglingId, setTogglingId] =
+    useState<string | null>(null);
 
   const pageSize = 12;
 
@@ -143,6 +161,59 @@ export default function ProductsAdminPage() {
       fetchProducts();
     };
 
+  const toggleProductVisibility =
+    async (product: Product) => {
+      setTogglingId(product.id);
+
+      try {
+        const pass =
+          localStorage.getItem(
+            "admin_password"
+          ) || "";
+
+        const res = await fetch(
+          `/api/admin/products/${product.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type":
+                "application/json",
+              "x-admin-password":
+                pass,
+            },
+            body: JSON.stringify({
+              data: {
+                isActive:
+                  !product.isActive,
+              },
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error();
+        }
+
+        setProducts((current) =>
+          current.map((item) =>
+            item.id === product.id
+              ? {
+                  ...item,
+                  isActive:
+                    !product.isActive,
+                }
+              : item
+          )
+        );
+      } catch {
+        alert(
+          "Impossible de modifier la visibilité du produit."
+        );
+      } finally {
+        setTogglingId(null);
+      }
+    };
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -204,34 +275,7 @@ export default function ProductsAdminPage() {
   return (
     <main className="admin-page products-page">
 
-      {/* HEADER */}
-      <div className="products-header">
-
-        <div className="products-header-content">
-
-        </div>
-
-        <div className="products-actions">
-
-          <Link
-            href="/admin/products/new"
-            className="products-btn-primary"
-          >
-            + Ajouter un produit
-          </Link>
-
-          <button
-            className="products-btn-secondary"
-            onClick={fetchProducts}
-          >
-            ↻
-          </button>
-
-        </div>
-
-      </div>
-
-      {/* FILTERS */}
+      {/* TOOLBAR */}
       <div className="products-filters">
 
         <input
@@ -243,28 +287,37 @@ export default function ProductsAdminPage() {
           }
         />
 
-        <select
-          className="products-select"
-          value={status}
-          onChange={(e) =>
-            setStatus(
-              e.target.value
-            )
-          }
+        <div className="products-select-wrap">
+          <select
+            className="products-select"
+            value={status}
+            onChange={(e) =>
+              setStatus(
+                e.target.value
+              )
+            }
+          >
+            <option value="all">
+              Tous les produits
+            </option>
+
+            <option value="active">
+              Produits actifs
+            </option>
+
+            <option value="inactive">
+              Produits inactifs
+            </option>
+
+          </select>
+        </div>
+
+        <Link
+          href="/admin/products/new"
+          className="products-btn-primary"
         >
-          <option value="all">
-            Tous les produits
-          </option>
-
-          <option value="active">
-            Produits actifs
-          </option>
-
-          <option value="inactive">
-            Produits inactifs
-          </option>
-
-        </select>
+          + Ajouter un produit
+        </Link>
 
       </div>
 
@@ -317,6 +370,12 @@ export default function ProductsAdminPage() {
                       {getName(p)}
                     </div>
 
+                    {p.productCode && (
+                      <div className="products-reference">
+                        Réf. {p.productCode}
+                      </div>
+                    )}
+
                     <div className="products-price">
                       {moneyEUR(
                         getPrice(p)
@@ -325,19 +384,54 @@ export default function ProductsAdminPage() {
 
                   </div>
 
-                  {/* STATUS */}
-                  <div
-                    className={`products-badge ${
+                  <button
+                    type="button"
+                    className={`products-visibility-switch ${
                       p.isActive
                         ? "is-active"
-                        : "is-inactive"
+                        : ""
                     }`}
+                    role="switch"
+                    aria-checked={p.isActive ?? false}
+                    disabled={togglingId === p.id}
+                    onClick={() =>
+                      toggleProductVisibility(p)
+                    }
                   >
-                    {p.isActive
-                      ? "Actif"
-                      : "Inactif"}
-                  </div>
+                    <span className="products-visibility-switch-text">
+                      <strong>Visible sur la boutique</strong>
+                      <small>
+                        {togglingId === p.id
+                          ? "Enregistrement..."
+                          : p.isActive
+                          ? "Visible"
+                          : "Masqué"}
+                      </small>
+                    </span>
+                    <span className="products-visibility-switch-track">
+                      <span />
+                    </span>
+                  </button>
 
+                </div>
+
+                <div className="products-meta">
+                  <span>
+                    {plural(p.markets?.length || 0, "pays")}
+                  </span>
+                  <span>
+                    {plural(p.variants?.length || 0, "variante")}
+                  </span>
+                  <span>
+                    {plural(p.addons?.length || 0, "complément")}
+                  </span>
+                  <span>
+                    {p.weightKg
+                      ? `${p.weightKg} kg`
+                      : "Poids non défini"}
+                    {" · "}
+                    {plural(p.deliveryPackageCount || 1, "colis", "colis")}
+                  </span>
                 </div>
 
                 {/* ACTIONS */}

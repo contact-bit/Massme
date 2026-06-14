@@ -113,9 +113,6 @@ export default function EditMethodPanel({
                   0
               ),
 
-            isActive:
-              form.isActive,
-
             sortOrder:
               form.sortOrder ==
               null
@@ -597,60 +594,6 @@ export default function EditMethodPanel({
             />
 
           </div>
-
-        </section>
-
-        {/* STATUS */}
-        <section className="emp-card">
-
-          <div className="emp-card-head">
-
-            <div className="emp-card-kicker">
-              STATUS
-            </div>
-
-            <h3>
-              Activation
-            </h3>
-
-          </div>
-
-          <label className="emp-toggle">
-
-            <input
-              type="checkbox"
-              checked={
-                form.isActive
-              }
-              onChange={(e) =>
-                setForm(
-                  (f) => ({
-                    ...f,
-
-                    isActive:
-                      e.target
-                        .checked,
-                  })
-                )
-              }
-            />
-
-            <span className="emp-switch" />
-
-            <div className="emp-toggle-content">
-
-              <strong>
-                Méthode active
-              </strong>
-
-              <span>
-                Visible dans
-                le checkout
-              </span>
-
-            </div>
-
-          </label>
 
         </section>
 

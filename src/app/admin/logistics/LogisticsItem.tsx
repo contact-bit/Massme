@@ -13,6 +13,8 @@ import { IconEye } from "../orders/components/icons";
 
 type Props = {
   order: Order;
+  open: boolean;
+  onToggle: () => void;
   toastIt: (msg: string) => void;
   onShip: (order: Order) => Promise<void>;
   onUpdateShippingAddress: (
@@ -114,12 +116,13 @@ function formatAddressForCopy(
 
 export default function LogisticsItem({
   order,
+  open,
+  onToggle,
   toastIt,
   onShip,
   onUpdateShippingAddress,
 }: Props) {
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
   const [editingDelivery, setEditingDelivery] =
     useState(false);
   const [
@@ -415,9 +418,7 @@ export default function LogisticsItem({
       {/* MAIN ROW */}
       <div
         className="log-row-main"
-        onClick={() =>
-          setOpen((v) => !v)
-        }
+        onClick={onToggle}
       >
         {/* COMMANDE */}
         <div className="log-col order">
@@ -433,9 +434,7 @@ export default function LogisticsItem({
             >
               <ActionIconButton
                 title="Voir"
-                onClick={() =>
-                  setOpen((v) => !v)
-                }
+                onClick={onToggle}
                 icon={<IconEye />}
                 variant="primary"
               />
@@ -555,10 +554,10 @@ export default function LogisticsItem({
               onClick={handleShip}
               disabled={loading}
             >
-              {loading
-                ? "Expédition..."
-                : "Expédier"}
-            </button>
+          {loading
+            ? "Expédition..."
+            : "À expédier"}
+        </button>
           )}
         </div>
       </div>

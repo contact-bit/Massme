@@ -1354,6 +1354,103 @@ body {
   background: rgba(255,255,255,.034) !important;
 }
 
+.orders-table-v2 tbody tr.row > td {
+  border-bottom: 0 !important;
+}
+
+.orders-table-v2 tbody tr.row-general-info > td {
+  padding: 0 10px 7px !important;
+  border-bottom: 1px solid rgba(255,255,255,.052) !important;
+}
+
+.orders-table-v2 tbody tr.row-general-info:hover {
+  background: transparent !important;
+}
+
+.row-general-info {
+  cursor: pointer;
+}
+
+.row-general-info-line {
+  display: flex;
+  align-items: center;
+  gap: .45rem 1.1rem;
+  min-height: 22px;
+  padding-top: 5px;
+  overflow: hidden;
+  border-top: 1px solid rgba(148,163,184,.08);
+  color: rgba(148,163,184,.56);
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.row-general-info-line span {
+  display: inline-flex;
+  align-items: center;
+  gap: .28rem;
+}
+
+.row-general-info-line strong {
+  overflow: hidden;
+  color: rgba(203,213,225,.78);
+  font-weight: 650;
+  text-overflow: ellipsis;
+}
+
+.row-general-info-line .invoice-state {
+  margin-left: auto;
+}
+
+.row-invoice-actions {
+  gap: .25rem !important;
+}
+
+.row-invoice-actions :is(a, button) {
+  min-height: 24px;
+  padding: 0 .42rem;
+  border: 1px solid rgba(148,163,184,.13);
+  border-radius: .35rem;
+  background: rgba(148,163,184,.045);
+  color: rgba(203,213,225,.7);
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 750;
+  line-height: 22px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.row-invoice-actions :is(a, button):hover {
+  border-color: rgba(56,189,248,.25);
+  background: rgba(56,189,248,.09);
+  color: #7dd3fc;
+}
+
+.row-invoice-actions button:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
+.row-general-info-line .invoice-state.state-sent strong {
+  color: #4ade80;
+}
+
+.row-general-info-line .invoice-state.state-error strong {
+  color: #f87171;
+}
+
+.row-general-info.open .row-general-info-line {
+  border-top-color: rgba(56,189,248,.16);
+}
+
+@media (max-width: 980px) {
+  .row-general-info-line {
+    gap: .4rem .8rem;
+    overflow-x: auto;
+  }
+}
+
 .cell-main,
 .cell-strong {
   color: rgba(248,250,252,.94);

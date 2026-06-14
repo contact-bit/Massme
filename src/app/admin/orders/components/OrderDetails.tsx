@@ -3,6 +3,7 @@
 import "./OrderDetails.css";
 
 import React, { useEffect, useState } from "react";
+import { FiPackage, FiTruck } from "react-icons/fi";
 
 import type { Order } from "../domain/types";
 
@@ -43,6 +44,14 @@ type PaymentFeeMethod = {
   id: string;
   provider: string;
   label: string;
+};
+
+type CatalogProduct = {
+  id?: string;
+  sku?: string;
+  productCode?: string;
+  name?: string | { fr?: string; en?: string };
+  imageUrl?: string;
 };
 
 /* =========================================================
@@ -135,23 +144,6 @@ export function OrderDetails({
   order: Order;
   onCopyAddress: () => void;
 }) {
-  const [sendingInvoice, setSendingInvoice] =
-    useState(false);
-
-  const [localInvoice, setLocalInvoice] =
-    useState(
-      (order as any)?.invoiceEmail || null
-    );
-  const [
-    localInvoiceNumber,
-    setLocalInvoiceNumber,
-  ] = useState(
-    (order as any)?.invoiceNumber ||
-      (order as any)?.invoiceEmail
-        ?.invoiceNumber ||
-      ""
-  );
-
   const [localShippingAddress, setLocalShippingAddress] =
     useState(
       (order as any)?.shippingAddress || null
@@ -172,6 +164,18 @@ export function OrderDetails({
 
   const [savingAddress, setSavingAddress] =
     useState(false);
+  const [editingAll, setEditingAll] =
+    useState(false);
+  const [savingAll, setSavingAll] =
+    useState(false);
+  const [copiedAll, setCopiedAll] =
+    useState(false);
+  const [billingDraft, setBillingDraft] =
+    useState<AddressDraft>(addressToDraft(null));
+  const [shippingDraft, setShippingDraft] =
+    useState<AddressDraft>(addressToDraft(null));
+  const [allContactDraft, setAllContactDraft] =
+    useState<ContactDraft>({ email: "", phone: "" });
 
   const [localEmail, setLocalEmail] =
     useState(
@@ -213,6 +217,8 @@ export function OrderDetails({
 
   const [paymentFeeMethods, setPaymentFeeMethods] =
     useState<PaymentFeeMethod[]>([]);
+  const [catalogProducts, setCatalogProducts] =
+    useState<CatalogProduct[]>([]);
 
   const [savingFee, setSavingFee] =
     useState(false);
@@ -273,6 +279,32 @@ export function OrderDetails({
   }, []);
 
   useEffect(() => {
+    let alive = true;
+
+    async function loadCatalogProducts() {
+      try {
+        const pass = localStorage.getItem("admin_password") || "";
+        const response = await fetch("/api/admin/products", {
+          cache: "no-store",
+          headers: { "x-admin-password": pass },
+        });
+        const data = await response.json();
+
+        if (alive && response.ok) {
+          setCatalogProducts(data?.products || []);
+        }
+      } catch {
+        if (alive) setCatalogProducts([]);
+      }
+    }
+
+    loadCatalogProducts();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
     setLocalShippingAddress(
       (order as any)?.shippingAddress || null
     );
@@ -293,90 +325,7 @@ export function OrderDetails({
         ""
     );
 
-    setLocalInvoiceNumber(
-      (order as any)?.invoiceNumber ||
-        (order as any)?.invoiceEmail
-          ?.invoiceNumber ||
-        ""
-    );
-
   }, [order]);
-
-  const invoice =
-    localInvoice?.status === "sent"
-      ? localInvoice
-      : (order as any)?.invoiceEmail ||
-        localInvoice;
-
-  const invoiceNumber =
-    localInvoiceNumber ||
-    (order as any)?.invoiceNumber ||
-    invoice?.invoiceNumber ||
-    "";
-
-  const orderSequence = Number(
-    String(
-      (order as any)?.orderNumber || ""
-    ).match(/^ID(\d+)$/)?.[1] || 0
-  );
-
-  const invoiceSequence = Number(
-    String(invoiceNumber).match(
-      /^FID(\d+)$/
-    )?.[1] || 0
-  );
-
-  const shouldLoadInvoiceNumber =
-    Boolean(order.id) &&
-    (!invoiceNumber ||
-      (orderSequence > 0 &&
-        invoiceSequence > 0 &&
-        invoiceSequence < orderSequence));
-
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!shouldLoadInvoiceNumber) {
-      return;
-    }
-
-    async function loadInvoiceNumber() {
-      try {
-        const res = await fetch(
-          `/api/admin/orders/invoice-number?orderId=${encodeURIComponent(
-            order.id
-          )}`,
-          { cache: "no-store" }
-        );
-
-        const data = await res.json();
-
-        if (
-          !cancelled &&
-          res.ok &&
-          data?.invoiceNumber
-        ) {
-          setLocalInvoiceNumber(
-            data.invoiceNumber
-          );
-
-          setLocalInvoice((prev: any) => ({
-            ...(prev || {}),
-            invoiceNumber:
-              data.invoiceNumber,
-          }));
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    loadInvoiceNumber();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [order.id, shouldLoadInvoiceNumber]);
 
   const shippingAddress =
     localShippingAddress ||
@@ -512,80 +461,135 @@ export function OrderDetails({
   const phone =
     localPhone || "—";
 
-const site =
-  "vitrectomed.com";
+  function catalogImageForItem(item: (typeof items)[number], name: string) {
+    const normalizedName = name.trim().toLowerCase();
+    const product = catalogProducts.find((candidate) => {
+      const candidateName =
+        typeof candidate.name === "string"
+          ? candidate.name
+          : candidate.name?.fr || candidate.name?.en || "";
 
-const heardFrom =
-  (order as any)?.heardFrom || "—";
+      return (
+        Boolean(item.id && candidate.id === item.id) ||
+        Boolean(item.sku && candidate.sku === item.sku) ||
+        Boolean(
+          item.productCode &&
+            candidate.productCode === item.productCode
+        ) ||
+        candidateName.trim().toLowerCase() === normalizedName
+      );
+    });
 
-const heardFromOther =
-  (order as any)?.heardFromOther || "";
+    return product?.imageUrl || "";
+  }
 
-const heardFromLabelMap: Record<string, string> = {
-  internet: "Internet",
-  social: "Réseaux sociaux",
-  medical: "Recommandation médicale",
-  other: "Autre",
-};
+  function startEditAll() {
+    setBillingDraft(addressToDraft(billingAddress));
+    setShippingDraft(addressToDraft(shippingAddress));
+    setAllContactDraft({
+      email: localEmail,
+      phone: localPhone,
+    });
+    if (paymentFee) {
+      startFeeEdit();
+    }
+    setEditingAll(true);
+  }
 
-  const heardFromLabel =
-  heardFromLabelMap[heardFrom] ||
-  heardFrom;
-
-  /* =========================================================
-     SEND INVOICE
-  ========================================================= */
-
-  async function sendInvoiceNow(
-    orderId: string
-  ) {
+  async function saveAllDetails() {
     try {
-      setSendingInvoice(true);
-
-      const res = await fetch(
-        "/api/admin/orders/send-invoice",
+      setSavingAll(true);
+      const pass = localStorage.getItem("admin_password") || "";
+      const response = await fetch(
+        `/api/admin/orders/${encodeURIComponent(order.id)}`,
         {
-          method: "POST",
+          method: "PATCH",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
+            "x-admin-password": pass,
           },
           body: JSON.stringify({
-            orderId,
+            billingAddress: billingDraft,
+            shippingAddress: shippingDraft,
+            contact: allContactDraft,
           }),
         }
       );
+      const data = await response.json();
 
-      const data = await res.json();
-
-      if (!data?.ok) {
-        throw new Error(
-          data?.error ||
-            "invoice_send_failed"
-        );
+      if (!response.ok || !data?.ok) {
+        throw new Error(data?.error || "order_update_failed");
       }
 
-      const now = new Date();
-
-      setLocalInvoice((prev: any) => ({
-        ...prev,
-        status: "sent",
-        sentAt: now,
-        lastSentAt: now,
-        orderNumber:
-          data?.orderNumber ??
-          prev?.orderNumber,
-        invoiceNumber:
-          data?.invoiceNumber ??
-          prev?.invoiceNumber,
-      }));
-    } catch (e) {
-      console.error(e);
-
-      alert("❌ Erreur envoi facture");
+      setLocalBillingAddress(billingDraft);
+      setLocalShippingAddress(shippingDraft);
+      setLocalEmail(allContactDraft.email);
+      setLocalPhone(allContactDraft.phone);
+      (order as any).billingAddress = billingDraft;
+      (order as any).shippingAddress = shippingDraft;
+      (order as any).email = allContactDraft.email;
+      (order as any).__email = allContactDraft.email;
+      if (editingFee) {
+        await saveManualFee();
+      }
+      setEditingAll(false);
+    } catch (error) {
+      console.error(error);
+      alert("Erreur mise à jour commande");
     } finally {
-      setSendingInvoice(false);
+      setSavingAll(false);
     }
+  }
+
+  async function copyAllDetails() {
+    await copyText(
+      [
+        formatAddressBlock(billingAddress) || "—",
+        "Adresse e-mail",
+        localEmail || "—",
+        "Téléphone",
+        phone,
+      ].join("\n")
+    );
+    setCopiedAll(true);
+    window.setTimeout(() => setCopiedAll(false), 1600);
+    onCopyAddress();
+  }
+
+  function renderGlobalAddressFields(
+    title: string,
+    draft: AddressDraft,
+    setDraft: React.Dispatch<React.SetStateAction<AddressDraft>>
+  ) {
+    return (
+      <div className="od-detail-card">
+        <div className="od-detail-title">{title}</div>
+        <div className="od-address-form">
+          {(
+            [
+              ["name", "Nom"],
+              ["address", "Adresse"],
+              ["postalCode", "Code postal"],
+              ["city", "Ville"],
+              ["country", "Pays"],
+            ] as Array<[keyof AddressDraft, string]>
+          ).map(([key, label]) => (
+            <label className="od-address-field" key={key}>
+              <span>{label}</span>
+              <input
+                value={draft[key]}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    [key]: event.target.value,
+                  }))
+                }
+              />
+            </label>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   function startAddressEdit(kind: AddressKind) {
@@ -1030,32 +1034,6 @@ const heardFromLabelMap: Record<string, string> = {
     );
   }
 
-  function invoiceHref(mode: "preview" | "download") {
-    return `/api/admin/orders/invoice?orderId=${encodeURIComponent(
-      order.id
-    )}&mode=${mode}`;
-  }
-
-  function renderInvoiceStatus() {
-    if (!invoice?.status) {
-      return "—";
-    }
-
-    switch (invoice.status) {
-      case "sending":
-        return "📤 Envoi...";
-
-      case "sent":
-        return "✅ Envoyée";
-
-      case "error":
-        return "❌ Erreur";
-
-      default:
-        return invoice.status;
-    }
-  }
-
   /* =========================================================
      RENDER
   ========================================================= */
@@ -1073,289 +1051,122 @@ const heardFromLabelMap: Record<string, string> = {
           <h2 className="od-section-title">
             Détail commande
           </h2>
+          <div className="od-global-actions">
+            {editingAll ? (
+              <>
+                <button
+                  className="btn-primary"
+                  disabled={savingAll}
+                  onClick={saveAllDetails}
+                >
+                  {savingAll ? "Enregistrement..." : "Enregistrer"}
+                </button>
+                <button
+                  className="btn-secondary"
+                  disabled={savingAll}
+                  onClick={() => {
+                    setEditingAll(false);
+                    setEditingFee(false);
+                  }}
+                >
+                  Annuler
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="btn-secondary" onClick={startEditAll}>
+                  Modifier
+                </button>
+                <button className="btn-secondary" onClick={copyAllDetails}>
+                  {copiedAll ? "Copié" : "Copier"}
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="od-section-body">
 
-          <div className="od-detail-grid">
-
-            <div className="od-detail-card">
-              <div className="od-detail-title">
-                Général
-              </div>
-
-              <div className="od-detail-line">
-                <span>Site</span>
-                <strong>{site}</strong>
-              </div>
-
-              <div className="od-detail-line">
-                <span>Média</span>
-                <strong>{heardFromLabel}</strong>
-              </div>
-
-              <div className="od-detail-line od-invoice-number-line">
-                <span>N° facture</span>
-                <strong>
-                  {invoiceNumber || "Création..."}
-                </strong>
-              </div>
-
-              <div className="od-detail-line od-detail-invoice">
-                <span>Facture</span>
-
-                <strong>
-                  <span className="od-invoice-status">
-                    {renderInvoiceStatus()}
-                  </span>
-
-                  <span className="od-invoice-actions">
-                    <a
-                      className="btn-secondary od-mini-action"
-                      href={invoiceHref("preview")}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Voir
-                    </a>
-
-                    <a
-                      className="btn-secondary od-mini-action"
-                      href={invoiceHref("download")}
-                    >
-                      PDF
-                    </a>
-
-                    <button
-                      className={
-                        invoice?.status ===
-                        "sent"
-                          ? "btn-secondary od-mini-action"
-                          : "btn-primary od-mini-action"
-                      }
-                      disabled={sendingInvoice}
-                      onClick={() =>
-                        sendInvoiceNow(order.id)
-                      }
-                    >
-                      {sendingInvoice
-                        ? "..."
-                        : invoice?.status ===
-                          "sent"
-                        ? "Renvoyer"
-                        : "Envoyer"}
-                    </button>
-                  </span>
-                </strong>
-              </div>
-
-              {heardFromOther && (
-                <div className="od-detail-line">
-                  <span>Détail</span>
-                  <strong>{heardFromOther}</strong>
-                </div>
-              )}
-            </div>
-
-            <div className="od-detail-card">
-              <div className="od-detail-title-row">
-                <div className="od-detail-title">
-                  Adresse facturation
-                </div>
-
-                {editingAddress !==
-                  "billingAddress" && (
-                  <button
-                    className="btn-secondary od-mini-action"
-                    onClick={() =>
-                      startAddressEdit(
-                        "billingAddress"
-                      )
-                    }
-                  >
-                    Modifier
-                  </button>
+          <div
+            className={`od-detail-grid${
+              editingAll ? " od-detail-grid-editing" : ""
+            }`}
+          >
+            {editingAll ? (
+              <>
+                {renderGlobalAddressFields(
+                  "Adresse facturation",
+                  billingDraft,
+                  setBillingDraft
                 )}
-              </div>
+                {renderGlobalAddressFields(
+                  "Adresse expédition",
+                  shippingDraft,
+                  setShippingDraft
+                )}
+                <div className="od-detail-card od-edit-contact-card">
+                  <div className="od-detail-title">Contact</div>
+                  <div className="od-address-form">
+                    <label className="od-address-field">
+                      <span>Adresse e-mail</span>
+                      <input
+                        value={allContactDraft.email}
+                        onChange={(event) =>
+                          setAllContactDraft((current) => ({
+                            ...current,
+                            email: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="od-address-field">
+                      <span>Téléphone</span>
+                      <input
+                        value={allContactDraft.phone}
+                        onChange={(event) =>
+                          setAllContactDraft((current) => ({
+                            ...current,
+                            phone: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+
+            <div className="od-detail-card">
+              <div className="od-detail-title">Adresse facturation</div>
 
               <div className="od-address-text">
-                {editingAddress ===
-                "billingAddress"
-                  ? renderAddressEditor(
-                      "billingAddress"
-                    )
-                  : formatAddressBlock(
-                      billingAddress
-                    ) || "—"}
+                {formatAddressBlock(billingAddress) || "—"}
               </div>
-
-              {editingAddress !==
-                "billingAddress" && (
-                <>
-                  <div className="od-contact-row">
-                    <span>Adresse e-mail</span>
-                    {editingContact ===
-                    "email" ? (
-                      <span className="od-contact-edit">
-                        <input
-                          value={contactDraft.email}
-                          onChange={(e) =>
-                            updateContactDraft(
-                              "email",
-                              e.target.value
-                            )
-                          }
-                        />
-
-                        <button
-                          className="btn-primary"
-                          disabled={savingContact}
-                          onClick={saveContact}
-                        >
-                          OK
-                        </button>
-
-                        <button
-                          className="btn-secondary"
-                          disabled={savingContact}
-                          onClick={() =>
-                            setEditingContact(null)
-                          }
-                        >
-                          Annuler
-                        </button>
-                      </span>
-                    ) : (
-                      <strong>
-                        {localEmail || "—"}
-                        <button
-                          className="btn-secondary od-mini-action"
-                          onClick={() =>
-                            startContactEdit(
-                              "email"
-                            )
-                          }
-                        >
-                          Modifier
-                        </button>
-                      </strong>
-                    )}
-                  </div>
-
-                  <div className="od-contact-row">
-                    <span>Téléphone</span>
-                    {editingContact ===
-                    "phone" ? (
-                      <span className="od-contact-edit">
-                        <input
-                          value={contactDraft.phone}
-                          onChange={(e) =>
-                            updateContactDraft(
-                              "phone",
-                              e.target.value
-                            )
-                          }
-                        />
-
-                        <button
-                          className="btn-primary"
-                          disabled={savingContact}
-                          onClick={saveContact}
-                        >
-                          OK
-                        </button>
-
-                        <button
-                          className="btn-secondary"
-                          disabled={savingContact}
-                          onClick={() =>
-                            setEditingContact(null)
-                          }
-                        >
-                          Annuler
-                        </button>
-                      </span>
-                    ) : (
-                      <strong>
-                        {phone}
-                        <button
-                          className="btn-secondary od-mini-action"
-                          onClick={() =>
-                            startContactEdit(
-                              "phone"
-                            )
-                          }
-                        >
-                          Modifier
-                        </button>
-                      </strong>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {editingAddress !==
-                "billingAddress" && (
-                <div className="od-inline-actions">
-                  <button
-                    className="btn-secondary"
-                    onClick={
-                      copyCurrentBillingAddress
-                    }
-                  >
-                    Copier
-                  </button>
-                </div>
-              )}
-
             </div>
 
             <div className="od-detail-card">
-              <div className="od-detail-title-row">
-                <div className="od-detail-title">
-                  Adresse expédition
-                </div>
-
-                {editingAddress !==
-                  "shippingAddress" && (
-                  <button
-                    className="btn-secondary od-mini-action"
-                    onClick={() =>
-                      startAddressEdit(
-                        "shippingAddress"
-                      )
-                    }
-                  >
-                    Modifier
-                  </button>
-                )}
-              </div>
+              <div className="od-detail-title">Adresse expédition</div>
 
               <div className="od-address-text">
-                {editingAddress ===
-                "shippingAddress"
-                  ? renderAddressEditor(
-                      "shippingAddress"
-                    )
-                  : formatAddressBlock(
-                      shippingAddress
-                    ) || "—"}
+                {formatAddressBlock(shippingAddress) || "—"}
               </div>
-
-              {editingAddress !==
-                "shippingAddress" && (
-                <div className="od-inline-actions">
-                  <button
-                    className="btn-secondary"
-                    onClick={
-                      copyCurrentShippingAddress
-                    }
-                  >
-                    Copier
-                  </button>
-                </div>
-              )}
             </div>
+
+            <div className="od-detail-card od-contact-card">
+              <div className="od-detail-title">Contact</div>
+
+              <div className="od-contact-row">
+                <span>Adresse e-mail</span>
+                <strong>{localEmail || "—"}</strong>
+              </div>
+              <div className="od-contact-row">
+                <span>Téléphone</span>
+                <strong>{phone}</strong>
+              </div>
+            </div>
+              </>
+            )}
 
           </div>
 
@@ -1419,12 +1230,34 @@ const heardFromLabelMap: Record<string, string> = {
                   const lineTotal =
                     price * qty;
 
+                  const image =
+                    it?.imageUrl ||
+                    it?.image ||
+                    it?.thumbnail ||
+                    it?.photo ||
+                    catalogImageForItem(it, name) ||
+                    "";
+
                   return (
-                    <tr key={idx}>
+                    <tr className="od-product-row" key={idx}>
 
                       <td>
-                        <div className="od-product-name">
-                          {name}
+                        <div className="od-product-cell">
+                          <div className="od-product-image">
+                            {image ? (
+                              <img src={image} alt="" />
+                            ) : (
+                              <FiPackage />
+                            )}
+                          </div>
+                          <div>
+                            <div className="od-product-name">
+                              {name}
+                            </div>
+                            <span className="od-product-sub">
+                              Article
+                            </span>
+                          </div>
                         </div>
                       </td>
 
@@ -1449,16 +1282,20 @@ const heardFromLabelMap: Record<string, string> = {
                 })
               )}
 
-              <tr className="od-shipping-row">
-                <td colSpan={5}>
-                  Expédition
-                </td>
-              </tr>
-
-              <tr>
+              <tr className="od-shipping-detail-row">
                 <td>
-                  <div className="od-product-name">
-                    {shippingMethodName}
+                  <div className="od-shipping-cell">
+                    <div className="od-shipping-icon">
+                      <FiTruck />
+                    </div>
+                    <div>
+                      <div className="od-product-name">
+                        {shippingMethodName}
+                      </div>
+                      <span className="od-product-sub">
+                        Expédition
+                      </span>
+                    </div>
                   </div>
                 </td>
 
@@ -1580,33 +1417,9 @@ const heardFromLabelMap: Record<string, string> = {
                       inputMode="decimal"
                       placeholder="0,00"
                     />
-
-                    <button
-                      className="btn-primary"
-                      disabled={savingFee}
-                      onClick={saveManualFee}
-                    >
-                      OK
-                    </button>
-
-                    <button
-                      className="btn-secondary"
-                      disabled={savingFee}
-                      onClick={() =>
-                        setEditingFee(false)
-                      }
-                    >
-                      Annuler
-                    </button>
                   </span>
                 ) : paymentFee ? (
                   <span className="od-total-inline-action">
-                    <button
-                      className="btn-secondary"
-                      onClick={startFeeEdit}
-                    >
-                      Modifier
-                    </button>
                     <span className="od-fee-amount">
                       -{moneyEUR(paymentFee.amount)}
                     </span>
@@ -1622,12 +1435,6 @@ const heardFromLabelMap: Record<string, string> = {
                         {detectingFee
                           ? "Recherche..."
                           : "Récupérer"}
-                      </button>
-                      <button
-                        className="btn-secondary"
-                        onClick={startFeeEdit}
-                      >
-                        Saisir
                       </button>
                     </span>
                   )}

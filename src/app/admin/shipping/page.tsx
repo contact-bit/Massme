@@ -102,6 +102,9 @@ export default function ShippingAdminPage() {
   const [savingOrder, setSavingOrder] =
     useState(false);
 
+  const [togglingId, setTogglingId] =
+    useState<string | null>(null);
+
   /* =========================================================
      LOAD
   ========================================================= */
@@ -210,6 +213,48 @@ export default function ShippingAdminPage() {
     );
 
     reload();
+  }
+
+  async function handleToggleActive(
+    method: ShippingMethod
+  ) {
+    setTogglingId(method.id);
+
+    try {
+      const res = await fetch(
+        `/api/admin/shipping-methods/${method.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            isActive: !method.isActive,
+          }),
+        }
+      );
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok || !json.ok) {
+        throw new Error();
+      }
+
+      setMethods((current) =>
+        current.map((item) =>
+          item.id === method.id
+            ? {
+                ...item,
+                isActive: !method.isActive,
+              }
+            : item
+        )
+      );
+    } catch {
+      alert("Impossible de modifier la visibilité de cette méthode.");
+    } finally {
+      setTogglingId(null);
+    }
   }
 
   async function handleReorder(
@@ -435,10 +480,6 @@ export default function ShippingAdminPage() {
 
             <div>
 
-              <div className="shipping-card-kicker">
-                Méthodes
-              </div>
-
               <h2>
                 Ordre d’affichage
               </h2>
@@ -499,6 +540,14 @@ export default function ShippingAdminPage() {
                   const isOpen =
                     editing?.id ===
                     method.id;
+
+                  const priceTTC =
+                    method.priceHT *
+                    (1 + method.vatRate / 100);
+
+                  const delay =
+                    method.delay?.[locale] ||
+                    "Délai non renseigné";
 
                   return (
                     <div
@@ -598,42 +647,73 @@ export default function ShippingAdminPage() {
                                   "Méthode"}
                               </h3>
 
-                              {!method.isActive && (
-                                <span className="shipping-off-badge">
-                                  OFF
-                                </span>
-                              )}
-
                             </div>
 
-                            <div className="shipping-method-type">
-
-                              {
-                                shippingTypeLabel(
-                                  method.type
-                                )
-                              }
-
-                            </div>
+                            <button
+                              type="button"
+                              className={`method-visibility-switch ${
+                                method.isActive
+                                  ? "is-active"
+                                  : ""
+                              }`}
+                              role="switch"
+                              aria-checked={method.isActive}
+                              disabled={togglingId === method.id}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleToggleActive(method);
+                              }}
+                            >
+                              <span className="method-visibility-switch-text">
+                                <strong>Visible sur la boutique</strong>
+                                <small>
+                                  {togglingId === method.id
+                                    ? "Enregistrement..."
+                                    : method.isActive
+                                    ? "Visible"
+                                    : "Masqué"}
+                                </small>
+                              </span>
+                              <span className="method-visibility-switch-track">
+                                <span />
+                              </span>
+                            </button>
 
                           </div>
 
+                          <p className="shipping-method-delay">
+                            {delay}
+                          </p>
+
                           <div className="shipping-method-bottom">
 
-                            <span>
-                              {
-                                method.priceHT
-                              }
-                              € HT
+                            <span className="method-detail">
+                              <small>Type</small>
+                              <strong>{shippingTypeLabel(method.type)}</strong>
                             </span>
 
-                            <span>
-                              TVA{" "}
-                              {
-                                method.vatRate
-                              }
-                              %
+                            <span className="method-detail">
+                              <small>Prix HT</small>
+                              <strong>{method.priceHT.toFixed(2)} €</strong>
                             </span>
+
+                            <span className="method-detail">
+                              <small>TVA</small>
+                              <strong>{method.vatRate} %</strong>
+                            </span>
+
+                            <span className="method-detail">
+                              <small>Prix TTC</small>
+                              <strong>{priceTTC.toFixed(2)} €</strong>
+                            </span>
+
+                            {method.type === "relay" &&
+                              method.relayProvider && (
+                                <span className="method-detail">
+                                  <small>Réseau relais</small>
+                                  <strong>{method.relayProvider}</strong>
+                                </span>
+                              )}
 
                           </div>
 

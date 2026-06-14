@@ -1606,25 +1606,19 @@ html[data-admin-theme="light"] .log-doc-icon-btn:hover svg {
 }
 
 html[data-admin-theme="light"] .log-ship-btn {
-  border-color: rgba(21,128,61,.34) !important;
-  background:
-    linear-gradient(
-      180deg,
-      #ecfdf3,
-      #bbf7d0
-    ) !important;
-  color: #14532d !important;
-  -webkit-text-fill-color: #14532d !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.94),
-    0 4px 10px rgba(21,128,61,.1) !important;
+  border-color: rgba(3,105,161,.34) !important;
+  background: linear-gradient(135deg, #1596c8, #2563eb) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: 0 5px 14px rgba(37,99,235,.18) !important;
 }
 
 html[data-admin-theme="light"] .log-ship-btn:hover:not(:disabled) {
-  border-color: rgba(21,128,61,.5) !important;
-  background: linear-gradient(180deg, #dcfce7, #86efac) !important;
-  color: #14532d !important;
-  -webkit-text-fill-color: #14532d !important;
+  border-color: rgba(3,105,161,.48) !important;
+  background: linear-gradient(135deg, #0e8aba, #1d4ed8) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: 0 8px 18px rgba(37,99,235,.24) !important;
 }
 
 /* ORDER DETAILS - POLISHED LIGHT SURFACES */
@@ -1797,6 +1791,74 @@ html[data-admin-theme="light"] .reviews-create-toggle.active {
   background: linear-gradient(180deg, #d9f0fa, #a9d9ed) !important;
   color: #034f70 !important;
   -webkit-text-fill-color: #034f70 !important;
+}
+
+/* REVIEWS SETTINGS CONTENT - LIGHT MODE */
+html[data-admin-theme="light"] .reviews-switch {
+  border-color: rgba(8,126,174,.16) !important;
+  background: rgba(255,255,255,.58) !important;
+}
+
+html[data-admin-theme="light"] .reviews-switch-content strong {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+html[data-admin-theme="light"] .reviews-switch-content span {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+html[data-admin-theme="light"] .reviews-switch-ui {
+  border: 1px solid rgba(71,85,105,.22) !important;
+  background: #cbd5e1 !important;
+}
+
+html[data-admin-theme="light"] .reviews-switch input:checked + .reviews-switch-ui {
+  border-color: rgba(3,105,161,.34) !important;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb) !important;
+}
+
+html[data-admin-theme="light"] .reviews-chip {
+  border-color: rgba(8,126,174,.18) !important;
+  background: linear-gradient(180deg, #fff, #e8f3f9) !important;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  box-shadow: none !important;
+}
+
+html[data-admin-theme="light"] .reviews-chip:hover {
+  border-color: rgba(8,126,174,.32) !important;
+  background: linear-gradient(180deg, #f0f9ff, #d8edf7) !important;
+  color: #075f86 !important;
+  -webkit-text-fill-color: #075f86 !important;
+}
+
+html[data-admin-theme="light"] .reviews-chip.active {
+  border-color: rgba(3,105,161,.42) !important;
+  background: linear-gradient(135deg, #1596c8, #2563eb) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: 0 6px 14px rgba(37,99,235,.18) !important;
+}
+
+html[data-admin-theme="light"] .reviews-custom {
+  border-color: rgba(8,126,174,.18) !important;
+  background: rgba(255,255,255,.62) !important;
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+}
+
+html[data-admin-theme="light"] .reviews-custom input {
+  border-color: rgba(8,126,174,.22) !important;
+  background: #fff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+html[data-admin-theme="light"] .reviews-message {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
 }
 
 /* REVIEWS OPEN DETAIL - LIGHT MODE */
@@ -2585,6 +2647,24 @@ html[data-admin-theme="light"] .products-btn-delete:hover {
   }
 }
 
+/* ORDERS TABLE - UNIFORM LARGER TYPOGRAPHY */
+.orders-table-v2 thead th {
+  font-size: 11.5px !important;
+}
+
+.orders-table-v2 tbody tr.row > td,
+.orders-table-v2 tbody tr.row :is(.cell-main, .cell-strong) {
+  font-size: 15px !important;
+}
+
+.orders-table-v2 tbody tr.row .cell-sub {
+  font-size: 12.5px !important;
+}
+
+.orders-table-v2 tbody tr.row .status-pill {
+  font-size: 12px !important;
+}
+
 /* EXPORT - COMPLETE LIGHT MODE */
 html[data-admin-theme="light"] .export-page {
   color: #111827 !important;
@@ -2799,4 +2879,23 @@ html[data-admin-theme="light"] .reviews-btn-send,
 html[data-admin-theme="light"] .reviews-btn-send:is(:hover, :active, :disabled) {
   color: #111827 !important;
   -webkit-text-fill-color: #111827 !important;
+}
+
+/* LOGISTICS TABLE - MATCH ORDERS TYPOGRAPHY */
+.log-table-header .log-th {
+  font-size: 11.5px !important;
+}
+
+.log-row-main,
+.log-row-main :is(.log-id, .log-main),
+.log-row-main > .log-col:not(.order):not(.status):not(.log-doc-col):not(.log-action-col) {
+  font-size: 15px !important;
+}
+
+.log-row-main :is(.log-sub, .log-email, .log-items-line) {
+  font-size: 12.5px !important;
+}
+
+.log-row-main :is(.status-pill, .log-status, .log-delay-pill, .log-ship-btn) {
+  font-size: 12px !important;
 }

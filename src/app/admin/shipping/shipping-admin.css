@@ -1020,6 +1020,112 @@
     1.6;
 }
 
+.shipping-method-delay {
+  margin: .1rem 0 0;
+  color: rgba(203,213,225,.72);
+  font-size: .74rem;
+  line-height: 1.45;
+}
+
+.method-detail {
+  display: grid;
+  gap: .12rem;
+  min-width: 82px;
+  padding: .42rem .55rem;
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: 7px;
+  background: rgba(255,255,255,.035);
+  line-height: 1.2;
+}
+
+.method-detail small {
+  color: rgba(148,163,184,.64);
+  font-size: .56rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.method-detail strong {
+  color: rgba(241,245,249,.9);
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.method-visibility-switch {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  flex: 0 0 auto;
+  padding: .38rem .42rem .38rem .58rem;
+  border: 1px solid rgba(148,163,184,.16);
+  border-radius: 9px;
+  background: rgba(148,163,184,.06);
+  color: rgba(226,232,240,.88);
+  cursor: pointer;
+}
+
+.method-visibility-switch:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+
+.method-visibility-switch-text {
+  display: grid;
+  gap: .05rem;
+  text-align: left;
+}
+
+.method-visibility-switch-text strong {
+  font-size: .6rem;
+  font-weight: 800;
+}
+
+.method-visibility-switch-text small {
+  color: rgba(148,163,184,.76);
+  font-size: .56rem;
+  font-weight: 700;
+}
+
+.method-visibility-switch-track {
+  position: relative;
+  width: 36px;
+  height: 21px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(148,163,184,.3);
+  transition: background .2s ease;
+}
+
+.method-visibility-switch-track span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,.24);
+  transition: transform .2s ease;
+}
+
+.method-visibility-switch.is-active {
+  border-color: rgba(34,197,94,.24);
+  background: rgba(34,197,94,.08);
+}
+
+.method-visibility-switch.is-active .method-visibility-switch-track {
+  background: #22c55e;
+}
+
+.method-visibility-switch.is-active .method-visibility-switch-track span {
+  transform: translateX(15px);
+}
+
+.method-visibility-switch.is-active .method-visibility-switch-text small {
+  color: #86efac;
+}
+
 /* =========================================================
    OFF BADGE
 ========================================================= */
@@ -1453,35 +1559,64 @@
 }
 
 .shipping-tabs {
-  display: grid;
-  grid-template-columns:
-    repeat(auto-fit, minmax(120px, 1fr));
-  gap: .5rem;
-  padding: .55rem;
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 8px;
-  background: rgba(13,17,23,.72);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .75rem;
 }
 
 .shipping-tab {
-  min-height: 46px;
-  padding: 0 .7rem;
-  gap: .55rem;
-  border-radius: 6px;
-  background: rgba(255,255,255,.025);
-  backdrop-filter: none;
+  min-height: 58px;
+  padding: 0 1rem;
+  gap: .75rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.04);
+  backdrop-filter: blur(14px);
+  box-shadow: none;
+}
+
+.shipping-tab:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0,208,255,.16);
+  background: rgba(255,255,255,.06);
+}
+
+.shipping-tab.active {
+  border-color: rgba(0,208,255,.24);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,208,255,.18),
+      rgba(37,99,235,.16)
+    );
+  color: white;
+  box-shadow: 0 16px 38px rgba(0,208,255,.12);
 }
 
 .shipping-tab-flag {
-  font-size: 1rem;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.shipping-tab-content {
+  align-items: flex-start;
+  gap: .12rem;
 }
 
 .shipping-tab-label {
-  font-size: .72rem;
+  font-size: .82rem;
+  font-weight: 800;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .shipping-tab-code {
-  font-size: .58rem;
+  margin-top: 0;
+  color: rgba(148,163,184,.72);
+  font-size: .68rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .shipping-create-section {
@@ -1617,8 +1752,25 @@
   }
 
   .shipping-tabs {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    gap: .7rem;
+  }
+
+  .shipping-tab {
+    width: auto;
+    min-width: calc(50% - .4rem);
+    flex: 1;
+  }
+
+  .shipping-method-top {
+    flex-direction: column;
+  }
+
+  .method-visibility-switch {
+    align-self: flex-start;
+  }
+
+  .method-detail {
+    flex: 1 1 calc(50% - .5rem);
   }
 
   .shipping-card,

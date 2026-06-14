@@ -51,20 +51,6 @@ function normalizeCountryCode(
     : fallback;
 }
 
-function providerLabel(
-  provider: PaymentMethod["provider"]
-) {
-  if (provider === "stripe") {
-    return "Carte bancaire";
-  }
-
-  if (provider === "paypal") {
-    return "PayPal";
-  }
-
-  return "Manuel";
-}
-
 /* =====================================================
    PAGE
 ===================================================== */
@@ -115,6 +101,14 @@ export default function PaymentsAdminPage() {
     setSavingOrder,
   ] =
     useState(false);
+
+  const [
+    togglingId,
+    setTogglingId,
+  ] =
+    useState<string | null>(
+      null
+    );
 
   /* =====================================================
      LOAD
@@ -230,6 +224,48 @@ export default function PaymentsAdminPage() {
     );
 
     reload();
+  }
+
+  async function handleToggleActive(
+    method: PaymentMethod
+  ) {
+    setTogglingId(method.id);
+
+    try {
+      const res = await fetch(
+        `/api/admin/payment-methods/${method.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            isActive: !method.isActive,
+          }),
+        }
+      );
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok || !json.ok) {
+        throw new Error();
+      }
+
+      setMethods((current) =>
+        current.map((item) =>
+          item.id === method.id
+            ? {
+                ...item,
+                isActive: !method.isActive,
+              }
+            : item
+        )
+      );
+    } catch {
+      alert("Impossible de modifier la visibilité de cette méthode.");
+    } finally {
+      setTogglingId(null);
+    }
   }
 
   async function handleReorder(
@@ -473,10 +509,6 @@ export default function PaymentsAdminPage() {
 
         <div className="pap-section-head">
 
-          <div className="pap-section-kicker">
-            Méthodes
-          </div>
-
           <h2>
             Ordre d’affichage
           </h2>
@@ -612,19 +644,36 @@ export default function PaymentsAdminPage() {
 
                             </div>
 
-                            {!method.isActive && (
-                              <div className="pap-off">
-                                OFF
-                              </div>
-                            )}
-
                           </div>
 
-                          <div className="pap-provider">
-                            {providerLabel(
-                              method.provider
-                            )}
-                          </div>
+                          <button
+                            type="button"
+                            className={`method-visibility-switch ${
+                              method.isActive
+                                ? "is-active"
+                                : ""
+                            }`}
+                            role="switch"
+                            aria-checked={method.isActive}
+                            disabled={togglingId === method.id}
+                            onClick={() =>
+                              handleToggleActive(method)
+                            }
+                          >
+                            <span className="method-visibility-switch-text">
+                              <strong>Visible sur la boutique</strong>
+                              <small>
+                                {togglingId === method.id
+                                  ? "Enregistrement..."
+                                  : method.isActive
+                                  ? "Visible"
+                                  : "Masqué"}
+                              </small>
+                            </span>
+                            <span className="method-visibility-switch-track">
+                              <span />
+                            </span>
+                          </button>
 
                         </div>
 
