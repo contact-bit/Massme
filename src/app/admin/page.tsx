@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   useCallback,
   useEffect,
@@ -26,15 +26,22 @@ import {
 } from "recharts";
 import {
   FiActivity,
+  FiAlertCircle,
   FiBarChart2,
+  FiCheckCircle,
+  FiChevronRight,
+  FiCreditCard,
   FiDownload,
   FiEye,
   FiEyeOff,
   FiGrid,
   FiMaximize2,
+  FiMessageSquare,
   FiMinimize2,
+  FiPackage,
   FiRefreshCw,
   FiSettings,
+  FiTruck,
   FiTrendingUp,
   FiX,
 } from "react-icons/fi";
@@ -45,9 +52,11 @@ type StatsResponse = {
   kpis: {
     productsCount: number;
     activeProducts: number;
+    incompleteProducts: number;
     paymentMethodsCount: number;
     activePaymentMethods: number;
     shippingMethodsCount: number;
+    activeShippingMethods: number;
     adminCountriesCount: number;
     reviewsCount: number;
     approvedReviews: number;
@@ -93,13 +102,14 @@ type RevenueChartType = "area" | "line" | "bar";
 type WidgetTone = "default" | "blue" | "cyan" | "green" | "orange" | "violet";
 type WidgetIntensity = "soft" | "normal" | "strong";
 type DashboardDensity = "compact" | "comfortable";
-type DashboardPreset = "essential" | "sales" | "operations" | "complete";
+type DashboardPreset = "today" | "sales" | "shipping" | "catalog";
 type WidgetStyle = {
   tone: WidgetTone;
   intensity: WidgetIntensity;
 };
 type WidgetId =
   | "alerts"
+  | "health"
   | "search"
   | "revenueYear"
   | "revenue7d"
@@ -131,7 +141,8 @@ const widgetGroups: Array<{
   {
     label: "Accès",
     widgets: [
-      { id: "alerts", label: "Alertes" },
+      { id: "alerts", label: "À faire aujourd’hui" },
+      { id: "health", label: "Santé de la boutique" },
       { id: "search", label: "Recherche commandes" },
       { id: "lastOrders", label: "Dernières commandes" },
     ],
@@ -174,7 +185,19 @@ const widgetGroups: Array<{
   },
 ];
 
-const defaultVisibleWidgets = widgetGroups.flatMap((group) =>
+const defaultVisibleWidgets: WidgetId[] = [
+  "alerts",
+  "health",
+  "revenueYear",
+  "paidOrders",
+  "aov",
+  "toPrepare",
+  "revenueChart",
+  "orderStatus",
+  "lastOrders",
+];
+
+const allWidgets = widgetGroups.flatMap((group) =>
   group.widgets.map((widget) => widget.id)
 );
 
@@ -184,18 +207,9 @@ const dashboardPresets: Array<{
   widgets: WidgetId[];
 }> = [
   {
-    id: "essential",
-    label: "Essentiel",
-    widgets: [
-      "alerts",
-      "search",
-      "revenueYear",
-      "orders",
-      "pendingOrders",
-      "revenueChart",
-      "toPrepare",
-      "lastOrders",
-    ],
+    id: "today",
+    label: "Aujourd’hui",
+    widgets: defaultVisibleWidgets,
   },
   {
     id: "sales",
@@ -216,10 +230,11 @@ const dashboardPresets: Array<{
     ],
   },
   {
-    id: "operations",
-    label: "Opérations",
+    id: "shipping",
+    label: "Expédition",
     widgets: [
       "alerts",
+      "health",
       "search",
       "orders",
       "pendingOrders",
@@ -233,9 +248,22 @@ const dashboardPresets: Array<{
     ],
   },
   {
-    id: "complete",
-    label: "Complet",
-    widgets: defaultVisibleWidgets,
+    id: "catalog",
+    label: "Catalogue",
+    widgets: [
+      "alerts",
+      "health",
+      "search",
+      "products",
+      "activeProducts",
+      "payments",
+      "activePayments",
+      "shipping",
+      "countries",
+      "reviews",
+      "approvedReviews",
+      "pendingReviews",
+    ],
   },
 ];
 
@@ -320,6 +348,7 @@ function MetricCard({
   detail,
   tone = "blue",
   delta,
+  href,
   control,
   className = "",
 }: {
@@ -348,8 +377,23 @@ function MetricCard({
     </>
   );
 
+  const metricClassName =
+    `dash-pro-metric tone-${tone} ${className}`;
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={metricClassName}
+        aria-label={`${label} : ${value}`}
+      >
+        {content}
+      </Link>
+    );
+  }
+
   return (
-    <article className={`dash-pro-metric tone-${tone} ${className}`}>
+    <article className={metricClassName}>
       {content}
     </article>
   );
@@ -465,6 +509,15 @@ function SectionHead({ title }: { title: string }) {
   );
 }
 
+type DashboardAction = {
+  title: string;
+  detail: string;
+  href: string;
+  label: string;
+  tone: "danger" | "warn" | "info";
+  icon: ReactNode;
+};
+
 export default function AdminDashboardPage() {
   const [data, setData] =
     useState<StatsResponse | null>(null);
@@ -541,6 +594,9 @@ export default function AdminDashboardPage() {
     const savedDensity = localStorage.getItem(
       "dashboard_density"
     );
+    const layoutVersion = localStorage.getItem(
+      "dashboard_layout_version"
+    );
     const valid = new Set(
       periodOptions.map((option) => option.value)
     );
@@ -561,13 +617,20 @@ export default function AdminDashboardPage() {
     ) {
       setChartType(savedChartType);
     }
-    if (savedWidgets) {
+    if (layoutVersion !== "3") {
+      setVisibleWidgets(defaultVisibleWidgets);
+      localStorage.setItem(
+        "dashboard_visible_widgets",
+        JSON.stringify(defaultVisibleWidgets)
+      );
+      localStorage.setItem("dashboard_layout_version", "3");
+    } else if (savedWidgets) {
       try {
         const parsed = JSON.parse(savedWidgets);
         if (Array.isArray(parsed)) {
           setVisibleWidgets(
             parsed.filter((id): id is WidgetId =>
-              defaultVisibleWidgets.includes(id as WidgetId)
+              allWidgets.includes(id as WidgetId)
             )
           );
         }
@@ -623,7 +686,7 @@ export default function AdminDashboardPage() {
   }
 
   function setAllWidgets(visible: boolean) {
-    const next = visible ? defaultVisibleWidgets : [];
+    const next = visible ? allWidgets : [];
     setVisibleWidgets(next);
     localStorage.setItem(
       "dashboard_visible_widgets",
@@ -704,11 +767,12 @@ export default function AdminDashboardPage() {
 
   const chartTooltip = useMemo(
     () => ({
-      background: "#07111f",
-      border: "1px solid rgba(148,163,184,.18)",
+      background: "var(--admin-tooltip-bg)",
+      border: "1px solid var(--admin-tooltip-border)",
       borderRadius: 12,
       fontSize: 12,
-      color: "#fff",
+      color: "var(--admin-tooltip-text)",
+      boxShadow: "var(--admin-tooltip-shadow)",
     }),
     []
   );
@@ -736,10 +800,99 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const { kpis: k, lastOrders, alerts } = data;
+  const { kpis: k, lastOrders } = data;
   const primaryStats = data.periods[primaryPeriod];
   const secondaryStats = data.periods[secondaryPeriod];
   const chartStats = data.periods[chartPeriod];
+  const dashboardActions: DashboardAction[] = [
+    ...(k.toPrepareCount > 0
+      ? [{
+          title: `${k.toPrepareCount} commande${k.toPrepareCount > 1 ? "s" : ""} à préparer`,
+          detail: "Ces commandes sont prêtes à être traitées.",
+          href: "/admin/logistics",
+          label: "Préparer",
+          tone: "warn" as const,
+          icon: <FiPackage />,
+        }]
+      : []),
+    ...(chartStats.pendingCount > 0
+      ? [{
+          title: `${chartStats.pendingCount} paiement${chartStats.pendingCount > 1 ? "s" : ""} en attente`,
+          detail: `Sur la période ${periodLabel(chartPeriod).toLowerCase()}.`,
+          href: "/admin/orders",
+          label: "Vérifier",
+          tone: "warn" as const,
+          icon: <FiCreditCard />,
+        }]
+      : []),
+    ...(k.pendingReviews > 0
+      ? [{
+          title: `${k.pendingReviews} avis à modérer`,
+          detail: "Publiez ou refusez les avis en attente.",
+          href: "/admin/reviews",
+          label: "Modérer",
+          tone: "info" as const,
+          icon: <FiMessageSquare />,
+        }]
+      : []),
+    ...(k.incompleteProducts > 0
+      ? [{
+          title: `${k.incompleteProducts} produit${k.incompleteProducts > 1 ? "s" : ""} à compléter`,
+          detail: "Titre, image ou prix manquant.",
+          href: "/admin/products",
+          label: "Corriger",
+          tone: "danger" as const,
+          icon: <FiAlertCircle />,
+        }]
+      : []),
+    ...(k.activePaymentMethods === 0
+      ? [{
+          title: "Aucun paiement actif",
+          detail: "Les clients ne peuvent pas finaliser leur commande.",
+          href: "/admin/payment-methods",
+          label: "Configurer",
+          tone: "danger" as const,
+          icon: <FiCreditCard />,
+        }]
+      : []),
+    ...(k.activeShippingMethods === 0
+      ? [{
+          title: "Aucune livraison active",
+          detail: "Activez au moins une méthode de livraison.",
+          href: "/admin/shipping",
+          label: "Configurer",
+          tone: "danger" as const,
+          icon: <FiTruck />,
+        }]
+      : []),
+  ];
+  const healthChecks = [
+    {
+      label: "Produit actif",
+      valid: k.activeProducts > 0,
+      href: "/admin/products",
+    },
+    {
+      label: "Paiement actif",
+      valid: k.activePaymentMethods > 0,
+      href: "/admin/payment-methods",
+    },
+    {
+      label: "Livraison active",
+      valid: k.activeShippingMethods > 0,
+      href: "/admin/shipping",
+    },
+    {
+      label: "Catalogue complet",
+      valid: k.productsCount > 0 && k.incompleteProducts === 0,
+      href: "/admin/products",
+    },
+  ];
+  const healthScore = Math.round(
+    (healthChecks.filter((check) => check.valid).length /
+      healthChecks.length) *
+      100
+  );
 
   const operations = [
     {
@@ -769,9 +922,9 @@ export default function AdminDashboardPage() {
     showWidget("orders") ||
     showWidget("paidOrders") ||
     showWidget("pendingOrders") ||
-    showWidget("aov");
+    showWidget("aov") ||
+    showWidget("toPrepare");
   const showOperations =
-    showWidget("toPrepare") ||
     showWidget("shipped") ||
     showWidget("operationsProgress") ||
     showWidget("operationsChart");
@@ -790,11 +943,6 @@ export default function AdminDashboardPage() {
   return (
     <div className={`admin-page dash-pro-page density-${density}`}>
       <header className="dash-pro-hero">
-        <div className="dash-pro-title">
-          <h1>Dashboard</h1>
-          <span>{visibleWidgets.length} widgets</span>
-        </div>
-
         <div className="dash-pro-actions">
           <PeriodSelect
             compact
@@ -848,7 +996,7 @@ export default function AdminDashboardPage() {
             <div className="dash-pro-widget-panel-title">
               <FiGrid />
               <strong>Personnalisation</strong>
-              <span>{visibleWidgets.length}/{defaultVisibleWidgets.length}</span>
+              <span>{visibleWidgets.length}/{allWidgets.length}</span>
             </div>
             <div>
               <button type="button" onClick={() => setAllWidgets(true)}>
@@ -955,29 +1103,90 @@ export default function AdminDashboardPage() {
         <section className="dash-pro-empty-dashboard">
           <FiGrid />
           <strong>Dashboard vide</strong>
-          <button type="button" onClick={() => applyPreset("essential")}>
+          <button type="button" onClick={() => applyPreset("today")}>
             Afficher l’essentiel
           </button>
         </section>
       )}
 
-      {hasVisibleWidgets && alerts.length > 0 && showWidget("alerts") && (
-        <section className="dash-pro-alerts">
-          {alerts.map((alert, index) => (
-            <article
-              key={`${alert.title}-${index}`}
-              className={`dash-pro-alert tone-${alert.tone} ${widgetClass("alerts")}`}
-            >
-              <strong>{alert.title}</strong>
-              <p>{alert.desc}</p>
-            </article>
-          ))}
+      {hasVisibleWidgets && (showWidget("alerts") || showWidget("health")) && (
+        <section
+          className={`dash-command-center ${
+            showWidget("alerts") !== showWidget("health") ? "single" : ""
+          }`}
+        >
+          {showWidget("alerts") && (
+          <article className={`dash-action-panel ${dashboardActions.length === 0 ? "is-clear" : ""} ${widgetClass("alerts")}`}>
+            <div className="dash-command-head">
+              <div>
+                <span className="dash-command-kicker">À faire aujourd’hui</span>
+              </div>
+              <strong>{dashboardActions.length}</strong>
+            </div>
+
+            <div className="dash-action-list">
+              {dashboardActions.length === 0 ? (
+                <div className="dash-action-empty">
+                  <FiCheckCircle />
+                  <div>
+                    <strong>Aucune action urgente</strong>
+                  </div>
+                </div>
+              ) : (
+                dashboardActions.slice(0, 5).map((action) => (
+                  <Link
+                    href={action.href}
+                    className={`dash-action-row tone-${action.tone}`}
+                    key={`${action.href}-${action.title}`}
+                  >
+                    <span className="dash-action-icon">{action.icon}</span>
+                    <div>
+                      <strong>{action.title}</strong>
+                      <span>{action.detail}</span>
+                    </div>
+                    <b>{action.label}</b>
+                    <FiChevronRight />
+                  </Link>
+                ))
+              )}
+            </div>
+          </article>
+          )}
+
+          {showWidget("health") && (
+          <article className={`dash-health-panel ${widgetClass("health")}`}>
+            <div className="dash-health-score">
+              <div
+                className="dash-health-ring"
+                style={{ "--health-score": `${healthScore * 3.6}deg` } as CSSProperties}
+              >
+                <strong>{healthScore}%</strong>
+              </div>
+              <div>
+                <span className="dash-command-kicker">Santé de la boutique</span>
+                <h2>{healthScore === 100 ? "Prête à vendre" : "Configuration à terminer"}</h2>
+              </div>
+            </div>
+            <div className="dash-health-checks">
+              {healthChecks.map((check) => (
+                <Link
+                  href={check.href}
+                  className={check.valid ? "is-valid" : "is-missing"}
+                  key={check.label}
+                >
+                  {check.valid ? <FiCheckCircle /> : <FiAlertCircle />}
+                  <span>{check.label}</span>
+                  {!check.valid && <b>Corriger</b>}
+                </Link>
+              ))}
+            </div>
+          </article>
+          )}
         </section>
       )}
 
       {showWidget("search") && (
         <section className="dash-pro-section dash-pro-search-section">
-          <SectionHead title="Recherche" />
           <article className={`dash-pro-panel dash-pro-search-panel ${widgetClass("search")}`}>
             <DashboardOrdersSearch embedded />
           </article>
@@ -1065,6 +1274,16 @@ export default function AdminDashboardPage() {
             detail={periodLabel(chartPeriod)}
             tone="violet"
             className={widgetClass("aov")}
+          />
+        )}
+        {showWidget("toPrepare") && (
+          <MetricCard
+            label="À préparer"
+            value={k.toPrepareCount}
+            detail="Commandes"
+            tone="orange"
+            className={widgetClass("toPrepare")}
+            href="/admin/logistics"
           />
         )}
       </section>
@@ -1224,16 +1443,6 @@ export default function AdminDashboardPage() {
         <section className="dash-pro-section">
           <SectionHead title="Opérations" />
           <div className="dash-pro-metrics">
-            {showWidget("toPrepare") && (
-              <MetricCard
-                label="À préparer"
-                value={k.toPrepareCount}
-                detail="Commandes"
-                tone="orange"
-                className={widgetClass("toPrepare")}
-                href="/admin/logistics"
-              />
-            )}
             {showWidget("shipped") && (
               <MetricCard
                 label="Expédiées"

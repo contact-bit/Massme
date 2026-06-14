@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { useSearchParams } from "next/navigation";
+import { FiSearch, FiX } from "react-icons/fi";
 
 import { useOrders } from "./orders/hooks/useOrders";
 import { StatusPill } from "./orders/components/StatusPill";
@@ -222,18 +223,40 @@ export default function DashboardOrdersSearch({
 
       {/* TOOLBAR */}
       <div className="dash-orders-toolbar">
-        {/* SEARCH */}
-        <input
-          className="dash-orders-search"
-          placeholder="Commande, facture, email, ville, produit..."
-          value={q}
-          onChange={(e) =>
-            setQ(
-              e.target.value
-            )
-          }
-        />
-
+        <div className={`dash-orders-searchbox ${hasSearch ? "has-value" : ""}`}>
+          <FiSearch aria-hidden="true" />
+          <input
+            className="dash-orders-search"
+            type="search"
+            aria-label="Rechercher une commande"
+            placeholder="N° commande, client, email, ville ou produit"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setQ("");
+              }
+            }}
+          />
+          <span className="dash-orders-search-status" aria-live="polite">
+            {loading && hasSearch
+              ? "Recherche…"
+              : hasSearch
+                ? `${filtered.length} résultat${filtered.length > 1 ? "s" : ""}`
+                : `${orders.length} commande${orders.length > 1 ? "s" : ""}`}
+          </span>
+          {hasSearch && (
+            <button
+              type="button"
+              className="dash-orders-search-clear"
+              aria-label="Effacer la recherche"
+              title="Effacer la recherche"
+              onClick={() => setQ("")}
+            >
+              <FiX />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* TABLE */}

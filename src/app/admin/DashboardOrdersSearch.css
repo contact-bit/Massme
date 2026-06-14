@@ -3,11 +3,7 @@
 ========================================================= */
 
 .dash-orders-toolbar {
-  display: flex;
-  align-items: flex-start;
-
-  gap: 8px;
-
+  width: 100%;
   margin-bottom: 10px;
 }
 
@@ -15,37 +11,73 @@
    SEARCH
 ========================================================= */
 
-.dash-orders-search {
+.dash-orders-searchbox {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  max-width: 420px;
-  height: 38px;
+  min-height: 48px;
+  padding: 0 8px 0 14px;
+  border: 1px solid var(--admin-line-strong);
+  border-radius: 12px;
+  background: var(--admin-surface-soft);
+  color: var(--admin-text-muted);
+}
 
-  padding: 0 12px;
+.dash-orders-searchbox:focus-within {
+  border-color: var(--admin-accent);
+  background: var(--admin-surface-raised);
+}
 
-  border-radius: 8px;
+.dash-orders-searchbox > svg {
+  font-size: 17px;
+  color: var(--admin-accent);
+}
 
-  border: 1px solid
-    rgba(255, 255, 255, 0.075);
-
-  background: rgba(2,6,23,.24);
-
-  color: white;
-
-  font-size: 13px;
-
+.dash-orders-search {
+  min-width: 0;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--admin-text-strong);
+  font-size: .78rem;
+  font-weight: 700;
   outline: none;
+  appearance: none;
+}
 
-  transition: 0.2s;
+.dash-orders-search::-webkit-search-cancel-button {
+  display: none;
 }
 
 .dash-orders-search::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--admin-text-muted);
+  font-weight: 650;
 }
 
-.dash-orders-search:focus {
-  border-color: rgba(99, 102, 241, 0.7);
+.dash-orders-search-status {
+  padding: .3rem .5rem;
+  border-radius: 7px;
+  background: rgba(56,189,248,.1);
+  color: var(--admin-accent);
+  font-size: .6rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
 
-  background: rgba(255, 255, 255, 0.05);
+.dash-orders-search-clear {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--admin-line);
+  border-radius: 8px;
+  background: var(--admin-surface-raised);
+  color: var(--admin-text-muted);
+  cursor: pointer;
 }
 
 /* =========================================================
@@ -128,11 +160,23 @@
 ========================================================= */
 
 @media (max-width: 980px) {
-  .dash-orders-search {
-    max-width: 100%;
-  }
-
   .dash-search-table {
     min-width: 900px;
+  }
+}
+
+@media (max-width: 560px) {
+  .dash-orders-searchbox {
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    min-height: 46px;
+    padding-left: 11px;
+  }
+
+  .dash-orders-search {
+    font-size: .7rem;
+  }
+
+  .dash-orders-search-status {
+    display: none;
   }
 }

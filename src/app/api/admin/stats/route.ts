@@ -203,8 +203,33 @@ export async function GET() {
 
     const activeProducts =
       products.filter(
-        (p: any) => p?.active === true
+        (p: any) => p?.isActive === true
       ).length;
+
+    const incompleteProducts =
+      products.filter((p: any) => {
+        const hasName = Boolean(
+          typeof p?.name === "string"
+            ? p.name.trim()
+            : p?.name?.fr || p?.name?.en || p?.title
+        );
+        const hasImage = Boolean(
+          p?.imageUrl ||
+          p?.image ||
+          p?.images?.[0]?.url ||
+          p?.images?.[0]
+        );
+        const hasPrice =
+          typeof p?.priceTTC === "number" ||
+          typeof p?.price === "number" ||
+          typeof p?.price?.eur === "number" ||
+          Object.values(p?.pricesByMarket || {}).some(
+            (price) => typeof price === "number"
+          ) ||
+          typeof p?.basePrice === "number";
+
+        return !hasName || !hasImage || !hasPrice;
+      }).length;
 
     /* =====================================================
        ADMIN CONFIG
@@ -245,6 +270,11 @@ export async function GET() {
 
     const shippingMethodsCount =
       shippingMethods.length;
+
+    const activeShippingMethods =
+      shippingMethods.filter(
+        (m: any) => m?.isActive !== false
+      ).length;
 
     const adminCountriesCount =
       COUNTRIES.length;
@@ -738,10 +768,12 @@ export async function GET() {
       kpis: {
         productsCount,
         activeProducts,
+        incompleteProducts,
 
         paymentMethodsCount,
         activePaymentMethods,
         shippingMethodsCount,
+        activeShippingMethods,
         adminCountriesCount,
         reviewsCount,
         approvedReviews,
