@@ -681,6 +681,38 @@ html[data-admin-theme="light"] .admin-font-root .products-page .products-filters
   white-space: nowrap;
 }
 
+.products-meta .products-market-flags {
+  gap: .24rem;
+  font-size: .9rem;
+  letter-spacing: .01em;
+}
+
+.products-meta .products-market-flag {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity .18s ease, filter .18s ease, transform .18s ease;
+}
+
+.products-meta .products-market-flag:hover {
+  transform: translateY(-1px);
+}
+
+.products-meta .products-market-flag.is-inactive {
+  filter: grayscale(1);
+  opacity: .32;
+}
+
+.products-meta .products-market-flag:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
 html[data-admin-theme="light"] .products-reference {
   color: #64748b;
 }

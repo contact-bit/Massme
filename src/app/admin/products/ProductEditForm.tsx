@@ -25,6 +25,13 @@ type VatConfig = {
   rate: string;
 };
 
+type MarketSettings = Record<
+  Market,
+  {
+    isActive: boolean;
+  }
+>;
+
 type ProductVariant = {
   id: string;
   productCode: string;
@@ -163,6 +170,8 @@ export default function ProductEditForm({
   const [vatByMarket, setVatByMarket] = useState<
     Record<Market, VatConfig>
   >({} as any);
+  const [marketSettings, setMarketSettings] =
+    useState<MarketSettings>({} as any);
 
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [addons, setAddons] = useState<ProductAddon[]>([]);
@@ -180,6 +189,7 @@ export default function ProductEditForm({
         name,
         description,
         markets,
+        marketSettings,
         pricesByMarket,
         vatByMarket,
         variants,
@@ -193,6 +203,7 @@ export default function ProductEditForm({
       name,
       description,
       markets,
+      marketSettings,
       pricesByMarket,
       vatByMarket,
       variants,
@@ -235,6 +246,7 @@ export default function ProductEditForm({
 
     const p: any = {};
     const v: any = {};
+    const settings: any = {};
 
     MARKETS.forEach(({ code }) => {
       p[code] = String(product.pricesByMarket?.[code] ?? "");
@@ -242,10 +254,14 @@ export default function ProductEditForm({
         enabled: product.vatByMarket?.[code]?.enabled ?? false,
         rate: String(product.vatByMarket?.[code]?.rate ?? ""),
       };
+      settings[code] = {
+        isActive: product.marketSettings?.[code]?.isActive !== false,
+      };
     });
 
     setPricesByMarket(p);
     setVatByMarket(v);
+    setMarketSettings(settings);
 
     // Variantes
     setVariants(
@@ -387,6 +403,14 @@ export default function ProductEditForm({
           weightKg,
           deliveryPackageCount,
           markets,
+          marketSettings: Object.fromEntries(
+            markets.map((m) => [
+              m,
+              {
+                isActive: marketSettings[m]?.isActive !== false,
+              },
+            ])
+          ),
           pricesByMarket: Object.fromEntries(
             markets.map((m) => [m, toNumber(pricesByMarket[m])])
           ),
@@ -1250,7 +1274,8 @@ export default function ProductEditForm({
         <div className="pf-table">
           <div className="pf-row pf-head">
             <span>Pays</span>
-            <span>Vente</span>
+            <span>Configuré</span>
+            <span>Visible</span>
             <span>Prix hors taxe</span>
             <span>Taxe</span>
             <span>TVA</span>
@@ -1263,6 +1288,8 @@ export default function ProductEditForm({
           ).map((m) => {
             const active = markets.includes(m.code);
             const vat = vatByMarket[m.code];
+            const marketActive =
+              marketSettings[m.code]?.isActive !== false;
 
             return (
               <div key={m.code} className="pf-row">
@@ -1273,11 +1300,29 @@ export default function ProductEditForm({
                 <ToggleButton
                   active={active}
                   activeLabel="En vente"
-                  inactiveLabel="Masqué"
+                  inactiveLabel="Non vendu"
                   onToggle={() =>
                     setMarkets((p) =>
                       active ? p.filter((x) => x !== m.code) : [...p, m.code]
                     )
+                  }
+                />
+
+                <ToggleButton
+                  disabled={!active}
+                  active={active && marketActive}
+                  activeLabel="Visible"
+                  inactiveLabel="Masqué"
+                  onToggle={() =>
+                    setMarketSettings((p) => ({
+                      ...p,
+                      [m.code]: {
+                        ...(p[m.code] || {
+                          isActive: true,
+                        }),
+                        isActive: !marketActive,
+                      },
+                    }))
                   }
                 />
 

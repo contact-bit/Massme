@@ -16,7 +16,9 @@ type Props = {
     currentPage: number;
     totalPages: number;
     paged: Order[];
-    setPage: (fn: (p: number) => number) => void;
+    setPage: React.Dispatch<
+      React.SetStateAction<number>
+    >;
   };
 
   selection: {

@@ -5,10 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
-  LOGO_URL,
   TRANSLATIONS,
   generateNavbarLinks,
   generateDropdowns,
+  LOGO_URL,
 } from "./navbar.data";
 
 import type {
@@ -28,9 +28,6 @@ interface NavbarDesktopProps {
 export default function NavbarDesktop({
   locale,
 }: NavbarDesktopProps) {
-  const pathname =
-    usePathname();
-
   const t =
     TRANSLATIONS[locale];
 
@@ -42,6 +39,14 @@ export default function NavbarDesktop({
   const dropdowns =
     generateDropdowns(
       locale
+    );
+
+  const primaryDropdowns =
+    dropdowns.filter(
+      (dropdown) =>
+        dropdown.href === links.pathologies ||
+        dropdown.href === links.operation ||
+        dropdown.href === links.recovery
     );
 
   return (
@@ -69,56 +74,47 @@ export default function NavbarDesktop({
       ========================================= */}
 
       <div className="vm-navbar-desktop__center">
-        <NavLink
-          href={links.home}
+        <nav
+          className="vm-navbar-desktop__primary-row"
+          aria-label="Navigation principale"
         >
-          {t.nav.home}
-        </NavLink>
+          <NavLink
+            href={links.home}
+          >
+            {t.nav.home}
+          </NavLink>
 
-        {dropdowns.map(
-          (dropdown) => (
-            <NavbarDropdown
-              key={dropdown.label}
-              label={
-                dropdown.label
-              }
-              href={
-                dropdown.href
-              }
-            >
-              {dropdown.items.map(
-                (item) => (
-                  <DropdownLink
-                    key={item.href}
-                    href={
-                      item.href
-                    }
-                  >
-                    {item.label}
-                  </DropdownLink>
-                )
-              )}
-            </NavbarDropdown>
-          )
-        )}
+          {primaryDropdowns.map(
+            (dropdown) => (
+              <NavbarDropdown
+                key={dropdown.label}
+                label={
+                  dropdown.label
+                }
+                href={
+                  dropdown.href
+                }
+              >
+                {dropdown.items.map(
+                  (item) => (
+                    <DropdownLink
+                      key={item.href}
+                      href={
+                        item.href
+                      }
+                    >
+                      {item.label}
+                    </DropdownLink>
+                  )
+                )}
+              </NavbarDropdown>
+            )
+          )}
 
-        <NavLink
-          href={
-            links.testimonial
-          }
-        >
-          {t.nav.testimonial}
-        </NavLink>
-
-        <NavLink href={links.faq}>
-          {t.nav.faq}
-        </NavLink>
-
-        <NavLink
-          href={links.contact}
-        >
-          {t.nav.contact}
-        </NavLink>
+          <NavLink href={links.directory}>
+            {t.nav.directory}
+          </NavLink>
+        </nav>
       </div>
 
       {/* =========================================
@@ -126,6 +122,34 @@ export default function NavbarDesktop({
       ========================================= */}
 
       <div className="vm-navbar-desktop__right">
+        <nav
+          className="vm-navbar-desktop__utility"
+          aria-label="Navigation secondaire"
+        >
+          <NavLink
+            href={
+              links.testimonial
+            }
+            variant="utility"
+          >
+            {t.nav.testimonial}
+          </NavLink>
+
+          <NavLink
+            href={links.faq}
+            variant="utility"
+          >
+            {t.nav.faq}
+          </NavLink>
+
+          <NavLink
+            href={links.contact}
+            variant="utility"
+          >
+            {t.nav.contact}
+          </NavLink>
+        </nav>
+
         {/* LANGUAGE */}
 
         <NavbarLanguage
@@ -154,11 +178,14 @@ interface NavLinkProps {
 
   children:
     React.ReactNode;
+
+  variant?: "primary" | "utility";
 }
 
 function NavLink({
   href,
   children,
+  variant = "primary",
 }: NavLinkProps) {
   const pathname =
     usePathname();
@@ -170,6 +197,10 @@ function NavLink({
     <Link
       href={href}
       className={`vm-navbar-desktop__link ${
+        variant === "utility"
+          ? "vm-navbar-desktop__link--utility"
+          : ""
+      } ${
         isActive
           ? "vm-navbar-desktop__link--active"
           : ""

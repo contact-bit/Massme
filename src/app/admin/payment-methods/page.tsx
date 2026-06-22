@@ -11,9 +11,12 @@ import type {
 } from "@/lib/shipping-i18n";
 
 import {
-  COUNTRIES,
   COUNTRY_TO_LOCALE,
 } from "@/lib/countries";
+import {
+  isConcreteCountry,
+  useAdminScope,
+} from "../context/adminScope";
 
 import AddPaymentMethodForm from "./components/AddPaymentMethodForm";
 import EditPaymentMethodModal from "./components/EditPaymentMethodModal";
@@ -73,13 +76,8 @@ export default function PaymentsAdminPage() {
       null
     );
 
-  const [
-    activeCountry,
-    setActiveCountry,
-  ] =
-    useState<CountryCode>(
-      "FR"
-    );
+  const { country: activeCountry } =
+    useAdminScope();
 
   /* 🔥 NEW */
   const [
@@ -145,7 +143,7 @@ export default function PaymentsAdminPage() {
           json.methods ??
           []
         ).map(
-          (m: any) => ({
+          (m: Record<string, unknown>) => ({
             id: String(
               m?.id
             ),
@@ -199,6 +197,11 @@ export default function PaymentsAdminPage() {
   useEffect(() => {
     reload();
   }, []);
+
+  useEffect(() => {
+    setEditing(null);
+    setShowCreate(false);
+  }, [activeCountry]);
 
   /* =====================================================
      DELETE
@@ -354,8 +357,9 @@ export default function PaymentsAdminPage() {
       return methods
         .filter(
           (m) =>
+            activeCountry === "ALL" ||
             m.country ===
-            activeCountry
+              activeCountry
         )
         .sort(
           (a, b) =>
@@ -401,82 +405,12 @@ export default function PaymentsAdminPage() {
       </header>
 
       {/* =====================================================
-          COUNTRIES
-      ===================================================== */}
-
-      <section className="pap-section">
-
-
-
-        <div className="pap-tabs">
-
-          {COUNTRIES.map(
-            (country) => (
-              <button
-                key={
-                  country.code
-                }
-                type="button"
-                onClick={() => {
-
-                  setActiveCountry(
-                    country.code
-                  );
-
-                  setEditing(
-                    null
-                  );
-
-                  setShowCreate(
-                    false
-                  );
-
-                }}
-                className={`pap-tab ${
-                  activeCountry ===
-                  country.code
-                    ? "active"
-                    : ""
-                }`}
-              >
-
-                <span className="pap-tab-flag">
-                  {
-                    country.flag
-                  }
-                </span>
-
-                <span className="pap-tab-content">
-
-                  <span className="pap-tab-title">
-                    {
-                      country.label
-                    }
-                  </span>
-
-                  <span className="pap-tab-code">
-                    {
-                      country.code
-                    }
-                  </span>
-
-                </span>
-
-              </button>
-            )
-          )}
-
-        </div>
-
-      </section>
-
-      {/* =====================================================
           CREATE
       ===================================================== */}
 
       <section className="pap-section">
 
-        {showCreate && (
+        {showCreate && isConcreteCountry(activeCountry) && (
 
           <div className="pap-card">
 
@@ -497,6 +431,12 @@ export default function PaymentsAdminPage() {
 
           </div>
 
+        )}
+
+        {showCreate && !isConcreteCountry(activeCountry) && (
+          <div className="pap-empty">
+            Sélectionnez un pays dans la barre admin pour créer une méthode.
+          </div>
         )}
 
       </section>
@@ -545,6 +485,10 @@ export default function PaymentsAdminPage() {
                   COUNTRY_TO_LOCALE[
                     method
                       .country
+                  ];
+                const fallbackLocale =
+                  COUNTRY_TO_LOCALE[
+                    method.country
                   ];
 
                 const isOpen =
@@ -639,6 +583,9 @@ export default function PaymentsAdminPage() {
                                   .name?.[
                                   locale
                                 ] ||
+                                  method.name?.[
+                                    fallbackLocale
+                                  ] ||
                                   "Sans nom"
                               }
 
@@ -683,6 +630,9 @@ export default function PaymentsAdminPage() {
                             .description?.[
                             locale
                           ] ||
+                            method.description?.[
+                              fallbackLocale
+                            ] ||
                             "Aucune description"}
 
                         </div>

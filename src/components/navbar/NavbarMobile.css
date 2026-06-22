@@ -83,6 +83,51 @@
 }
 
 /* =========================================================
+   PUBLIC SHOP LIGHT THEME
+========================================================= */
+
+.public-shell .vm-mobile-navbar__logo::before,
+.public-shell .vm-mobile-navbar__burger::before {
+  display: none;
+}
+
+.public-shell .vm-mobile-navbar__logo-image {
+  width: min(58vw, 230px);
+  height: auto;
+}
+
+.public-shell .vm-mobile-navbar__burger {
+  border-color: rgba(10, 36, 107, .14);
+  border-radius: 7px;
+  background: #0a246b;
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(10, 36, 107, .16);
+}
+
+.public-shell .vm-mobile-navbar__burger:hover,
+.public-shell .vm-mobile-navbar__burger[aria-expanded="true"] {
+  border-color: rgba(21, 166, 187, .42);
+  background:
+    linear-gradient(
+      135deg,
+      #0a246b 0%,
+      #083986 58%,
+      #15a6bb 140%
+    );
+  box-shadow:
+    0 14px 28px rgba(10, 36, 107, .18),
+    0 0 0 4px rgba(21, 166, 187, .12);
+}
+
+.public-shell .vm-mobile-overlay {
+  background:
+    radial-gradient(circle at 82% 12%, rgba(21, 166, 187, .16), transparent 32%),
+    rgba(247, 251, 255, .72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* =========================================================
    BURGER
 ========================================================= */
 
@@ -345,12 +390,38 @@
 
   flex-direction: column;
 
-  gap: .45rem;
+  gap: .85rem;
 
   min-height: 100%;
 
   padding:
     7rem 1.25rem 2rem;
+}
+
+/* =========================================================
+   SECTIONS
+========================================================= */
+
+.vm-mobile-section {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.vm-mobile-section__label {
+  margin: 0;
+  padding: 0 .35rem;
+  color: rgba(255,255,255,.52);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.vm-mobile-section__items {
+  display: flex;
+  flex-direction: column;
+  gap: .42rem;
 }
 
 /* =========================================================
@@ -374,9 +445,9 @@
 
   text-decoration: none;
 
-  font-size: 1rem;
+  font-size: 1.06rem;
 
-  font-weight: 500;
+  font-weight: 750;
 
   transition:
     background .22s ease,
@@ -430,9 +501,9 @@
   color:
     rgba(255,255,255,.92);
 
-  font-size: 1rem;
+  font-size: 1.06rem;
 
-  font-weight: 600;
+  font-weight: 850;
 
   cursor: pointer;
 
@@ -523,9 +594,9 @@
   color:
     rgba(255,255,255,.92);
 
-  font-size: 1rem;
+  font-size: 1.06rem;
 
-  font-weight: 600;
+  font-weight: 850;
 
   cursor: pointer;
 
@@ -637,9 +708,9 @@
 
   text-decoration: none;
 
-  font-size: .98rem;
+  font-size: 1.06rem;
 
-  font-weight: 600;
+  font-weight: 900;
 
   /* =========================================
      PREMIUM CTA
@@ -718,4 +789,122 @@
         env(safe-area-inset-bottom)
       );
   }
+}
+
+/* =========================================================
+   PUBLIC SHOP LIGHT THEME - FINAL MOBILE OVERRIDES
+========================================================= */
+
+.public-shell .vm-mobile-menu {
+  right: auto;
+  left: 100%;
+  transform: none;
+  border-left: 1px solid rgba(10, 36, 107, .12);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, .99),
+      rgba(244, 247, 251, .99)
+    );
+  color: #071b55;
+  box-shadow: -20px 0 70px rgba(10, 36, 107, .16);
+}
+
+.public-shell .vm-mobile-menu--open {
+  left: auto;
+  right: 0;
+}
+
+.public-shell .vm-mobile-menu:not(.vm-mobile-menu--open) {
+  display: none;
+}
+
+.public-shell .vm-mobile-menu::before,
+.public-shell .vm-mobile-menu::after {
+  display: none;
+}
+
+.public-shell .vm-mobile-menu__content {
+  gap: .95rem;
+  padding-top: 6.5rem;
+}
+
+.public-shell .vm-mobile-section {
+  gap: .4rem;
+}
+
+.public-shell .vm-mobile-section__label {
+  padding: 0 .15rem;
+  color: rgba(10, 36, 107, .56);
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+}
+
+.public-shell .vm-mobile-section__items {
+  gap: .45rem;
+}
+
+.public-shell .vm-mobile-link,
+.public-shell .vm-mobile-dropdown__trigger,
+.public-shell .vm-mobile-language__trigger,
+.public-shell .vm-mobile-language__item {
+  border: 1px solid rgba(10, 36, 107, .10);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .86);
+  color: #071b55;
+  font-size: 1.06rem;
+  font-weight: 850;
+  box-shadow: 0 10px 26px rgba(10, 36, 107, .05);
+}
+
+.public-shell .vm-mobile-link:hover,
+.public-shell .vm-mobile-dropdown__trigger:hover,
+.public-shell .vm-mobile-language__trigger:hover,
+.public-shell .vm-mobile-language__item:hover,
+.public-shell .vm-mobile-language__item--active {
+  background: rgba(214, 236, 244, .58);
+  color: #0a246b;
+  border-color: rgba(10, 36, 107, .16);
+  transform: translateX(0);
+}
+
+.public-shell .vm-mobile-dropdown__content,
+.public-shell .vm-mobile-language__content {
+  margin-top: .45rem;
+}
+
+.public-shell .vm-mobile-language__inner {
+  gap: .45rem;
+  padding:
+    .2rem 0 .45rem;
+}
+
+.public-shell .vm-mobile-dropdown__icon,
+.public-shell .vm-mobile-language__icon,
+.public-shell .vm-mobile-language__flag {
+  color: #0a246b;
+}
+
+.public-shell .vm-mobile-menu__cta {
+  min-height: 58px;
+  margin-top: 1.05rem;
+  border-radius: 8px;
+  border-color: #0a246b;
+  background: #0a246b;
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 16px 30px rgba(10, 36, 107, .20);
+}
+
+.public-shell .vm-mobile-menu__cta::before {
+  display: none;
+}
+
+.public-shell .vm-mobile-menu__cta:hover {
+  background: #071b55;
+  border-color: #071b55;
+  color: #fff;
+  box-shadow: 0 18px 34px rgba(10, 36, 107, .24);
+  transform: translateY(-1px);
 }

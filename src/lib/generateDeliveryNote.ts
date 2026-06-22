@@ -1,7 +1,13 @@
+import { readFile } from "fs/promises";
+import path from "path";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
-const LOGO_URL =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/2456d5ba-af23-4219-7115-f54286a7c600/public";
+const LOGO_PATH = path.join(
+  process.cwd(),
+  "public",
+  "brand",
+  "logo-officiel.png"
+);
 
 type Address = {
   name?: string;
@@ -76,9 +82,7 @@ function getQuantity(item: Order["items"][number]) {
 
 async function loadLogo(pdfDoc: PDFDocument) {
   try {
-    const res = await fetch(LOGO_URL);
-    if (!res.ok) return null;
-    const bytes = await res.arrayBuffer();
+    const bytes = await readFile(LOGO_PATH);
     return await pdfDoc.embedPng(bytes);
   } catch {
     return null;

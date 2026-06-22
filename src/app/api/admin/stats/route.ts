@@ -141,12 +141,166 @@ function pct(
   );
 }
 
+type StatsCountry =
+  | "FR"
+  | "GB"
+  | "DE"
+  | "ES"
+  | "IT"
+  | "NL"
+  | "CH";
+
+function normalizeStatsCountry(
+  value: unknown
+): StatsCountry | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (
+    normalized === "fr" ||
+    normalized === "fra" ||
+    normalized.includes("france")
+  ) {
+    return "FR";
+  }
+
+  if (
+    normalized === "en" ||
+    normalized === "gb" ||
+    normalized === "uk" ||
+    normalized.includes("angleterre") ||
+    normalized.includes("royaume") ||
+    normalized.includes("united kingdom") ||
+    normalized.includes("great britain")
+  ) {
+    return "GB";
+  }
+
+  if (
+    normalized === "de" ||
+    normalized.includes("allemagne") ||
+    normalized.includes("germany") ||
+    normalized.includes("deutschland")
+  ) {
+    return "DE";
+  }
+
+  if (
+    normalized === "es" ||
+    normalized.includes("espagne") ||
+    normalized.includes("spain")
+  ) {
+    return "ES";
+  }
+
+  if (
+    normalized === "it" ||
+    normalized.includes("italie") ||
+    normalized.includes("italy")
+  ) {
+    return "IT";
+  }
+
+  if (
+    normalized === "nl" ||
+    normalized.includes("pays-bas") ||
+    normalized.includes("pays bas") ||
+    normalized.includes("netherlands")
+  ) {
+    return "NL";
+  }
+
+  if (
+    normalized === "ch" ||
+    normalized.includes("suisse") ||
+    normalized.includes("switzerland")
+  ) {
+    return "CH";
+  }
+
+  return null;
+}
+
+function matchesStatsCountry(
+  value: unknown,
+  country: StatsCountry | null
+) {
+  if (!country) {
+    return true;
+  }
+
+  return normalizeStatsCountry(value) === country;
+}
+
+function productMatchesCountry(
+  product: Record<string, unknown>,
+  country: StatsCountry | null
+) {
+  if (!country) {
+    return true;
+  }
+
+  const markets = Array.isArray(product.markets)
+    ? product.markets
+    : ["FR"];
+
+  return markets.some((market) =>
+    matchesStatsCountry(market, country)
+  );
+}
+
+function orderMatchesCountry(
+  order: Record<string, unknown>,
+  country: StatsCountry | null
+) {
+  if (!country) {
+    return true;
+  }
+
+  const totals =
+    order.totals as Record<string, unknown> | undefined;
+  const shippingAddress =
+    order.shippingAddress as
+      | Record<string, unknown>
+      | undefined;
+  const billingAddress =
+    order.billingAddress as
+      | Record<string, unknown>
+      | undefined;
+  const relayPoint =
+    order.relayPoint as
+      | Record<string, unknown>
+      | undefined;
+
+  return [
+    order.country,
+    totals?.country,
+    shippingAddress?.country,
+    billingAddress?.country,
+    relayPoint?.country,
+    relayPoint?.Pays,
+  ].some((value) =>
+    matchesStatsCountry(value, country)
+  );
+}
+
 /* =========================================================
    API
 ========================================================= */
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const selectedCountry =
+      normalizeStatsCountry(
+        new URL(req.url).searchParams.get("country")
+      );
 
     const productsCol =
       dbAdmin.collection("products");
@@ -194,9 +348,16 @@ export async function GET() {
       await productsCol.get();
 
     const products =
-      productsSnap.docs.map((d) =>
-        d.data()
-      );
+      productsSnap.docs
+        .map((d) =>
+          d.data()
+        )
+        .filter((product) =>
+          productMatchesCountry(
+            product,
+            selectedCountry
+          )
+        );
 
     const productsCount =
       products.length;
@@ -246,14 +407,28 @@ export async function GET() {
     ]);
 
     const paymentMethods =
-      paymentMethodsSnap.docs.map((d) =>
-        d.data()
-      );
+      paymentMethodsSnap.docs
+        .map((d) =>
+          d.data()
+        )
+        .filter((method) =>
+          matchesStatsCountry(
+            method?.country,
+            selectedCountry
+          )
+        );
 
     const shippingMethods =
-      shippingMethodsSnap.docs.map((d) =>
-        d.data()
-      );
+      shippingMethodsSnap.docs
+        .map((d) =>
+          d.data()
+        )
+        .filter((method) =>
+          matchesStatsCountry(
+            method?.country,
+            selectedCountry
+          )
+        );
 
     const reviews =
       reviewsSnap.docs.map((d) =>
@@ -300,10 +475,17 @@ export async function GET() {
       await ordersCol.get();
 
     const allOrdersRaw =
-      allOrdersSnap.docs.map((d) => ({
-        id: d.id,
-        ...(d.data() as any),
-      }));
+      allOrdersSnap.docs
+        .map((d) => ({
+          id: d.id,
+          ...(d.data() as any),
+        }))
+        .filter((order) =>
+          orderMatchesCountry(
+            order,
+            selectedCountry
+          )
+        );
 
     const allOrders =
       allOrdersRaw.map((o) => {
@@ -576,47 +758,34 @@ export async function GET() {
        LAST ORDERS
     ===================================================== */
 
-    const lastOrdersSnap =
-      await ordersCol
-        .orderBy(
-          "createdAt",
-          "desc"
-        )
-        .limit(8)
-        .get();
-
     const lastOrders =
-      lastOrdersSnap.docs.map((d) => {
+      [...allOrders]
+        .sort((a, b) => b._ms - a._ms)
+        .slice(0, 8)
+        .map((o) => {
+          const iso =
+            o._ms > 0
+              ? new Date(o._ms).toISOString()
+              : null;
 
-        const o: any = d.data();
+          return {
+            id: o.id,
 
-        const iso =
-          o?.createdAt
-            ?.toDate?.()
-            ?.toISOString?.() ??
-          (typeof o?.createdAt ===
-          "string"
-            ? o.createdAt
-            : null);
+            orderNumber:
+              o?.orderNumber ?? null,
 
-        return {
-          id: d.id,
+            status:
+              normalizeOrderStatus(o),
 
-          orderNumber:
-            o?.orderNumber ?? null,
+            total:
+              orderTotalEUR(o),
 
-          status:
-            normalizeOrderStatus(o),
+            email:
+              o?.email ?? "",
 
-          total:
-            orderTotalEUR(o),
-
-          email:
-            o?.email ?? "",
-
-          createdAt: iso,
-        };
-      });
+            createdAt: iso,
+          };
+        });
 
     /* =====================================================
        REVENUE

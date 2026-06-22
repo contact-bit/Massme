@@ -43,12 +43,12 @@
 
   align-items: center;
 
-  gap: .38rem;
+  gap: .32rem;
 
-  min-height: 48px;
+  min-height: 46px;
 
   padding:
-    0 1rem;
+    0 .9rem;
 
   border-radius: 999px;
 
@@ -84,11 +84,11 @@
   color:
     rgba(255,255,255,.84);
 
-  font-size: .93rem;
+  font-size: .96rem;
 
-  font-weight: 500;
+  font-weight: 800;
 
-  letter-spacing: -.015em;
+  letter-spacing: 0;
 
   text-decoration: none;
 
@@ -163,7 +163,7 @@
 
   z-index: 300;
 
-  min-width: 290px;
+  min-width: 280px;
 
   opacity: 0;
 
@@ -315,4 +315,31 @@
   .vm-dropdown__menu {
     min-width: 260px;
   }
+}
+
+/* =========================================================
+   PUBLIC SHOP LIGHT THEME
+========================================================= */
+
+.public-shell .vm-dropdown__content {
+  border-color: rgba(10, 36, 107, .12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 24px 70px rgba(10, 36, 107, .14);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.public-shell .vm-dropdown__trigger {
+  min-height: 44px;
+  padding: 0 clamp(.48rem, .62vw, .82rem);
+}
+
+.public-shell .vm-dropdown__menu {
+  min-width: 300px;
+}
+
+.public-shell .vm-dropdown__content::before,
+.public-shell .vm-dropdown__content::after {
+  display: none;
 }

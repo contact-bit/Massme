@@ -6,6 +6,10 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import {
+  useAdminScope,
+  type AdminCountryScope,
+} from "../context/adminScope";
 
 import "./products.css";
 
@@ -32,9 +36,38 @@ type Product = {
   weightKg?: number;
   deliveryPackageCount?: number;
   markets?: string[];
+  marketSettings?: Record<
+    string,
+    {
+      isActive?: boolean;
+    }
+  >;
   variants?: unknown[];
   addons?: unknown[];
   pricesByMarket?: Record<string, number>;
+};
+
+const MARKET_BY_ADMIN_COUNTRY: Partial<Record<AdminCountryScope, string>> = {
+  FR: "FR",
+  GB: "EN",
+  ES: "ES",
+  DE: "DE",
+  IT: "IT",
+  NL: "NL",
+  CH: "CH",
+};
+
+const MARKET_FLAG: Record<string, string> = {
+  FR: "🇫🇷",
+  EN: "🇬🇧",
+  BE: "🇧🇪",
+  DE: "🇩🇪",
+  AT: "🇦🇹",
+  ES: "🇪🇸",
+  IT: "🇮🇹",
+  NL: "🇳🇱",
+  PT: "🇵🇹",
+  CH: "🇨🇭",
 };
 
 function getName(p: Product) {
@@ -46,7 +79,9 @@ function getName(p: Product) {
 }
 
 function getPrice(p: Product) {
-  if (typeof p.pricesByMarket?.FR === "number") {
+  if (
+    typeof p.pricesByMarket?.FR === "number"
+  ) {
     return p.pricesByMarket.FR;
   }
 
@@ -67,6 +102,62 @@ function moneyEUR(n: number) {
       currency: "EUR",
     }
   ).format(n || 0);
+}
+
+function getScopedMarket(
+  country: AdminCountryScope
+) {
+  return country === "ALL"
+    ? null
+    : MARKET_BY_ADMIN_COUNTRY[country] ||
+        country;
+}
+
+function isConfiguredForMarket(
+  product: Product,
+  market: string
+) {
+  const productMarkets = Array.isArray(
+    product.markets
+  )
+    ? product.markets
+    : ["FR"];
+
+  return productMarkets.includes(market);
+}
+
+function isActiveForMarket(
+  product: Product,
+  market: string
+) {
+  return (
+    product.isActive !== false &&
+    isConfiguredForMarket(
+      product,
+      market
+    ) &&
+    product.marketSettings?.[market]
+      ?.isActive !== false
+  );
+}
+
+function isGloballyActive(
+  product: Product
+) {
+  return product.isActive !== false;
+}
+
+function getProductMarkets(
+  product: Product,
+  scopedMarket: string | null
+) {
+  if (scopedMarket) {
+    return [scopedMarket];
+  }
+
+  return Array.isArray(product.markets)
+    ? product.markets
+    : [];
 }
 
 function clamp(
@@ -97,6 +188,12 @@ export default function ProductsAdminPage() {
 
   const [togglingId, setTogglingId] =
     useState<string | null>(null);
+
+  const { country: activeCountry } =
+    useAdminScope();
+
+  const scopedMarket =
+    getScopedMarket(activeCountry);
 
   const pageSize = 12;
 
@@ -171,6 +268,30 @@ export default function ProductsAdminPage() {
             "admin_password"
           ) || "";
 
+        const nextGlobalActive =
+          !product.isActive;
+        const nextMarketActive =
+          scopedMarket
+            ? !isActiveForMarket(
+                product,
+                scopedMarket
+              )
+            : nextGlobalActive;
+        const marketSettings =
+          scopedMarket
+            ? {
+                ...(product.marketSettings ||
+                  {}),
+                [scopedMarket]: {
+                  ...(product.marketSettings?.[
+                    scopedMarket
+                  ] || {}),
+                  isActive:
+                    nextMarketActive,
+                },
+              }
+            : product.marketSettings;
+
         const res = await fetch(
           `/api/admin/products/${product.id}`,
           {
@@ -183,8 +304,14 @@ export default function ProductsAdminPage() {
             },
             body: JSON.stringify({
               data: {
-                isActive:
-                  !product.isActive,
+                ...(scopedMarket
+                  ? {
+                      marketSettings,
+                    }
+                  : {
+                      isActive:
+                        nextGlobalActive,
+                    }),
               },
             }),
           }
@@ -199,8 +326,15 @@ export default function ProductsAdminPage() {
             item.id === product.id
               ? {
                   ...item,
-                  isActive:
-                    !product.isActive,
+                  ...(scopedMarket
+                    ? {
+                        marketSettings:
+                          marketSettings,
+                      }
+                    : {
+                        isActive:
+                          nextGlobalActive,
+                      }),
                 }
               : item
           )
@@ -214,22 +348,115 @@ export default function ProductsAdminPage() {
       }
     };
 
+  const toggleProductMarketVisibility =
+    async (
+      product: Product,
+      market: string
+    ) => {
+      const toggleKey = `${product.id}:${market}`;
+      setTogglingId(toggleKey);
+
+      try {
+        const pass =
+          localStorage.getItem(
+            "admin_password"
+          ) || "";
+
+        const nextMarketActive =
+          !isActiveForMarket(
+            product,
+            market
+          );
+
+        const marketSettings = {
+          ...(product.marketSettings ||
+            {}),
+          [market]: {
+            ...(product.marketSettings?.[
+              market
+            ] || {}),
+            isActive: nextMarketActive,
+          },
+        };
+
+        const res = await fetch(
+          `/api/admin/products/${product.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type":
+                "application/json",
+              "x-admin-password":
+                pass,
+            },
+            body: JSON.stringify({
+              data: {
+                marketSettings,
+              },
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error();
+        }
+
+        setProducts((current) =>
+          current.map((item) =>
+            item.id === product.id
+              ? {
+                  ...item,
+                  marketSettings,
+                }
+              : item
+          )
+        );
+      } catch {
+        alert(
+          "Impossible de modifier la visibilité du produit pour ce pays."
+        );
+      } finally {
+        setTogglingId(null);
+      }
+    };
+
   useEffect(() => {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    setPage(1);
+  }, [q, status, activeCountry]);
+
   const filtered = useMemo(() => {
     return products.filter((p) => {
       if (
+        scopedMarket &&
+        !isConfiguredForMarket(
+          p,
+          scopedMarket
+        )
+      ) {
+        return false;
+      }
+
+      const visible = scopedMarket
+        ? isActiveForMarket(
+            p,
+            scopedMarket
+          )
+        : isGloballyActive(p);
+
+      if (
         status === "active" &&
-        !p.isActive
+        !visible
       ) {
         return false;
       }
 
       if (
         status === "inactive" &&
-        p.isActive
+        visible
       ) {
         return false;
       }
@@ -251,7 +478,12 @@ export default function ProductsAdminPage() {
           )
       );
     });
-  }, [products, q, status]);
+  }, [
+    products,
+    q,
+    status,
+    scopedMarket,
+  ]);
 
   const totalPages = Math.max(
     1,
@@ -334,6 +566,13 @@ export default function ProductsAdminPage() {
           </div>
         ) : (
           paged.map((p) => {
+            const visible = scopedMarket
+              ? isActiveForMarket(
+                  p,
+                  scopedMarket
+                )
+              : isGloballyActive(p);
+
             return (
               <div
                 key={p.id}
@@ -387,12 +626,12 @@ export default function ProductsAdminPage() {
                   <button
                     type="button"
                     className={`products-visibility-switch ${
-                      p.isActive
+                      visible
                         ? "is-active"
                         : ""
                     }`}
                     role="switch"
-                    aria-checked={p.isActive ?? false}
+                    aria-checked={visible}
                     disabled={togglingId === p.id}
                     onClick={() =>
                       toggleProductVisibility(p)
@@ -403,7 +642,7 @@ export default function ProductsAdminPage() {
                       <small>
                         {togglingId === p.id
                           ? "Enregistrement..."
-                          : p.isActive
+                          : visible
                           ? "Visible"
                           : "Masqué"}
                       </small>
@@ -416,8 +655,54 @@ export default function ProductsAdminPage() {
                 </div>
 
                 <div className="products-meta">
-                  <span>
-                    {plural(p.markets?.length || 0, "pays")}
+                  <span className="products-market-flags">
+                    {getProductMarkets(
+                      p,
+                      scopedMarket
+                    ).map((market) => {
+                      const marketVisible =
+                        isActiveForMarket(
+                          p,
+                          market
+                        );
+                      const flag =
+                        MARKET_FLAG[market] ||
+                        "🌍";
+                      const toggleKey = `${p.id}:${market}`;
+
+                      return (
+                        <button
+                          key={market}
+                          type="button"
+                          className={`products-market-flag ${
+                            marketVisible
+                              ? "is-active"
+                              : "is-inactive"
+                          }`}
+                          title={
+                            marketVisible
+                              ? `Masquer pour ${market}`
+                              : `Afficher pour ${market}`
+                          }
+                          aria-label={
+                            marketVisible
+                              ? `Masquer le produit pour ${market}`
+                              : `Afficher le produit pour ${market}`
+                          }
+                          disabled={
+                            togglingId === toggleKey
+                          }
+                          onClick={() =>
+                            toggleProductMarketVisibility(
+                              p,
+                              market
+                            )
+                          }
+                        >
+                          {flag}
+                        </button>
+                      );
+                    })}
                   </span>
                   <span>
                     {plural(p.variants?.length || 0, "variante")}

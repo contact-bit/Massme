@@ -1356,6 +1356,11 @@ body {
   background: rgba(255,255,255,.034) !important;
 }
 
+.orders-table-v2 tbody tr.row-hovered,
+.orders-table-v2 tbody tr.row-general-info.row-hovered:hover {
+  background: rgba(255,255,255,.034) !important;
+}
+
 .orders-table-v2 tbody tr.row > td {
   border-bottom: 0 !important;
 }
@@ -1365,7 +1370,7 @@ body {
   border-bottom: 1px solid rgba(255,255,255,.052) !important;
 }
 
-.orders-table-v2 tbody tr.row-general-info:hover {
+.orders-table-v2 tbody tr.row-general-info:hover:not(.row-hovered) {
   background: transparent !important;
 }
 

@@ -30,8 +30,7 @@ export default function AddMethodForm({
   country,
   onCreated,
 }: Props) {
-  const lang =
-    COUNTRY_LANGUAGE_MAP[country];
+  const lang = COUNTRY_LANGUAGE_MAP[country];
 
   const [loading, setLoading] =
     useState(false);

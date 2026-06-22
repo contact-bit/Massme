@@ -14,6 +14,10 @@ import { useOrders } from "./orders/hooks/useOrders";
 import { StatusPill } from "./orders/components/StatusPill";
 import { ShippingStatusPill } from "./orders/components/ShippingStatusPill";
 import { IconEye } from "./orders/components/icons";
+import {
+  matchesAdminCountry,
+  useAdminScope,
+} from "./context/adminScope";
 
 /* =========================================================
    HELPERS
@@ -69,6 +73,28 @@ function getCustomerName(o: any) {
   );
 }
 
+function orderMatchesCountry(
+  order: any,
+  country: ReturnType<
+    typeof useAdminScope
+  >["country"]
+) {
+  if (country === "ALL") {
+    return true;
+  }
+
+  return [
+    order?.country,
+    order?.totals?.country,
+    order?.shippingAddress?.country,
+    order?.billingAddress?.country,
+    order?.relayPoint?.country,
+    order?.relayPoint?.Pays,
+  ].some((value) =>
+    matchesAdminCountry(value, country)
+  );
+}
+
 /* =========================================================
    COMPONENT
 ========================================================= */
@@ -80,6 +106,9 @@ type Props = {
 export default function DashboardOrdersSearch({
   embedded = false,
 }: Props) {
+  const { country: activeCountry } =
+    useAdminScope();
+
   const searchParams =
     useSearchParams();
 
@@ -113,6 +142,15 @@ export default function DashboardOrdersSearch({
      FILTERED
   ========================================================= */
 
+  const scopedOrders = useMemo(() => {
+    return orders.filter((order) =>
+      orderMatchesCountry(
+        order,
+        activeCountry
+      )
+    );
+  }, [activeCountry, orders]);
+
   const filtered = useMemo(() => {
     const term = q
       .trim()
@@ -122,7 +160,7 @@ export default function DashboardOrdersSearch({
       return [];
     }
 
-    return orders.filter(
+    return scopedOrders.filter(
       (o: any) => {
         const itemText =
           Array.isArray(
@@ -196,7 +234,7 @@ export default function DashboardOrdersSearch({
         );
       }
     );
-  }, [orders, q]);
+  }, [scopedOrders, q]);
 
   const hasSearch =
     q.trim().length > 0;
@@ -243,7 +281,7 @@ export default function DashboardOrdersSearch({
               ? "Recherche…"
               : hasSearch
                 ? `${filtered.length} résultat${filtered.length > 1 ? "s" : ""}`
-                : `${orders.length} commande${orders.length > 1 ? "s" : ""}`}
+                : `${scopedOrders.length} commande${scopedOrders.length > 1 ? "s" : ""}`}
           </span>
           {hasSearch && (
             <button

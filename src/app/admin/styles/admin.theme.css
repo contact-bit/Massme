@@ -509,6 +509,7 @@ html[data-admin-theme="light"] .row-invoice-actions :is(a, button):hover {
 
 html[data-admin-theme="light"] .admin-font-root :is(
   .orders-table-v2 tbody tr:hover,
+  .orders-table-v2 tbody tr.row-hovered,
   .log-row-main:hover,
   .od-table tbody tr:hover,
   .reviews-email-row:hover

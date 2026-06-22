@@ -133,6 +133,11 @@ export async function POST(req: Request) {
         Math.round(Number(deliveryPackageCount ?? 1) || 1)
       ),
       isActive: true,
+      marketSettings: {
+        FR: {
+          isActive: true,
+        },
+      },
       applyVAT: true,
       markets: ["FR"],
       pricesByMarket: { FR: Number(priceHT) },

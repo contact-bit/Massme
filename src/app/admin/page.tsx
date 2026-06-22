@@ -47,6 +47,7 @@ import {
 } from "react-icons/fi";
 
 import DashboardOrdersSearch from "./DashboardOrdersSearch";
+import { useAdminScope } from "./context/adminScope";
 
 type StatsResponse = {
   kpis: {
@@ -519,6 +520,9 @@ type DashboardAction = {
 };
 
 export default function AdminDashboardPage() {
+  const { country: activeCountry } =
+    useAdminScope();
+
   const [data, setData] =
     useState<StatsResponse | null>(null);
   const [loading, setLoading] =
@@ -547,9 +551,22 @@ export default function AdminDashboardPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("/api/admin/stats", {
-        cache: "no-store",
-      });
+      const params = new URLSearchParams();
+
+      if (activeCountry !== "ALL") {
+        params.set("country", activeCountry);
+      }
+
+      const response = await fetch(
+        `/api/admin/stats${
+          params.toString()
+            ? `?${params.toString()}`
+            : ""
+        }`,
+        {
+          cache: "no-store",
+        }
+      );
       const json = await response.json();
 
       if (!response.ok) {
@@ -566,7 +583,7 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeCountry]);
 
   useEffect(() => {
     refresh();

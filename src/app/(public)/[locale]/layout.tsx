@@ -9,8 +9,10 @@ import "./checkout/checkout.css";
 import "./contact/contact.css";
 import "./success/success.css";
 import "./blog/blog.css";
+import "./public-identity.css";
 
 import { CartProvider } from "@/context/CartContext";
+import { isLocale } from "@/lib/i18n";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -21,7 +23,7 @@ interface LayoutProps {
 
 export default async function LocaleLayout({ children, params }: LayoutProps) {
   const { locale } = await params;
-  const safeLocale = locale === "fr" || locale === "en" ? locale : "fr";
+  const safeLocale = isLocale(locale) ? locale : "fr";
 
   return (
     <CartProvider>

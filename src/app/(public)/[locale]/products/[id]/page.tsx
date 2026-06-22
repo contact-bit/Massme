@@ -92,6 +92,12 @@ type Product = {
   isActive?: boolean;
 
   markets?: string[];
+  marketSettings?: Record<
+    string,
+    {
+      isActive?: boolean;
+    }
+  >;
 
   addons?: Addon[];
 
@@ -619,6 +625,18 @@ function getPriceForMarket(
   return 0;
 }
 
+function isProductActiveInMarket(
+  product: Product,
+  market: Market
+) {
+  return (
+    product.isActive !== false &&
+    Array.isArray(product.markets) &&
+    product.markets.includes(market) &&
+    product.marketSettings?.[market]?.isActive !== false
+  );
+}
+
 /* =====================================================
    PAGE
 ===================================================== */
@@ -777,6 +795,21 @@ export default function ProductPage() {
   }
 
   if (!product) {
+    return (
+      <main className="product-detail-page">
+        <div className="product-loading">
+          {t.notFound}
+        </div>
+      </main>
+    );
+  }
+
+  if (
+    !isProductActiveInMarket(
+      product,
+      market
+    )
+  ) {
     return (
       <main className="product-detail-page">
         <div className="product-loading">

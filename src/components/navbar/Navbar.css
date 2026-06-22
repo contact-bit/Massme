@@ -226,3 +226,58 @@
     display: none;
   }
 }
+
+@media (max-width: 1380px) {
+  .public-shell .vm-navbar__desktop-wrapper {
+    display: none;
+  }
+
+  .public-shell .vm-navbar__mobile-wrapper {
+    display: block;
+  }
+}
+
+/* =========================================================
+   PUBLIC SHOP LIGHT THEME
+========================================================= */
+
+.public-shell .vm-navbar {
+  padding: 18px 0;
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.public-shell .vm-navbar::before {
+  display: none;
+}
+
+.public-shell .vm-navbar__container {
+  width: min(100% - 32px, 1440px);
+  max-width: 1440px;
+  padding: 0 16px;
+}
+
+.public-shell .vm-navbar__container::before {
+  border: 1px solid rgba(10, 36, 107, .12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .84);
+  box-shadow: 0 14px 42px rgba(10, 36, 107, .08);
+}
+
+.public-shell .vm-navbar--scrolled {
+  padding: 10px 0;
+}
+
+.public-shell .vm-navbar--scrolled .vm-navbar__container::before {
+  border-color: rgba(10, 36, 107, .16);
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 12px 36px rgba(10, 36, 107, .11);
+}
+
+@media (max-width: 1500px) {
+  .public-shell .vm-navbar__container {
+    width: min(100% - 24px, 1380px);
+    padding: 0 12px;
+  }
+}

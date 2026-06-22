@@ -1,18 +1,79 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
-import ReviewsSection from "@/components/reviews/ReviewsSection";
+import type { ReactNode } from "react";
+import {
+  Activity,
+  ArrowRight,
+  BadgeCheck,
+  CalendarCheck,
+  Check,
+  CircleHelp,
+  CircleDot,
+  ClipboardCheck,
+  Eye,
+  FileCheck2,
+  Globe2,
+  HeartPulse,
+  Layers,
+  MapPin,
+  ShieldCheck,
+  Sparkles,
+  Stethoscope,
+  Target,
+  UserRoundCheck,
+} from "lucide-react";
+
 import type { Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n";
+import { getPageContent } from "@/content/pages/i18n";
+import {
+  homeContent,
+  type HomeIconKey,
+} from "@/content/pages/home";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata() {
-  return {
-    title:
-      "Vitrectomie : Guide Complet de l'Intervention Oculaire – VitrectoMed",
+const ICONS: Record<HomeIconKey, ReactNode> = {
+  activity: <Activity />,
+  alert: <CircleHelp />,
+  badge: <BadgeCheck />,
+  calendar: <CalendarCheck />,
+  check: <Check />,
+  circle: <CircleDot />,
+  clipboard: <ClipboardCheck />,
+  eye: <Eye />,
+  faq: <CircleHelp />,
+  file: <FileCheck2 />,
+  globe: <Globe2 />,
+  heart: <HeartPulse />,
+  layers: <Layers />,
+  map: <MapPin />,
+  microscope: <Eye />,
+  shield: <ShieldCheck />,
+  sparkles: <Sparkles />,
+  stethoscope: <Stethoscope />,
+  target: <Target />,
+  user: <UserRoundCheck />,
+};
 
-    description:
-      "Découvrez tout sur la vitrectomie : indications, déroulement, convalescence et risques. Informez-vous pour un parcours de soins serein.",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale: rawLocale } = await params;
+  const locale = isLocale(rawLocale)
+    ? rawLocale
+    : "fr";
+  const content = getPageContent(
+    homeContent,
+    locale
+  );
+
+  return {
+    title: content.metadata.title,
+    description: content.metadata.description,
   };
 }
 
@@ -28,642 +89,450 @@ export default async function HomePage({
   }
 
   const locale: Locale = rawLocale;
-
   const prefix = `/${locale}`;
+  const content = getPageContent(
+    homeContent,
+    locale
+  );
 
   return (
     <main className="home">
-      {/* =========================================================
-          HERO
-      ========================================================= */}
+      <section className="home-hero">
+        <div className="home-container">
+          <div className="home-hero-grid">
+            <div className="home-hero-panel">
+              <div className="home-hero-copy">
+                <span className="home-kicker">
+                  {content.hero.kicker}
+                </span>
 
-      <section className="hero section">
-        <div className="container-xl">
-          <div className="hero-shell">
-            <div className="hero-grid">
-              {/* LEFT */}
+                <h1>
+                  {content.hero.title}
+                  <span>{content.hero.subtitle}</span>
+                </h1>
 
-              <div className="stack-lg">
-                <div className="stack-md">
-                  <span className="text-label hero-label">
-                   vitrectomed - Guide médical
-                  </span>
+                <p>{content.hero.description}</p>
 
-                  <h1 className="title-hero hero-title">
-                    Vitrectomie :
-                    comprendre
-                    l’intervention,
-                    les indications
-                    et le parcours
-                    de soins
-                  </h1>
+                <div className="home-actions">
+                  <Link
+                    href={`${prefix}/convalescence`}
+                    className="home-btn home-btn-primary"
+                  >
+                    {content.hero.primaryCta}
+                    <ArrowRight size={18} />
+                  </Link>
 
-                  <p className="text-large hero-intro">
-                    La vitrectomie occupe aujourd’hui
-                    une place centrale dans la chirurgie
-                    oculaire des maladies rétiniennes.
-                  </p>
-
-                  <p className="text-body">
-                    Cette intervention moderne permet
-                    d’accéder à des zones sensibles
-                    de l’œil afin de traiter diverses
-                    pathologies rétiniennes avec une
-                    précision microchirurgicale.
-                  </p>
-
-                  <p className="text-body">
-                    Découvrez le déroulement de
-                    l’opération, les indications,
-                    les suites post-opératoires
-                    et les solutions pour mieux
-                    vivre la convalescence.
-                  </p>
+                  <Link
+                    href={`${prefix}/annuaire`}
+                    className="home-btn home-btn-secondary"
+                  >
+                    <MapPin size={18} />
+                    {content.hero.secondaryCta}
+                  </Link>
                 </div>
 
-                {/* CTA GRID */}
-
-                <div className="hero-actions">
-                  <Link
-                    href={`${prefix}/convalescence/coussin`}
-                    className="hero-link-card"
-                  >
-                    <div>
-                      <strong>
-                        Matériel de convalescence
-                      </strong>
-
-                      <span>
-                        Solutions ergonomiques
-                      </span>
-                    </div>
-
-                    <i>→</i>
-                  </Link>
-
-                  <Link
-                    href={`${prefix}/pathologies`}
-                    className="hero-link-card"
-                  >
-                    <div>
-                      <strong>
-                        Les pathologies
-                      </strong>
-
-                      <span>
-                        Comprendre les indications
-                      </span>
-                    </div>
-
-                    <i>→</i>
-                  </Link>
-
-                  <Link
-                    href={`${prefix}/operation`}
-                    className="hero-link-card"
-                  >
-                    <div>
-                      <strong>
-                        Les opérations
-                      </strong>
-
-                      <span>
-                        Déroulement détaillé
-                      </span>
-                    </div>
-
-                    <i>→</i>
-                  </Link>
-
-                  <Link
-                    href={`${prefix}/temoignage`}
-                    className="hero-link-card"
-                  >
-                    <div>
-                      <strong>
-                        Témoignages
-                      </strong>
-
-                      <span>
-                        Retours de patients
-                      </span>
-                    </div>
-
-                    <i>→</i>
-                  </Link>
+                <div className="home-hero-update">
+                  <CalendarCheck size={15} />
+                  {content.hero.updatedAt}
                 </div>
               </div>
 
-              {/* RIGHT */}
-
-              <div className="hero-panel card card-hero">
-                <div className="hero-panel-top">
-                  <span className="hero-chip">
-                    Chirurgie rétinienne
-                  </span>
-
-                  <span className="hero-chip hero-chip-soft">
-                    Micro-invasive
-                  </span>
-                </div>
-
-                <div className="hero-stats">
-                  <div className="hero-stat">
-                    <strong>
-                      Haute précision
-                    </strong>
-
-                    <span>
-                      Instruments microchirurgicaux
-                    </span>
-                  </div>
-
-                  <div className="hero-stat">
-                    <strong>
-                      Ambulatoire
-                    </strong>
-
-                    <span>
-                      Retour rapide à domicile
-                    </span>
-                  </div>
-
-                  <div className="hero-stat">
-                    <strong>
-                      Suivi médical
-                    </strong>
-
-                    <span>
-                      Contrôles post-opératoires
-                    </span>
-                  </div>
-
-                  <div className="hero-stat">
-                    <strong>
-                      Convalescence
-                    </strong>
-
-                    <span>
-                      Accompagnement personnalisé
-                    </span>
-                  </div>
-                </div>
-
-                <div className="hero-panel-footer">
-                  Vitrectomie • Macula • Rétine •
-                  Convalescence
-                </div>
+              <div className="home-hero-visual">
+                <Image
+                  src="/brand/home-hero-consultation.png"
+                  alt={content.hero.imageAlt}
+                  width={1536}
+                  height={1024}
+                  priority
+                />
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* =========================================================
-          INTRO
-      ========================================================= */}
+            <aside className="home-cert-card">
+              <div className="home-card-title">
+                <ShieldCheck size={24} />
+                <strong>{content.certification.title}</strong>
+              </div>
 
-      <section className="section">
-        <div className="container-md stack-lg">
-          <div className="section-header">
-            <span className="text-label">
-              Chirurgie du vitré
-            </span>
-
-            <h2 className="title-section">
-              Définition et principes
-              de la vitrectomie
-            </h2>
-          </div>
-
-          <div className="card card-content stack-md">
-            <p className="text-large">
-              La vitrectomie est une
-              technique chirurgicale utilisée
-              pour intervenir directement
-              sur la rétine située au fond
-              du globe oculaire.
-            </p>
-
-            <p className="text-body">
-              Grâce aux progrès des
-              microscopes chirurgicaux et
-              des micro-instruments, cette
-              opération permet aujourd’hui
-              un traitement extrêmement précis
-              des pathologies rétiniennes.
-            </p>
-
-            <p className="text-body">
-              Le vitré peut être remplacé par
-              une bulle de gaz, un liquide
-              spécifique ou une huile de silicone
-              afin de maintenir la rétine
-              correctement positionnée.
-            </p>
-          </div>
-
-          <div className="grid-3">
-            <div className="info-card">
-              <strong>
-                Micro-incisions
-              </strong>
-
-              <span>
-                Intervention mini-invasive
-              </span>
-            </div>
-
-            <div className="info-card">
-              <strong>
-                Haute précision
-              </strong>
-
-              <span>
-                Technologie chirurgicale avancée
-              </span>
-            </div>
-
-            <div className="info-card">
-              <strong>
-                Ambulatoire
-              </strong>
-
-              <span>
-                Retour rapide au domicile
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================
-          INDICATIONS
-      ========================================================= */}
-
-      <section className="section section-alt">
-        <div className="container-md stack-lg">
-          <div className="section-header">
-            <span className="text-label">
-              Pathologies rétiniennes
-            </span>
-
-            <h2 className="title-section">
-              Dans quels cas réaliser
-              une vitrectomie ?
-            </h2>
-          </div>
-
-          <div className="card card-content stack-md">
-            <p className="text-large">
-              La vitrectomie peut être
-              proposée pour traiter plusieurs
-              maladies touchant le vitré
-              ou la rétine.
-            </p>
-
-            <ul className="modern-list">
-              <li>
-                Décollement de rétine
-              </li>
-
-              <li>
-                Trou maculaire
-              </li>
-
-              <li>
-                Rétinopathie diabétique
-              </li>
-
-              <li>
-                Hémorragie intra-vitréenne
-              </li>
-
-              <li>
-                Membranes épirétiniennes
-              </li>
-
-              <li>
-                Inflammations profondes
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================
-          OPERATION
-      ========================================================= */}
-
-      <section className="section">
-        <div className="container-md stack-lg">
-          <div className="section-header">
-            <span className="text-label">
-              Intervention
-            </span>
-
-            <h2 className="title-section">
-              Comprendre le déroulement
-              de l’opération
-            </h2>
-          </div>
-
-          <div className="grid-2">
-            <div className="card card-content stack-md">
-              <h3 className="title-card">
-                Les étapes techniques
-              </h3>
-
-              <p className="text-body">
-                Le chirurgien retire le vitré
-                grâce à des instruments
-                miniaturisés puis traite
-                les lésions rétiniennes.
-              </p>
-
-              <p className="text-body">
-                Une bulle de gaz ou une huile
-                de silicone peut ensuite être
-                utilisée afin de stabiliser
-                la rétine.
-              </p>
-            </div>
-
-            <div className="card card-content stack-md">
-              <h3 className="title-card">
-                Durée et récupération
-              </h3>
-
-              <p className="text-body">
-                La durée varie selon la
-                complexité de l’intervention.
-              </p>
-
-              <p className="text-body">
-                Une surveillance post-opératoire
-                est assurée avant le retour
-                à domicile.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================
-          RECOVERY
-      ========================================================= */}
-
-      <section className="section section-alt">
-        <div className="container-md stack-lg">
-          <div className="section-header">
-            <span className="text-label">
-              Convalescence
-            </span>
-
-            <h2 className="title-section">
-              Récupération et
-              période post-opératoire
-            </h2>
-          </div>
-
-          <div className="grid-2">
-            <div className="card card-content stack-md">
-              <h3 className="title-card">
-                Adaptation du quotidien
-              </h3>
-
-              <p className="text-body">
-                Certaines interventions
-                nécessitent une position
-                spécifique de la tête
-                pendant plusieurs jours.
-              </p>
-
-              <p className="text-body">
-                Les voyages en avion et
-                certaines activités doivent
-                être temporairement évités.
-              </p>
-            </div>
-
-            <div className="card card-content stack-md">
-              <h3 className="title-card">
-                Sensations normales
-              </h3>
-
-              <p className="text-body">
-                Une gêne légère, une sensation
-                d’œil sec ou une vision trouble
-                temporaire sont fréquentes
-                après l’intervention.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================
-          FAQ
-      ========================================================= */}
-
-      <section className="section">
-        <div className="container-md stack-lg">
-          <div className="section-header">
-            <span className="text-label">
-              FAQ
-            </span>
-
-            <h2 className="title-section">
-              Questions fréquentes
-            </h2>
-          </div>
-
-          <div className="grid-2">
-            <div className="card card-content stack-sm">
-              <h3 className="title-card">
-                La vitrectomie est-elle douloureuse ?
-              </h3>
-
-              <p className="text-body">
-                L’intervention est généralement
-                réalisée sous anesthésie locale
-                et reste peu douloureuse.
-              </p>
-            </div>
-
-            <div className="card card-content stack-sm">
-              <h3 className="title-card">
-                Peut-on reprendre rapidement
-                le travail ?
-              </h3>
-
-              <p className="text-body">
-                Cela dépend du métier et
-                de l’évolution post-opératoire.
-              </p>
-            </div>
-
-            <div className="card card-content stack-sm">
-              <h3 className="title-card">
-                Quels gestes éviter ?
-              </h3>
-
-              <ul className="modern-list">
-                <li>Éviter l’avion</li>
-                <li>Éviter la plongée</li>
-                <li>Ne pas frotter l’œil</li>
+              <ul>
+                {content.certification.items.map((item) => (
+                  <li key={item.text}>
+                    {ICONS[item.icon]}
+                    {item.text}
+                  </li>
+                ))}
               </ul>
-            </div>
 
-            <div className="card card-content stack-sm">
-              <h3 className="title-card">
-                Comment dormir après l’opération ?
-              </h3>
-
-              <p className="text-body">
-                Une position ventrale peut
-                être recommandée selon
-                l’intervention réalisée.
-              </p>
-            </div>
-          </div>
-
-          <div className="table-wrapper">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>
-                    Activité
-                  </th>
-
-                  <th>
-                    Reprise estimée
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr>
-                  <td>
-                    Voyage aérien
-                  </td>
-
-                  <td>
-                    Après disparition du gaz
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>
-                    Télétravail
-                  </td>
-
-                  <td>
-                    Entre 7 et 21 jours
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================
-          FINAL CTA
-      ========================================================= */}
-
-      <section className="section">
-        <div className="container-lg">
-          <div className="final-cta">
-            <div className="stack-md">
-              <span className="text-label">
-                VitrectoMed
-              </span>
-
-              <h2 className="title-section">
-                Préparer sereinement
-                votre convalescence
-              </h2>
-
-              <p className="text-large">
-                Découvrez les équipements,
-                conseils et solutions pour
-                améliorer votre confort
-                post-opératoire.
-              </p>
-
-              <div>
-                <Link
-                  href={`${prefix}/convalescence/coussin`}
-                  className="btn btn-primary btn-lg"
-                >
-                  Voir les solutions
-                </Link>
+              <div className="home-product-mini">
+                <div className="home-product-mini-visual">
+                  <Image
+                    src="/brand/home-product.png"
+                    alt={content.certification.productAlt}
+                    width={220}
+                    height={160}
+                  />
+                </div>
+                <div>
+                  <strong>{content.certification.productTitle}</strong>
+                  <p>{content.certification.productText}</p>
+                  <Link href={`${prefix}/convalescence/coussin`}>
+                    {content.certification.productCta} <ArrowRight size={14} />
+                  </Link>
+                </div>
               </div>
-            </div>
+            </aside>
           </div>
         </div>
       </section>
 
-      {/* =========================================================
-          DOCUMENTATION
-      ========================================================= */}
+      <section className="home-trust">
+        <div className="home-container home-trust-grid">
+          {content.trust.map((item) => (
+            <TrustItem
+              key={item.text}
+              icon={ICONS[item.icon]}
+              text={item.text}
+            />
+          ))}
+        </div>
+      </section>
 
-      <section className="section section-alt">
-        <div className="container-md">
-          <div className="card card-content stack-md">
-            <span className="text-label">
-              Documentation
-            </span>
+      <section className="home-notice-section">
+        <div className="home-container home-notice">
+          <span><FileCheck2 size={18} /></span>
+          <p>{content.notice.text}</p>
+          <Link href={`${prefix}/contact`}>
+            {content.notice.cta} <ArrowRight size={15} />
+          </Link>
+        </div>
+      </section>
 
-            <h2 className="title-section">
-              Ressources médicales
-            </h2>
-
-            <p className="text-body">
-              Feuille de consentement
-              officielle de la Société
-              Française d’Ophtalmologie.
-            </p>
-
+      <section className="home-section">
+        <div className="home-container home-card home-journey">
+          <div className="home-journey-head">
             <div>
-              <a
-                href="https://www.sfo-online.fr/sites/www.sfo-online.fr/files/medias/documents/12a_Vitrectomie.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-secondary"
-              >
-                Télécharger le PDF
-              </a>
+              <div className="home-card-title">
+                <UserRoundCheck size={24} />
+                <h2>{content.journey.title}</h2>
+              </div>
+              <p>{content.journey.description}</p>
             </div>
 
-
-{/* =========================================================
-    REVIEWS
-========================================================= */}
-
-<section className="section">
-  <div className="container-xl stack-lg">
-
-    <div className="section-header">
-      <span className="text-label">
-        Avis patients
-      </span>
-
-      <h2 className="title-section">
-        Ils partagent leur expérience
-      </h2>
-    </div>
-
-    <ReviewsSection locale={locale} />
-
-  </div>
-</section>
-
-
+            <div className="home-guide-list" aria-label={content.journey.guideAria}>
+              {content.journey.guides.map((guide) => (
+                <Link href={`${prefix}/convalescence`} key={guide} className="home-guide-chip">
+                  {guide}
+                </Link>
+              ))}
+            </div>
           </div>
+
+          <div className="home-journey-grid">
+            {content.journey.cards.map((item) => (
+              <JourneyCard
+                key={item.title}
+                href={`${prefix}${item.href}`}
+                icon={ICONS[item.icon]}
+                title={item.title}
+                text={item.text}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="home-section">
+        <div className="home-container home-card home-understand">
+          <div>
+            <span className="home-section-label">{content.understand.label}</span>
+            <h2>{content.understand.title}</h2>
+            <p>{content.understand.description}</p>
+
+            <div className="home-stage-row">
+              {content.understand.stages.map((stage, index) => (
+                <div className="home-stage" key={stage.title}>
+                  <div className={`home-stage-visual home-stage-visual--${stage.state}`}>
+                    <span className="home-stage-ring" />
+                    <span className="home-stage-focus" />
+                    <span className="home-stage-signal home-stage-signal--one" />
+                    <span className="home-stage-signal home-stage-signal--two" />
+                  </div>
+                  <strong>{stage.title}</strong>
+                  <span>{stage.text}</span>
+                  {index < content.understand.stages.length - 1 && (
+                    <ArrowRight className="home-stage-arrow" size={18} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="home-explainer">
+            <h3>{content.understand.explainerTitle}</h3>
+            <p>{content.understand.explainerText}</p>
+            <Link href={`${prefix}/pathologies/trou-maculaire`}>
+              {content.understand.explainerCta} <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-section home-grid-section">
+        <div className="home-container home-info-grid">
+          {content.infoCards.map((card) => (
+            <InfoCard
+              key={card.title}
+              icon={ICONS[card.icon]}
+              title={card.title}
+              items={card.items}
+            />
+          ))}
+
+          <article className="home-card home-treatment">
+            <div>
+              <div className="home-card-title">
+                <Stethoscope size={24} />
+                <h3>{content.treatment.title}</h3>
+              </div>
+              <p>{content.treatment.text}</p>
+              <Link href={`${prefix}/operation`}>
+                {content.treatment.cta} <ArrowRight size={16} />
+              </Link>
+            </div>
+            <Image
+              src="/brand/home-retina.png"
+              alt={content.treatment.imageAlt}
+              width={230}
+              height={230}
+            />
+          </article>
+        </div>
+      </section>
+
+      <section className="home-section">
+        <div className="home-container home-card home-pathologies">
+          <div className="home-section-head">
+            <div>
+              <div className="home-card-title">
+                <Target size={24} />
+                <h2>{content.pathologies.title}</h2>
+              </div>
+              <p>{content.pathologies.description}</p>
+            </div>
+            <Link href={`${prefix}/pathologies`}>
+              {content.pathologies.cta} <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          <div className="home-pathology-grid">
+            {content.pathologies.cards.map((item) => (
+              <PathologyCard
+                key={item.title}
+                href={`${prefix}${item.href}`}
+                title={item.title}
+                text={item.text}
+                icon={ICONS[item.icon]}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="home-section">
+        <div className="home-container home-card home-recovery">
+          <div className="home-card-title">
+            <Eye size={24} />
+            <h2>{content.recovery.title}</h2>
+          </div>
+          <p>{content.recovery.text}</p>
+
+          <div className="home-recovery-grid">
+            {content.recovery.metrics.map((metric) => (
+              <MiniMetric
+                key={metric.title}
+                title={metric.title}
+                text={metric.text}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="home-section">
+        <div className="home-container home-specialist">
+          <Image
+            src="/brand/home-specialist.png"
+            alt={content.specialist.imageAlt}
+            width={720}
+            height={420}
+          />
+          <div>
+            <h2>{content.specialist.title}</h2>
+            <p>{content.specialist.text}</p>
+            <ul>
+              {content.specialist.items.map((item) => (
+                <li key={item}>
+                  <Check size={16} />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link href={`${prefix}/annuaire`} className="home-btn home-btn-primary">
+              {content.specialist.cta} <ArrowRight size={18} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-section">
+        <div className="home-container home-card">
+          <div className="home-faq-head">
+            <div className="home-card-title">
+              <CircleHelp size={24} />
+              <h2>{content.faq.title}</h2>
+            </div>
+            <Link href={`${prefix}/faq`}>
+              {content.faq.cta} <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          <div className="home-faq-grid">
+            {content.faq.items.map((item) => (
+              <Link href={`${prefix}/faq`} key={item} className="home-faq-item">
+                {item}
+                <span>+</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="home-final">
+        <div className="home-container home-final-card">
+          <Image
+            src="/brand/home-product.png"
+            alt={content.final.imageAlt}
+            width={300}
+            height={220}
+          />
+          <div>
+            <h2>{content.final.title}</h2>
+            <p>{content.final.text}</p>
+          </div>
+          <div className="home-final-points">
+            {content.final.points.map((point) => (
+              <span key={point}>
+                <Check size={16} />
+                {point}
+              </span>
+            ))}
+          </div>
+          <Link href={`${prefix}/convalescence/coussin`} className="home-btn home-btn-light">
+            {content.final.cta} <ArrowRight size={18} />
+          </Link>
         </div>
       </section>
     </main>
+  );
+}
+
+function JourneyCard({
+  href,
+  icon,
+  title,
+  text,
+}: {
+  href: string;
+  icon: ReactNode;
+  title: string;
+  text: string;
+}) {
+  return (
+    <Link href={href} className="home-journey-card">
+      <span>{icon}</span>
+      <strong>{title}</strong>
+      <p>{text}</p>
+      <ArrowRight size={18} />
+    </Link>
+  );
+}
+
+function PathologyCard({
+  href,
+  title,
+  text,
+  icon,
+}: {
+  href: string;
+  title: string;
+  text: string;
+  icon: ReactNode;
+}) {
+  return (
+    <Link href={href} className="home-pathology-card">
+      <span className="home-pathology-icon">
+        {icon}
+      </span>
+      <strong>{title}</strong>
+      <span>{text}</span>
+      <ArrowRight size={16} />
+    </Link>
+  );
+}
+
+function TrustItem({
+  icon,
+  text,
+}: {
+  icon: ReactNode;
+  text: string;
+}) {
+  return (
+    <div className="home-trust-item">
+      {icon}
+      <strong>{text}</strong>
+    </div>
+  );
+}
+
+function InfoCard({
+  icon,
+  title,
+  items,
+}: {
+  icon: ReactNode;
+  title: string;
+  items: string[];
+}) {
+  return (
+    <article className="home-card home-info-card">
+      <div className="home-card-title">
+        {icon}
+        <h3>{title}</h3>
+      </div>
+      <ul>
+        {items.map((item) => (
+          <li key={item}>
+            <Check size={15} />
+            {item}
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
+}
+
+function MiniMetric({
+  title,
+  text,
+}: {
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="home-mini-metric">
+      <strong>{title}</strong>
+      <span>{text}</span>
+    </div>
   );
 }

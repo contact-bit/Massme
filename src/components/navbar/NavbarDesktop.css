@@ -4,20 +4,14 @@
 
 .vm-navbar-desktop {
   position: relative;
-
   z-index: 20;
-
-  display: flex;
-
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-
   justify-content: space-between;
-
   width: 100%;
-
-  min-height: 84px;
-
-  gap: 2.5rem;
+  min-height: 82px;
+  gap: 1.25rem;
 }
 
 /* =========================================================
@@ -107,38 +101,35 @@
 
 .vm-navbar-desktop__center {
   position: relative;
-
   display: flex;
-
   align-items: center;
-
-  justify-content: center;
-
-  flex: 1;
-
-  gap: .5rem;
-
+  justify-content: flex-start;
   min-height: 62px;
-
-  padding:
-    .55rem;
-
+  min-width: 0;
+  padding: .45rem;
   border-radius: 999px;
-
   background:
     rgba(255,255,255,.03);
-
   backdrop-filter:
     blur(18px);
-
   -webkit-backdrop-filter:
     blur(18px);
-
   border:
     1px solid rgba(255,255,255,.06);
-
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.vm-navbar-desktop__primary-row {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: .25rem;
+  width: 100%;
+  min-width: 0;
 }
 
 /* =========================================================
@@ -186,10 +177,7 @@
   justify-content: center;
 
   min-height: 48px;
-
-  padding:
-    0 1rem;
-
+  padding: 0 .9rem;
   border-radius: 999px;
 
   border:
@@ -198,11 +186,11 @@
   color:
     rgba(255,255,255,.82);
 
-  font-size: .93rem;
+  font-size: .96rem;
 
-  font-weight: 500;
+  font-weight: 800;
 
-  letter-spacing: -.015em;
+  letter-spacing: 0;
 
   text-decoration: none;
 
@@ -214,6 +202,13 @@
     transform .25s ease,
     border-color .25s ease,
     box-shadow .25s ease;
+}
+
+.vm-navbar-desktop__link--utility {
+  min-height: 42px;
+  padding: 0 .72rem;
+  font-size: .9rem;
+  font-weight: 800;
 }
 
 /* =========================================================
@@ -286,9 +281,9 @@
   color:
     rgba(255,255,255,.82);
 
-  font-size: .92rem;
+  font-size: .96rem;
 
-  font-weight: 500;
+  font-weight: 800;
 
   letter-spacing: -.01em;
 
@@ -355,14 +350,21 @@
 
 .vm-navbar-desktop__right {
   display: flex;
-
   align-items: center;
-
-  gap: .85rem;
-
+  justify-content: flex-end;
+  gap: .7rem;
   flex-shrink: 0;
-
   min-width: max-content;
+}
+
+.vm-navbar-desktop__utility {
+  display: flex;
+  align-items: center;
+  gap: .15rem;
+  padding: .25rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.05);
 }
 
 /* =========================================================
@@ -405,9 +407,9 @@
 
   color: white;
 
-  font-size: .92rem;
+  font-size: .96rem;
 
-  font-weight: 600;
+  font-weight: 800;
 
   letter-spacing: -.015em;
 
@@ -487,5 +489,151 @@
   .vm-navbar-desktop__cta {
     padding:
       0 1rem;
+  }
+}
+
+/* =========================================================
+   PUBLIC SHOP LIGHT THEME
+========================================================= */
+
+.public-shell .vm-navbar-desktop {
+  min-height: 70px;
+  min-width: 0;
+  gap: clamp(.6rem, 1vw, 1.25rem);
+}
+
+.public-shell .vm-navbar-desktop__left,
+.public-shell .vm-navbar-desktop__right {
+  min-width: 0;
+}
+
+.public-shell .vm-navbar-desktop__right {
+  flex-shrink: 1;
+  gap: clamp(.32rem, .62vw, .68rem);
+}
+
+.public-shell .vm-navbar-desktop__logo-image {
+  width: clamp(184px, 16vw, 250px);
+  height: auto;
+}
+
+.public-shell .vm-navbar-desktop__logo::before,
+.public-shell .vm-navbar-desktop__center::before {
+  display: none;
+}
+
+.public-shell .vm-navbar-desktop__center {
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 54px;
+  padding: .24rem;
+  border: 1px solid rgba(10, 36, 107, .10);
+  background: rgba(255, 255, 255, .58);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.public-shell .vm-navbar-desktop__primary-row {
+  gap: .08rem;
+}
+
+.public-shell .vm-navbar-desktop__utility {
+  gap: .06rem;
+  padding: .2rem;
+  border-color: rgba(10, 36, 107, .10);
+  background: rgba(255, 255, 255, .62);
+}
+
+.public-shell .vm-navbar-desktop__link,
+.public-shell .vm-dropdown__link {
+  min-height: 44px;
+  padding: 0 clamp(.48rem, .62vw, .82rem);
+  color: #071b55;
+  font-size: clamp(13px, .82vw, 15px);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.public-shell .vm-navbar-desktop__link--utility {
+  min-height: 42px;
+  padding: 0 clamp(.42rem, .54vw, .68rem);
+  font-size: clamp(12px, .76vw, 14px);
+  font-weight: 850;
+}
+
+.public-shell .vm-navbar-desktop__link:hover,
+.public-shell .vm-navbar-desktop__link--active,
+.public-shell .vm-dropdown:hover .vm-dropdown__trigger {
+  border-color: rgba(10, 36, 107, .10);
+  background: rgba(214, 236, 244, .45);
+  color: #0a246b;
+  box-shadow: none;
+}
+
+.public-shell .vm-dropdown:hover .vm-dropdown__link,
+.public-shell .vm-dropdown:hover .vm-dropdown__icon,
+.public-shell .vm-dropdown__icon {
+  color: #0a246b;
+}
+
+.public-shell .vm-navbar-desktop__dropdown-link {
+  color: #071b55;
+}
+
+.public-shell .vm-navbar-desktop__dropdown-link:hover,
+.public-shell .vm-navbar-desktop__dropdown-link--active {
+  border-color: rgba(10, 36, 107, .10);
+  background: rgba(214, 236, 244, .48);
+  color: #0a246b;
+  box-shadow: none;
+}
+
+.public-shell .vm-navbar-desktop__cta {
+  min-height: 50px;
+  padding: 0 clamp(.82rem, 1vw, 1.18rem);
+  border-radius: 7px;
+  border-color: #0a246b;
+  background: #0a246b;
+  color: #fff;
+  font-size: clamp(13px, .82vw, 15px);
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: 0 12px 24px rgba(10, 36, 107, .18);
+}
+
+.public-shell .vm-navbar-desktop__cta:hover {
+  border-color: #0a246b;
+  background: #071b55;
+  box-shadow: 0 16px 28px rgba(10, 36, 107, .22);
+}
+
+@media (max-width: 1380px) {
+  .public-shell .vm-navbar-desktop {
+    gap: 1rem;
+  }
+
+  .public-shell .vm-navbar-desktop__logo-image {
+    width: 220px;
+  }
+
+  .public-shell .vm-navbar-desktop__center {
+    padding: .2rem;
+  }
+
+  .public-shell .vm-navbar-desktop__link,
+  .public-shell .vm-dropdown__link {
+    padding: 0 .58rem;
+    font-size: 13px;
+  }
+
+  .public-shell .vm-navbar-desktop__link--utility {
+    padding: 0 .48rem;
+    font-size: 12px;
+  }
+
+  .public-shell .vm-navbar-desktop__cta {
+    padding: 0 .82rem;
+    font-size: 13px;
   }
 }

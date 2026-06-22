@@ -16,9 +16,12 @@ import {
 } from "@/lib/shipping-i18n";
 
 import {
-  COUNTRIES,
   COUNTRY_TO_LOCALE,
 } from "@/lib/countries";
+import {
+  isConcreteCountry,
+  useAdminScope,
+} from "../context/adminScope";
 
 import "./shipping-admin.css";
 
@@ -90,8 +93,8 @@ export default function ShippingAdminPage() {
       null
     );
 
-  const [activeCountry, setActiveCountry] =
-    useState<CountryCode>("FR");
+  const { country: activeCountry } =
+    useAdminScope();
 
   const [showCreate, setShowCreate] =
     useState(false);
@@ -132,11 +135,12 @@ export default function ShippingAdminPage() {
       }
 
       setMethods(
-        json.methods.map(
-          (m: any) => ({
-            id: m.id,
+        (json.methods ?? []).map(
+          (m: Record<string, unknown>) => ({
+            id: String(m.id),
 
-            country: m.country,
+            country:
+              m.country as CountryCode,
 
             name:
               m.name ?? {},
@@ -145,7 +149,7 @@ export default function ShippingAdminPage() {
               m.delay ?? {},
 
             type:
-              m.type ||
+              (m.type as ShippingMethod["type"]) ||
               "home",
 
             relayProvider:
@@ -189,6 +193,11 @@ export default function ShippingAdminPage() {
   useEffect(() => {
     reload();
   }, []);
+
+  useEffect(() => {
+    setEditing(null);
+    setShowCreate(false);
+  }, [activeCountry]);
 
   /* =========================================================
      DELETE
@@ -341,8 +350,9 @@ export default function ShippingAdminPage() {
     return methods
       .filter(
         (m) =>
+          activeCountry === "ALL" ||
           m.country ===
-          activeCountry
+            activeCountry
       )
       .sort(
         (a, b) =>
@@ -389,66 +399,10 @@ export default function ShippingAdminPage() {
           </button>
         </header>
 
-        {/* COUNTRIES */}
-        <section className="shipping-tabs">
-
-          {COUNTRIES.map(
-            (country) => (
-              <button
-                key={
-                  country.code
-                }
-                onClick={() => {
-                  setActiveCountry(
-                    country.code
-                  );
-
-                  setEditing(
-                    null
-                  );
-
-                  setShowCreate(
-                    false
-                  );
-                }}
-                className={`shipping-tab ${
-                  activeCountry ===
-                  country.code
-                    ? "active"
-                    : ""
-                }`}
-              >
-
-                <span className="shipping-tab-flag">
-                  {country.flag}
-                </span>
-
-                <span className="shipping-tab-content">
-
-                  <span className="shipping-tab-label">
-                    {
-                      country.label
-                    }
-                  </span>
-
-                  <span className="shipping-tab-code">
-                    {
-                      country.code
-                    }
-                  </span>
-
-                </span>
-
-              </button>
-            )
-          )}
-
-        </section>
-
         {/* CREATE */}
         <section className="shipping-create-section">
 
-          {showCreate && (
+          {showCreate && isConcreteCountry(activeCountry) && (
             <div className="shipping-card">
 
               <div className="shipping-card-body">
@@ -468,6 +422,12 @@ export default function ShippingAdminPage() {
 
               </div>
 
+            </div>
+          )}
+
+          {showCreate && !isConcreteCountry(activeCountry) && (
+            <div className="shipping-empty">
+              Sélectionnez un pays dans la barre admin pour créer une méthode.
             </div>
           )}
 
@@ -535,6 +495,10 @@ export default function ShippingAdminPage() {
                     COUNTRY_TO_LOCALE[
                       method
                         .country
+                    ];
+                  const fallbackLocale =
+                    COUNTRY_TO_LOCALE[
+                      method.country
                     ];
 
                   const isOpen =
@@ -644,6 +608,9 @@ export default function ShippingAdminPage() {
                                   .name?.[
                                   locale
                                 ] ||
+                                  method.name?.[
+                                    fallbackLocale
+                                  ] ||
                                   "Méthode"}
                               </h3>
 
@@ -682,7 +649,9 @@ export default function ShippingAdminPage() {
                           </div>
 
                           <p className="shipping-method-delay">
-                            {delay}
+                            {method.delay?.[locale] ||
+                              method.delay?.[fallbackLocale] ||
+                              delay}
                           </p>
 
                           <div className="shipping-method-bottom">

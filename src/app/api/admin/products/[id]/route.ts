@@ -101,6 +101,38 @@ function normalizePricedByMarket(
   return { markets, pricesByMarket, vatByMarket };
 }
 
+function normalizeMarketSettings(
+  input: any,
+  markets: Market[]
+): Record<Market, { isActive: boolean }> {
+  const src = input?.marketSettings;
+  const out: Record<Market, { isActive: boolean }> = {} as any;
+
+  for (const market of markets) {
+    out[market] = {
+      isActive: src?.[market]?.isActive !== false,
+    };
+  }
+
+  return out;
+}
+
+function normalizeMarketSettingsRecord(
+  input: any
+): Partial<Record<Market, { isActive: boolean }>> {
+  const out: Partial<Record<Market, { isActive: boolean }>> = {};
+
+  for (const market of MARKETS) {
+    if (input?.[market]) {
+      out[market] = {
+        isActive: input[market]?.isActive !== false,
+      };
+    }
+  }
+
+  return out;
+}
+
 /* ----------------------------------
    COMMON SECURITY
 ---------------------------------- */
@@ -221,29 +253,43 @@ export async function PATCH(req: Request) {
       update.description = pickLangRecord(data.description);
 
     /* ---------- PRODUIT : MARKETS / PRICES / TVA ---------- */
-    let productMarkets: Market[] = ["FR"];
+    let productMarkets: Market[] | null = null;
     if (Array.isArray(data.markets)) {
       const filtered = data.markets.filter(isMarket);
       if (filtered.length > 0) {
         productMarkets = filtered;
+        update.markets = productMarkets;
+
+        const currencyByMarket: Record<Market, Currency> = {} as any;
+        for (const m of productMarkets) {
+          currencyByMarket[m] = CURRENCY_BY_MARKET[m];
+        }
+        update.currencyByMarket = currencyByMarket;
+        update.marketSettings = normalizeMarketSettings(data, productMarkets);
+
+        const productPriced = normalizePricedByMarket(data, productMarkets);
+        update.pricesByMarket = productPriced.pricesByMarket;
+        update.vatByMarket = productPriced.vatByMarket;
       }
+    } else if ("marketSettings" in data) {
+      const currentSnap = await dbAdmin
+        .collection("products")
+        .doc(id)
+        .get();
+      const currentMarketSettings =
+        currentSnap.data()?.marketSettings || {};
+      update.marketSettings = normalizeMarketSettingsRecord(
+        {
+          ...currentMarketSettings,
+          ...data.marketSettings,
+        }
+      );
     }
-    update.markets = productMarkets;
-
-    const currencyByMarket: Record<Market, Currency> = {} as any;
-    for (const m of productMarkets) {
-      currencyByMarket[m] = CURRENCY_BY_MARKET[m];
-    }
-    update.currencyByMarket = currencyByMarket;
-
-    const productPriced = normalizePricedByMarket(data, productMarkets);
-    update.pricesByMarket = productPriced.pricesByMarket;
-    update.vatByMarket = productPriced.vatByMarket;
 
     /* ---------- VARIANTS ---------- */
     if (Array.isArray(data.variants)) {
       update.variants = data.variants.map((v: any) => {
-        const priced = normalizePricedByMarket(v, productMarkets);
+        const priced = normalizePricedByMarket(v, productMarkets || ["FR"]);
 
         return {
           id: String(v.id || ""),
@@ -256,14 +302,12 @@ export async function PATCH(req: Request) {
           vatByMarket: priced.vatByMarket,
         };
       });
-    } else {
-      update.variants = [];
     }
 
     /* ---------- ADDONS ---------- */
     if (Array.isArray(data.addons)) {
       update.addons = data.addons.map((a: any) => {
-        const priced = normalizePricedByMarket(a, productMarkets);
+        const priced = normalizePricedByMarket(a, productMarkets || ["FR"]);
 
         return {
           id: String(a.id || ""),
@@ -276,8 +320,6 @@ export async function PATCH(req: Request) {
           vatByMarket: priced.vatByMarket,
         };
       });
-    } else {
-      update.addons = [];
     }
 
     /* ---------- LEGACY (OPTIONNEL) ---------- */

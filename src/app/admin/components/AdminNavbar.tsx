@@ -9,6 +9,7 @@ import {
   Package,
   Truck,
   CreditCard,
+  ClipboardList,
   Star,
   Menu,
   X,
@@ -31,39 +32,47 @@ type Tab = {
   icon: React.ReactNode;
 };
 
+function getStoredRole(): AdminRole {
+  if (typeof window === "undefined") {
+    return "admin";
+  }
+
+  const storedRole = localStorage.getItem(
+    "admin_role"
+  );
+
+  return storedRole === "logistics"
+    ? "logistics"
+    : "admin";
+}
+
+function getStoredTheme(): "dark" | "light" {
+  if (typeof window === "undefined") {
+    return "dark";
+  }
+
+  return localStorage.getItem("admin_theme") ===
+    "light"
+    ? "light"
+    : "dark";
+}
+
 export default function AdminNavbar() {
   const pathname = usePathname();
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState<
     "dark" | "light"
-  >("dark");
+  >(getStoredTheme);
 
-  const [role, setRole] = useState<AdminRole>("admin");
+  const [role] =
+    useState<AdminRole>(getStoredRole);
 
   useEffect(() => {
-    setMounted(true);
-
-    const storedRole = localStorage.getItem(
-      "admin_role"
-    ) as AdminRole | null;
-
-    if (storedRole) {
-      setRole(storedRole);
-    }
-
-    const storedTheme =
-      localStorage.getItem("admin_theme") ===
-      "light"
-        ? "light"
-        : "dark";
-
-    setTheme(storedTheme);
     document.documentElement.dataset.adminTheme =
-      storedTheme;
+      theme;
 
     const onScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -74,7 +83,7 @@ export default function AdminNavbar() {
     return () => {
       window.removeEventListener("scroll", onScroll);
     };
-  }, []);
+  }, [theme]);
 
   const tabs: Tab[] = useMemo(() => {
     if (role === "logistics") {
@@ -108,6 +117,13 @@ export default function AdminNavbar() {
         label: "Produits",
         short: "Produits",
         icon: <Package size={17} />,
+      },
+
+      {
+        href: "/admin/annuaire",
+        label: "Annuaire",
+        short: "Annuaire",
+        icon: <ClipboardList size={17} />,
       },
 
       {
@@ -168,8 +184,6 @@ export default function AdminNavbar() {
     document.documentElement.dataset.adminTheme =
       nextTheme;
   }
-
-  if (!mounted) return null;
 
   return (
     <>

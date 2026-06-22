@@ -17,6 +17,10 @@ import { useOrderFilters } from "./hooks/useOrderFilters";
 import { Toast } from "./components/Toast";
 import { TopBar } from "./components/TopBar";
 import { OrdersList } from "./components/OrdersList";
+import {
+  matchesAdminCountry,
+  useAdminScope,
+} from "../context/adminScope";
 
 /* ================= HELPERS ================= */
 
@@ -24,10 +28,43 @@ function getOrderLabel(o?: Order | null) {
   return o?.orderNumber || (o?.id ? compactId(o.id) : "—");
 }
 
+function orderMatchesCountry(
+  order: Order,
+  country: ReturnType<
+    typeof useAdminScope
+  >["country"]
+) {
+  if (country === "ALL") {
+    return true;
+  }
+
+  const candidates = [
+    order.totals?.country,
+    order.shippingAddress?.country,
+    order.billingAddress?.country,
+    order.relayPoint?.country,
+  ];
+
+  return candidates.some((value) =>
+    matchesAdminCountry(value, country)
+  );
+}
+
 export default function AdminOrdersPage() {
+  const { country: activeCountry } =
+    useAdminScope();
+
   const { toast, toastIt } = useToast();
-  const [openOrderId, setOpenOrderId] =
-    useState<string | null>(null);
+  const [openOrderId] =
+    useState<string | null>(() => {
+      if (typeof window === "undefined") {
+        return null;
+      }
+
+      return new URLSearchParams(
+        window.location.search
+      ).get("open");
+    });
 
   const {
     orders,
@@ -45,8 +82,16 @@ export default function AdminOrdersPage() {
   const filters = useOrderFilters("", "");
 
   const filtered = useMemo(
-    () => filters.apply(orders),
-    [orders, filters]
+    () =>
+      filters
+        .apply(orders)
+        .filter((order) =>
+          orderMatchesCountry(
+            order,
+            activeCountry
+          )
+        ),
+    [activeCountry, orders, filters]
   );
 
   const pagination = usePagination(filtered, 12);
@@ -59,14 +104,6 @@ export default function AdminOrdersPage() {
   }, [initOnce]);
 
   useEffect(() => {
-    const params = new URLSearchParams(
-      window.location.search
-    );
-
-    setOpenOrderId(params.get("open"));
-  }, []);
-
-  useEffect(() => {
     if (!openOrderId) return;
     if (orders.length === 0) return;
 
@@ -76,13 +113,15 @@ export default function AdminOrdersPage() {
 
     if (index === -1) return;
 
-    setActiveId(openOrderId);
-    setPage(
-      () =>
-        Math.floor(
-          index / pageSize
-        ) + 1
-    );
+    queueMicrotask(() => {
+      setActiveId(openOrderId);
+      setPage(
+        () =>
+          Math.floor(
+            index / pageSize
+          ) + 1
+      );
+    });
   }, [
     openOrderId,
     orders.length,
@@ -155,7 +194,7 @@ export default function AdminOrdersPage() {
                 currentPage: pagination.currentPage,
                 totalPages: pagination.totalPages,
                 paged: pagination.paged as Order[],
-                setPage: pagination.setPage as any,
+                setPage: pagination.setPage,
               }}
               selection={selection}
               deleting={deleting}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingBag, Package, Truck } from "lucide-react";
+import { ClipboardList, LayoutDashboard, ShoppingBag, Package, Truck } from "lucide-react";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -11,6 +11,7 @@ export default function AdminSidebar() {
     { href: "/admin", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { href: "/admin/orders", label: "Commandes", icon: <Package size={18} /> },
     { href: "/admin/products", label: "Produits", icon: <ShoppingBag size={18} /> },
+    { href: "/admin/annuaire", label: "Annuaire", icon: <ClipboardList size={18} /> },
     { href: "/admin/shipping", label: "Livraison", icon: <Truck size={18} /> },
   ];
 

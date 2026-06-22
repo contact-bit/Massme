@@ -19,8 +19,77 @@ import { getLogisticStatus } from "../orders/domain/logistics";
 import LogisticsList from "./LogisticsList";
 
 import type { Order } from "../orders/domain/types";
+import {
+  matchesAdminCountry,
+  useAdminScope,
+} from "../context/adminScope";
+
+function orderMatchesCountry(
+  order: Order,
+  country: ReturnType<
+    typeof useAdminScope
+  >["country"]
+) {
+  if (country === "ALL") {
+    return true;
+  }
+
+  const candidates = [
+    order.totals?.country,
+    order.shippingAddress?.country,
+    order.billingAddress?.country,
+    order.relayPoint?.country,
+  ];
+
+  return candidates.some((value) =>
+    matchesAdminCountry(value, country)
+  );
+}
+
+type OrderWithPayment = Order & {
+  paymentStatus?: unknown;
+  paymentProvider?: unknown;
+  provider?: unknown;
+  payment?: {
+    status?: unknown;
+    provider?: unknown;
+  };
+};
+
+type FirestoreDateLike = {
+  toDate?: () => Date;
+  _seconds?: number;
+};
+
+function lowerValue(value: unknown) {
+  return String(value || "").toLowerCase();
+}
+
+function orderCreatedTime(order: Order) {
+  const createdAt =
+    order.createdAt as FirestoreDateLike | null | undefined;
+
+  if (
+    typeof createdAt?.toDate === "function"
+  ) {
+    return (
+      createdAt.toDate().getTime?.() ?? 0
+    );
+  }
+
+  if (
+    typeof createdAt?._seconds === "number"
+  ) {
+    return createdAt._seconds * 1000;
+  }
+
+  return 0;
+}
 
 export default function LogisticsPage() {
+  const { country: activeCountry } =
+    useAdminScope();
+
   const { toast, toastIt } =
     useToast();
 
@@ -75,27 +144,37 @@ export default function LogisticsPage() {
   const logisticsEligible =
     useMemo(() => {
       return orders.filter((o) => {
-        const orderStatus = String(
-          (o as any)?.status || ""
-        ).toLowerCase();
+        if (
+          !orderMatchesCountry(
+            o,
+            activeCountry
+          )
+        ) {
+          return false;
+        }
+
+        const orderWithPayment =
+          o as OrderWithPayment;
+
+        const orderStatus = lowerValue(
+          orderWithPayment.status
+        );
 
         const paymentStatus =
-          String(
-            (o as any)
-              ?.paymentStatus ||
-              (o as any)?.payment
-                ?.status ||
-              ""
-          ).toLowerCase();
+          lowerValue(
+            orderWithPayment
+              .paymentStatus ||
+              orderWithPayment.payment
+                ?.status
+          );
 
-        const provider = String(
-          (o as any)
-            ?.paymentProvider ||
-            (o as any)?.provider ||
-            (o as any)?.payment
-              ?.provider ||
-            ""
-        ).toLowerCase();
+        const provider = lowerValue(
+          orderWithPayment
+            .paymentProvider ||
+            orderWithPayment.provider ||
+            orderWithPayment.payment
+              ?.provider
+        );
 
         const isBankTransfer =
           provider ===
@@ -132,7 +211,7 @@ export default function LogisticsPage() {
 
         return true;
       });
-    }, [orders]);
+    }, [activeCountry, orders]);
 
   const logisticsRows = useMemo(() => {
     return [...logisticsEligible].sort(
@@ -149,21 +228,8 @@ export default function LogisticsPage() {
             : 1;
         }
 
-        const aTime =
-          (a as any)?.createdAt?.toDate?.()
-            ?.getTime?.() ??
-          ((a as any)?.createdAt?._seconds
-            ? (a as any).createdAt
-                ._seconds * 1000
-            : 0);
-
-        const bTime =
-          (b as any)?.createdAt?.toDate?.()
-            ?.getTime?.() ??
-          ((b as any)?.createdAt?._seconds
-            ? (b as any).createdAt
-                ._seconds * 1000
-            : 0);
+        const aTime = orderCreatedTime(a);
+        const bTime = orderCreatedTime(b);
 
         return bTime - aTime;
       }

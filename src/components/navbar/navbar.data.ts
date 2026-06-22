@@ -8,7 +8,7 @@ import type {
 ========================================================= */
 
 export const LOGO_URL =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/500df708-673d-4a48-549d-d1b311a8e600/public";
+  "/brand/logo-officiel.png";
 
 /* =========================================================
    LANGUAGES
@@ -813,22 +813,22 @@ export function generateNavbarLinks(
       `${prefix}/annuaire`,
 
     ophthalmologists:
-      `${prefix}/annuaire/ophtalmologue`,
+      `${prefix}/annuaire`,
 
     ophthalmologistsAM:
-      `${prefix}/annuaire/ophtalmologue/alpes-maritimes`,
+      `${prefix}/annuaire`,
 
     ophthalmologistsNice:
-      `${prefix}/annuaire/ophtalmologue/alpes-maritimes/nice`,
+      `${prefix}/annuaire`,
 
     clinics:
-      `${prefix}/annuaire/hopitaux-cliniques`,
+      `${prefix}/annuaire`,
 
     clinicsAM:
-      `${prefix}/annuaire/hopitaux-cliniques/alpes-maritimes`,
+      `${prefix}/annuaire`,
 
     clinicsNice:
-      `${prefix}/annuaire/hopitaux-cliniques/alpes-maritimes/nice`,
+      `${prefix}/annuaire`,
 
     /* =========================
        STATIC
@@ -1059,83 +1059,5 @@ export function generateDropdowns(
       ],
     },
 
-    {
-      label:
-        t.nav.directory,
-
-      href: links.directory,
-
-      items: [
-        {
-          label:
-            dropdowns
-              .directory
-              .overview,
-
-          href:
-            links.directory,
-        },
-
-        {
-          label:
-            dropdowns
-              .directory
-              .ophthalmologists,
-
-          href:
-            links.ophthalmologists,
-        },
-
-        {
-          label:
-            dropdowns
-              .directory
-              .ophthalmologistsAM,
-
-          href:
-            links.ophthalmologistsAM,
-        },
-
-        {
-          label:
-            dropdowns
-              .directory
-              .ophthalmologistsNice,
-
-          href:
-            links.ophthalmologistsNice,
-        },
-
-        {
-          label:
-            dropdowns
-              .directory
-              .clinics,
-
-          href:
-            links.clinics,
-        },
-
-        {
-          label:
-            dropdowns
-              .directory
-              .clinicsAM,
-
-          href:
-            links.clinicsAM,
-        },
-
-        {
-          label:
-            dropdowns
-              .directory
-              .clinicsNice,
-
-          href:
-            links.clinicsNice,
-        },
-      ],
-    },
   ];
 }

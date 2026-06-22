@@ -1,19 +1,22 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
+import {
+  Facebook,
+  Instagram,
+  Linkedin,
+  Mail,
+  MapPin,
+  ShieldCheck,
+  Youtube,
+} from "lucide-react";
+
+import { LOGO_URL } from "@/components/navbar/navbar.data";
+
 import "../styles/shop/components/footer.css";
 
-/* ------------------------------------------
-   🌍 LOGO
------------------------------------------- */
-const LOGO_URL =
-  "https://imagedelivery.net/mEerI0ULsAvmhZskQQTV1g/5112d871-7854-47e2-2838-1790ba171700/public";
-
-/* ------------------------------------------
-   🌍 LOCALES
------------------------------------------- */
 type Locale = "fr" | "en" | "es" | "de" | "it" | "nl" | "pt";
 
 const SUPPORTED_LOCALES: Locale[] = [
@@ -26,382 +29,337 @@ const SUPPORTED_LOCALES: Locale[] = [
   "pt",
 ];
 
-/* ------------------------------------------
-   🌍 TRADUCTIONS FOOTER
------------------------------------------- */
 const CONTENT: Record<
   Locale,
   {
-    desc: string;
-    badges: string[];
-    nav: {
-      title: string;
-      links: { label: string; href: string }[];
-    };
-    info: {
-      title: string;
-      items: string[];
-    };
-    contact: {
-      title: string;
-      ship: string;
-      email: string;
-      country: string;
-    };
-    legalLinks: { label: string; href: string }[];
-    bottom: string;
+    about: string;
+    resources: string;
+    information: string;
+    contact: string;
+    medicalNotice: string;
+    contactEmail: string;
+    press: string;
+    copyright: string;
+    tagline: string;
+    socialAria: string;
+    aboutLinks: Array<{ label: string; href: string }>;
+    resourceLinks: Array<{ label: string; href: string }>;
+    infoLinks: Array<{ label: string; href: string }>;
   }
 > = {
   fr: {
-    desc:
-      "Dispositif médical d’accompagnement de la convalescence après vitrectomie.",
-    badges: [
-      "Dispositif médical certifié CE",
-      "Conçu et fabriqué en France",
-      "Accompagnement post-opératoire vitrectomie",
+    about: "À propos",
+    resources: "Ressources",
+    information: "Informations",
+    contact: "Contact",
+    medicalNotice:
+      "VitrectoMed accompagne les patients dans la compréhension de la vitrectomie et la récupération post-opératoire.",
+    contactEmail: "Nous écrire",
+    press: "Presse",
+    copyright: "© 2026 VitrectoMed — Tous droits réservés.",
+    tagline: "Comprendre. Se préparer. Récupérer.",
+    socialAria: "Réseaux sociaux",
+    aboutLinks: [
+      { label: "Notre mission", href: "" },
+      { label: "Comité éditorial", href: "/contact" },
+      { label: "Méthodologie", href: "/blog" },
+      { label: "Références médicales", href: "/pathologies" },
     ],
-    nav: {
-      title: "Navigation",
-      links: [
-        { label: "Accueil", href: "/fr" },
-        { label: "Fonctionnement", href: "/fr/a-propos" },
-        { label: "Commander VitectroMed", href: "/fr/products" },
-      ],
-    },
-    info: {
-      title: "Infos médicales",
-      items: [
-        "Conforme aux recommandations médicales",
-        "Ne remplace pas l’avis de votre ophtalmologue",
-      ],
-    },
-    contact: {
-      title: "Contact",
-      ship: "Livraison France & Europe",
-      email: "contact@vitectromed.com",
-      country: "France",
-    },
-    legalLinks: [
-      { label: "Mentions légales", href: "/fr/mentions-legales" },
-      { label: "Confidentialité", href: "/fr/confidentialite" },
-      { label: "CGV", href: "/fr/cgv" },
-      { label: "Remboursement", href: "/fr/remboursement" },
+    resourceLinks: [
+      { label: "Guides pratiques", href: "/blog" },
+      { label: "Vidéos explicatives", href: "/operation" },
+      { label: "Témoignages patients", href: "/temoignage" },
+      { label: "Questions fréquentes", href: "/faq" },
     ],
-    bottom:
-      "© 2025 VitectroMed — Tous droits réservés. Dispositif médical destiné à l’accompagnement post-opératoire après vitrectomie.",
+    infoLinks: [
+      { label: "Mentions légales", href: "/mentions-legales" },
+      { label: "Politique de confidentialité", href: "/confidentialite" },
+      { label: "Cookies", href: "/cookies" },
+      { label: "CGU", href: "/cgu" },
+    ],
   },
-
   en: {
-    desc: "Medical device supporting recovery after vitrectomy.",
-    badges: [
-      "CE-certified medical device",
-      "Designed and made in France",
-      "Post-operative vitrectomy support",
+    about: "About",
+    resources: "Resources",
+    information: "Information",
+    contact: "Contact",
+    medicalNotice:
+      "VitrectoMed helps patients understand vitrectomy and post-operative recovery.",
+    contactEmail: "Email us",
+    press: "Press",
+    copyright: "© 2026 VitrectoMed — All rights reserved.",
+    tagline: "Understand. Prepare. Recover.",
+    socialAria: "Social media",
+    aboutLinks: [
+      { label: "Our mission", href: "" },
+      { label: "Editorial board", href: "/contact" },
+      { label: "Methodology", href: "/blog" },
+      { label: "Medical references", href: "/pathologies" },
     ],
-    nav: {
-      title: "Navigation",
-      links: [
-        { label: "Home", href: "/en" },
-        { label: "How it works", href: "/en/a-propos" },
-        { label: "Order VitectroMed", href: "/en/products" },
-      ],
-    },
-    info: {
-      title: "Medical info",
-      items: [
-        "Use in accordance with medical recommendations",
-        "Does not replace your ophthalmologist’s advice",
-      ],
-    },
-    contact: {
-      title: "Contact",
-      ship: "Delivery in Europe",
-      email: "contact@vitectromed.com",
-      country: "France",
-    },
-    legalLinks: [
-      { label: "Legal notice", href: "/en/mentions-legales" },
-      { label: "Privacy", href: "/en/confidentialite" },
-      { label: "Terms & Conditions", href: "/en/cgv" },
-      { label: "Refunds", href: "/en/remboursement" },
+    resourceLinks: [
+      { label: "Practical guides", href: "/blog" },
+      { label: "Explainer videos", href: "/operation" },
+      { label: "Patient stories", href: "/temoignage" },
+      { label: "Frequently asked questions", href: "/faq" },
     ],
-    bottom:
-      "© 2025 VitectroMed — All rights reserved. Medical device for post-operative vitrectomy recovery.",
+    infoLinks: [
+      { label: "Legal notice", href: "/mentions-legales" },
+      { label: "Privacy policy", href: "/confidentialite" },
+      { label: "Cookies", href: "/cookies" },
+      { label: "Terms of use", href: "/cgu" },
+    ],
   },
-
   es: {
-    desc:
-      "Dispositivo médico para apoyar la recuperación tras una vitrectomía.",
-    badges: [
-      "Dispositivo médico con certificación CE",
-      "Diseñado y fabricado en Francia",
-      "Soporte postoperatorio de vitrectomía",
+    about: "Acerca de",
+    resources: "Recursos",
+    information: "Información",
+    contact: "Contacto",
+    medicalNotice:
+      "VitrectoMed ayuda a los pacientes a comprender la vitrectomía y la recuperación postoperatoria.",
+    contactEmail: "Escríbenos",
+    press: "Prensa",
+    copyright: "© 2026 VitrectoMed — Todos los derechos reservados.",
+    tagline: "Comprender. Prepararse. Recuperarse.",
+    socialAria: "Redes sociales",
+    aboutLinks: [
+      { label: "Nuestra misión", href: "" },
+      { label: "Comité editorial", href: "/contact" },
+      { label: "Metodología", href: "/blog" },
+      { label: "Referencias médicas", href: "/pathologies" },
     ],
-    nav: {
-      title: "Navegación",
-      links: [
-        { label: "Inicio", href: "/es" },
-        { label: "Funcionamiento", href: "/es/a-propos" },
-        { label: "Comprar VitectroMed", href: "/es/products" },
-      ],
-    },
-    info: {
-      title: "Información médica",
-      items: [
-        "Cumple las recomendaciones médicas",
-        "No sustituye el consejo del oftalmólogo",
-      ],
-    },
-    contact: {
-      title: "Contacto",
-      ship: "Envíos en Europa",
-      email: "contact@vitectromed.com",
-      country: "Francia",
-    },
-    legalLinks: [
-      { label: "Aviso legal", href: "/es/mentions-legales" },
-      { label: "Privacidad", href: "/es/confidentialite" },
-      { label: "Condiciones", href: "/es/cgv" },
-      { label: "Reembolsos", href: "/es/remboursement" },
+    resourceLinks: [
+      { label: "Guías prácticas", href: "/blog" },
+      { label: "Vídeos explicativos", href: "/operation" },
+      { label: "Testimonios de pacientes", href: "/temoignage" },
+      { label: "Preguntas frecuentes", href: "/faq" },
     ],
-    bottom:
-      "© 2025 VitectroMed — Todos los derechos reservados.",
+    infoLinks: [
+      { label: "Aviso legal", href: "/mentions-legales" },
+      { label: "Política de privacidad", href: "/confidentialite" },
+      { label: "Cookies", href: "/cookies" },
+      { label: "Condiciones de uso", href: "/cgu" },
+    ],
   },
-
   de: {
-    desc:
-      "Medizinisches Gerät zur Unterstützung der Genesung nach Vitrektomie.",
-    badges: [
-      "CE-zertifiziertes Medizinprodukt",
-      "Entwickelt und hergestellt in Frankreich",
-      "Postoperative Vitrektomie-Unterstützung",
+    about: "Über uns",
+    resources: "Ressourcen",
+    information: "Informationen",
+    contact: "Kontakt",
+    medicalNotice:
+      "VitrectoMed hilft Patienten, die Vitrektomie und die postoperative Erholung besser zu verstehen.",
+    contactEmail: "E-Mail senden",
+    press: "Presse",
+    copyright: "© 2026 VitrectoMed — Alle Rechte vorbehalten.",
+    tagline: "Verstehen. Vorbereiten. Erholen.",
+    socialAria: "Soziale Netzwerke",
+    aboutLinks: [
+      { label: "Unsere Mission", href: "" },
+      { label: "Redaktionsbeirat", href: "/contact" },
+      { label: "Methodik", href: "/blog" },
+      { label: "Medizinische Referenzen", href: "/pathologies" },
     ],
-    nav: {
-      title: "Navigation",
-      links: [
-        { label: "Startseite", href: "/de" },
-        { label: "Funktionsweise", href: "/de/a-propos" },
-        { label: "VitectroMed bestellen", href: "/de/products" },
-      ],
-    },
-    info: {
-      title: "Medizinische Infos",
-      items: [
-        "Gemäß medizinischen Empfehlungen",
-        "Ersetzt nicht den Rat Ihres Augenarztes",
-      ],
-    },
-    contact: {
-      title: "Kontakt",
-      ship: "Lieferung in Europa",
-      email: "contact@vitectromed.com",
-      country: "Frankreich",
-    },
-    legalLinks: [
-      { label: "Impressum", href: "/de/mentions-legales" },
-      { label: "Datenschutz", href: "/de/confidentialite" },
-      { label: "AGB", href: "/de/cgv" },
-      { label: "Rückerstattung", href: "/de/remboursement" },
+    resourceLinks: [
+      { label: "Praktische Leitfäden", href: "/blog" },
+      { label: "Erklärvideos", href: "/operation" },
+      { label: "Patientenerfahrungen", href: "/temoignage" },
+      { label: "Häufige Fragen", href: "/faq" },
     ],
-    bottom:
-      "© 2025 VitectroMed — Alle Rechte vorbehalten.",
+    infoLinks: [
+      { label: "Impressum", href: "/mentions-legales" },
+      { label: "Datenschutzerklärung", href: "/confidentialite" },
+      { label: "Cookies", href: "/cookies" },
+      { label: "Nutzungsbedingungen", href: "/cgu" },
+    ],
   },
-
   it: {
-    desc:
-      "Dispositivo medico per supportare il recupero dopo vitrectomia.",
-    badges: [
-      "Dispositivo medico certificato CE",
-      "Progettato e prodotto in Francia",
-      "Supporto post-operatorio vitrectomia",
+    about: "Chi siamo",
+    resources: "Risorse",
+    information: "Informazioni",
+    contact: "Contatto",
+    medicalNotice:
+      "VitrectoMed aiuta i pazienti a comprendere la vitrectomia e il recupero post-operatorio.",
+    contactEmail: "Scrivici",
+    press: "Stampa",
+    copyright: "© 2026 VitrectoMed — Tutti i diritti riservati.",
+    tagline: "Capire. Prepararsi. Recuperare.",
+    socialAria: "Social media",
+    aboutLinks: [
+      { label: "La nostra missione", href: "" },
+      { label: "Comitato editoriale", href: "/contact" },
+      { label: "Metodologia", href: "/blog" },
+      { label: "Riferimenti medici", href: "/pathologies" },
     ],
-    nav: {
-      title: "Navigazione",
-      links: [
-        { label: "Home", href: "/it" },
-        { label: "Funzionamento", href: "/it/a-propos" },
-        { label: "Acquista VitectroMed", href: "/it/products" },
-      ],
-    },
-    info: {
-      title: "Info mediche",
-      items: [
-        "Conforme alle raccomandazioni mediche",
-        "Non sostituisce il parere medico",
-      ],
-    },
-    contact: {
-      title: "Contatto",
-      ship: "Spedizione in Europa",
-      email: "contact@vitectromed.com",
-      country: "Francia",
-    },
-    legalLinks: [
-      { label: "Note legali", href: "/it/mentions-legales" },
-      { label: "Privacy", href: "/it/confidentialite" },
-      { label: "Condizioni", href: "/it/cgv" },
-      { label: "Rimborsi", href: "/it/remboursement" },
+    resourceLinks: [
+      { label: "Guide pratiche", href: "/blog" },
+      { label: "Video esplicativi", href: "/operation" },
+      { label: "Testimonianze dei pazienti", href: "/temoignage" },
+      { label: "Domande frequenti", href: "/faq" },
     ],
-    bottom:
-      "© 2025 VitectroMed — Tutti i diritti riservati.",
+    infoLinks: [
+      { label: "Note legali", href: "/mentions-legales" },
+      { label: "Informativa sulla privacy", href: "/confidentialite" },
+      { label: "Cookie", href: "/cookies" },
+      { label: "Condizioni d'uso", href: "/cgu" },
+    ],
   },
-
   nl: {
-    desc:
-      "Medisch hulpmiddel ter ondersteuning van herstel na vitrectomie.",
-    badges: [
-      "CE-gecertificeerd medisch hulpmiddel",
-      "Ontworpen en gemaakt in Frankrijk",
-      "Postoperatieve vitrectomie-ondersteuning",
+    about: "Over ons",
+    resources: "Bronnen",
+    information: "Informatie",
+    contact: "Contact",
+    medicalNotice:
+      "VitrectoMed helpt patiënten vitrectomie en postoperatief herstel beter te begrijpen.",
+    contactEmail: "Mail ons",
+    press: "Pers",
+    copyright: "© 2026 VitrectoMed — Alle rechten voorbehouden.",
+    tagline: "Begrijpen. Voorbereiden. Herstellen.",
+    socialAria: "Sociale media",
+    aboutLinks: [
+      { label: "Onze missie", href: "" },
+      { label: "Redactieraad", href: "/contact" },
+      { label: "Methodologie", href: "/blog" },
+      { label: "Medische referenties", href: "/pathologies" },
     ],
-    nav: {
-      title: "Navigatie",
-      links: [
-        { label: "Home", href: "/nl" },
-        { label: "Werking", href: "/nl/a-propos" },
-        { label: "VitectroMed bestellen", href: "/nl/products" },
-      ],
-    },
-    info: {
-      title: "Medische info",
-      items: [
-        "Conform medische aanbevelingen",
-        "Vervangt geen medisch advies",
-      ],
-    },
-    contact: {
-      title: "Contact",
-      ship: "Levering in Europa",
-      email: "contact@vitectromed.com",
-      country: "Frankrijk",
-    },
-    legalLinks: [
-      { label: "Juridische info", href: "/nl/mentions-legales" },
-      { label: "Privacy", href: "/nl/confidentialite" },
-      { label: "Voorwaarden", href: "/nl/cgv" },
-      { label: "Terugbetaling", href: "/nl/remboursement" },
+    resourceLinks: [
+      { label: "Praktische gidsen", href: "/blog" },
+      { label: "Uitlegvideo's", href: "/operation" },
+      { label: "Patiëntverhalen", href: "/temoignage" },
+      { label: "Veelgestelde vragen", href: "/faq" },
     ],
-    bottom:
-      "© 2025 VitectroMed — Alle rechten voorbehouden.",
+    infoLinks: [
+      { label: "Wettelijke vermeldingen", href: "/mentions-legales" },
+      { label: "Privacybeleid", href: "/confidentialite" },
+      { label: "Cookies", href: "/cookies" },
+      { label: "Gebruiksvoorwaarden", href: "/cgu" },
+    ],
   },
-
   pt: {
-    desc:
-      "Dispositivo médico para apoiar a recuperação após vitrectomia.",
-    badges: [
-      "Dispositivo médico certificado CE",
-      "Projetado e fabricado na França",
-      "Suporte pós-operatório de vitrectomia",
+    about: "Sobre",
+    resources: "Recursos",
+    information: "Informações",
+    contact: "Contato",
+    medicalNotice:
+      "VitrectoMed ajuda pacientes a compreender a vitrectomia e a recuperação pós-operatória.",
+    contactEmail: "Enviar email",
+    press: "Imprensa",
+    copyright: "© 2026 VitrectoMed — Todos os direitos reservados.",
+    tagline: "Compreender. Preparar. Recuperar.",
+    socialAria: "Redes sociais",
+    aboutLinks: [
+      { label: "Nossa missão", href: "" },
+      { label: "Comitê editorial", href: "/contact" },
+      { label: "Metodologia", href: "/blog" },
+      { label: "Referências médicas", href: "/pathologies" },
     ],
-    nav: {
-      title: "Navegação",
-      links: [
-        { label: "Início", href: "/pt" },
-        { label: "Funcionamento", href: "/pt/a-propos" },
-        { label: "Comprar VitectroMed", href: "/pt/products" },
-      ],
-    },
-    info: {
-      title: "Informações médicas",
-      items: [
-        "Conforme recomendações médicas",
-        "Não substitui aconselhamento médico",
-      ],
-    },
-    contact: {
-      title: "Contato",
-      ship: "Envio para a Europa",
-      email: "contact@vitectromed.com",
-      country: "França",
-    },
-    legalLinks: [
-      { label: "Aviso legal", href: "/pt/mentions-legales" },
-      { label: "Privacidade", href: "/pt/confidentialite" },
-      { label: "Condições", href: "/pt/cgv" },
-      { label: "Reembolsos", href: "/pt/remboursement" },
+    resourceLinks: [
+      { label: "Guias práticos", href: "/blog" },
+      { label: "Vídeos explicativos", href: "/operation" },
+      { label: "Depoimentos de pacientes", href: "/temoignage" },
+      { label: "Perguntas frequentes", href: "/faq" },
     ],
-    bottom:
-      "© 2025 VitectroMed — Todos os direitos reservados.",
+    infoLinks: [
+      { label: "Aviso legal", href: "/mentions-legales" },
+      { label: "Política de privacidade", href: "/confidentialite" },
+      { label: "Cookies", href: "/cookies" },
+      { label: "Termos de uso", href: "/cgu" },
+    ],
   },
 };
 
-/* ------------------------------------------
-   🦶 FOOTER
------------------------------------------- */
+function localizeLinks(
+  prefix: string,
+  links: Array<{ label: string; href: string }>
+) {
+  return links.map((link) => ({
+    ...link,
+    href: `${prefix}${link.href}`,
+  }));
+}
+
 export default function Footer() {
   const pathname = usePathname();
   const rawLocale = pathname?.split("/")[1];
-
   const locale: Locale = SUPPORTED_LOCALES.includes(rawLocale as Locale)
     ? (rawLocale as Locale)
     : "fr";
+  const prefix = `/${locale}`;
+  const t = CONTENT[locale];
 
-  const T = CONTENT[locale];
+  const aboutLinks = localizeLinks(prefix, t.aboutLinks);
+  const resourceLinks = localizeLinks(prefix, t.resourceLinks);
+  const infoLinks = localizeLinks(prefix, t.infoLinks);
 
   return (
-    <footer className="footer">
-      <div className="footer-container footer-compact">
-        {/* Brand */}
-        <div className="footer-brand">
-          <Image src={LOGO_URL} alt="VitectroMed" width={140} height={44} />
-          <p className="footer-desc">{T.desc}</p>
+    <footer className="footer vm-footer">
+      <div className="vm-footer__inner">
+        <div className="vm-footer__brand">
+          <Link href={prefix} className="vm-footer__logo" aria-label="VitrectoMed">
+            <Image
+              src={LOGO_URL}
+              alt="VitrectoMed"
+              width={300}
+              height={69}
+            />
+          </Link>
 
-          <ul className="footer-badges">
-            {T.badges.map((b, i) => (
-              <li key={i} className="footer-badge">
-                ✓ {b}
-              </li>
-            ))}
-          </ul>
-        </div>
+          <p>{t.medicalNotice}</p>
 
-        {/* Navigation */}
-        <div className="footer-col">
-          <h3>{T.nav.title}</h3>
-          <div className="footer-links">
-            {T.nav.links.map((l) => (
-              <Link key={l.href} href={l.href}>
-                {l.label}
-              </Link>
-            ))}
+          <div className="vm-footer__socials" aria-label={t.socialAria}>
+            <a href="#" aria-label="Facebook"><Facebook size={18} /></a>
+            <a href="#" aria-label="YouTube"><Youtube size={18} /></a>
+            <a href="#" aria-label="Instagram"><Instagram size={18} /></a>
+            <a href="#" aria-label="LinkedIn"><Linkedin size={18} /></a>
           </div>
         </div>
 
-        {/* Medical */}
-        <div className="footer-col">
-          <h3>{T.info.title}</h3>
-          <ul className="footer-list">
-            {T.info.items.map((x, i) => (
-              <li key={i}>✓ {x}</li>
-            ))}
-          </ul>
-        </div>
+        <FooterColumn title={t.about} links={aboutLinks} />
+        <FooterColumn title={t.resources} links={resourceLinks} />
+        <FooterColumn title={t.information} links={infoLinks} />
 
-        {/* Contact */}
-        <div className="footer-col">
-          <h3>{T.contact.title}</h3>
-          <ul className="footer-list">
-            <li>• {T.contact.ship}</li>
+        <div className="vm-footer__col">
+          <h3>{t.contact}</h3>
+          <ul>
             <li>
-              ✉ <a href={`mailto:${T.contact.email}`}>{T.contact.email}</a>
+              <Mail size={15} />
+              <Link href={`${prefix}/contact`}>{t.contactEmail}</Link>
             </li>
-            <li>📍 {T.contact.country}</li>
+            <li>
+              <MapPin size={15} />
+              <span>Nice, France</span>
+            </li>
+            <li>
+              <ShieldCheck size={15} />
+              <span>{t.press}</span>
+            </li>
           </ul>
         </div>
       </div>
 
-      {/* Legal links */}
-      <div className="footer-subbar">
-        <div className="footer-subbar-inner">
-          {T.legalLinks.map((l) => (
-            <Link key={l.href} href={l.href} className="footer-subbar-link">
-              {l.label}
-            </Link>
-          ))}
-        </div>
+      <div className="vm-footer__bottom">
+        <span>{t.copyright}</span>
+        <span>{t.tagline}</span>
       </div>
-
-      <div className="footer-bottom">{T.bottom}</div>
     </footer>
+  );
+}
+
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: { label: string; href: string }[];
+}) {
+  return (
+    <div className="vm-footer__col">
+      <h3>{title}</h3>
+      <ul>
+        {links.map((link) => (
+          <li key={link.href}>
+            <Link href={link.href}>{link.label}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

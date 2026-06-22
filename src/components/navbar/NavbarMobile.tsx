@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 
 import {
-  LOGO_URL,
   TRANSLATIONS,
   generateNavbarLinks,
   generateDropdowns,
+  LOGO_URL,
 } from "./navbar.data";
 
 import type { Locale } from "./navbar.types";
@@ -40,6 +40,11 @@ interface MobileDropdownProps {
   children: React.ReactNode;
 }
 
+interface MobileSectionProps {
+  label: string;
+  children: React.ReactNode;
+}
+
 /* =========================================================
    COMPONENT
 ========================================================= */
@@ -61,6 +66,14 @@ export default function NavbarMobile({
   const dropdowns =
     generateDropdowns(
       locale
+    );
+
+  const primaryDropdowns =
+    dropdowns.filter(
+      (dropdown) =>
+        dropdown.href === links.pathologies ||
+        dropdown.href === links.operation ||
+        dropdown.href === links.recovery
     );
 
   /* =====================================================
@@ -162,75 +175,81 @@ export default function NavbarMobile({
         }`}
       >
         <div className="vm-mobile-menu__content">
-          {/* HOME */}
+          <MobileSection label={t.nav.menu}>
+            <MobileLink
+              href={links.home}
+              label={t.nav.home}
+              onClick={closeMenu}
+            />
 
-          <MobileLink
-            href={links.home}
-            label={t.nav.home}
-            onClick={closeMenu}
-          />
+            {primaryDropdowns.map(
+              (dropdown) => (
+                <MobileDropdown
+                  key={
+                    dropdown.label
+                  }
+                  label={
+                    dropdown.label
+                  }
+                >
+                  {dropdown.items.map(
+                    (item) => (
+                      <MobileLink
+                        key={
+                          item.href
+                        }
+                        href={
+                          item.href
+                        }
+                        label={
+                          item.label
+                        }
+                        onClick={
+                          closeMenu
+                        }
+                      />
+                    )
+                  )}
+                </MobileDropdown>
+              )
+            )}
+          </MobileSection>
 
-          {/* DROPDOWNS */}
+          <MobileSection label={t.nav.directory}>
+            <MobileLink
+              href={links.directory}
+              label={t.dropdowns.directory.overview}
+              onClick={closeMenu}
+            />
+          </MobileSection>
 
-          {dropdowns.map(
-            (dropdown) => (
-              <MobileDropdown
-                key={
-                  dropdown.label
-                }
-                label={
-                  dropdown.label
-                }
-              >
-                {dropdown.items.map(
-                  (item) => (
-                    <MobileLink
-                      key={
-                        item.href
-                      }
-                      href={
-                        item.href
-                      }
-                      label={
-                        item.label
-                      }
-                      onClick={
-                        closeMenu
-                      }
-                    />
-                  )
-                )}
-              </MobileDropdown>
-            )
-          )}
+          <MobileSection label={t.nav.contact}>
+            <MobileLink
+              href={
+                links.testimonial
+              }
+              label={
+                t.nav.testimonial
+              }
+              onClick={closeMenu}
+            />
 
-          {/* STATIC LINKS */}
+            <MobileLink
+              href={links.faq}
+              label={t.nav.faq}
+              onClick={closeMenu}
+            />
 
-          <MobileLink
-            href={
-              links.testimonial
-            }
-            label={
-              t.nav.testimonial
-            }
-            onClick={closeMenu}
-          />
-
-          <MobileLink
-            href={links.faq}
-            label={t.nav.faq}
-            onClick={closeMenu}
-          />
-
-          <MobileLink
-            href={
-              links.contact
-            }
-            label={
-              t.nav.contact
-            }
-            onClick={closeMenu}
-          />
+            <MobileLink
+              href={
+                links.contact
+              }
+              label={
+                t.nav.contact
+              }
+              onClick={closeMenu}
+            />
+          </MobileSection>
 
           {/* LANGUAGE */}
 
@@ -250,6 +269,27 @@ export default function NavbarMobile({
         </div>
       </aside>
     </>
+  );
+}
+
+/* =========================================================
+   MOBILE SECTION
+========================================================= */
+
+function MobileSection({
+  label,
+  children,
+}: MobileSectionProps) {
+  return (
+    <section className="vm-mobile-section">
+      <p className="vm-mobile-section__label">
+        {label}
+      </p>
+
+      <div className="vm-mobile-section__items">
+        {children}
+      </div>
+    </section>
   );
 }
 

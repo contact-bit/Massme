@@ -61,6 +61,8 @@ export default function OrdersTable({
 }: Props) {
   const [openId, setOpenId] =
     useState<string | null>(null);
+  const [hoveredOrderId, setHoveredOrderId] =
+    useState<string | null>(null);
   const [sendingInvoices, setSendingInvoices] =
     useState<Record<string, boolean>>({});
   const [sentInvoices, setSentInvoices] =
@@ -257,6 +259,9 @@ export default function OrdersTable({
             const invoiceSent =
               sentInvoices[o.id] || invoice?.status === "sent";
 
+            const isHovered =
+              hoveredOrderId === o.id;
+
             return (
               <React.Fragment
                 key={o.id}
@@ -271,7 +276,19 @@ export default function OrdersTable({
                     isOpen
                       ? "open"
                       : ""
+                  } ${
+                    isHovered
+                      ? "row-hovered"
+                      : ""
                   }`}
+                  onMouseEnter={() =>
+                    setHoveredOrderId(o.id)
+                  }
+                  onMouseLeave={() =>
+                    setHoveredOrderId((current) =>
+                      current === o.id ? null : current
+                    )
+                  }
                   onClick={() =>
                     toggle(o.id)
                   }
@@ -432,7 +449,17 @@ export default function OrdersTable({
                 <tr
                   className={`row-general-info ${
                     isOpen ? "open" : ""
+                  } ${
+                    isHovered ? "row-hovered" : ""
                   }`}
+                  onMouseEnter={() =>
+                    setHoveredOrderId(o.id)
+                  }
+                  onMouseLeave={() =>
+                    setHoveredOrderId((current) =>
+                      current === o.id ? null : current
+                    )
+                  }
                   onClick={() => toggle(o.id)}
                 >
                   <td colSpan={8}>

@@ -11,6 +11,7 @@ export default function AdminTopbar() {
   const pageTitle = useMemo(() => {
     if (pathname === "/admin") return "Dashboard";
     if (pathname?.startsWith("/admin/products")) return "Produits";
+    if (pathname?.startsWith("/admin/annuaire")) return "Annuaire";
     if (pathname?.startsWith("/admin/orders")) return "Commandes";
     if (pathname?.startsWith("/admin/shipping")) return "Livraison";
     if (pathname?.startsWith("/admin/payment-methods")) return "Méthodes de paiement";
@@ -23,6 +24,9 @@ export default function AdminTopbar() {
     }
     if (pathname?.startsWith("/admin/products")) {
       return "Gérez votre catalogue produits.";
+    }
+    if (pathname?.startsWith("/admin/annuaire")) {
+      return "Gérez les chirurgiens et établissements de l’annuaire.";
     }
     if (pathname?.startsWith("/admin/orders")) {
       return "Suivez et gérez les commandes clients.";

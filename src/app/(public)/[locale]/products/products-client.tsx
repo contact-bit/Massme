@@ -157,6 +157,14 @@ type Product = {
   deliveryPackageCount?: number;
 
   markets: Market[];
+  marketSettings?: Partial<
+    Record<
+      Market,
+      {
+        isActive?: boolean;
+      }
+    >
+  >;
 
   pricesByMarket: Record<Market, number>;
   vatByMarket: Record<Market, VatConfig>;
@@ -213,6 +221,18 @@ function getVariantImage(
   return chosen?.imageUrl || p.imageUrl || "/placeholder.jpg";
 }
 
+function isProductActiveInMarket(
+  product: Product,
+  market: Market
+) {
+  return (
+    product.isActive !== false &&
+    Array.isArray(product.markets) &&
+    product.markets.includes(market) &&
+    product.marketSettings?.[market]?.isActive !== false
+  );
+}
+
 /* =====================================================
    COMPONENT
 ===================================================== */
@@ -245,10 +265,7 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
       })) as Product[];
 
       const filtered = all.filter(
-        (p) =>
-          p.isActive !== false &&
-          Array.isArray(p.markets) &&
-          p.markets.includes(market)
+        (p) => isProductActiveInMarket(p, market)
       );
 
       setProducts(filtered);
