@@ -21,6 +21,18 @@
     transform .28s ease;
 }
 
+.public-shell .vm-navbar {
+  padding: 0;
+  border-bottom: 1px solid rgba(207, 217, 255, .55);
+  background: rgba(255, 255, 255, .96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.public-shell .vm-navbar::before {
+  display: none;
+}
+
 /* =========================================================
    GLOBAL ATMOSPHERE
 ========================================================= */
@@ -67,6 +79,12 @@
     0 2rem;
 }
 
+.public-shell .vm-navbar__container {
+  max-width: 1500px;
+  min-height: 86px;
+  padding: 0 28px;
+}
+
 /* =========================================================
    GLASS SHELL
 ========================================================= */
@@ -103,6 +121,10 @@
     inset 0 1px 0 rgba(255,255,255,.04);
 }
 
+.public-shell .vm-navbar__container::before {
+  display: none;
+}
+
 /* =========================================================
    SCROLLED
 ========================================================= */
@@ -110,6 +132,10 @@
 .vm-navbar--scrolled {
   padding:
     .65rem 0;
+}
+
+.public-shell .vm-navbar--scrolled {
+  padding: 0;
 }
 
 .vm-navbar--scrolled
@@ -128,6 +154,11 @@
     0 18px 60px rgba(0,0,0,.34),
     0 0 0 1px rgba(0,208,255,.04),
     inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.public-shell .vm-navbar--scrolled
+.vm-navbar__container::before {
+  display: none;
 }
 
 /* =========================================================
@@ -164,6 +195,10 @@
     padding:
       0 1.5rem;
   }
+
+  .public-shell .vm-navbar__container {
+    padding: 0 20px;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -186,6 +221,11 @@
       0 1rem;
   }
 
+  .public-shell .vm-navbar__container {
+    min-height: 78px;
+    padding: 0 14px;
+  }
+
   .vm-navbar__container::before {
     border-radius:
       1.5rem;
@@ -206,6 +246,14 @@
       max(2rem, env(safe-area-inset-right));
   }
 
+  .public-shell .vm-navbar__container {
+    padding-left:
+      max(28px, env(safe-area-inset-left));
+
+    padding-right:
+      max(28px, env(safe-area-inset-right));
+  }
+
   @media (max-width: 1100px) {
 
     .vm-navbar__container {
@@ -214,6 +262,14 @@
 
       padding-right:
         max(1rem, env(safe-area-inset-right));
+    }
+
+    .public-shell .vm-navbar__container {
+      padding-left:
+        max(14px, env(safe-area-inset-left));
+
+      padding-right:
+        max(14px, env(safe-area-inset-right));
     }
   }
 }
@@ -227,7 +283,7 @@
   }
 }
 
-@media (max-width: 1380px) {
+@media (max-width: 1100px) {
   .public-shell .vm-navbar__desktop-wrapper {
     display: none;
   }
@@ -242,8 +298,9 @@
 ========================================================= */
 
 .public-shell .vm-navbar {
-  padding: 18px 0;
-  background: rgba(255, 255, 255, .92);
+  padding: 0;
+  border-bottom: 1px solid rgba(207, 217, 255, .55);
+  background: rgba(255, 255, 255, .96);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
@@ -253,31 +310,36 @@
 }
 
 .public-shell .vm-navbar__container {
-  width: min(100% - 32px, 1440px);
-  max-width: 1440px;
-  padding: 0 16px;
+  width: min(100% - 40px, 1500px);
+  max-width: 1500px;
+  min-height: 86px;
+  padding: 0;
 }
 
 .public-shell .vm-navbar__container::before {
-  border: 1px solid rgba(10, 36, 107, .12);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .84);
-  box-shadow: 0 14px 42px rgba(10, 36, 107, .08);
+  display: none;
 }
 
 .public-shell .vm-navbar--scrolled {
-  padding: 10px 0;
+  padding: 0;
 }
 
 .public-shell .vm-navbar--scrolled .vm-navbar__container::before {
-  border-color: rgba(10, 36, 107, .16);
-  background: rgba(255, 255, 255, .94);
-  box-shadow: 0 12px 36px rgba(10, 36, 107, .11);
+  display: none;
 }
 
 @media (max-width: 1500px) {
   .public-shell .vm-navbar__container {
-    width: min(100% - 24px, 1380px);
-    padding: 0 12px;
+    width: min(100% - 32px, 1440px);
   }
+}
+
+.public-shell .vm-navbar {
+  position: sticky;
+  top: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }

@@ -362,12 +362,16 @@
 ========================================================= */
 
 .public-shell .vm-language__trigger {
-  min-height: 48px;
-  border-color: rgba(10, 36, 107, .14);
-  border-radius: 7px;
-  background: #fff;
-  color: #0a246b;
+  gap: 4px;
+  min-height: 42px;
+  padding: 0 4px;
+  border-color: transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: #06158d;
   box-shadow: none;
+  font-size: 13px;
+  font-weight: 950;
 }
 
 .public-shell .vm-language__trigger::before {
@@ -375,21 +379,22 @@
 }
 
 .public-shell .vm-language__trigger:hover {
-  border-color: rgba(10, 36, 107, .22);
-  background: rgba(214, 236, 244, .42);
+  border-color: transparent;
+  background: transparent;
+  color: #0024d8;
   box-shadow: none;
 }
 
 .public-shell .vm-language__icon,
 .public-shell .vm-language__trigger:hover .vm-language__icon {
-  color: #0a246b;
+  color: currentColor;
 }
 
 .public-shell .vm-language__menu {
   border-color: rgba(10, 36, 107, .12);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .96);
-  box-shadow: 0 24px 70px rgba(10, 36, 107, .14);
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
 }
 
 .public-shell .vm-language__menu::before,
@@ -403,7 +408,7 @@
 
 .public-shell .vm-language__item:hover,
 .public-shell .vm-language__item--active {
-  border-color: rgba(10, 36, 107, .10);
-  background: rgba(214, 236, 244, .48);
-  color: #0a246b;
+  border-color: rgba(0, 36, 216, .12);
+  background: transparent;
+  color: #0024d8;
 }

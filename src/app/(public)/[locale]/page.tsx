@@ -3,59 +3,85 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
-  Activity,
   ArrowRight,
-  BadgeCheck,
-  CalendarCheck,
-  Check,
-  CircleHelp,
-  CircleDot,
+  Bed,
+  BriefcaseMedical,
+  CheckCircle2,
+  ChevronDown,
   ClipboardCheck,
+  Clock3,
   Eye,
-  FileCheck2,
-  Globe2,
-  HeartPulse,
-  Layers,
+  Facebook,
+  GraduationCap,
+  Heart,
+  Instagram,
+  Languages,
   MapPin,
+  Plane,
+  Search,
   ShieldCheck,
-  Sparkles,
-  Stethoscope,
-  Target,
-  UserRoundCheck,
+  UserRound,
+  Youtube,
 } from "lucide-react";
 
 import type { Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n";
-import { getPageContent } from "@/content/pages/i18n";
-import {
-  homeContent,
-  type HomeIconKey,
-} from "@/content/pages/home";
 
 export const dynamic = "force-dynamic";
 
-const ICONS: Record<HomeIconKey, ReactNode> = {
-  activity: <Activity />,
-  alert: <CircleHelp />,
-  badge: <BadgeCheck />,
-  calendar: <CalendarCheck />,
-  check: <Check />,
-  circle: <CircleDot />,
-  clipboard: <ClipboardCheck />,
-  eye: <Eye />,
-  faq: <CircleHelp />,
-  file: <FileCheck2 />,
-  globe: <Globe2 />,
-  heart: <HeartPulse />,
-  layers: <Layers />,
-  map: <MapPin />,
-  microscope: <Eye />,
-  shield: <ShieldCheck />,
-  sparkles: <Sparkles />,
-  stethoscope: <Stethoscope />,
-  target: <Target />,
-  user: <UserRoundCheck />,
-};
+const faqItems = [
+  {
+    question: "Combien de temps dure la récupération après une vitrectomie ?",
+    answer:
+      "La récupération varie d'une personne à l'autre et selon la pathologie traitée. En général, l'amélioration visuelle commence dans les jours qui suivent l'opération et peut se poursuivre pendant plusieurs semaines, voire plusieurs mois.",
+  },
+  {
+    question: "Quand la bulle de gaz disparaît-elle ?",
+    answer:
+      "La bulle de gaz se résorbe naturellement avec le temps. Selon le type de gaz utilisé, elle peut disparaître en 1 à 8 semaines. Votre chirurgien vous informera précisément en fonction de votre cas.",
+  },
+  "Puis-je reprendre mes activités sportives ?",
+  "Comment dormir après une vitrectomie ?",
+  "Quels sont les signes d'alerte après une vitrectomie ?",
+  "Combien de temps dure la convalescence totale ?",
+  "Quand puis-je reprendre le travail ?",
+];
+
+const pathologyCards = [
+  {
+    title: "Trou maculaire",
+    text: "Qu'est-ce qu'un trou maculaire ? Quels symptômes ? Comment évolue la maladie ?",
+    href: "/pathologies/trou-maculaire",
+    visual: "macular",
+  },
+  {
+    title: "Décollement de rétine",
+    text: "Comprendre cette urgence ophtalmologique et les options de traitement.",
+    href: "/pathologies/decollement-retine",
+    visual: "detachment",
+  },
+  {
+    title: "Membrane épirétinienne",
+    text: "Comprendre les symptômes, l'évolution et le moment d'envisager une chirurgie.",
+    href: "/pathologies",
+    visual: "diabetic",
+  },
+  {
+    title: "Corps flottants",
+    text: "Comprendre les causes et savoir quand consulter.",
+    href: "/pathologies/mouches-volantes-ou-corps-flottants",
+    visual: "floaters",
+  },
+];
+
+const guideCards = [
+  { label: "Dormir après vitrectomie", icon: <Bed />, href: "/blog" },
+  { label: "Temps de récupération et convalescence", icon: <Clock3 />, href: "/convalescence" },
+  { label: "Vision après vitrectomie", icon: <Eye />, href: "/convalescence" },
+  { label: "Positionnement face vers le bas", icon: <UserRound />, href: "/convalescence" },
+  { label: "Bulle de gaz", icon: <CheckCircle2 />, href: "/convalescence" },
+  { label: "Voyager après vitrectomie", icon: <Plane />, href: "/blog" },
+];
 
 export async function generateMetadata({
   params,
@@ -63,17 +89,14 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }) {
   const { locale: rawLocale } = await params;
-  const locale = isLocale(rawLocale)
-    ? rawLocale
-    : "fr";
-  const content = getPageContent(
-    homeContent,
-    locale
-  );
 
   return {
-    title: content.metadata.title,
-    description: content.metadata.description,
+    title: "Vitrectomie : votre parcours, notre accompagnement | VitrectoMed",
+    description:
+      "Informations fiables, parcours patient, guides de récupération, annuaire de chirurgiens et dispositif médical Vitrectomed.",
+    alternates: {
+      canonical: isLocale(rawLocale) ? `/${rawLocale}` : "/fr",
+    },
   };
 }
 
@@ -90,397 +113,240 @@ export default async function HomePage({
 
   const locale: Locale = rawLocale;
   const prefix = `/${locale}`;
-  const content = getPageContent(
-    homeContent,
-    locale
-  );
 
   return (
-    <main className="home">
-      <section className="home-hero">
-        <div className="home-container">
-          <div className="home-hero-grid">
-            <div className="home-hero-panel">
-              <div className="home-hero-copy">
-                <span className="home-kicker">
-                  {content.hero.kicker}
-                </span>
-
-                <h1>
-                  {content.hero.title}
-                  <span>{content.hero.subtitle}</span>
-                </h1>
-
-                <p>{content.hero.description}</p>
-
-                <div className="home-actions">
-                  <Link
-                    href={`${prefix}/convalescence`}
-                    className="home-btn home-btn-primary"
-                  >
-                    {content.hero.primaryCta}
-                    <ArrowRight size={18} />
-                  </Link>
-
-                  <Link
-                    href={`${prefix}/annuaire`}
-                    className="home-btn home-btn-secondary"
-                  >
-                    <MapPin size={18} />
-                    {content.hero.secondaryCta}
-                  </Link>
-                </div>
-
-                <div className="home-hero-update">
-                  <CalendarCheck size={15} />
-                  {content.hero.updatedAt}
-                </div>
-              </div>
-
-              <div className="home-hero-visual">
-                <Image
-                  src="/brand/home-hero-consultation.png"
-                  alt={content.hero.imageAlt}
-                  width={1536}
-                  height={1024}
-                  priority
-                />
-              </div>
-            </div>
-
-            <aside className="home-cert-card">
-              <div className="home-card-title">
-                <ShieldCheck size={24} />
-                <strong>{content.certification.title}</strong>
-              </div>
-
-              <ul>
-                {content.certification.items.map((item) => (
-                  <li key={item.text}>
-                    {ICONS[item.icon]}
-                    {item.text}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="home-product-mini">
-                <div className="home-product-mini-visual">
-                  <Image
-                    src="/brand/home-product.png"
-                    alt={content.certification.productAlt}
-                    width={220}
-                    height={160}
-                  />
-                </div>
-                <div>
-                  <strong>{content.certification.productTitle}</strong>
-                  <p>{content.certification.productText}</p>
-                  <Link href={`${prefix}/convalescence/coussin`}>
-                    {content.certification.productCta} <ArrowRight size={14} />
-                  </Link>
-                </div>
-              </div>
-            </aside>
-          </div>
-        </div>
-      </section>
-
-      <section className="home-trust">
-        <div className="home-container home-trust-grid">
-          {content.trust.map((item) => (
-            <TrustItem
-              key={item.text}
-              icon={ICONS[item.icon]}
-              text={item.text}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="home-notice-section">
-        <div className="home-container home-notice">
-          <span><FileCheck2 size={18} /></span>
-          <p>{content.notice.text}</p>
-          <Link href={`${prefix}/contact`}>
-            {content.notice.cta} <ArrowRight size={15} />
-          </Link>
-        </div>
-      </section>
-
-      <section className="home-section">
-        <div className="home-container home-card home-journey">
-          <div className="home-journey-head">
-            <div>
-              <div className="home-card-title">
-                <UserRoundCheck size={24} />
-                <h2>{content.journey.title}</h2>
-              </div>
-              <p>{content.journey.description}</p>
-            </div>
-
-            <div className="home-guide-list" aria-label={content.journey.guideAria}>
-              {content.journey.guides.map((guide) => (
-                <Link href={`${prefix}/convalescence`} key={guide} className="home-guide-chip">
-                  {guide}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="home-journey-grid">
-            {content.journey.cards.map((item) => (
-              <JourneyCard
-                key={item.title}
-                href={`${prefix}${item.href}`}
-                icon={ICONS[item.icon]}
-                title={item.title}
-                text={item.text}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="home-section">
-        <div className="home-container home-card home-understand">
-          <div>
-            <span className="home-section-label">{content.understand.label}</span>
-            <h2>{content.understand.title}</h2>
-            <p>{content.understand.description}</p>
-
-            <div className="home-stage-row">
-              {content.understand.stages.map((stage, index) => (
-                <div className="home-stage" key={stage.title}>
-                  <div className={`home-stage-visual home-stage-visual--${stage.state}`}>
-                    <span className="home-stage-ring" />
-                    <span className="home-stage-focus" />
-                    <span className="home-stage-signal home-stage-signal--one" />
-                    <span className="home-stage-signal home-stage-signal--two" />
-                  </div>
-                  <strong>{stage.title}</strong>
-                  <span>{stage.text}</span>
-                  {index < content.understand.stages.length - 1 && (
-                    <ArrowRight className="home-stage-arrow" size={18} />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="home-explainer">
-            <h3>{content.understand.explainerTitle}</h3>
-            <p>{content.understand.explainerText}</p>
-            <Link href={`${prefix}/pathologies/trou-maculaire`}>
-              {content.understand.explainerCta} <ArrowRight size={16} />
+    <main className="home-exact">
+      <section className="home-exact-hero home-exact-wrap">
+        <div className="home-exact-hero-copy">
+          <h1>Vitrectomie :<br />votre parcours,<br />notre accompagnement</h1>
+          <p className="home-exact-lead">
+            Comprendre sa pathologie, choisir son chirurgien et réussir sa récupération après vitrectomie.
+          </p>
+          <p>
+            Des informations fiables et claires pour comprendre votre intervention, choisir votre chirurgien et réussir votre récupération après une vitrectomie.
+          </p>
+          <div className="home-exact-actions">
+            <Link href={`${prefix}/convalescence`} className="home-exact-btn home-exact-btn-primary">
+              Commencer mon parcours <ArrowRight />
+            </Link>
+            <Link href={`${prefix}/annuaire`} className="home-exact-btn home-exact-btn-secondary">
+              <UserRound /> Trouver un chirurgien
             </Link>
           </div>
         </div>
-      </section>
 
-      <section className="home-section home-grid-section">
-        <div className="home-container home-info-grid">
-          {content.infoCards.map((card) => (
-            <InfoCard
-              key={card.title}
-              icon={ICONS[card.icon]}
-              title={card.title}
-              items={card.items}
-            />
-          ))}
-
-          <article className="home-card home-treatment">
-            <div>
-              <div className="home-card-title">
-                <Stethoscope size={24} />
-                <h3>{content.treatment.title}</h3>
-              </div>
-              <p>{content.treatment.text}</p>
-              <Link href={`${prefix}/operation`}>
-                {content.treatment.cta} <ArrowRight size={16} />
-              </Link>
-            </div>
-            <Image
-              src="/brand/home-retina.png"
-              alt={content.treatment.imageAlt}
-              width={230}
-              height={230}
-            />
-          </article>
-        </div>
-      </section>
-
-      <section className="home-section">
-        <div className="home-container home-card home-pathologies">
-          <div className="home-section-head">
-            <div>
-              <div className="home-card-title">
-                <Target size={24} />
-                <h2>{content.pathologies.title}</h2>
-              </div>
-              <p>{content.pathologies.description}</p>
-            </div>
-            <Link href={`${prefix}/pathologies`}>
-              {content.pathologies.cta} <ArrowRight size={16} />
-            </Link>
-          </div>
-
-          <div className="home-pathology-grid">
-            {content.pathologies.cards.map((item) => (
-              <PathologyCard
-                key={item.title}
-                href={`${prefix}${item.href}`}
-                title={item.title}
-                text={item.text}
-                icon={ICONS[item.icon]}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="home-section">
-        <div className="home-container home-card home-recovery">
-          <div className="home-card-title">
-            <Eye size={24} />
-            <h2>{content.recovery.title}</h2>
-          </div>
-          <p>{content.recovery.text}</p>
-
-          <div className="home-recovery-grid">
-            {content.recovery.metrics.map((metric) => (
-              <MiniMetric
-                key={metric.title}
-                title={metric.title}
-                text={metric.text}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="home-section">
-        <div className="home-container home-specialist">
+        <div className="home-exact-hero-image">
           <Image
-            src="/brand/home-specialist.png"
-            alt={content.specialist.imageAlt}
-            width={720}
-            height={420}
+            src="/brand/home-hero-patient.jpeg"
+            alt="Patiente en position face vers le bas après une vitrectomie"
+            width={900}
+            height={620}
+            priority
           />
-          <div>
-            <h2>{content.specialist.title}</h2>
-            <p>{content.specialist.text}</p>
-            <ul>
-              {content.specialist.items.map((item) => (
-                <li key={item}>
-                  <Check size={16} />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link href={`${prefix}/annuaire`} className="home-btn home-btn-primary">
-              {content.specialist.cta} <ArrowRight size={18} />
-            </Link>
-          </div>
         </div>
-      </section>
 
-      <section className="home-section">
-        <div className="home-container home-card">
-          <div className="home-faq-head">
-            <div className="home-card-title">
-              <CircleHelp size={24} />
-              <h2>{content.faq.title}</h2>
-            </div>
-            <Link href={`${prefix}/faq`}>
-              {content.faq.cta} <ArrowRight size={16} />
-            </Link>
+        <aside className="home-exact-device">
+          <div className="home-exact-device-title">
+            <ShieldCheck />
+            <span>DISPOSITIF MÉDICAL</span>
+            <strong>Vitrectomed®</strong>
           </div>
-
-          <div className="home-faq-grid">
-            {content.faq.items.map((item) => (
-              <Link href={`${prefix}/faq`} key={item} className="home-faq-item">
-                {item}
-                <span>+</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="home-final">
-        <div className="home-container home-final-card">
+          <p className="home-exact-ce">🇫🇷 Dispositif médical marqué CE</p>
           <Image
             src="/brand/home-product.png"
-            alt={content.final.imageAlt}
-            width={300}
-            height={220}
+            alt="Dispositif médical Vitrectomed"
+            width={250}
+            height={190}
           />
-          <div>
-            <h2>{content.final.title}</h2>
-            <p>{content.final.text}</p>
-          </div>
-          <div className="home-final-points">
-            {content.final.points.map((point) => (
-              <span key={point}>
-                <Check size={16} />
-                {point}
-              </span>
-            ))}
-          </div>
-          <Link href={`${prefix}/convalescence/coussin`} className="home-btn home-btn-light">
-            {content.final.cta} <ArrowRight size={18} />
+          <ul>
+            <li><CheckCircle2 /> Aide au maintien de la position prescrite</li>
+            <li><CheckCircle2 /> Utilisation prolongée et assistée</li>
+            <li><CheckCircle2 /> Réduit les tensions cervicales et dorsales</li>
+            <li><CheckCircle2 /> Facilite la convalescence post-opératoire</li>
+          </ul>
+          <Link href={`${prefix}/convalescence/coussin`} className="home-exact-device-cta">
+            Découvrir le dispositif <ArrowRight />
           </Link>
+          <Link href={`${prefix}/convalescence/coussin`} className="home-exact-device-more">
+            <Search /> En savoir plus sur Vitrectomed®
+          </Link>
+        </aside>
+      </section>
+
+      <section className="home-exact-trust home-exact-wrap" aria-label="Garanties éditoriales">
+        <Trust icon={<ShieldCheck />} text="Contenus rédigés et relus par un comité éditorial spécialisé en chirurgie vitréo-rétinienne" />
+        <Trust icon={<GraduationCap />} text="Informations médicales à caractère éducatif" />
+        <Trust icon={<Languages />} text="Disponible en 20+ langues" />
+      </section>
+
+      <section className="home-exact-panel home-exact-wrap">
+        <SectionTitle title="Vous venez d’être diagnostiqué ?" text="Les pathologies les plus fréquemment traitées par vitrectomie." center />
+        <div className="home-exact-pathologies">
+          {pathologyCards.map((card) => (
+            <Link href={`${prefix}${card.href}`} className="home-exact-pathology" key={card.title}>
+              <span className={`home-exact-pathology-visual home-exact-pathology-visual--${card.visual}`}>
+                <span className="home-exact-pathology-orbit" />
+                <span className="home-exact-pathology-mark home-exact-pathology-mark--one" />
+                <span className="home-exact-pathology-mark home-exact-pathology-mark--two" />
+              </span>
+              <strong>{card.title}</strong>
+              <p>{card.text}</p>
+              <em>En savoir plus <ArrowRight size={16} /></em>
+            </Link>
+          ))}
         </div>
       </section>
+
+      <section className="home-exact-panel home-exact-wrap home-exact-journey">
+        <SectionTitle title="Votre parcours patient" text="Nous vous accompagnons à chaque étape de votre vitrectomie." />
+        <div className="home-exact-steps">
+          <Step icon={<ClipboardCheck />} step="ÉTAPE 1" title="Préparer son intervention" subtitle="Avant l'opération" text="Comprendre l'opération, les examens, les étapes clés et les conseils avant votre intervention." />
+          <ArrowRight className="home-exact-step-arrow" />
+          <Step icon={<Heart />} step="ÉTAPE 2" title="Réussir sa récupération" subtitle="Après l'opération" text="Récupération et suivi. Les étapes clés de votre convalescence après vitrectomie." />
+          <ArrowRight className="home-exact-step-arrow" />
+          <Step icon={<UserRound />} step="ÉTAPE 3" title="Retrouver ses activités" subtitle="Retour à la vie quotidienne" text="Conseils et repères pour retrouver vos activités en toute sécurité." />
+        </div>
+
+        <div className="home-exact-guides-head">
+          <div>
+            <h2>Guides essentiels après vitrectomie</h2>
+            <p>Des ressources pratiques pour chaque étape de votre récupération.</p>
+          </div>
+          <Link href={`${prefix}/blog`}>Voir tous les guides <ArrowRight size={16} /></Link>
+        </div>
+
+        <div className="home-exact-guides">
+          {guideCards.map((guide) => (
+            <Link href={`${prefix}${guide.href}`} key={guide.label}>
+              {guide.icon}
+              <span>{guide.label}</span>
+              <ArrowRight size={15} />
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="home-exact-directory home-exact-wrap">
+        <div className="home-exact-directory-copy">
+          <h2>Trouver un chirurgien spécialisé</h2>
+          <p className="home-exact-green">
+            Un annuaire conçu pour faciliter la mise en relation entre patients et chirurgiens spécialisés.
+          </p>
+          <p>
+            Trouvez un chirurgien spécialisé en vitrectomie ou un centre expert en chirurgie vitréo-rétinienne près de chez vous.
+          </p>
+          <div className="home-exact-directory-points">
+            <span><UserRound /> Chirurgiens spécialisés en vitrectomie</span>
+            <span><MapPin /> Recherche par pays et par ville</span>
+            <span><ShieldCheck /> Centres experts en chirurgie rétinienne</span>
+            <span><BriefcaseMedical /> Informations vérifiées et mises à jour</span>
+          </div>
+          <Link href={`${prefix}/annuaire`} className="home-exact-btn home-exact-btn-primary">
+            Rechercher un chirurgien <ArrowRight />
+          </Link>
+        </div>
+
+        <div className="home-exact-map-search">
+          <div className="home-exact-map" aria-hidden="true">
+            <Image
+              src="/brand/home-specialist.png"
+              alt=""
+              width={1536}
+              height={1024}
+              sizes="(max-width: 1260px) 100vw, 820px"
+            />
+            <div className="home-exact-map-badges">
+              <span><ShieldCheck size={16} /> Annuaire vérifié</span>
+              <span><MapPin size={16} /> Recherche locale</span>
+            </div>
+          </div>
+          <div className="home-exact-search-card">
+            <label>
+              Où ?
+              <span>Pays, ville ou code postal <MapPin size={16} /></span>
+            </label>
+            <label>
+              Spécialité recherchée
+              <span>Sélectionner une spécialité <ChevronDown size={16} /></span>
+            </label>
+            <Link href={`${prefix}/annuaire`}><Search size={18} /> Rechercher</Link>
+            <small>Exemples : Vitrectomie, Trou maculaire, Décollement de rétine, Membrane épirétinienne...</small>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-exact-faq home-exact-wrap">
+        <div className="home-exact-faq-title">
+          <h2>FAQ</h2>
+          <p>Les questions les plus fréquentes après une vitrectomie.</p>
+          <Link href={`${prefix}/faq`}>Voir toutes les questions <ArrowRight size={16} /></Link>
+        </div>
+        <div className="home-exact-faq-grid">
+          {faqItems.map((item) => (
+            <FaqItem item={item} key={typeof item === "string" ? item : item.question} />
+          ))}
+        </div>
+      </section>
+
+      <section className="home-exact-bottom-trust home-exact-wrap">
+        <Trust icon={<ClipboardCheck />} text="Informations basées sur des sources médicales reconnues" />
+        <Trust icon={<UserRound />} text="Comité éditorial spécialisé en chirurgie vitréo-rétinienne" />
+        <Trust icon={<Clock3 />} text="Mises à jour régulières et rigoureuses" />
+        <Trust icon={<Languages />} text="Plateforme internationale disponible en 20+ langues" />
+      </section>
+
+      <footer className="home-exact-footer">
+        <div className="home-exact-footer-inner home-exact-wrap">
+          <div>
+            <Link href={prefix} className="home-exact-footer-logo">
+              <span className="home-exact-logo-mark">
+                <Image
+                  src="/brand/logo-officiel.png"
+                  alt="VitrectoMed"
+                  width={1011}
+                  height={232}
+                />
+              </span>
+            </Link>
+            <p>La référence pour votre parcours avant et après vitrectomie</p>
+          </div>
+          <FooterLinks title="Ressources" links={["Guides pratiques", "Vidéos explicatives", "Témoignages patients"]} />
+          <FooterLinks title="À propos" links={["Notre mission", "Comité éditorial", "Mentions légales"]} />
+          <FooterLinks title="Informations" links={["Politique de confidentialité", "Conditions d'utilisation", "Cookies"]} />
+          <FooterLinks title="Contact" links={["Nous écrire", "FAQ", "Presse"]} />
+          <div className="home-exact-social">
+            <span>Suivez-nous</span>
+            <div>
+              <Facebook />
+              <Instagram />
+              <Youtube />
+            </div>
+            <small>© 2024 Vitrectomed.com - Tous droits réservés.</small>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
 
-function JourneyCard({
-  href,
-  icon,
+function SectionTitle({
   title,
   text,
+  center = false,
 }: {
-  href: string;
-  icon: ReactNode;
   title: string;
   text: string;
+  center?: boolean;
 }) {
   return (
-    <Link href={href} className="home-journey-card">
-      <span>{icon}</span>
-      <strong>{title}</strong>
+    <div className={`home-exact-section-title ${center ? "home-exact-section-title-center" : ""}`}>
+      <h2>{title}</h2>
       <p>{text}</p>
-      <ArrowRight size={18} />
-    </Link>
+    </div>
   );
 }
 
-function PathologyCard({
-  href,
-  title,
-  text,
-  icon,
-}: {
-  href: string;
-  title: string;
-  text: string;
-  icon: ReactNode;
-}) {
-  return (
-    <Link href={href} className="home-pathology-card">
-      <span className="home-pathology-icon">
-        {icon}
-      </span>
-      <strong>{title}</strong>
-      <span>{text}</span>
-      <ArrowRight size={16} />
-    </Link>
-  );
-}
-
-function TrustItem({
+function Trust({
   icon,
   text,
 }: {
@@ -488,51 +354,73 @@ function TrustItem({
   text: string;
 }) {
   return (
-    <div className="home-trust-item">
+    <div className="home-exact-trust-item">
       {icon}
       <strong>{text}</strong>
     </div>
   );
 }
 
-function InfoCard({
+function Step({
   icon,
+  step,
   title,
-  items,
+  subtitle,
+  text,
 }: {
   icon: ReactNode;
+  step: string;
   title: string;
-  items: string[];
+  subtitle: string;
+  text: string;
 }) {
   return (
-    <article className="home-card home-info-card">
-      <div className="home-card-title">
-        {icon}
+    <article className="home-exact-step">
+      <span>{icon}</span>
+      <div>
+        <small>{step}</small>
         <h3>{title}</h3>
+        <strong>{subtitle}</strong>
+        <p>{text}</p>
       </div>
-      <ul>
-        {items.map((item) => (
-          <li key={item}>
-            <Check size={15} />
-            {item}
-          </li>
-        ))}
-      </ul>
     </article>
   );
 }
 
-function MiniMetric({
+function FaqItem({
+  item,
+}: {
+  item: string | { question: string; answer: string };
+}) {
+  if (typeof item === "string") {
+    return (
+      <details className="home-exact-faq-item">
+        <summary>{item}</summary>
+      </details>
+    );
+  }
+
+  return (
+    <details className="home-exact-faq-item" open>
+      <summary>{item.question}</summary>
+      <p>{item.answer}</p>
+    </details>
+  );
+}
+
+function FooterLinks({
   title,
-  text,
+  links,
 }: {
   title: string;
-  text: string;
+  links: string[];
 }) {
   return (
-    <div className="home-mini-metric">
-      <strong>{title}</strong>
-      <span>{text}</span>
+    <div className="home-exact-footer-links">
+      <h3>{title}</h3>
+      {links.map((link) => (
+        <span key={link}>{link}</span>
+      ))}
     </div>
   );
 }

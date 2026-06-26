@@ -5,6 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
+  Search,
+  ShoppingBag,
+} from "lucide-react";
+
+import {
   TRANSLATIONS,
   generateNavbarLinks,
   generateDropdowns,
@@ -41,11 +46,15 @@ export default function NavbarDesktop({
       locale
     );
 
-  const primaryDropdowns =
-    dropdowns.filter(
+  const pathologiesDropdown =
+    dropdowns.find(
       (dropdown) =>
-        dropdown.href === links.pathologies ||
-        dropdown.href === links.operation ||
+        dropdown.href === links.pathologies
+    );
+
+  const recoveryDropdown =
+    dropdowns.find(
+      (dropdown) =>
         dropdown.href === links.recovery
     );
 
@@ -78,41 +87,68 @@ export default function NavbarDesktop({
           className="vm-navbar-desktop__primary-row"
           aria-label="Navigation principale"
         >
-          <NavLink
-            href={links.home}
-          >
+          <NavLink href={links.operation}>
             {t.nav.home}
           </NavLink>
 
-          {primaryDropdowns.map(
-            (dropdown) => (
-              <NavbarDropdown
-                key={dropdown.label}
-                label={
-                  dropdown.label
-                }
-                href={
-                  dropdown.href
-                }
-              >
-                {dropdown.items.map(
-                  (item) => (
-                    <DropdownLink
-                      key={item.href}
-                      href={
-                        item.href
-                      }
-                    >
-                      {item.label}
-                    </DropdownLink>
-                  )
-                )}
-              </NavbarDropdown>
-            )
+          {pathologiesDropdown ? (
+            <NavbarDropdown
+              label={pathologiesDropdown.label}
+              href={pathologiesDropdown.href}
+            >
+              {pathologiesDropdown.items.map(
+                (item) => (
+                  <DropdownLink
+                    key={item.href}
+                    href={item.href}
+                  >
+                    {item.label}
+                  </DropdownLink>
+                )
+              )}
+            </NavbarDropdown>
+          ) : (
+            <NavLink href={links.pathologies}>
+              {t.nav.pathologies}
+            </NavLink>
           )}
+
+          {recoveryDropdown ? (
+            <NavbarDropdown
+              label={recoveryDropdown.label}
+              href={recoveryDropdown.href}
+            >
+              {recoveryDropdown.items.map(
+                (item) => (
+                  <DropdownLink
+                    key={item.href}
+                    href={item.href}
+                  >
+                    {item.label}
+                  </DropdownLink>
+                )
+              )}
+            </NavbarDropdown>
+          ) : (
+            <NavLink href={links.recovery}>
+              {t.nav.recovery}
+            </NavLink>
+          )}
+
+          <NavLink href={links.guides}>
+            {t.nav.guides}
+          </NavLink>
+
+          <NavLink href={links.faq}>
+            {t.nav.faq}
+          </NavLink>
 
           <NavLink href={links.directory}>
             {t.nav.directory}
+          </NavLink>
+
+          <NavLink href={links.contact}>
+            {t.nav.contact}
           </NavLink>
         </nav>
       </div>
@@ -122,39 +158,19 @@ export default function NavbarDesktop({
       ========================================= */}
 
       <div className="vm-navbar-desktop__right">
-        <nav
-          className="vm-navbar-desktop__utility"
-          aria-label="Navigation secondaire"
-        >
-          <NavLink
-            href={
-              links.testimonial
-            }
-            variant="utility"
-          >
-            {t.nav.testimonial}
-          </NavLink>
-
-          <NavLink
-            href={links.faq}
-            variant="utility"
-          >
-            {t.nav.faq}
-          </NavLink>
-
-          <NavLink
-            href={links.contact}
-            variant="utility"
-          >
-            {t.nav.contact}
-          </NavLink>
-        </nav>
-
         {/* LANGUAGE */}
 
         <NavbarLanguage
           locale={locale}
         />
+
+        <Link
+          href={links.search}
+          className="vm-navbar-desktop__search"
+          aria-label="Rechercher"
+        >
+          <Search size={18} />
+        </Link>
 
         {/* CTA */}
 
@@ -162,7 +178,8 @@ export default function NavbarDesktop({
           href={links.comfort}
           className="vm-navbar-desktop__cta"
         >
-          {t.nav.comfort}
+          {t.nav.shop}
+          <ShoppingBag size={17} />
         </Link>
       </div>
     </div>

@@ -14,7 +14,6 @@ import { ChevronDown } from "lucide-react";
 
 import {
   LANGUAGES,
-  isLocale,
 } from "./navbar.data";
 
 import type {
@@ -102,13 +101,14 @@ export default function NavbarLanguage({
       <button
         type="button"
         className="vm-language__trigger"
+        aria-label="Changer de langue"
         onClick={() =>
           setOpen(!open)
         }
       >
         <span>
           {
-            currentLanguage?.flag
+            currentLanguage?.code.toUpperCase()
           }
         </span>
 
@@ -138,7 +138,11 @@ export default function NavbarLanguage({
               href={switchLocaleHref(
                 language.code
               )}
-              className="vm-language__item"
+              className={`vm-language__item ${
+                language.code === locale
+                  ? "vm-language__item--active"
+                  : ""
+              }`}
               onClick={() =>
                 setOpen(false)
               }

@@ -213,12 +213,24 @@ export default function NavbarMobile({
                 </MobileDropdown>
               )
             )}
+
+            <MobileLink
+              href={links.guides}
+              label={t.nav.guides}
+              onClick={closeMenu}
+            />
           </MobileSection>
 
           <MobileSection label={t.nav.directory}>
             <MobileLink
               href={links.directory}
               label={t.dropdowns.directory.overview}
+              onClick={closeMenu}
+            />
+
+            <MobileLink
+              href={links.search}
+              label={t.nav.search}
               onClick={closeMenu}
             />
           </MobileSection>

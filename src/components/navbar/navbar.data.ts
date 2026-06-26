@@ -68,17 +68,23 @@ const FR_TRANSLATIONS = {
 
     operation: "Opération",
 
-    recovery: "Convalescence",
+    recovery: "Récupération",
+
+    guides: "Guides",
 
     testimonial: "Témoignages",
 
     directory: "Annuaire",
 
+    search: "Recherche",
+
     faq: "FAQ",
 
-    contact: "Contact",
+    contact: "À propos",
 
     comfort: "Coussin vitrectomie",
+
+    shop: "Boutique",
 
     menu: "Menu",
   },  
@@ -176,15 +182,21 @@ const EN_TRANSLATIONS = {
 
     recovery: "Recovery",
 
+    guides: "Guides",
+
     testimonial: "Testimonials",
 
     directory: "Directory",
+
+    search: "Search",
 
     faq: "FAQ",
 
     contact: "Contact",
 
     comfort: "Vitrectomy pillow",
+
+    shop: "Shop",
 
     menu: "Menu",
   },
@@ -282,15 +294,21 @@ const DE_TRANSLATIONS = {
 
     recovery: "Erholung",
 
+    guides: "Ratgeber",
+
     testimonial: "Erfahrungen",
 
     directory: "Verzeichnis",
+
+    search: "Suche",
 
     faq: "FAQ",
 
     contact: "Kontakt",
 
     comfort: "Vitrektomie-Kissen",
+
+    shop: "Shop",
 
     menu: "Menü",
   },
@@ -388,15 +406,21 @@ const IT_TRANSLATIONS = {
 
     recovery: "Recupero",
 
+    guides: "Guide",
+
     testimonial: "Testimonianze",
 
     directory: "Directory",
+
+    search: "Ricerca",
 
     faq: "FAQ",
 
     contact: "Contatto",
 
     comfort: "Cuscino vitrectomia",
+
+    shop: "Shop",
 
     menu: "Menu",
   },
@@ -494,15 +518,21 @@ const NL_TRANSLATIONS = {
 
     recovery: "Herstel",
 
+    guides: "Gidsen",
+
     testimonial: "Getuigenissen",
 
     directory: "Directory",
+
+    search: "Zoeken",
 
     faq: "FAQ",
 
     contact: "Contact",
 
     comfort: "Vitrectomie-kussen",
+
+    shop: "Shop",
 
     menu: "Menu",
   },
@@ -600,15 +630,21 @@ const ES_TRANSLATIONS = {
 
     recovery: "Recuperación",
 
+    guides: "Guías",
+
     testimonial: "Testimonios",
 
     directory: "Directorio",
+
+    search: "Buscar",
 
     faq: "FAQ",
 
     contact: "Contacto",
 
     comfort: "Cojín vitrectomía",
+
+    shop: "Tienda",
 
     menu: "Menú",
   },
@@ -797,6 +833,12 @@ export function generateNavbarLinks(
 
     comfort:
       `${prefix}/convalescence/coussin`,
+
+    guides:
+      `${prefix}/blog`,
+
+    search:
+      `${prefix}/annuaire/recherche`,
 
     /* =========================
        TESTIMONIAL
