@@ -113,7 +113,7 @@ export default function NavbarLanguage({
         </span>
 
         <ChevronDown
-          size={15}
+          size={20}
           className={`vm-language__icon ${
             open
               ? "vm-language__icon--open"

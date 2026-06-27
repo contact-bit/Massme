@@ -143,9 +143,9 @@ export default function NavbarMobile({
           }
         >
           {isMenuOpen ? (
-            <X size={24} />
+            <X size={30} />
           ) : (
-            <Menu size={24} />
+            <Menu size={30} />
           )}
         </button>
       </header>

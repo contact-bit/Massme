@@ -104,7 +104,7 @@ export default function NavbarDropdown({
           aria-label={label}
         >
           <ChevronDown
-            size={15}
+            size={20}
             className={`vm-dropdown__icon ${
               open
                 ? "vm-dropdown__icon--open"

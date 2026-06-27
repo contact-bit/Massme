@@ -402,7 +402,7 @@
   margin: 0;
   padding: 0 .35rem;
   color: rgba(255,255,255,.52);
-  font-size: .72rem;
+  font-size: .9rem;
   font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -821,7 +821,7 @@
 .public-shell .vm-mobile-section__label {
   padding: 0 .15rem;
   color: rgba(10, 36, 107, .56);
-  font-size: .76rem;
+  font-size: .92rem;
   font-weight: 900;
   letter-spacing: .07em;
 }
@@ -839,7 +839,7 @@
   border-radius: 0;
   background: transparent;
   color: #071b55;
-  font-size: 1.06rem;
+  font-size: 1.16rem;
   font-weight: 850;
   box-shadow: none;
 }

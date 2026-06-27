@@ -310,10 +310,10 @@
 }
 
 .public-shell .vm-navbar__container {
-  width: min(100% - 40px, 1500px);
-  max-width: 1500px;
+  width: 100%;
+  max-width: none;
   min-height: 86px;
-  padding: 0;
+  padding: 0 clamp(20px, 1.4vw, 28px);
 }
 
 .public-shell .vm-navbar__container::before {
@@ -330,7 +330,7 @@
 
 @media (max-width: 1500px) {
   .public-shell .vm-navbar__container {
-    width: min(100% - 32px, 1440px);
+    width: 100%;
   }
 }
 

@@ -11,17 +11,14 @@ import {
   ClipboardCheck,
   Clock3,
   Eye,
-  Facebook,
   GraduationCap,
   Heart,
-  Instagram,
   Languages,
   MapPin,
   Plane,
   Search,
   ShieldCheck,
   UserRound,
-  Youtube,
 } from "lucide-react";
 
 import type { Locale } from "@/lib/i18n";
@@ -117,60 +114,75 @@ export default async function HomePage({
   return (
     <main className="home-exact">
       <section className="home-exact-hero home-exact-wrap">
-        <div className="home-exact-hero-copy">
-          <h1>Vitrectomie :<br />votre parcours,<br />notre accompagnement</h1>
-          <p className="home-exact-lead">
-            Comprendre sa pathologie, choisir son chirurgien et réussir sa récupération après vitrectomie.
-          </p>
-          <p>
-            Des informations fiables et claires pour comprendre votre intervention, choisir votre chirurgien et réussir votre récupération après une vitrectomie.
-          </p>
-          <div className="home-exact-actions">
-            <Link href={`${prefix}/convalescence`} className="home-exact-btn home-exact-btn-primary">
-              Commencer mon parcours <ArrowRight />
-            </Link>
-            <Link href={`${prefix}/annuaire`} className="home-exact-btn home-exact-btn-secondary">
-              <UserRound /> Trouver un chirurgien
-            </Link>
+        <div className="home-exact-hero-main">
+          <div className="home-exact-hero-copy">
+            <h1>Vitrectomie :<br />votre parcours,<br />notre accompagnement</h1>
+            <p className="home-exact-lead">
+              Comprendre sa pathologie, choisir son chirurgien et réussir sa récupération après vitrectomie.
+            </p>
+            <p>
+              Des informations fiables et claires pour comprendre votre intervention, choisir votre chirurgien et réussir votre récupération après une vitrectomie.
+            </p>
+            <div className="home-exact-actions">
+              <Link href={`${prefix}/convalescence`} className="home-exact-btn home-exact-btn-primary">
+                Commencer mon parcours <ArrowRight />
+              </Link>
+              <Link href={`${prefix}/annuaire`} className="home-exact-btn home-exact-btn-secondary">
+                <UserRound /> Trouver un chirurgien
+              </Link>
+            </div>
+          </div>
+
+          <div className="home-exact-hero-image">
+            <Image
+              src="/brand/home-hero-patient.jpeg"
+              alt="Patiente en position face vers le bas après une vitrectomie"
+              width={900}
+              height={620}
+              priority
+            />
           </div>
         </div>
 
-        <div className="home-exact-hero-image">
-          <Image
-            src="/brand/home-hero-patient.jpeg"
-            alt="Patiente en position face vers le bas après une vitrectomie"
-            width={900}
-            height={620}
-            priority
-          />
-        </div>
-
-        <aside className="home-exact-device">
-          <div className="home-exact-device-title">
-            <ShieldCheck />
-            <span>DISPOSITIF MÉDICAL</span>
-            <strong>Vitrectomed®</strong>
+        <div className="home-exact-device-column">
+          <div className="home-exact-device-intro">
+            <span>APRÈS L’INTERVENTION</span>
+            <strong>Un appui pensé pour votre récupération</strong>
           </div>
-          <p className="home-exact-ce">🇫🇷 Dispositif médical marqué CE</p>
-          <Image
-            src="/brand/home-product.png"
-            alt="Dispositif médical Vitrectomed"
-            width={250}
-            height={190}
-          />
-          <ul>
-            <li><CheckCircle2 /> Aide au maintien de la position prescrite</li>
-            <li><CheckCircle2 /> Utilisation prolongée et assistée</li>
-            <li><CheckCircle2 /> Réduit les tensions cervicales et dorsales</li>
-            <li><CheckCircle2 /> Facilite la convalescence post-opératoire</li>
-          </ul>
-          <Link href={`${prefix}/convalescence/coussin`} className="home-exact-device-cta">
-            Découvrir le dispositif <ArrowRight />
-          </Link>
-          <Link href={`${prefix}/convalescence/coussin`} className="home-exact-device-more">
-            <Search /> En savoir plus sur Vitrectomed®
-          </Link>
-        </aside>
+
+          <aside className="home-exact-device">
+            <div className="home-exact-device-title">
+              <ShieldCheck />
+              <span>DISPOSITIF MÉDICAL</span>
+              <strong>Vitrectomed®</strong>
+            </div>
+            <p className="home-exact-ce">🇫🇷 Dispositif médical marqué CE</p>
+            <Image
+              src="/brand/home-product.png"
+              alt="Dispositif médical Vitrectomed"
+              width={250}
+              height={190}
+            />
+            <ul>
+              <li><CheckCircle2 /> Aide au maintien de la position prescrite</li>
+              <li><CheckCircle2 /> Utilisation prolongée et assistée</li>
+              <li><CheckCircle2 /> Réduit les tensions cervicales et dorsales</li>
+              <li><CheckCircle2 /> Facilite la convalescence post-opératoire</li>
+            </ul>
+            <Link href={`${prefix}/convalescence/coussin`} className="home-exact-device-cta">
+              Découvrir le dispositif <ArrowRight />
+            </Link>
+            <Link href={`${prefix}/convalescence/coussin`} className="home-exact-device-more">
+              <Search /> En savoir plus sur Vitrectomed®
+            </Link>
+          </aside>
+
+          <div className="home-exact-device-benefits" aria-label="Bénéfices du dispositif">
+            <span><ClipboardCheck /> Position</span>
+            <span><Heart /> Confort</span>
+            <span><Clock3 /> Récupération</span>
+          </div>
+        </div>
       </section>
 
       <section className="home-exact-trust home-exact-wrap" aria-label="Garanties éditoriales">
@@ -294,37 +306,6 @@ export default async function HomePage({
         <Trust icon={<Clock3 />} text="Mises à jour régulières et rigoureuses" />
         <Trust icon={<Languages />} text="Plateforme internationale disponible en 20+ langues" />
       </section>
-
-      <footer className="home-exact-footer">
-        <div className="home-exact-footer-inner home-exact-wrap">
-          <div>
-            <Link href={prefix} className="home-exact-footer-logo">
-              <span className="home-exact-logo-mark">
-                <Image
-                  src="/brand/logo-officiel.png"
-                  alt="VitrectoMed"
-                  width={1011}
-                  height={232}
-                />
-              </span>
-            </Link>
-            <p>La référence pour votre parcours avant et après vitrectomie</p>
-          </div>
-          <FooterLinks title="Ressources" links={["Guides pratiques", "Vidéos explicatives", "Témoignages patients"]} />
-          <FooterLinks title="À propos" links={["Notre mission", "Comité éditorial", "Mentions légales"]} />
-          <FooterLinks title="Informations" links={["Politique de confidentialité", "Conditions d'utilisation", "Cookies"]} />
-          <FooterLinks title="Contact" links={["Nous écrire", "FAQ", "Presse"]} />
-          <div className="home-exact-social">
-            <span>Suivez-nous</span>
-            <div>
-              <Facebook />
-              <Instagram />
-              <Youtube />
-            </div>
-            <small>© 2024 Vitrectomed.com - Tous droits réservés.</small>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }
@@ -405,22 +386,5 @@ function FaqItem({
       <summary>{item.question}</summary>
       <p>{item.answer}</p>
     </details>
-  );
-}
-
-function FooterLinks({
-  title,
-  links,
-}: {
-  title: string;
-  links: string[];
-}) {
-  return (
-    <div className="home-exact-footer-links">
-      <h3>{title}</h3>
-      {links.map((link) => (
-        <span key={link}>{link}</span>
-      ))}
-    </div>
   );
 }

@@ -579,7 +579,7 @@
 
 .public-shell .vm-navbar-desktop__primary-row {
   justify-content: center;
-  gap: clamp(14px, 1.55vw, 34px);
+  gap: clamp(28px, 2.35vw, 54px);
 }
 
 .public-shell .vm-navbar-desktop__utility {
@@ -591,18 +591,18 @@
 
 .public-shell .vm-navbar-desktop__link,
 .public-shell .vm-dropdown__link {
-  min-height: 42px;
+  min-height: 48px;
   padding: 0;
   color: #06158d;
-  font-size: clamp(12px, .82vw, 14px);
+  font-size: clamp(16px, .96vw, 18px);
   font-weight: 950;
   letter-spacing: 0;
 }
 
 .public-shell .vm-navbar-desktop__link--utility {
-  min-height: 42px;
+  min-height: 48px;
   padding: 0 clamp(.42rem, .54vw, .68rem);
-  font-size: clamp(12px, .76vw, 14px);
+  font-size: clamp(16px, .92vw, 17px);
   font-weight: 850;
 }
 
@@ -638,21 +638,21 @@
 }
 
 .public-shell .vm-navbar-desktop__cta {
-  min-height: 50px;
-  padding: 0 16px;
+  min-height: 58px;
+  padding: 0 18px;
   border-radius: 6px;
   border-color: #0024d8;
   background: #0024d8;
   color: #fff;
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 900;
   white-space: nowrap;
   box-shadow: none;
 }
 
 .public-shell .vm-navbar-desktop__search {
-  width: 42px;
-  height: 42px;
+  width: 50px;
+  height: 50px;
   border-color: transparent;
   border-radius: 999px;
   background: transparent;
@@ -674,31 +674,35 @@
 
 @media (max-width: 1380px) {
   .public-shell .vm-navbar-desktop {
-    grid-template-columns: minmax(220px, 285px) minmax(0, 1fr) auto;
-    gap: 14px;
+    grid-template-columns: minmax(170px, 190px) minmax(0, 1fr) auto;
+    gap: 5px;
   }
 
   .public-shell .vm-navbar-desktop__logo-image {
-    width: 250px;
+    width: 180px;
   }
 
   .public-shell .vm-navbar-desktop__center {
     padding: 0;
   }
 
+  .public-shell .vm-navbar-desktop__primary-row {
+    gap: 20px;
+  }
+
   .public-shell .vm-navbar-desktop__link,
   .public-shell .vm-dropdown__link {
     padding: 0;
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .public-shell .vm-navbar-desktop__link--utility {
     padding: 0 .48rem;
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .public-shell .vm-navbar-desktop__cta {
     padding: 0 14px;
-    font-size: 13px;
+    font-size: 16px;
   }
 }

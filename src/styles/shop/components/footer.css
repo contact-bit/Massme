@@ -789,9 +789,10 @@
   display: grid;
   grid-template-columns: minmax(280px, 1.6fr) repeat(4, minmax(130px, 1fr));
   gap: clamp(24px, 4vw, 54px);
-  width: min(100% - 48px, 1440px);
-  margin: 0 auto;
-  padding: 34px 0 28px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 34px clamp(20px, 1.4vw, 28px) 28px;
 }
 
 .vm-footer__brand {
@@ -929,9 +930,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  width: min(100% - 48px, 1440px);
-  margin: 0 auto;
-  padding: 16px 0 22px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 16px clamp(20px, 1.4vw, 28px) 22px;
   border-top: 1px solid rgba(255, 255, 255, .10);
   color: rgba(255, 255, 255, .58);
   font-size: 12px;
@@ -947,7 +949,9 @@
 @media (max-width: 760px) {
   .vm-footer__inner,
   .vm-footer__bottom {
-    width: min(100% - 28px, 520px);
+    width: 100%;
+    max-width: none;
+    padding-inline: 14px;
   }
 
   .vm-footer__inner {

@@ -169,7 +169,7 @@ export default function NavbarDesktop({
           className="vm-navbar-desktop__search"
           aria-label="Rechercher"
         >
-          <Search size={18} />
+          <Search size={24} />
         </Link>
 
         {/* CTA */}
@@ -179,7 +179,7 @@ export default function NavbarDesktop({
           className="vm-navbar-desktop__cta"
         >
           {t.nav.shop}
-          <ShoppingBag size={17} />
+          <ShoppingBag size={22} />
         </Link>
       </div>
     </div>
