@@ -49,6 +49,11 @@ import {
 import DashboardOrdersSearch from "./DashboardOrdersSearch";
 import { useAdminScope } from "./context/adminScope";
 
+const CHART_INITIAL_DIMENSION = {
+  width: 1,
+  height: 1,
+};
+
 type StatsResponse = {
   kpis: {
     productsCount: number;
@@ -1336,7 +1341,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="dash-pro-chart">
-              <ResponsiveContainer>
+              <ResponsiveContainer initialDimension={CHART_INITIAL_DIMENSION}>
                 {chartType === "bar" ? (
                   <BarChart data={chartStats.series}>
                     <CartesianGrid stroke="rgba(148,163,184,.1)" vertical={false} />
@@ -1381,7 +1386,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="dash-pro-donut">
-              <ResponsiveContainer>
+              <ResponsiveContainer initialDimension={CHART_INITIAL_DIMENSION}>
                 <PieChart>
                   <Pie
                     data={[
@@ -1523,7 +1528,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="dash-pro-chart dash-pro-chart-small">
-              <ResponsiveContainer>
+              <ResponsiveContainer initialDimension={CHART_INITIAL_DIMENSION}>
                 <BarChart
                   data={operations.map((item) => ({
                     name: item.label,

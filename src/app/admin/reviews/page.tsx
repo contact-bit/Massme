@@ -2,6 +2,7 @@
 
 import {
   Fragment,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -277,7 +278,7 @@ function useReviewSettings() {
       null
     );
 
-  async function load() {
+  const load = useCallback(async () => {
 
     setLoading(
       true
@@ -319,7 +320,7 @@ function useReviewSettings() {
       );
 
     }
-  }
+  }, []);
 
   async function save() {
 
@@ -400,7 +401,7 @@ function useReviewSettings() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   return {
     draftSettings,
@@ -443,7 +444,7 @@ function useReviews(
       null
     );
 
-  async function load() {
+  const load = useCallback(async () => {
 
     setLoading(
       true
@@ -481,7 +482,7 @@ function useReviews(
       );
 
     }
-  }
+  }, [status]);
 
   async function moderate(
     reviewId: string,
@@ -540,7 +541,7 @@ function useReviews(
 
   useEffect(() => {
     load();
-  }, [status]);
+  }, [load]);
 
   return {
     rows,

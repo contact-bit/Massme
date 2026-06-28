@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { getAdminDb } from "@/server/firebaseAdmin";
+import { getAdminDb } from "@/lib/firebase.admin";
 
 const DOC_PATH = "settings/dashboard";
 

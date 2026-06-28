@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { getAdminDb } from "@/server/firebaseAdmin";
+import { getAdminDb } from "@/lib/firebase.admin";
 import { verifyReviewToken } from "@/lib/reviewToken";
 
 type ReviewStatus = "pending" | "approved" | "rejected";
@@ -178,8 +178,6 @@ export async function POST(req: Request) {
     const orderId = s(body.orderId, 120);
 
     const token = s(body.token, 2000);
-
-    const email = normalizeEmail(body.email);
 
     const comment = s(body.comment, 2000);
 

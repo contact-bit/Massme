@@ -1,6 +1,6 @@
 // src/app/api/admin/reviews/route.ts
 import { NextResponse } from "next/server";
-import { getAdminDb } from "@/server/firebaseAdmin";
+import { getAdminDb } from "@/lib/firebase.admin";
 
 type ReviewDoc = {
   orderId?: string;

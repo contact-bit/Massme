@@ -274,7 +274,7 @@ export function useOrders(
               "retrait"
             ) ?? false;
 
-        let tracking:
+        const tracking:
           | string
           | null =
           order.trackingNumber ??

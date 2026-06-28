@@ -13,7 +13,7 @@ export function getEffectiveShippingStatus(order: Order): ShippingStatus {
     return raw;
   }
 
-  const fulfillmentStatus = String((order as any)?.fulfillment?.status || "").toLowerCase();
+  const fulfillmentStatus = String(order.fulfillment?.status || "").toLowerCase();
 
   if (fulfillmentStatus === "preparing") return "preparing";
   if (fulfillmentStatus === "shipped") return "shipped";
@@ -77,8 +77,8 @@ export function getShippingStatusUi(status: ShippingStatus) {
 export function getTrackingNumber(order: Order): string | null {
   return (
     order.trackingNumber ||
-    (order as any)?.shippingTracking?.trackingNumber ||
-    (order as any)?.fulfillment?.tracking?.trackingNumber ||
+    order.shippingTracking?.trackingNumber ||
+    order.fulfillment?.tracking?.trackingNumber ||
     null
   );
 }
@@ -86,17 +86,17 @@ export function getTrackingNumber(order: Order): string | null {
 export function getCarrier(order: Order): string | null {
   return (
     order.carrier ||
-    (order as any)?.shippingTracking?.carrier ||
-    (order as any)?.fulfillment?.tracking?.carrier ||
+    order.shippingTracking?.carrier ||
+    order.fulfillment?.tracking?.carrier ||
     null
   );
 }
 
 export function getShipDate(order: Order): string | null {
   return (
-    (order as any)?.shippingTracking?.shipDate ||
-    (order as any)?.fulfillment?.tracking?.shipDate ||
-    (typeof (order as any)?.shippedAt === "string" ? (order as any).shippedAt : null) ||
+    order.shippingTracking?.shipDate ||
+    order.fulfillment?.tracking?.shipDate ||
+    (typeof order.shippedAt === "string" ? order.shippedAt : null) ||
     null
   );
 }

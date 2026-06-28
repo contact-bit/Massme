@@ -138,7 +138,7 @@ function sortEntries(
 export async function loadPublishedDirectoryEntries(
   options: { country?: CountryCode } = {}
 ): Promise<DirectoryEntry[]> {
-  let query: FirebaseFirestore.Query = dbAdmin
+  const query: FirebaseFirestore.Query = dbAdmin
     .collection(DIRECTORY_COLLECTION)
     .where("status", "==", "published");
 
@@ -172,7 +172,7 @@ async function loadPublishedDirectoryCandidates(
   const cleanLocation =
     normalizeDirectoryText(location);
 
-  let baseQuery: FirebaseFirestore.Query = dbAdmin
+  const baseQuery: FirebaseFirestore.Query = dbAdmin
     .collection(DIRECTORY_COLLECTION)
     .where("status", "==", "published");
 

@@ -119,7 +119,9 @@ export default function DashboardOrdersSearch({
   } = useOrders(() => {});
 
   const [q, setQ] =
-    useState("");
+    useState(() =>
+      searchParams.get("search") || ""
+    );
 
   /* =========================================================
      INIT
@@ -128,15 +130,6 @@ export default function DashboardOrdersSearch({
   useEffect(() => {
     initOnce();
   }, [initOnce]);
-
-  useEffect(() => {
-    const term =
-      searchParams.get("search") || "";
-
-    if (term) {
-      setQ(term);
-    }
-  }, [searchParams]);
 
   /* =========================================================
      FILTERED

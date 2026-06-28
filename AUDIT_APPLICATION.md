@@ -1,346 +1,172 @@
-# Audit complet de l'application Vitrectomed
+# Audit actuel de l’application VitrectoMed
 
-Date de l'audit : 27 juin 2026
-
-## Mise à jour du 28 juin 2026 — phase sécurité terminée
-
-- Session admin signée de huit heures ajoutée dans un cookie `HttpOnly`, `SameSite=Lax` et `Secure` en production.
-- Mot de passe, faux token et rôle supprimés du stockage navigateur pour les parcours actifs.
-- Protection serveur globale de `/admin/**` et `/api/admin/**` via `src/proxy.ts`, convention correcte de Next.js 16.
-- Rôle logistique limité à son écran et à ses opérations API autorisées.
-- Vérification de l'origine ajoutée sur les mutations admin pour limiter les requêtes intersites.
-- Anciens envois d'e-mails logistiques protégés par la session admin.
-- Route de session et déconnexion serveur ajoutée sous `/api/admin/session`.
-- Appel de l'action « marquer comme payée » corrigé vers `/api/admin/orders/mark-paid` avec contrôle de la réponse.
-- Suppression de commande corrigée : elle exige maintenant explicitement le rôle administrateur.
-- Ancienne route invalide `/admin/payments` supprimée ; elle était non reliée, remplacée par `/admin/payment-methods` et bloquait le build Next.js.
-- Build de production Next.js validé avec Webpack ; le script `npm run build` utilise désormais ce moteur, Turbopack restant bloqué dans cet environnement.
-- Portugais retiré complètement : locale `pt`, traductions, route `/pt`, marché `PT`, TVA Portugal et options produit supprimés du code. Les éventuelles anciennes données Firestore ne sont pas modifiées automatiquement.
-
-Les constats de sécurité ci-dessous décrivent l'état trouvé lors de l'audit initial. Ils sont conservés comme historique ; les points listés dans cette mise à jour sont désormais corrigés.
+Dernière mise à jour : 28 juin 2026
 
 ## Résumé exécutif
 
-L'application est un monolithe Next.js 16 : la boutique et l'administration vivent dans le même projet, le même déploiement et le même accès aux données. Leur séparation visuelle et leur séparation par URL sont bonnes, mais leur séparation de sécurité est insuffisante.
+VitrectoMed est un monolithe Next.js 16 qui contient deux espaces clairement identifiables :
 
-- Boutique : routes localisées sous `src/app/(public)/[locale]`.
-- Administration : routes sous `src/app/admin`.
-- API commune : routes sous `src/app/api`.
-- Logique partagée : `src/lib`, `src/server`, `src/components`, `src/context`.
-- Données : Firebase/Firestore côté navigateur et côté serveur.
-- Paiements : Stripe, PayPal et virement bancaire.
-- Logistique : traitement interne, Sendcloud et points relais.
+- la boutique et le contenu public sous `src/app/(public)/[locale]` ;
+- l’administration privée sous `src/app/admin` ;
+- les API communes sous `src/app/api` ;
+- la logique partagée sous `src/lib`, `src/server`, `src/components` et `src/context`.
 
-Conclusion : les deux parties sont bien distinguées pour l'organisation des écrans, mais ne sont pas deux projets réellement isolés. Cette architecture peut rester monolithique, à condition de déplacer toute l'authentification admin côté serveur et de protéger uniformément les API sensibles.
+La boutique et l’administration ne sont donc pas deux projets indépendants. Elles partagent le même déploiement et Firestore, mais elles sont maintenant séparées par leurs routes et par une protection serveur de l’administration. Cette architecture est cohérente pour la taille actuelle du projet.
 
-## Chiffres du projet
+État global : le build de production passe, l’administration utilise une session serveur, le portugais et ShipStation sont retirés, Firebase Admin est unifié et un important lot de code mort a été supprimé.
 
-- 38 pages publiques.
-- 13 pages d'administration.
-- 42 routes API après nettoyage et ajout de la session.
-- 1 route serveur placée directement dans l'arbre admin, hors de `/api`.
-- 263 fichiers TypeScript/TSX.
-- 85 fichiers CSS.
-- Environ 131 000 lignes dans `src` en comptant TypeScript, CSS, images et polices.
-- Les plus gros fichiers atteignent 1 400 à 3 000 lignes, ce qui rend plusieurs fonctionnalités difficiles à maintenir.
+## Chiffres actuels
+
+- 42 pages publiques localisées, dont quatre pages juridiques.
+- 13 pages d’administration.
+- 42 routes API.
+- 218 fichiers TypeScript/TSX.
+- 74 feuilles CSS.
+- 6 langues : français, anglais, espagnol, allemand, italien et néerlandais.
 
 ## Hiérarchie fonctionnelle
 
-### Racine
-
 ```text
-src/app
-├── layout.tsx                 document HTML et langue
-├── page.tsx                   redirection vers /fr
-├── (public)/[locale]          site public et boutique
-├── admin                      interface d'administration
-└── api                        API publiques, admin, paiement et logistique
+src/
+├── app/
+│   ├── (public)/[locale]/
+│   │   ├── page.tsx                 accueil
+│   │   ├── products/                catalogue et fiches produit
+│   │   ├── cart/                    panier
+│   │   ├── checkout/                commande et paiement
+│   │   ├── bank-transfer/           instructions de virement
+│   │   ├── success/                 confirmation
+│   │   ├── review/                  dépôt d’avis
+│   │   ├── annuaire/                annuaire médical
+│   │   ├── blog/                    contenus éditoriaux
+│   │   ├── operation/               informations vitrectomie
+│   │   ├── pathologies/             contenus médicaux
+│   │   ├── convalescence/           récupération et produit
+│   │   └── contact/                 contact
+│   ├── admin/
+│   │   ├── login/                   connexion
+│   │   ├── page.tsx                 tableau de bord
+│   │   ├── orders/                  commandes
+│   │   ├── logistics/               préparation logistique
+│   │   ├── products/                catalogue administrable
+│   │   ├── payment-methods/         moyens de paiement
+│   │   ├── shipping/                méthodes de livraison
+│   │   ├── taxes/                   TVA
+│   │   ├── reviews/                 avis et e-mails d’avis
+│   │   ├── annuaire/                fiches de l’annuaire
+│   │   └── export/                   exports
+│   └── api/
+│       ├── admin/                   opérations privées
+│       ├── checkout/                création Stripe
+│       ├── stripe-webhook/          confirmation Stripe
+│       ├── paypal/                  paiement PayPal
+│       ├── bank-transfer/           commandes par virement
+│       ├── reviews/                 avis publics
+│       └── sendcloud/               webhook logistique
+├── components/                      composants partagés
+├── context/                         panier
+├── lib/                             intégrations et outils
+├── server/                          logique exclusivement serveur
+├── types/                           types partagés
+└── proxy.ts                         garde des routes admin et locales
 ```
 
-Le middleware redirige `/` vers `/fr`, accepte une locale dans l'URL et laisse explicitement passer sans filtrage toutes les routes `/admin` et `/api`.
+## Sécurité de l’administration
 
-### Boutique et site public
+### Terminé
 
-```text
-/[locale]
-├── /                          accueil
-├── /products                  catalogue
-│   └── /[id]                  fiche produit
-├── /cart                      panier
-├── /checkout                  commande
-├── /bank-transfer             instructions de virement
-├── /success                   confirmation de commande
-├── /review                    dépôt d'avis
-├── /contact                   contact
-├── /blog                      liste des articles
-│   └── /[id]                  article
-├── /annuaire                  annuaire médical
-│   ├── /recherche
-│   ├── /[location]
-│   ├── /ophtalmologue/...
-│   └── /hopitaux-cliniques/...
-├── /pathologies               contenu médical
-│   ├── /decollement-retine
-│   ├── /mouches-volantes-ou-corps-flottants
-│   ├── /myopie-forte
-│   ├── /retinopathie-diabetique
-│   ├── /trou-maculaire
-│   │   ├── /convalescence
-│   │   └── /temoignage
-│   └── /uveite
-├── /operation                 contenu opératoire
-│   └── /risque                pages de risques
-├── /convalescence
-│   └── /coussin               expérience produit dédiée
-└── /temoignage
-```
+- Session signée d’une durée maximale de huit heures.
+- Cookie `HttpOnly`, `SameSite=Lax` et `Secure` en production.
+- Aucun mot de passe ni faux jeton conservé dans le stockage navigateur actif.
+- Protection de `/admin/**` et `/api/admin/**` dans `src/proxy.ts`.
+- Contrôle du rôle administrateur ou logistique côté serveur.
+- Restriction du rôle logistique à ses écrans et opérations autorisés.
+- Vérification d’origine sur les mutations admin.
+- Déconnexion et lecture de session sous `/api/admin/session`.
+- Route « marquer comme payée » corrigée.
+- Suppression de commande réservée au rôle administrateur.
 
-Le layout public charge la navigation, le pied de page et le panier. Il importe aussi globalement les feuilles de style de l'accueil, des produits, du checkout, du contact, du succès et du blog, même lorsque la page courante ne les utilise pas.
+### Action de déploiement restante
 
-### Administration
+Définir `ADMIN_SESSION_SECRET` dans Vercel avec une longue valeur aléatoire, différente des mots de passe, puis redéployer. Le code possède un repli pour le développement, mais le secret explicite est préférable en production.
 
-```text
-/admin
-├── /                          tableau de bord
-├── /login                     connexion
-├── /orders                    commandes
-├── /products                  catalogue
-│   ├── /new                   création
-│   └── /[id]                  édition
-├── /payment-methods           méthodes de paiement actives
-├── /payments                  ancien écran de paiement, non relié à la navigation
-├── /shipping                  méthodes de livraison
-├── /taxes                     taxes
-├── /reviews                   avis et e-mails d'avis
-├── /annuaire                  gestion de l'annuaire
-├── /logistics                 traitement logistique
-└── /export                    exports commandes
-```
+## Langues et logistique
 
-L'interface admin a son propre layout, sa police, son shell et ses styles. Elle réutilise toutefois `CartProvider`, alors qu'aucun composant admin n'utilise le panier. C'est un couplage inutile avec la boutique.
+- Le portugais a été retiré des locales, marchés, traductions, produits, factures et checkouts.
+- Les anciennes données portugaises éventuellement présentes dans Firestore ne sont pas supprimées automatiquement.
+- ShipStation a été retiré du code, des routes, des types, des dépendances et des variables locales.
+- Les anciennes variables `SHIPSTATION_*` doivent aussi être supprimées manuellement de Vercel et l’ancien webhook doit être désactivé chez le fournisseur.
+- La logistique actuelle repose sur le traitement interne, les points relais et Sendcloud.
 
-### API
+## Firebase et e-mails d’avis
 
-```text
-/api
-├── /admin-login
-├── /admin
-│   ├── /directory             lecture et gestion annuaire
-│   ├── /logistics/settings
-│   ├── /orders                lecture, édition, validation, facture, export, e-mails
-│   ├── /payment-methods       lecture et gestion
-│   ├── /products              lecture et gestion
-│   ├── /reviews               lecture, modération et envoi
-│   ├── /settings              dashboard et e-mails d'avis
-│   ├── /shipping-methods      lecture et gestion
-│   └── /stats
-├── /checkout                  création paiement Stripe
-├── /bank-transfer/create-order
-├── /paypal/create-order
-├── /paypal/capture-order
-├── /stripe-webhook
-├── /get-order
-├── /verify-payment
-├── /payment-methods           méthodes visibles par la boutique
-├── /reviews                   avis publics
-├── /contact
-├── /email-logistique
-├── /sendcloud/webhook
-└── /sendcloud/webhook
-```
+- Une seule initialisation Firebase Admin subsiste : `src/lib/firebase.admin.ts`.
+- L’ancien wrapper `src/server/firebaseAdmin.ts` a été supprimé.
+- La seule route de réglage active est `/api/admin/settings/review-email`.
+- L’ancienne route placée directement sous `/admin/settings/review-email` a été supprimée.
+- La route conservée valide strictement `enabled`, `mode` et `delayDays`.
 
-Les routes API sont fonctionnellement rangées, mais l'authentification n'est pas centralisée et plusieurs variantes de la même fonction coexistent.
+## Nettoyage réalisé
 
-## Séparation boutique / administration
+- Suppression des scripts et routes de test ou de diagnostic.
+- Suppression des routes, services et types ShipStation.
+- Suppression de l’ancienne page `/admin/payments`, remplacée par `/admin/payment-methods`.
+- Suppression des anciennes versions de composants panier, checkout, produit, livraison, avis, dashboard et logistique qui n’étaient importées nulle part.
+- Suppression de deux anciens widgets relais non utilisés, dont un chargeait encore une ancienne version de jQuery.
+- Suppression d’un composant d’export vide.
+- Suppression des cinq ressources SVG de Create Next App.
+- Suppression de `tsconfig.tsbuildinfo` et ajout de `*.tsbuildinfo` au `.gitignore`.
+- Remplacement du README Create Next App par la documentation du projet.
 
-### Ce qui est bien séparé
+Chaque gros lot a été suivi d’un build de production. Le build final expose les 42 pages publiques, 13 pages admin et 42 routes API attendues.
 
-- Arbres de pages distincts : `(public)/[locale]` et `admin`.
-- Layouts, navigation et identité visuelle distincts.
-- Styles principaux distincts : `src/styles/shop` et `src/app/admin/styles`.
-- Composants métier de commande admin regroupés par `components`, `hooks` et `domain`.
-- Accès serveur Firebase séparé de l'initialisation Firebase navigateur dans la majorité des fichiers.
+## Qualité du code
 
-### Ce qui reste couplé ou incohérent
+Avant cette phase, ESLint signalait 451 erreurs et 43 avertissements.
 
-- Un seul déploiement et une seule API servent les deux parties.
-- L'admin réutilise le contexte panier de la boutique sans en avoir besoin.
-- Des pages admin (`taxes`, édition produit) interrogent Firestore directement depuis le navigateur au lieu de passer par une API serveur.
-- La boutique interroge aussi Firestore directement pour les produits et méthodes de livraison. La sécurité dépend donc totalement de règles Firestore qui ne sont pas présentes dans ce dépôt.
-- Deux initialisations Firebase Admin coexistent : `src/lib/firebase.admin.ts` et `src/server/firebaseAdmin.ts`.
-- L'authentification admin est centralisée dans `src/server/adminAuth.ts`.
-- Deux routes identiques de réglage des e-mails d'avis coexistent : `/api/admin/settings/review-email` et `/admin/settings/review-email`.
-- Deux pages de gestion des paiements coexistent : `/admin/payment-methods` est utilisée ; `/admin/payments` n'est pas reliée à la navigation.
+État actuel :
 
-## Problèmes critiques
+- toutes les erreurs React concrètes ont été corrigées ;
+- les appels impurs pendant le rendu ont été supprimés ;
+- les synchronisations d’état du checkout ont été remplacées par des valeurs dérivées ;
+- les dépendances principales de hooks ont été corrigées ;
+- les apostrophes JSX et variables réassignées inutilement ont été corrigées ;
+- des types communs ont été ajoutés pour les commandes, adresses, dates Firestore, articles et suivis logistiques ;
+- les `any` sont passés de 428 à 369 pendant cette phase.
 
-### 1. Authentification admin côté navigateur
+ESLint reste volontairement en échec à cause de 369 anciens `any`. Il reste aussi 25 avertissements : 12 variables internes inutilisées et 13 images HTML non optimisées. Leur correction doit continuer progressivement par domaine pour éviter une régression massive.
 
-La connexion écrit `admin_token = "true"`, le rôle et le mot de passe admin en clair dans `localStorage`. Le layout admin se contente de lire ces valeurs pour afficher ou masquer les pages. Cela n'est pas une session sécurisée et toute faille XSS pourrait lire le mot de passe.
+### Dépendances npm
 
-Recommandation : session serveur dans un cookie `HttpOnly`, `Secure`, `SameSite`, avec expiration, vérification du rôle côté serveur et aucun mot de passe conservé dans le navigateur.
+- Audit initial : 31 vulnérabilités, dont 9 élevées et 2 critiques.
+- Next.js, Firebase, Firebase Admin, next-intl et Resend ont été mis à jour vers leurs versions corrigées compatibles.
+- Deux remplacements transitifs ciblés maintiennent PostCSS en `8.5.14` et UUID en `11.1.1`.
+- Résultat final de `npm audit` : 0 vulnérabilité, sans utiliser `npm audit fix --force`.
 
-### 2. API admin non protégées
+## Vérifications effectuées
 
-Au moins 18 routes admin ne font aucun contrôle d'authentification dans leur source. Elles incluent des opérations sensibles : marquer une commande payée, générer ou envoyer une facture, programmer un e-mail, créer/modifier/supprimer des moyens de paiement et de livraison, modérer des avis, modifier les réglages du dashboard et consulter les statistiques.
+- Build Next.js 16 de production avec Webpack : succès.
+- Compilation TypeScript du build : succès.
+- Accueil français : affichage validé dans le navigateur.
+- Checkout : affichage validé, y compris l’état panier vide.
+- Administration non authentifiée : redirection et écran de connexion validés.
+- Session admin et rôle logistique : parcours serveur validés lors de la phase sécurité.
+- Recherche globale : aucune intégration active ShipStation ni locale portugaise ne subsiste dans `src`.
 
-La route de validation de virement importe même `assertAdmin`, mais les deux lignes de vérification sont commentées.
+## Incohérences encore connues
 
-Recommandation : une seule fonction de session/autorisation appelée au début de chaque route `/api/admin/**`, complétée par une protection serveur de `/admin/**`.
+- Les liens FAQ pointaient vers une page inexistante : ils ciblent maintenant la FAQ présente sur l’accueil.
+- Les mentions « 20+ langues » ont été corrigées en « 6 langues ».
+- Les pages de mentions légales, confidentialité, cookies et conditions générales de vente et d’utilisation ont été créées avec LAZURCO comme éditeur et vendeur. La convention avec le médiateur historique de LAZURCO doit être reconfirmée avant déploiement.
+- Plusieurs fichiers admin restent très volumineux, notamment `OrderDetails.tsx`, la page des avis et leurs feuilles CSS.
+- Certaines anciennes données Firestore peuvent contenir des champs portugais ou ShipStation ; elles n’affectent plus le code actif mais nécessiteraient une migration de données séparée.
 
-### 3. Action « marquer comme payée » cassée
+## Étapes suivantes
 
-`src/app/admin/orders/page.tsx` appelle `/api/mark-as-paid`, qui n'existe pas. La route réelle est `/api/admin/orders/mark-paid`. Le code ne contrôle pas non plus `response.ok`, puis affiche un succès même en cas de réponse HTTP en erreur.
+1. Ajouter `ADMIN_SESSION_SECRET` dans Vercel et retirer les anciennes variables ShipStation.
+2. Faire valider les textes juridiques et confirmer la convention de médiation LAZURCO.
+3. Continuer le typage par domaines : détails de commande, logistique, checkout API, produits et webhooks.
+4. Traiter les avertissements ESLint restants et migrer les images concernées vers `next/image` lorsque pertinent.
+5. Découper progressivement les très gros composants admin.
 
-### 4. Suppression de commande toujours refusée
-
-La route `DELETE /api/admin/orders` utilise `assertAdminOrLogistics`, qui renvoie `null` en cas de succès, puis compare ce résultat à la chaîne `"admin"`. La comparaison échoue toujours et la suppression retourne 401.
-
-### 5. Portugais accepté puis rejeté
-
-Le middleware, le marché, le panier, le catalogue produit et certains composants acceptent `pt`. En revanche, `src/lib/i18n.ts`, la navigation, le checkout, les factures, certains e-mails et le blog ne connaissent que six langues, sans portugais. Une URL `/pt` passe le middleware mais peut ensuite retourner une page introuvable ou retomber en français.
-
-Décision nécessaire : terminer réellement le portugais partout, ou le retirer de la liste du middleware et des écrans qui l'annoncent.
-
-## Fichiers et modules potentiellement inutilisés
-
-Cette liste vient d'une analyse statique des imports depuis toutes les pages, layouts et routes Next.js. Elle doit être validée fonctionnellement avant une suppression massive. Les fichiers `.d.ts` et les ressources chargées indirectement sont volontairement traités avec prudence.
-
-### Boutique
-
-- `src/app/(public)/[locale]/annuaire/directory-data.ts`
-- `src/app/(public)/[locale]/cart/CartClient.tsx`
-- `src/app/(public)/[locale]/checkout/components/CheckoutActions.css`
-- `src/app/(public)/[locale]/checkout/components/CheckoutSection.css`
-- `src/app/(public)/[locale]/checkout/services/createBankTransferOrder.ts`
-- `src/app/(public)/[locale]/checkout/services/createStripeCheckout.ts`
-- `src/app/(public)/[locale]/checkout/utils/getPayButtonLabel.ts`
-- `src/app/(public)/[locale]/checkout/utils/sanitizeItems.ts`
-- `src/app/(public)/[locale]/checkout/utils/validateCheckout.ts`
-
-Les deux services de checkout sont remplacés par la logique intégrée dans `useCheckout.ts`. Les utilitaires semblent également être une ancienne tentative de découpage non raccordée.
-
-### Administration
-
-- `src/app/admin/components/AdminCard.tsx`
-- `src/app/admin/components/AdminHeader.tsx`
-- `src/app/admin/components/AdminKpiCard.tsx`
-- `src/app/admin/components/AdminRevenueChart.tsx`
-- `src/app/admin/components/AdminSidebar.tsx`
-- `src/app/admin/components/AdminState.tsx`
-- `src/app/admin/components/AdminTabs.tsx`
-- `src/app/admin/components/AdminTopbar.tsx`
-- `src/app/admin/components/ReviewEmailSettings.tsx`
-- `src/app/admin/orders/components/Drawer.tsx`
-- `src/app/admin/orders/components/KpiGrid.tsx`
-- `src/app/admin/orders/components/LogisticsSourceBadge.tsx`
-- `src/app/admin/orders/components/LogisticsStatusBadge.tsx`
-- `src/app/admin/orders/components/PaginationControls.tsx`
-- `src/app/admin/orders/domain/shippingText.ts`
-- `src/app/admin/products/components/ProductForm.tsx`
-- `src/app/admin/products/components/product-form.css`
-- `src/app/admin/products/new/new-product.css`
-- `src/app/admin/shipping/components/ChooseShippingMethod.tsx`
-- `src/app/admin/shipping/components/ToggleActivation.tsx`
-- `src/app/admin/shipping/components/choose-shipping-method.css`
-- `src/app/admin/shipping/components/shipping/relayProviders.tsx`
-- `src/app/admin/styles/admin-sidebar.css`
-- `src/app/admin/styles/admin.layout.css`
-- `src/app/admin/styles/adminlogin.css`
-
-Plusieurs de ces fichiers sont des anciennes versions remplacées par `AdminNavbar`, `AdminShell`, les composants actuels de commande ou les formulaires placés un niveau plus haut.
-
-### Composants, configuration et serveur
-
-- `src/components/BesoinPage.tsx`
-- `src/components/CartDrawer.tsx`
-- `src/components/RelayPointModal.tsx`
-- `src/components/RelayPointSelector.tsx`
-- `src/components/RelayWidget.tsx`
-- `src/components/admin/ToggleActivation.tsx`
-- `src/components/reviews/ReviewsSection.tsx`
-- `src/components/reviews/ReviewsSection.css`
-- `src/config/shippingMethods.ts`
-- `src/content/pages/home.ts`
-- `src/lib/firebase.client.ts`
-- `src/types/fulfillment.ts`
-- `src/styles/admin-shipping-modal.css`
-- `src/styles/components/cartDrawer.css`
-- `src/styles/shipping-form.css`
-- `src/types/shipping.ts`
-
-`src/types/paypal__checkout-server-sdk.d.ts` n'a pas d'import entrant, mais c'est une déclaration TypeScript ambiante : ne pas la supprimer sans vérifier que la bibliothèque compile toujours.
-
-### Ressources publiques non référencées
-
-- `public/file.svg`
-- `public/globe.svg`
-- `public/next.svg`
-- `public/vercel.svg`
-- `public/window.svg`
-- `public/brand/annuaire-hero-world.png`
-- `public/brand/annuaire-hero.png`
-- `public/brand/home-hero-consultation.png`
-- `public/brand/home-hero-patient.png`
-- `public/brand/vitrectomed-logo-board.png`
-- `public/brand/vitrectomed-logo-horizontal.png`
-
-Les cinq SVG sont les ressources par défaut de Create Next App. `public/robots.txt` n'est pas référencé dans le code mais est servi automatiquement : il doit rester.
-
-## Doublons et dette de structure
-
-- `ProductForm.tsx` existe deux fois ; seule la version directement sous `admin/products` est utilisée.
-- `ToggleActivation.tsx` existe dans trois emplacements ; une seule variante de livraison est utilisée par la page active.
-- `relayProviders.tsx` existe côté partagé et dans l'admin ; la variante admin semble abandonnée.
-- Trois fichiers `product-form.css` coexistent.
-- Deux feuilles `blog.css` coexistent ; ce doublon est légitime si elles ciblent liste et détail, mais les noms prêtent à confusion.
-- `Navbar.tsx` à la racine des composants est seulement un fichier relais vers la vraie navigation. Ce n'est pas un bug, mais l'import direct éviterait une couche inutile.
-- `tsconfig.tsbuildinfo` est versionné alors qu'il s'agit d'un cache généré. Il devrait être retiré du dépôt et ajouté au `.gitignore` lors d'un prochain nettoyage.
-- Le README est encore presque entièrement celui de Create Next App et se termine par plusieurs lignes `massme` encodées de façon incorrecte.
-
-## Qualité et maintenabilité
-
-### Contrôles réalisés
-
-- `npx tsc --noEmit` : succès, aucune erreur TypeScript de compilation.
-- `npm run lint` : échec avec 548 signalements, dont 504 erreurs et 44 avertissements.
-- 489 signalements viennent de `@typescript-eslint/no-explicit-any`.
-- Autres catégories principales : 27 variables inutilisées, 13 balises image non optimisées, 7 mises à jour d'état synchrones dans des effets, 4 dépendances de hooks manquantes, 2 apostrophes JSX non échappées et un appel à `Math.random()` pendant le rendu.
-- `npm run build` : interrompu après plusieurs minutes bloqué sur la création du build optimisé, sans erreur explicite. Le succès du compilateur seul ne permet donc pas d'affirmer qu'un build de production complet passe.
-
-### Fichiers trop volumineux
-
-Exemples :
-
-- `admin-navbar.css` : environ 3 070 lignes.
-- `admin.theme.css` : environ 2 230 lignes.
-- `OrderDetails.css` : environ 2 060 lignes.
-- `admin/page.tsx` : environ 1 630 lignes.
-- `admin/reviews/page.tsx` : environ 1 510 lignes.
-- `OrderDetails.tsx` : environ 1 470 lignes.
-- `ProductEditForm.tsx` : environ 1 420 lignes.
-
-Ces fichiers devraient être découpés par domaine et non seulement par type technique.
-
-## Nettoyage effectué pendant l'audit
-
-Les cinq artefacts explicitement dédiés aux tests, au développement ou au diagnostic ont été supprimés :
-
-- `scripts/testMail.ts`
-- `scripts/setupFirestore.ts`
-- `src/app/api/admin/debug-firestore/route.ts`
-- `src/app/api/dev/review-link/route.ts`
-- `src/server/_debug/firebase/route.ts`
-
-Aucun autre fichier potentiellement inutilisé n'a été supprimé automatiquement : l'analyse d'import ne remplace pas une validation fonctionnelle dans le navigateur.
-
-## Plan d'action recommandé
-
-1. Sécuriser immédiatement l'admin : session serveur, cookie HttpOnly, middleware/guard serveur et protection de toutes les API admin.
-2. Corriger les deux bugs commandes : URL de `mark-paid` et logique de rôle dans `DELETE /api/admin/orders`.
-3. Décider si le portugais est supporté, puis aligner toutes les listes de langues.
-4. Unifier Firebase Admin et les réglages d'e-mails d'avis.
-5. Supprimer les 54 candidats orphelins par petits lots, avec vérification visuelle boutique/admin après chaque lot.
-6. Retirer les ressources Create Next App, le cache TypeScript versionné et réécrire le README.
-7. Traiter d'abord les erreurs React du lint, puis réduire progressivement les `any` avec des types de domaine communs.
-8. Ajouter ensuite le futur système de tests : tests de domaine, tests API d'autorisation, puis parcours navigateur checkout et admin.
+Le système de tests est explicitement reporté dans une phase séparée : autorisations admin, calculs métier, checkout et parcours administration.

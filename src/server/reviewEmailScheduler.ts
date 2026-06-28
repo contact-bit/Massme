@@ -174,12 +174,10 @@ export async function scheduleReviewEmailForOrder(orderId: string) {
     try {
 const result = await sendReviewEmailNow(orderId);
 
-const { ok: _ignored, ...rest } = result || {};
-
 return {
+  ...result,
   ok: true,
   immediate: true,
-  ...rest,
 };
     } catch (err: any) {
       const msg = String(err?.message || err);

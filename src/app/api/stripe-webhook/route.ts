@@ -4,7 +4,6 @@ import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { FieldValue } from "firebase-admin/firestore";
-import { computePrice } from "@/lib/pricing";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 import { scheduleReviewEmailForOrder } from "@/server/reviewEmailScheduler";
 import { sendOrderEmails, OrderEmailPayload } from "@/lib/mailer";
@@ -319,8 +318,6 @@ export async function POST(req: Request) {
   const locale: EmailLocale = EMAIL_I18N[savedOrder?.locale as EmailLocale]
     ? savedOrder.locale
     : "fr";
-
-  const mail = EMAIL_I18N[locale];
 
   const firstName =
     savedOrder?.shippingAddress?.firstName ||

@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -165,7 +166,7 @@ export default function AdminDirectoryPage() {
   const [postalCodeOptions, setPostalCodeOptions] =
     useState<string[]>([]);
 
-  async function fetchEntries() {
+  const fetchEntries = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -189,11 +190,11 @@ export default function AdminDirectoryPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [activeCountry]);
 
   useEffect(() => {
     fetchEntries();
-  }, [activeCountry]);
+  }, [fetchEntries]);
 
   useEffect(() => {
     if (editingId || !isConcreteCountry(activeCountry)) {

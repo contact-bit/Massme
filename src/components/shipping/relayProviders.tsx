@@ -28,13 +28,18 @@ type RelayProviderConfig = {
    PLACEHOLDER
 ===================================================== */
 
-const ComingSoon =
-  (name: string): RelayProviderComponent =>
-  () => (
+const ComingSoon = (
+  name: string
+): RelayProviderComponent => {
+  const ComingSoonProvider = () => (
     <div className="p-4 text-sm rounded bg-yellow-50 text-yellow-800">
       🚧 {name} bientôt disponible
     </div>
   );
+
+  ComingSoonProvider.displayName = `ComingSoon(${name})`;
+  return ComingSoonProvider;
+};
 
 /* =====================================================
    REGISTRY — 🔑 DOIT MATCH RelayProvider

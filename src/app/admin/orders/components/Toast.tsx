@@ -17,6 +17,9 @@ export function Toast({
   useEffect(() => {
     if (!message) return;
 
+    // Le même composant affiche des messages successifs : la visibilité doit
+    // être réinitialisée lorsque son message change.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisible(true);
 
     const t = setTimeout(() => {

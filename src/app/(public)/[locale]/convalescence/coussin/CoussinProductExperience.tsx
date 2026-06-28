@@ -229,8 +229,6 @@ export default function CoussinProductExperience({
   const priceHT = mainPriceHT + addonPriceHT;
   const vatAmount = mainVat.enabled ? round2((priceHT * mainVat.rate) / 100) : 0;
   const priceTTC = round2(priceHT + vatAmount);
-  const monthly = round2(priceTTC / 4);
-
   const gallery = [
     selectedVariant?.imageUrl || product.imageUrl || FALLBACK_IMAGE,
     product.imageUrl || FALLBACK_IMAGE,

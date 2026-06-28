@@ -1,4 +1,11 @@
-import { initializeApp, cert, getApps } from "firebase-admin/app";
+import "server-only";
+
+import {
+  initializeApp,
+  cert,
+  getApps,
+  type ServiceAccount,
+} from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 // ✅ Chargement sécurisé depuis les variables d’environnement
@@ -22,8 +29,13 @@ if (!serviceAccount.projectId || !serviceAccount.privateKey || !serviceAccount.c
 // 🚀 Initialisation unique de Firebase Admin
 const app =
   !getApps().length
-    ? initializeApp({ credential: cert(serviceAccount as any) })
+    ? initializeApp({ credential: cert(serviceAccount as ServiceAccount) })
     : getApps()[0];
 
 // ✅ Export Firestore Admin
 export const dbAdmin = getFirestore(app);
+
+/** @deprecated Utiliser directement `dbAdmin` dans les nouveaux fichiers. */
+export function getAdminDb() {
+  return dbAdmin;
+}

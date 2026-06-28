@@ -8,10 +8,10 @@ export function normalizeOrders(list: Order[]): Order[] {
        DATE
     ========================================================= */
     const created =
-      parseCreatedAt((o as any).createdAt) ||
-      parseCreatedAt((o as any).created_at) ||
-      parseCreatedAt((o as any).created) ||
-      parseCreatedAt((o as any).paidAt) ||
+      parseCreatedAt(o.createdAt) ||
+      parseCreatedAt(o.created_at) ||
+      parseCreatedAt(o.created) ||
+      parseCreatedAt(o.paidAt) ||
       null;
 
     /* =========================================================
@@ -23,10 +23,10 @@ export function normalizeOrders(list: Order[]): Order[] {
        🔥 TOTAL (SOURCE UNIQUE ET FIABLE)
     ========================================================= */
     const total =
-      typeof (o as any)?.total === "number"
-        ? (o as any).total
-        : typeof (o as any)?.totals?.totalTTC === "number"
-        ? (o as any).totals.totalTTC
+      typeof o.total === "number"
+        ? o.total
+        : typeof o.totals?.totalTTC === "number"
+        ? o.totals.totalTTC
         : getTotal(o); // fallback (sécurité)
 
     /* =========================================================
@@ -37,7 +37,7 @@ export function normalizeOrders(list: Order[]): Order[] {
     /* =========================================================
        LANG
     ========================================================= */
-    const rawCountry = safeLower((o as any).shippingAddress?.country);
+    const rawCountry = safeLower(o.shippingAddress?.country);
     let lang: LangCode | undefined;
 
     if (rawCountry.startsWith("fr")) lang = "fr";
@@ -50,28 +50,23 @@ export function normalizeOrders(list: Order[]): Order[] {
     /* =========================================================
        RELAY POINT
     ========================================================= */
-    const relay = (o as any)?.relayPoint
+    const relay = o.relayPoint
       ? {
           name:
-            (o as any).relayPoint.name ||
-            (o as any).relayPoint.Nom ||
-            null,
+            o.relayPoint.name ||
+            o.relayPoint.Nom,
           address:
-            (o as any).relayPoint.address ||
-            (o as any).relayPoint.Adresse1 ||
-            null,
+            o.relayPoint.address ||
+            o.relayPoint.Adresse1,
           city:
-            (o as any).relayPoint.city ||
-            (o as any).relayPoint.Ville ||
-            null,
+            o.relayPoint.city ||
+            o.relayPoint.Ville,
           postalCode:
-            (o as any).relayPoint.postalCode ||
-            (o as any).relayPoint.CP ||
-            null,
+            o.relayPoint.postalCode ||
+            o.relayPoint.CP,
           country:
-            (o as any).relayPoint.country ||
-            (o as any).relayPoint.Pays ||
-            null,
+            o.relayPoint.country ||
+            o.relayPoint.Pays,
         }
       : null;
 
@@ -82,7 +77,7 @@ export function normalizeOrders(list: Order[]): Order[] {
       ...o,
 
       // 🔥 GARDE LES DONNÉES BACK
-      totals: (o as any)?.totals ?? null,
+      totals: o.totals,
 
       // 🔥 NORMALISE POUR TOUT LE FRONT
       total: total,

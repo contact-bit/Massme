@@ -194,7 +194,7 @@ export default function LogisticsItem({
     }
 
     return order.items;
-  }, [order?.items]);
+  }, [order]);
 
   const itemsLabel =
     (items.length

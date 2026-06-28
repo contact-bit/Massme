@@ -10,7 +10,7 @@ import { isLocale } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
 
 const BANK_DETAILS = {
-  beneficiary: "Lazurco SAS",
+  beneficiary: "LAZURCO SASU",
   iban: "FR76 XXXX XXXX XXXX XXXX XXXX XXX",
   bic: "XXXXXXXXXXX",
   bankName: "Votre banque",
@@ -324,9 +324,12 @@ function Row({
 
   copiedText: string;
 }) {
-  const id = `${label}-${Math.random()
-    .toString(16)
-    .slice(2)}`.replace(/\s+/g, "-");
+  const id = `bank-${label}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
   return (
     <div className="bank-row">

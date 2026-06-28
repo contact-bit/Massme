@@ -75,8 +75,7 @@ export function getPaymentProvider(order: Order): string {
 }
 
 export function getPaymentFee(
-  order: Order,
-  totalTTC: number
+  order: Order
 ): FeeInfo | null {
   const o = order as Record<string, unknown>;
   const payment =

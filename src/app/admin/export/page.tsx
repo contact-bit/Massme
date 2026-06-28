@@ -7,7 +7,6 @@ import {
 
 import ExportFilters from "./ExportFilters";
 import ExportActions from "./ExportActions";
-import ExportColumns from "./ExportColumns";
 
 import "./export.css";
 
@@ -516,17 +515,6 @@ export default function AdminExportPage() {
             </span>
 
           </div>
-
-        </div>
-
-        {/* COLUMNS */}
-        <div className="export-columns-wrap">
-
-          <ExportColumns
-            summary={
-              summary
-            }
-          />
 
         </div>
 

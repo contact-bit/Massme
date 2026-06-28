@@ -437,7 +437,7 @@ export default async function FloatersPage({
         <div className="seo-container">
           <h2>
             Comment prévenir
-            l'apparition ou
+            l’apparition ou
             l’aggravation des
             myodésopsies ?
           </h2>

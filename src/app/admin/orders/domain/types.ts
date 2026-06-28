@@ -1,8 +1,37 @@
+export type LangCode = "fr" | "en" | "es" | "de" | "it" | "nl";
+
+export type FirestoreDateValue =
+  | Date
+  | string
+  | number
+  | {
+      toDate?: () => Date;
+      seconds?: number;
+      _seconds?: number;
+    }
+  | null;
+
+export type LocalizedText =
+  | string
+  | Partial<Record<LangCode, string>>;
+
+export type OrderAddress = {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+};
+
 export type OrderItem = {
   id?: string;
   sku?: string;
   productCode?: string;
-  name?: any;
+  name?: LocalizedText;
   image?: string;
   imageUrl?: string;
   thumbnail?: string;
@@ -20,8 +49,6 @@ export type OrderItem = {
   quantity?: number;
   description?: string;
 };
-
-export type LangCode = "fr" | "en" | "es" | "de" | "it" | "nl";
 
 export type ShippingStatus =
   | "pending"
@@ -41,7 +68,12 @@ export type RelayPoint = {
   city?: string;
   postalCode?: string;
   country?: string;
-  raw?: any;
+  Nom?: string;
+  Adresse1?: string;
+  Ville?: string;
+  CP?: string;
+  Pays?: string;
+  raw?: unknown;
 };
 
 /* =========================================================
@@ -52,8 +84,11 @@ export type Order = {
 
   email?: string;
   status?: string;
-  createdAt?: any;
-  paidAt?: any;
+  createdAt?: FirestoreDateValue;
+  created_at?: FirestoreDateValue;
+  created?: FirestoreDateValue;
+  paidAt?: FirestoreDateValue;
+  shippedAt?: FirestoreDateValue;
 
   // NUMÉRO
   orderNumber?: string;
@@ -101,8 +136,8 @@ export type Order = {
   shippingPrice?: number;
 
   items?: OrderItem[];
-  shippingAddress?: any;
-  billingAddress?: any;
+  shippingAddress?: OrderAddress;
+  billingAddress?: OrderAddress;
 
   relayPoint?: RelayPoint | null;
 
@@ -110,13 +145,28 @@ export type Order = {
     packageCount?: number | string | null;
     weight?: string | null;
     instructions?: string | null;
-    updatedAt?: any;
+    updatedAt?: FirestoreDateValue;
     updatedBy?: string | null;
   } | null;
 
   shippingStatus?: ShippingStatus;
   trackingNumber?: string | null;
   carrier?: "mondialrelay" | "other" | null;
+
+  shippingTracking?: {
+    trackingNumber?: string | null;
+    carrier?: string | null;
+    shipDate?: string | null;
+  };
+
+  fulfillment?: {
+    status?: string | null;
+    tracking?: {
+      trackingNumber?: string | null;
+      carrier?: string | null;
+      shipDate?: string | null;
+    };
+  };
 
   /* =========================================================
      🔥 NORMALIZED (FRONT)

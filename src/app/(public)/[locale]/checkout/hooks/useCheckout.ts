@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -45,6 +44,9 @@ export default function useCheckout() {
 
   const t =
     getT(locale);
+
+  const defaultCountry =
+    LOCALE_TO_COUNTRY[locale] ?? "FR";
 
   const {
     items,
@@ -90,7 +92,7 @@ export default function useCheckout() {
     address: "",
     postalCode: "",
     city: "",
-    country: "FR",
+    country: defaultCountry,
   });
 
   const [
@@ -100,7 +102,7 @@ export default function useCheckout() {
     address: "",
     postalCode: "",
     city: "",
-    country: "FR",
+    country: defaultCountry,
   });
 
   const [
@@ -122,57 +124,15 @@ export default function useCheckout() {
     setHeardFromOther,
   ] = useState("");
 
-  /* =====================================================
-     AUTO COUNTRY
-  ===================================================== */
-
-  useEffect(() => {
-    const country =
-      LOCALE_TO_COUNTRY[
-        locale
-      ] ?? "FR";
-
-    setBillingCustomer(
-      (prev) => ({
-        ...prev,
-        country,
-      })
-    );
-
-    setShippingCustomer(
-      (prev) => ({
-        ...prev,
-        country,
-      })
-    );
-  }, [locale]);
-
-  /* =====================================================
-     SAME AS BILLING
-  ===================================================== */
-
-  useEffect(() => {
-    if (
-      sameAsBilling
-    ) {
-      setShippingCustomer({
-        address:
-          billingCustomer.address,
-
-        postalCode:
-          billingCustomer.postalCode,
-
-        city:
-          billingCustomer.city,
-
-        country:
-          billingCustomer.country,
-      });
-    }
-  }, [
-    sameAsBilling,
-    billingCustomer,
-  ]);
+  const resolvedShippingCustomer =
+    sameAsBilling
+      ? {
+          address: billingCustomer.address,
+          postalCode: billingCustomer.postalCode,
+          city: billingCustomer.city,
+          country: billingCustomer.country,
+        }
+      : shippingCustomer;
 
   /* =====================================================
      SHIPPING
@@ -188,7 +148,7 @@ export default function useCheckout() {
     setRelayPoint,
   } = useShippingMethods({
     country:
-      shippingCustomer.country,
+      resolvedShippingCustomer.country,
 
     locale,
     totalWeightKg,
@@ -206,7 +166,7 @@ export default function useCheckout() {
       paymentError,
   } = usePaymentMethods({
     country:
-      shippingCustomer.country,
+      resolvedShippingCustomer.country,
   });
 
   /* =====================================================
@@ -428,7 +388,7 @@ export default function useCheckout() {
 
           shippingCustomer:
             {
-              ...shippingCustomer,
+              ...resolvedShippingCustomer,
 
               name:
                 fullName,
@@ -580,16 +540,16 @@ export default function useCheckout() {
                 billingCustomer.phone.trim(),
 
               address:
-                shippingCustomer.address,
+                resolvedShippingCustomer.address,
 
               postalCode:
-                shippingCustomer.postalCode,
+                resolvedShippingCustomer.postalCode,
 
               city:
-                shippingCustomer.city,
+                resolvedShippingCustomer.city,
 
               country:
-                shippingCustomer.country,
+                resolvedShippingCustomer.country,
             },
 
           shippingMethod,
@@ -670,7 +630,7 @@ export default function useCheckout() {
     billingCustomer,
     setBillingCustomer,
 
-    shippingCustomer,
+    shippingCustomer: resolvedShippingCustomer,
     setShippingCustomer,
 
     sameAsBilling,

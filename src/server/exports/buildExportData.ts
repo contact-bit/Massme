@@ -158,13 +158,13 @@ function getCommission(order: any) {
   return round2(ttc * 0.015 + 0.25);
 }
 
-function getFabrication(order: any) {
+function getFabrication() {
   return 0;
 }
 
 function getGain(order: any) {
   return round2(
-    getTotalHT(order) - getCommission(order) - getFabrication(order)
+    getTotalHT(order) - getCommission(order) - getFabrication()
   );
 }
 
@@ -197,7 +197,7 @@ export function buildExportData(order: any) {
     totalTTC: getTotalTTC(order),
 
     commission: getCommission(order),
-    fabrication: getFabrication(order),
+    fabrication: getFabrication(),
     gain: getGain(order),
   };
 

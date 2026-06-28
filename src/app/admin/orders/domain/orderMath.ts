@@ -5,11 +5,11 @@ import type { Order, OrderItem } from "./types";
 ========================================================= */
 export function getItemPrice(it: OrderItem): number {
   // 🔥 PRIORITÉ À TON FORMAT FIRESTORE
-  if (typeof (it as any)?.priceHT === "number") {
-    return (it as any).priceHT;
+  if (typeof it.priceHT === "number") {
+    return it.priceHT;
   }
 
-  const p = (it as any)?.price;
+  const p = it.price;
 
   if (typeof p === "number") return p;
 
@@ -37,12 +37,12 @@ export function getSubtotal(o: Order): number {
 ========================================================= */
 export function getShipping(o: Order): number {
   // 🔥 TON FORMAT
-  if (typeof (o as any)?.shippingMethod?.priceHT === "number") {
-    return (o as any).shippingMethod.priceHT;
+  if (typeof o.shippingMethod?.priceHT === "number") {
+    return o.shippingMethod.priceHT;
   }
 
-  if (typeof (o as any)?.shippingMethod?.priceTTC === "number") {
-    return (o as any).shippingMethod.priceTTC;
+  if (typeof o.shippingMethod?.priceTTC === "number") {
+    return o.shippingMethod.priceTTC;
   }
 
   if (typeof o.shippingPrice === "number") return o.shippingPrice;
@@ -55,14 +55,14 @@ export function getShipping(o: Order): number {
 ========================================================= */
 export function getTotal(o: Order): number {
   // 🔥 PRIORITÉ FIRESTORE (LE PLUS IMPORTANT)
-  if (typeof (o as any)?.totals?.totalTTC === "number") {
-    return (o as any).totals.totalTTC;
+  if (typeof o.totals?.totalTTC === "number") {
+    return o.totals.totalTTC;
   }
 
   if (typeof o.total === "number") return o.total;
 
-  if (typeof (o as any)?.amount_total === "number") {
-    return (o as any).amount_total / 100;
+  if (typeof o.amount_total === "number") {
+    return o.amount_total / 100;
   }
 
   // fallback
@@ -77,7 +77,7 @@ export function buildItemsLabel(items: OrderItem[]) {
 
   return (
     items
-      .map((it: any) => {
+      .map((it) => {
         const n =
           typeof it?.name === "string"
             ? it.name

@@ -434,9 +434,9 @@ export async function generateInvoicePDF(
     "06200 Nice, FRANCE",
     "",
     "SIRET : 831 588 926 00012",
-    "TVA : FR52831588926",
+    "TVA : FR25831588926",
     "",
-    "Email : contact@hdconnects.com",
+    "Email : contact@vitrectomed.com",
     "Site : www.vitrectomed.com",
   ];
   for (const line of companyLines) {

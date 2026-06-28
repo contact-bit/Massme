@@ -204,7 +204,7 @@ export async function generateDeliveryNotePDF(
       "LAZURCO",
       "189 avenue de Fabron",
       "06200 Nice, FRANCE",
-      "contact@hdconnects.com",
+      "contact@vitrectomed.com",
       "www.vitrectomed.com",
     ],
   });

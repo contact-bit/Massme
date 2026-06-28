@@ -7,12 +7,22 @@ import { useDebouncedValue } from "./useDebouncedValue";
 /* =========================================================
    🔥 DATE SAFE (ULTRA IMPORTANT)
 ========================================================= */
-function toDateSafe(v: any): Date | null {
+function toDateSafe(v: unknown): Date | null {
   if (!v) return null;
 
-  if (typeof v?.toDate === "function") return v.toDate();
-  if (typeof v?._seconds === "number") return new Date(v._seconds * 1000);
+  if (v instanceof Date) return v;
 
+  const timestamp = v as {
+    toDate?: () => Date;
+    _seconds?: number;
+  };
+
+  if (typeof timestamp.toDate === "function") return timestamp.toDate();
+  if (typeof timestamp._seconds === "number") {
+    return new Date(timestamp._seconds * 1000);
+  }
+
+  if (typeof v !== "string" && typeof v !== "number") return null;
   const d = new Date(v);
   return isNaN(d.getTime()) ? null : d;
 }
@@ -37,7 +47,7 @@ export function useOrderFilters(initialFrom: string, initialTo: string) {
       const fromD = from ? new Date(from + "T00:00:00") : null;
       const toD = to ? new Date(to + "T23:59:59") : null;
 
-      let out = orders.filter((o) => {
+      const out = orders.filter((o) => {
         const st = safeString(o.status);
 
         /* ================= STATUS ================= */
@@ -54,7 +64,7 @@ export function useOrderFilters(initialFrom: string, initialTo: string) {
         if (fromD || toD) {
           const d =
             toDateSafe(o.__created) ||
-            toDateSafe((o as any).createdAt) ||
+            toDateSafe(o.createdAt) ||
             null;
 
           // 🔥 FIX CRITIQUE ne plus supprimer la commande
@@ -89,12 +99,12 @@ export function useOrderFilters(initialFrom: string, initialTo: string) {
       out.sort((a, b) => {
         const da =
           toDateSafe(a.__created)?.getTime() ||
-          toDateSafe((a as any).createdAt)?.getTime() ||
+          toDateSafe(a.createdAt)?.getTime() ||
           0;
 
         const db =
           toDateSafe(b.__created)?.getTime() ||
-          toDateSafe((b as any).createdAt)?.getTime() ||
+          toDateSafe(b.createdAt)?.getTime() ||
           0;
 
         const ta = a.__total ?? 0;

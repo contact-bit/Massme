@@ -513,7 +513,7 @@ export default async function HighMyopiaPage({
         <div className="seo-container">
           <h2>
             Quelles sont les suites
-            après l'opération ?
+            après l’opération ?
           </h2>
 
           <p>

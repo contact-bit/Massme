@@ -27,14 +27,6 @@ function formatMoney(cents: number, currency: string) {
   return `${value} ${String(currency || "EUR").toUpperCase()}`;
 }
 
-function toDate(created_at: any) {
-  if (!created_at) return new Date();
-  if (created_at?._seconds) return new Date(created_at._seconds * 1000);
-  if (created_at?.toDate) return created_at.toDate();
-  const d = new Date(created_at);
-  return Number.isNaN(d.getTime()) ? new Date() : d;
-}
-
 function safeEmailList(raw?: string) {
   if (!raw) return [];
   return raw.split(",").map((e) => e.trim()).filter(Boolean);
@@ -160,7 +152,6 @@ export async function sendOrderEmails({
   const sender =
     process.env.RESEND_FROM || "Vitrectomed Support <contact@hdconnects.com>";
 
-  const created = toDate(order.created_at);
   const amountText = formatMoney(order.amount_total, order.currency);
   const orderNumber = resolveOrderNumber(order);
   const invoiceNumber = resolveInvoiceNumber(order);

@@ -158,6 +158,8 @@ export function CartProvider({
             parsed
           )
         ) {
+          // Hydratation volontaire depuis le stockage du navigateur.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setItems(parsed);
         }
       }

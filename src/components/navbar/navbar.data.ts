@@ -877,7 +877,7 @@ export function generateNavbarLinks(
     ========================= */
 
     faq:
-      `${prefix}/faq`,
+      `${prefix}/#faq`,
 
     contact:
       `${prefix}/contact`,

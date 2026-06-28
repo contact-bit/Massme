@@ -365,7 +365,7 @@ export function OrderDetails({
   const subtotal = getSubtotal(order);
 
   const paymentFee =
-    getPaymentFee(order, total);
+    getPaymentFee(order);
 
   const storedFeeProvider =
     String(

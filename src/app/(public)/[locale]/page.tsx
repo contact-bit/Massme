@@ -188,7 +188,7 @@ export default async function HomePage({
       <section className="home-exact-trust home-exact-wrap" aria-label="Garanties éditoriales">
         <Trust icon={<ShieldCheck />} text="Contenus rédigés et relus par un comité éditorial spécialisé en chirurgie vitréo-rétinienne" />
         <Trust icon={<GraduationCap />} text="Informations médicales à caractère éducatif" />
-        <Trust icon={<Languages />} text="Disponible en 20+ langues" />
+        <Trust icon={<Languages />} text="Disponible en 6 langues" />
       </section>
 
       <section className="home-exact-panel home-exact-wrap">
@@ -287,11 +287,11 @@ export default async function HomePage({
         </div>
       </section>
 
-      <section className="home-exact-faq home-exact-wrap">
+      <section id="faq" className="home-exact-faq home-exact-wrap">
         <div className="home-exact-faq-title">
           <h2>FAQ</h2>
           <p>Les questions les plus fréquentes après une vitrectomie.</p>
-          <Link href={`${prefix}/faq`}>Voir toutes les questions <ArrowRight size={16} /></Link>
+          <Link href={`${prefix}#faq`}>Voir toutes les questions <ArrowRight size={16} /></Link>
         </div>
         <div className="home-exact-faq-grid">
           {faqItems.map((item) => (
@@ -304,7 +304,7 @@ export default async function HomePage({
         <Trust icon={<ClipboardCheck />} text="Informations basées sur des sources médicales reconnues" />
         <Trust icon={<UserRound />} text="Comité éditorial spécialisé en chirurgie vitréo-rétinienne" />
         <Trust icon={<Clock3 />} text="Mises à jour régulières et rigoureuses" />
-        <Trust icon={<Languages />} text="Plateforme internationale disponible en 20+ langues" />
+        <Trust icon={<Languages />} text="Plateforme internationale disponible en 6 langues" />
       </section>
     </main>
   );
