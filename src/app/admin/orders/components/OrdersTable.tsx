@@ -20,11 +20,16 @@ import {
 } from "./ActionIconButton";
 
 import {
+  IconCheck,
   IconEye,
   IconTrash,
 } from "./icons";
 
 import { getShipDate } from "../domain/logistics";
+import {
+  getOrderPaymentStatus,
+  isPendingBankTransfer,
+} from "../domain/payment";
 
 import { OrderDetails } from "./OrderDetails";
 
@@ -54,6 +59,7 @@ type Props = {
 
 export default function OrdersTable({
   orders,
+  onMarkAsPaid,
   onOpen,
   onDelete,
   deleting,
@@ -66,6 +72,8 @@ export default function OrdersTable({
   const [sendingInvoices, setSendingInvoices] =
     useState<Record<string, boolean>>({});
   const [sentInvoices, setSentInvoices] =
+    useState<Record<string, boolean>>({});
+  const [validatingPayments, setValidatingPayments] =
     useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -114,6 +122,30 @@ export default function OrdersTable({
     }
   }
 
+  async function validateBankTransfer(order: Order) {
+    const confirmed = window.confirm(
+      "Confirmer la réception du virement ? La facture sera envoyée et la commande passera en logistique."
+    );
+
+    if (!confirmed || validatingPayments[order.id]) {
+      return;
+    }
+
+    try {
+      setValidatingPayments((current) => ({
+        ...current,
+        [order.id]: true,
+      }));
+      await onMarkAsPaid(order.id);
+    } finally {
+      setValidatingPayments((current) => {
+        const next = { ...current };
+        delete next[order.id];
+        return next;
+      });
+    }
+  }
+
   return (
     <div className="orders-table-wrap">
 
@@ -155,9 +187,13 @@ export default function OrdersTable({
             const isOpen =
               openId === o.id;
 
+            const awaitingBankValidation =
+              isPendingBankTransfer(o);
+
             const paymentStatus =
-              (o as any)?.payment
-                ?.status || o.status;
+              awaitingBankValidation
+                ? "awaiting_bank_transfer"
+                : getOrderPaymentStatus(o);
 
             const displayId =
               (o as any)?.orderNumber ||
@@ -252,9 +288,11 @@ export default function OrdersTable({
               (o as any)?.invoiceEmail || null;
 
             const invoiceNumber =
-              (o as any)?.invoiceNumber ||
-              invoice?.invoiceNumber ||
-              "Création...";
+              awaitingBankValidation
+                ? "Après validation"
+                : (o as any)?.invoiceNumber ||
+                  invoice?.invoiceNumber ||
+                  "Création...";
 
             const invoiceSent =
               sentInvoices[o.id] || invoice?.status === "sent";
@@ -367,12 +405,31 @@ export default function OrdersTable({
                   {/* PAYMENT */}
 
                   <td>
+                    <div className="payment-status-cell">
+                      <StatusPill
+                        status={paymentStatus}
+                      />
 
-                    <StatusPill
-                      status={
-                        paymentStatus
-                      }
-                    />
+                      {awaitingBankValidation && (
+                        <span onClick={(event) => event.stopPropagation()}>
+                          <button
+                            type="button"
+                            className="payment-validate-btn"
+                            title="Confirmer que le virement a été reçu"
+                            aria-label="Valider le paiement reçu par virement"
+                            onClick={() => validateBankTransfer(o)}
+                            disabled={!!validatingPayments[o.id]}
+                          >
+                            <IconCheck size={14} />
+                            <span>
+                              {validatingPayments[o.id]
+                                ? "Validation…"
+                                : "Valider le paiement"}
+                            </span>
+                          </button>
+                        </span>
+                      )}
+                    </div>
 
                   </td>
 
@@ -478,38 +535,44 @@ export default function OrdersTable({
                       <span>
                         N° facture <strong>{invoiceNumber}</strong>
                       </span>
-                      <span
-                        className="row-invoice-actions"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <a
-                          href={`/api/admin/orders/invoice?orderId=${encodeURIComponent(
-                            o.id
-                          )}&mode=preview`}
-                          target="_blank"
-                          rel="noreferrer"
+                      {awaitingBankValidation ? (
+                        <span className="invoice-awaiting-payment">
+                          Facture disponible après validation
+                        </span>
+                      ) : (
+                        <span
+                          className="row-invoice-actions"
+                          onClick={(event) => event.stopPropagation()}
                         >
-                          Voir
-                        </a>
-                        <a
-                          href={`/api/admin/orders/invoice?orderId=${encodeURIComponent(
-                            o.id
-                          )}&mode=download`}
-                        >
-                          PDF
-                        </a>
-                        <button
-                          type="button"
-                          disabled={sendingInvoices[o.id]}
-                          onClick={() => sendInvoice(o.id)}
-                        >
-                          {sendingInvoices[o.id]
-                            ? "..."
-                            : invoiceSent
-                            ? "Renvoyer"
-                            : "Envoyer"}
-                        </button>
-                      </span>
+                          <a
+                            href={`/api/admin/orders/invoice?orderId=${encodeURIComponent(
+                              o.id
+                            )}&mode=preview`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Voir
+                          </a>
+                          <a
+                            href={`/api/admin/orders/invoice?orderId=${encodeURIComponent(
+                              o.id
+                            )}&mode=download`}
+                          >
+                            PDF
+                          </a>
+                          <button
+                            type="button"
+                            disabled={sendingInvoices[o.id]}
+                            onClick={() => sendInvoice(o.id)}
+                          >
+                            {sendingInvoices[o.id]
+                              ? "..."
+                              : invoiceSent
+                              ? "Renvoyer"
+                              : "Envoyer"}
+                          </button>
+                        </span>
+                      )}
                     </div>
                   </td>
                 </tr>

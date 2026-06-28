@@ -3,11 +3,68 @@ import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { assertAdmin } from "@/server/adminAuth";
 
-type Market = "FR" | "BE" | "DE" | "AT" | "ES" | "IT" | "NL" | "CH";
-const MARKETS: Market[] = ["FR", "BE", "DE", "AT", "ES", "IT", "NL", "CH"];
+type Market =
+  | "FR"
+  | "EN"
+  | "BE"
+  | "DE"
+  | "AT"
+  | "ES"
+  | "IT"
+  | "NL"
+  | "CH";
+const MARKETS: Market[] = [
+  "FR",
+  "EN",
+  "BE",
+  "DE",
+  "AT",
+  "ES",
+  "IT",
+  "NL",
+  "CH",
+];
 
 function isMarket(x: any): x is Market {
   return typeof x === "string" && (MARKETS as string[]).includes(x);
+}
+
+function sanitizeProductMarkets(product: any) {
+  const markets = Array.isArray(product?.markets)
+    ? product.markets.filter(isMarket)
+    : ["FR"];
+
+  const filterMarketRecord = (value: unknown) => {
+    if (!value || typeof value !== "object") return value;
+
+    return Object.fromEntries(
+      Object.entries(value).filter(([market]) => isMarket(market))
+    );
+  };
+
+  const sanitizeOption = (option: any) => ({
+    ...option,
+    markets: Array.isArray(option?.markets)
+      ? option.markets.filter(isMarket)
+      : markets,
+    pricesByMarket: filterMarketRecord(option?.pricesByMarket),
+    vatByMarket: filterMarketRecord(option?.vatByMarket),
+  });
+
+  return {
+    ...product,
+    markets,
+    marketSettings: filterMarketRecord(product?.marketSettings),
+    pricesByMarket: filterMarketRecord(product?.pricesByMarket),
+    vatByMarket: filterMarketRecord(product?.vatByMarket),
+    currencyByMarket: filterMarketRecord(product?.currencyByMarket),
+    variants: Array.isArray(product?.variants)
+      ? product.variants.map(sanitizeOption)
+      : product?.variants,
+    addons: Array.isArray(product?.addons)
+      ? product.addons.map(sanitizeOption)
+      : product?.addons,
+  };
 }
 
 /* ============================
@@ -26,10 +83,10 @@ export async function GET(req: Request) {
 
     let products = snap.docs.map((doc) => {
       const data = doc.data() as any;
-      return {
+      return sanitizeProductMarkets({
         id: doc.id,
         ...data,
-      };
+      });
     }) as any[];
 
     if (market) {

@@ -68,3 +68,11 @@ export function IconTrash(props: IconProps) {
     </BaseIcon>
   );
 }
+
+export function IconCheck(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="m5 12 4 4L19 6" />
+    </BaseIcon>
+  );
+}

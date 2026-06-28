@@ -7,6 +7,7 @@ import type { Order } from "../domain/types";
 import {
   getEffectiveShippingStatus,
 } from "../domain/logistics";
+import { isPendingBankTransfer } from "../domain/payment";
 
 type Tone =
   | "success"
@@ -49,6 +50,15 @@ export function ShippingStatusPill({
 }: {
   order: Order;
 }) {
+  if (isPendingBankTransfer(order)) {
+    return (
+      <span className="status-pill warning">
+        <span className="status-dot" />
+        En attente de validation
+      </span>
+    );
+  }
+
   const status =
     getEffectiveShippingStatus(order);
 

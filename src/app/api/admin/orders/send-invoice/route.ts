@@ -77,6 +77,28 @@ function getOrderEmail(
   ).toLowerCase();
 }
 
+function isUnvalidatedBankTransfer(
+  order: Record<string, unknown>
+) {
+  const payment = pickRecord(order, "payment");
+  const provider = (
+    asString(payment.provider) ||
+    asString(order.paymentProvider) ||
+    asString(order.provider)
+  ).toLowerCase();
+  const status = (
+    asString(payment.status) ||
+    asString(order.paymentStatus) ||
+    asString(order.status)
+  ).toLowerCase();
+
+  return (
+    provider === "bank_transfer" &&
+    status !== "paid" &&
+    status !== "validated"
+  );
+}
+
 function isLocale(value: string): value is Locale {
   return ["fr", "en", "es", "de", "it", "nl"].includes(value);
 }
@@ -147,6 +169,18 @@ export async function POST(req: Request) {
 
     const { ref: sourceRef, snap } = source;
     const order = asRecord(snap.data());
+
+    if (isUnvalidatedBankTransfer(order)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "bank_transfer_not_validated",
+          message: "La facture sera envoyée après validation du virement.",
+        },
+        { status: 409 }
+      );
+    }
+
     const email = getOrderEmail(order);
 
     if (!email || !email.includes("@")) {

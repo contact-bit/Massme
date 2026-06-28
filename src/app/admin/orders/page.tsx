@@ -146,27 +146,30 @@ export default function AdminOrdersPage() {
 
   const handleMarkAsPaid = async (id: string) => {
     try {
-      const response = await fetch("/api/admin/orders/mark-paid", {
+      const response = await fetch(
+        `/api/admin/orders/${encodeURIComponent(id)}/validate-bank-transfer`,
+        {
         method: "POST",
+        }
+      );
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const data = await response.json().catch(() => null);
 
-        body: JSON.stringify({
-          orderId: id,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Impossible de marquer la commande comme payée");
+      if (!response.ok || !data?.ok) {
+        throw new Error(
+          data?.error ||
+            "Impossible de valider le virement"
+        );
       }
 
       await fetchOrders();
 
-      toastIt("Commande marquée comme payée ✅");
-    } catch {
-      toastIt("Erreur paiement ❌");
+      toastIt(
+        "Virement validé : facture envoyée et logistique déclenchée ✅"
+      );
+    } catch (error) {
+      toastIt("Erreur de validation du virement ❌");
+      throw error;
     }
   };
 

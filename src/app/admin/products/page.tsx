@@ -69,6 +69,10 @@ const MARKET_FLAG: Record<string, string> = {
   CH: "🇨🇭",
 };
 
+const SUPPORTED_MARKETS = new Set(
+  Object.keys(MARKET_FLAG)
+);
+
 function getName(p: Product) {
   return typeof p.name === "string"
     ? p.name
@@ -151,11 +155,15 @@ function getProductMarkets(
   scopedMarket: string | null
 ) {
   if (scopedMarket) {
-    return [scopedMarket];
+    return SUPPORTED_MARKETS.has(scopedMarket)
+      ? [scopedMarket]
+      : [];
   }
 
   return Array.isArray(product.markets)
-    ? product.markets
+    ? product.markets.filter((market) =>
+        SUPPORTED_MARKETS.has(market)
+      )
     : [];
 }
 
@@ -630,8 +638,7 @@ export default function ProductsAdminPage() {
                           market
                         );
                       const flag =
-                        MARKET_FLAG[market] ||
-                        "🌍";
+                        MARKET_FLAG[market];
                       const toggleKey = `${p.id}:${market}`;
 
                       return (

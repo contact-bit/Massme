@@ -196,6 +196,22 @@ export async function GET(
               o?.payment ??
               null,
 
+            paymentStatus:
+              o?.paymentStatus ??
+              null,
+
+            paymentProvider:
+              o?.paymentProvider ??
+              null,
+
+            provider:
+              o?.provider ??
+              null,
+
+            bankTransfer:
+              o?.bankTransfer ??
+              null,
+
             paymentMethod:
               o?.paymentMethod ??
               null,
@@ -234,6 +250,10 @@ export async function GET(
 
             carrier:
               o?.carrier ??
+              null,
+
+            fulfillment:
+              o?.fulfillment ??
               null,
 
             /* =========================================

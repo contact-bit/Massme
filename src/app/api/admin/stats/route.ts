@@ -742,6 +742,7 @@ export async function GET(req: Request) {
     const toPrepareCount =
       allOrders.filter(
         (o) =>
+          o._status === "paid" &&
           getLogisticStatus(o) ===
           "to_prepare"
       ).length;
@@ -749,6 +750,7 @@ export async function GET(req: Request) {
     const shippedCount =
       allOrders.filter(
         (o) =>
+          o._status === "paid" &&
           getLogisticStatus(o) ===
           "shipped"
       ).length;

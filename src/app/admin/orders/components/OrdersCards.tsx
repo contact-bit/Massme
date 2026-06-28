@@ -10,6 +10,10 @@ import {
 import { StatusPill } from "./StatusPill";
 import { ShippingStatusPill } from "./ShippingStatusPill";
 import { getShipDate } from "../domain/logistics";
+import {
+  getOrderPaymentStatus,
+  isPendingBankTransfer,
+} from "../domain/payment";
 
 type Props = {
   orders: Order[];
@@ -43,9 +47,6 @@ export function OrdersCards({
         {orders.map((o) => {
           const orderLabel = getOrderLabel(o);
 
-          const paymentStatus =
-            (o as any)?.payment?.status ?? o.status;
-
           const shipDate = getShipDate(o);
 
           const total =
@@ -54,7 +55,13 @@ export function OrdersCards({
             o.totals?.totalTTC ??
             0;
 
-          const isPaid = paymentStatus === "paid";
+          const awaitingBankValidation =
+            isPendingBankTransfer(o);
+
+          const paymentStatus =
+            awaitingBankValidation
+              ? "awaiting_bank_transfer"
+              : getOrderPaymentStatus(o);
 
           return (
             <div key={o.id} className="order-card-v2">
@@ -121,14 +128,22 @@ export function OrdersCards({
                   {deleting[o.id] ? "..." : "Suppr"}
                 </button>
 
-                {/* 💥 BOUTON PAIEMENT */}
-                <button
-                  className="btn-success"
-                  onClick={() => onMarkAsPaid(o.id)}
-                  disabled={isPaid}
-                >
-                  {isPaid ? "Payé ✓" : "Marquer payé"}
-                </button>
+                {awaitingBankValidation && (
+                  <button
+                    className="btn-success"
+                    onClick={() => {
+                      const confirmed = window.confirm(
+                        "Confirmer la réception du virement ? La facture sera envoyée et la commande passera en logistique."
+                      );
+
+                      if (confirmed) {
+                        void onMarkAsPaid(o.id);
+                      }
+                    }}
+                  >
+                    Valider le virement
+                  </button>
+                )}
 
                 <input
                   type="checkbox"

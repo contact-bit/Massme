@@ -84,6 +84,19 @@ export type Order = {
 
   email?: string;
   status?: string;
+  paymentStatus?: string;
+  paymentProvider?: string;
+  provider?: string;
+  payment?: {
+    status?: string;
+    provider?: string;
+    validationMode?: string;
+    validationInProgress?: boolean;
+  };
+  bankTransfer?: {
+    paymentConfirmedByAdmin?: boolean;
+    paymentConfirmedAt?: FirestoreDateValue;
+  };
   createdAt?: FirestoreDateValue;
   created_at?: FirestoreDateValue;
   created?: FirestoreDateValue;

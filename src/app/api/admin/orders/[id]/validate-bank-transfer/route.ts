@@ -1,28 +1,39 @@
 import { NextResponse } from "next/server";
+
 import { dbAdmin } from "@/lib/firebase.admin";
 import { assertAdmin } from "@/server/adminAuth";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
-import { sendOrderEmails } from "@/lib/mailer";
-import { ensureInvoiceNumberForOrder } from "@/server/orders/generateInvoiceNumber";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function normalizeEmail(v: unknown): string | null {
-  const e = typeof v === "string" ? v.trim().toLowerCase() : "";
-  if (!e || !e.includes("@")) return null;
-  return e;
+function normalizeEmail(value: unknown): string | null {
+  const email = typeof value === "string"
+    ? value.trim().toLowerCase()
+    : "";
+
+  return email.includes("@") ? email : null;
 }
 
-function toCentsFromTotals(orderData: any): number {
-  const totalTTC = Number(
-    orderData?.totals?.totalTTC ??
-      orderData?.total ??
-      orderData?.amount_total ??
-      0
+function getProvider(order: Record<string, any>) {
+  return String(
+    order?.payment?.provider ||
+      order?.paymentProvider ||
+      order?.provider ||
+      ""
+  ).toLowerCase();
+}
+
+function isPaid(order: Record<string, any>) {
+  return [
+    order?.status,
+    order?.paymentStatus,
+    order?.payment?.status,
+  ].some((value) =>
+    ["paid", "validated"].includes(
+      String(value || "").toLowerCase()
+    )
   );
-  if (!Number.isFinite(totalTTC)) return 0;
-  return Math.round(totalTTC * 100);
 }
 
 export async function POST(
@@ -32,28 +43,71 @@ export async function POST(
   const auth = await assertAdmin(req);
   if (auth) return auth;
 
+  const { id } = await context.params;
+
+  if (!id) {
+    return NextResponse.json(
+      { ok: false, error: "Identifiant de commande manquant." },
+      { status: 400 }
+    );
+  }
+
+  const orderRef = dbAdmin.collection("orders").doc(id);
+
   try {
-    const { id } = await context.params;
-    if (!id) {
-      return NextResponse.json({ ok: false, error: "Missing id" }, { status: 400 });
+    const claim = await dbAdmin.runTransaction(async (transaction) => {
+      const snap = await transaction.get(orderRef);
+
+      if (!snap.exists) {
+        return { state: "missing" as const, order: null };
+      }
+
+      const order = snap.data() as Record<string, any>;
+      const provider = getProvider(order);
+
+      if (
+        provider !== "bank_transfer" &&
+        String(order.status || "").toLowerCase() !==
+          "awaiting_bank_transfer"
+      ) {
+        return { state: "wrong_provider" as const, order };
+      }
+
+      if (isPaid(order)) {
+        return { state: "already_paid" as const, order };
+      }
+
+      if (order?.payment?.validationInProgress === true) {
+        return { state: "busy" as const, order };
+      }
+
+      transaction.update(orderRef, {
+        "payment.validationInProgress": true,
+        "payment.validationStartedAt": new Date(),
+        updatedAt: new Date(),
+      });
+
+      return { state: "claimed" as const, order };
+    });
+
+    if (claim.state === "missing") {
+      return NextResponse.json(
+        { ok: false, error: "Commande introuvable." },
+        { status: 404 }
+      );
     }
 
-    const orderRef = dbAdmin.collection("orders").doc(id);
-    const snap = await orderRef.get();
-
-    if (!snap.exists) {
-      return NextResponse.json({ ok: false, error: "Order not found" }, { status: 404 });
+    if (claim.state === "wrong_provider") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Cette action est réservée aux virements bancaires.",
+        },
+        { status: 409 }
+      );
     }
 
-    const order = snap.data() as any;
-
-    const alreadyPaid =
-      order?.paymentStatus === "paid" ||
-      order?.payment?.status === "paid" ||
-      order?.payment?.status === "validated" ||
-      order?.status === "paid";
-
-    if (alreadyPaid) {
+    if (claim.state === "already_paid") {
       return NextResponse.json({
         ok: true,
         alreadyPaid: true,
@@ -61,159 +115,83 @@ export async function POST(
       });
     }
 
+    if (claim.state === "busy") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "La validation de ce virement est déjà en cours.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const order = claim.order;
     const customerEmail =
       normalizeEmail(order?.email) ||
       normalizeEmail(order?.customerEmail) ||
       normalizeEmail(order?.customer_email) ||
       normalizeEmail(order?.billingCustomer?.email) ||
-      normalizeEmail(order?.shippingCustomer?.email) ||
-      null;
+      normalizeEmail(order?.shippingCustomer?.email);
 
-    await orderRef.set(
-      {
-        updatedAt: new Date(),
-        status: "paid",
-        paidAt: new Date(),
-        paymentStatus: "paid",
-        provider: order?.provider || order?.paymentProvider || "bank_transfer",
-        paymentProvider: order?.paymentProvider || "bank_transfer",
-        payment: {
-          ...(order?.payment || {}),
-          provider: "bank_transfer",
-          status: "paid",
-          validationMode: "manual",
-          validatedAt: new Date(),
-          validatedBy: "admin",
-        },
-        bankTransfer: {
-          ...(order?.bankTransfer || {}),
-          paymentConfirmedByAdmin: true,
-          paymentConfirmedAt: new Date(),
-        },
+    const finalizeResult = await finalizePaidOrder({
+      orderId: id,
+      provider: "bank_transfer",
+      email: customerEmail,
+      locale: order?.locale || "fr",
+      payment: {
+        providerOrderId:
+          order?.reference || order?.orderNumber || id,
+        providerRef:
+          order?.reference || order?.orderNumber || id,
+        validationMode: "manual",
+        manuallyValidated: true,
+        validatedBy: "admin",
       },
-      { merge: true }
-    );
+    });
 
-    let finalizeResult: any = null;
-    try {
-      finalizeResult = await finalizePaidOrder({
-        orderId: id,
-        provider: "bank_transfer",
-        email: customerEmail,
-        locale: order?.locale || "fr",
-        payment: {
-          providerOrderId: order?.reference || order?.orderNumber || id,
-          providerRef: order?.reference || order?.orderNumber || id,
-          manuallyValidated: true,
-        },
-      });
+    const confirmedAt = new Date();
 
-      await orderRef.set(
-        {
-          "debug.bankTransferFinalizeAt": new Date(),
-          "debug.bankTransferFinalizeResult": finalizeResult ?? null,
-        },
-        { merge: true }
-      );
-    } catch (err: any) {
-      await orderRef.set(
-        {
-          "debug.bankTransferFinalizeErrorAt": new Date(),
-          "debug.bankTransferFinalizeError": String(err?.message || err),
-        },
-        { merge: true }
-      );
-    }
-
-    const refreshedSnap = await orderRef.get();
-    const refreshedOrder = refreshedSnap.data() as any;
-
-    let emailSent = false;
-    if (!refreshedOrder?.emails?.sent && customerEmail) {
-      try {
-        const amountTotalCents = toCentsFromTotals(refreshedOrder);
-        const invoiceNumber =
-          refreshedOrder?.invoiceNumber ||
-          (await ensureInvoiceNumberForOrder(
-            orderRef
-          ));
-
-        const mailResult = await sendOrderEmails({
-          order: {
-            id,
-            amount_total: amountTotalCents,
-            currency: (refreshedOrder?.currency || "EUR").toLowerCase(),
-            customer_email: customerEmail,
-            payment_status: "paid",
-            provider: "bank_transfer",
-            created_at: refreshedOrder?.createdAt || new Date(),
-            orderData: {
-              ...refreshedOrder,
-              invoiceNumber,
-            },
-            locale: refreshedOrder?.locale || "fr",
-            orderNumber:
-              refreshedOrder?.orderNumber || refreshedOrder?.reference || id,
-            invoiceNumber,
-          },
-          clientEmail: customerEmail,
-        });
-
-        emailSent = true;
-
-        await orderRef.set(
-          {
-            emails: {
-              sent: true,
-              sentAt: new Date(),
-              provider: "bank_transfer",
-              client: mailResult?.client ?? null,
-              admin: mailResult?.admin ?? null,
-              logistics: mailResult?.logistics ?? [],
-            },
-            invoiceEmail: {
-              status: "sent",
-              sentAt: new Date(),
-              provider: "bank_transfer",
-              orderNumber:
-                mailResult?.orderNumber ?? refreshedOrder?.orderNumber ?? id,
-              invoiceNumber:
-                mailResult?.invoiceNumber ?? invoiceNumber,
-            },
-          },
-          { merge: true }
-        );
-      } catch (err: any) {
-        await orderRef.set(
-          {
-            emails: {
-              sent: false,
-              lastErrorAt: new Date(),
-              lastError: String(err?.message || err),
-              provider: "bank_transfer",
-            },
-            invoiceEmail: {
-              status: "error",
-              lastErrorAt: new Date(),
-              lastError: String(err?.message || err),
-              provider: "bank_transfer",
-            },
-          },
-          { merge: true }
-        );
-      }
-    }
+    await orderRef.update({
+      paymentStatus: "paid",
+      paymentProvider: "bank_transfer",
+      provider: "bank_transfer",
+      "payment.validationInProgress": false,
+      "payment.validatedAt": confirmedAt,
+      "payment.validatedBy": "admin",
+      "bankTransfer.paymentConfirmedByAdmin": true,
+      "bankTransfer.paymentConfirmedAt": confirmedAt,
+      shippingStatus: "preparing",
+      "fulfillment.status": "preparing",
+      logisticsAvailableAt: confirmedAt,
+      updatedAt: confirmedAt,
+    });
 
     return NextResponse.json({
       ok: true,
       orderId: id,
-      emailSent,
-      finalizeResult: finalizeResult ?? null,
+      invoiceSent: Boolean(finalizeResult?.emailResult),
+      logisticsStarted: true,
+      finalizeResult,
     });
-  } catch (err: any) {
-    console.error("[validate-bank-transfer] error:", err);
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Échec de la validation du virement.";
+
+    await orderRef
+      .update({
+        "payment.validationInProgress": false,
+        "payment.validationError": message,
+        "payment.validationErrorAt": new Date(),
+        updatedAt: new Date(),
+      })
+      .catch(() => undefined);
+
+    console.error("[validate-bank-transfer] error:", error);
+
     return NextResponse.json(
-      { ok: false, error: err?.message || "Validation failed" },
+      { ok: false, error: message },
       { status: 500 }
     );
   }

@@ -138,6 +138,11 @@ export async function POST(req: Request) {
       shippingMethod,
       relayPoint,
 
+      shippingStatus: "pending",
+      fulfillment: {
+        status: "pending",
+      },
+
       shippingPrice: totals.shippingTTC,
       totals,
 

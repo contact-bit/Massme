@@ -19,7 +19,7 @@ La boutique et l’administration ne sont donc pas deux projets indépendants. E
 
 - 42 pages publiques localisées, dont quatre pages juridiques.
 - 13 pages d’administration.
-- 42 routes API.
+- 41 routes API.
 - 218 fichiers TypeScript/TSX.
 - 74 feuilles CSS.
 - 6 langues : français, anglais, espagnol, allemand, italien et néerlandais.
@@ -118,7 +118,7 @@ Définir `ADMIN_SESSION_SECRET` dans Vercel avec une longue valeur aléatoire, d
 - Suppression de `tsconfig.tsbuildinfo` et ajout de `*.tsbuildinfo` au `.gitignore`.
 - Remplacement du README Create Next App par la documentation du projet.
 
-Chaque gros lot a été suivi d’un build de production. Le build final expose les 42 pages publiques, 13 pages admin et 42 routes API attendues.
+Chaque gros lot a été suivi d’un build de production. Le build final expose les 42 pages publiques, 13 pages admin et 41 routes API attendues.
 
 ## Qualité du code
 

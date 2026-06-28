@@ -12,7 +12,12 @@ function getTone(status?: string): Tone {
   if (
     s === "pending_payment" ||
     s === "awaiting_bank_transfer" ||
-    s === "pending" ||
+    s === "pending"
+  ) {
+    return "warning";
+  }
+
+  if (
     s === "failed" ||
     s === "refused" ||
     s === "declined" ||
