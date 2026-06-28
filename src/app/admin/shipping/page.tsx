@@ -5,6 +5,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 
 import AddMethodForm from "./components/AddMethodForm";
 
@@ -89,7 +90,7 @@ export default function ShippingAdminPage() {
     useState(true);
 
   const [editing, setEditing] =
-    useState<ShippingMethod | null>(
+    useState<string | null>(
       null
     );
 
@@ -198,6 +199,23 @@ export default function ShippingAdminPage() {
     setEditing(null);
     setShowCreate(false);
   }, [activeCountry]);
+
+  useEffect(() => {
+    if (!editing) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setEditing(null);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [editing]);
 
   /* =========================================================
      DELETE
@@ -366,6 +384,12 @@ export default function ShippingAdminPage() {
     activeCountry,
   ]);
 
+  const editingMethod = editing
+    ? methods.find(
+        (method) => method.id === editing
+      ) ?? null
+    : null;
+
   /* =========================================================
      RENDER
   ========================================================= */
@@ -502,7 +526,7 @@ export default function ShippingAdminPage() {
                     ];
 
                   const isOpen =
-                    editing?.id ===
+                    editing ===
                     method.id;
 
                   const priceTTC =
@@ -555,16 +579,7 @@ export default function ShippingAdminPage() {
                       >
 
                         {/* LEFT */}
-                        <div
-                          className="shipping-method-left"
-                          onClick={() =>
-                            setEditing(
-                              isOpen
-                                ? null
-                                : method
-                            )
-                          }
-                        >
+                        <div className="shipping-method-left">
 
                           <div className="shipping-method-top">
 
@@ -692,14 +707,16 @@ export default function ShippingAdminPage() {
                         <div className="shipping-method-actions">
 
                           <button
+                            type="button"
                             className="shipping-btn shipping-btn-ghost"
-                            onClick={() =>
+                            onClick={(event) => {
+                              event.stopPropagation();
                               setEditing(
                                 isOpen
                                   ? null
-                                  : method
-                              )
-                            }
+                                  : method.id
+                              );
+                            }}
                           >
                             {isOpen
                               ? "Fermer"
@@ -707,6 +724,7 @@ export default function ShippingAdminPage() {
                           </button>
 
                           <button
+                            type="button"
                             className="shipping-btn shipping-btn-danger"
                             onClick={() =>
                               handleDelete(
@@ -721,27 +739,6 @@ export default function ShippingAdminPage() {
 
                       </div>
 
-                      {/* EDIT */}
-                      {isOpen && (
-                        <div className="shipping-edit-panel">
-
-                          <EditMethodPanel
-                            data={
-                              method
-                            }
-                            onClose={() =>
-                              setEditing(
-                                null
-                              )
-                            }
-                            onSaved={
-                              reload
-                            }
-                          />
-
-                        </div>
-                      )}
-
                     </div>
                   );
                 }
@@ -753,6 +750,61 @@ export default function ShippingAdminPage() {
         </section>
 
       </div>
+
+      {editingMethod && createPortal(
+        <div
+          className={`${
+            document.querySelector<HTMLElement>(
+              ".admin-font-root"
+            )?.className || "admin-font-root"
+          } shipping-edit-overlay`}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 2147483000,
+            display: "grid",
+            placeItems: "center",
+            padding: "clamp(1rem, 3vw, 2.5rem)",
+            background: "rgba(2, 6, 23, .76)",
+            backdropFilter: "blur(10px)",
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Modifier la méthode de livraison"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setEditing(null);
+            }
+          }}
+        >
+          <div
+            className="shipping-edit-dialog"
+            style={{
+              width: "min(1080px, 100%)",
+              maxHeight: "calc(100dvh - 2rem)",
+              overflowY: "auto",
+              padding: "clamp(1rem, 2.5vw, 1.75rem)",
+              border: "1px solid rgba(125, 211, 252, .18)",
+              borderRadius: "18px",
+              background:
+                "linear-gradient(180deg, rgba(15, 23, 42, .99), rgba(2, 6, 23, .99))",
+              boxShadow:
+                "0 30px 100px rgba(0, 0, 0, .58), 0 0 0 1px rgba(255, 255, 255, .03)",
+            }}
+          >
+            <EditMethodPanel
+              key={editingMethod.id}
+              data={editingMethod}
+              onClose={() => setEditing(null)}
+              onSaved={() => {
+                reload();
+                setEditing(null);
+              }}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
 
     </main>
   );

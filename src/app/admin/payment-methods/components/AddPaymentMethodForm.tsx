@@ -4,6 +4,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import AdminNumberInput from "@/app/admin/components/AdminNumberInput";
 
 import type {
   CountryCode,
@@ -581,24 +582,15 @@ export default function AddPaymentMethodForm({
             Ordre
           </label>
 
-          <input
-            type="number"
+          <AdminNumberInput
+            integer
+            min={0}
             placeholder="1"
             value={
               sortOrder
             }
-            onChange={(e) =>
-              setSortOrder(
-                e.target
-                  .value ===
-                  ""
-                  ? ""
-                  : Number(
-                      e
-                        .target
-                        .value
-                    )
-              )
+            onValueChange={(value) =>
+              setSortOrder(value ?? "")
             }
           />
 

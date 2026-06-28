@@ -1,0 +1,200 @@
+/* Design commun des formulaires de modification Livraison et Paiement */
+
+.settings-editor {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  gap: .75rem;
+  color: var(--admin-text, #d7e1ed);
+}
+
+.settings-editor :is(.emp-head, .epmp-head) {
+  align-items: center;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid var(--admin-line, rgba(255,255,255,.075));
+}
+
+.settings-editor :is(.emp-title, .epmp-title) {
+  margin: 0;
+  color: var(--admin-text-strong, #f8fafc);
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  line-height: 1.15;
+  letter-spacing: -.03em;
+}
+
+.settings-editor :is(.emp-meta, .epmp-meta) {
+  margin-top: .35rem;
+  color: var(--admin-text-muted, #94a3b8);
+  font-size: .7rem;
+  font-weight: 750;
+  letter-spacing: .04em;
+}
+
+.settings-editor :is(.emp-head > .emp-close, .epmp-head > .epmp-close) {
+  flex: 0 0 auto;
+  border-radius: var(--admin-control-radius, 8px);
+  transition:
+    transform .24s ease,
+    border-color .24s ease,
+    background .24s ease,
+    color .24s ease;
+}
+
+.settings-editor :is(.emp-head > .emp-close, .epmp-head > .epmp-close):hover {
+  transform: rotate(90deg);
+  border-color: rgba(56,189,248,.28);
+  background: rgba(56,189,248,.09);
+  color: var(--admin-text-strong, #f8fafc);
+}
+
+.settings-editor :is(.emp-card, .epmp-card) {
+  width: 100%;
+  min-width: 0;
+  padding: .8rem;
+  border: 1px solid var(--admin-line, rgba(255,255,255,.075));
+  border-radius: var(--admin-card-radius, 12px);
+  background: var(--admin-surface-solid, #0b1320);
+  box-shadow: 0 8px 22px rgba(0,0,0,.16);
+}
+
+.settings-editor :is(.emp-card-head, .epmp-card-head) {
+  margin-bottom: .65rem;
+}
+
+.settings-editor :is(.emp-card-kicker, .epmp-card-kicker) {
+  min-height: 22px;
+  padding: 0 .6rem;
+  border-radius: 6px;
+  font-size: .56rem;
+  letter-spacing: .11em;
+}
+
+.settings-editor :is(.emp-card-head, .epmp-card-head) h3 {
+  margin: .42rem 0 0;
+  color: var(--admin-text-strong, #f8fafc);
+  font-size: .96rem;
+  letter-spacing: -.02em;
+}
+
+.settings-editor :is(.emp-grid, .epmp-grid) {
+  gap: .65rem;
+}
+
+.settings-editor :is(.emp-field, .epmp-field) {
+  gap: .3rem;
+}
+
+.settings-editor :is(.emp-field, .epmp-field) label {
+  color: var(--admin-text-muted, #94a3b8);
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .025em;
+}
+
+.settings-editor :is(.emp-field, .epmp-field) :is(input, select, textarea) {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  box-sizing: border-box;
+  padding: .55rem .7rem;
+  border: 1px solid var(--admin-line-strong, rgba(255,255,255,.14));
+  border-radius: var(--admin-control-radius, 8px);
+  background: var(--admin-surface-raised, #101b2b);
+  color: var(--admin-text-strong, #f8fafc);
+  font: inherit;
+  font-size: .76rem;
+  line-height: 1.4;
+  outline: none;
+  resize: vertical;
+}
+
+.settings-editor :is(.emp-field, .epmp-field) textarea {
+  min-height: 72px;
+  max-height: 120px;
+}
+
+.settings-editor :is(.emp-field, .epmp-field) :is(input, select, textarea):focus {
+  border-color: var(--admin-accent, #38bdf8);
+  box-shadow: 0 0 0 3px rgba(56,189,248,.12);
+}
+
+.shipping-edit-dialog .emp-body {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .7rem;
+  align-items: start;
+}
+
+.shipping-edit-dialog .emp-body > .emp-card:first-child,
+.shipping-edit-dialog .emp-error {
+  grid-column: 1 / -1;
+}
+
+.shipping-edit-dialog .emp-field-compact,
+.shipping-edit-dialog .emp-body > .emp-card:nth-of-type(4) .emp-field {
+  width: min(220px, 100%);
+}
+
+.shipping-edit-dialog .emp-body > .emp-card:nth-of-type(3) .emp-grid {
+  grid-template-columns: repeat(2, minmax(90px, 150px));
+}
+
+.shipping-edit-dialog .emp-weight-tiers {
+  margin-top: .65rem;
+  padding-top: .65rem;
+  border-top: 1px solid var(--admin-line, rgba(255,255,255,.075));
+}
+
+.pap-edit-dialog .settings-editor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.pap-edit-dialog .settings-editor > :is(.epmp-head, .epmp-error, .epmp-actions) {
+  grid-column: 1 / -1;
+}
+
+.pap-edit-dialog .settings-editor > .epmp-card:nth-of-type(1) {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.pap-edit-dialog .settings-editor > .epmp-card:nth-of-type(3) {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.pap-edit-dialog .settings-editor > .epmp-card:nth-of-type(2) {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
+.pap-edit-dialog .settings-editor > .epmp-card:nth-of-type(3) .epmp-field {
+  width: min(150px, 100%);
+}
+
+.settings-editor :is(.emp-footer, .epmp-actions) {
+  padding-top: .7rem;
+  border-top: 1px solid var(--admin-line, rgba(255,255,255,.075));
+}
+
+.settings-editor :is(.emp-btn, .epmp-btn) {
+  min-height: 38px;
+  border-radius: var(--admin-control-radius, 8px);
+  font-size: .72rem;
+}
+
+@media (max-width: 900px) {
+  .shipping-edit-dialog .emp-body,
+  .pap-edit-dialog .settings-editor {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .shipping-edit-dialog .emp-field-compact,
+  .shipping-edit-dialog .emp-body > .emp-card:nth-of-type(4) .emp-field,
+  .pap-edit-dialog .settings-editor > .epmp-card:nth-of-type(3) .epmp-field {
+    width: 100%;
+  }
+}

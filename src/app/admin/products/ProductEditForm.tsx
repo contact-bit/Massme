@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import AdminNumberInput from "@/app/admin/components/AdminNumberInput";
 import "@/app/admin/styles/product-form.css";
 
 /* =====================================================
@@ -793,19 +794,18 @@ export default function ProductEditForm({
                         }}
                       />
 
-                      <input
-                        type="number"
-                        step="0.01"
+                      <AdminNumberInput
                         disabled={!active}
                         value={v.pricesByMarket[m.code] || ""}
-                        onChange={(e) => {
+                        min={0}
+                        onValueChange={(value) => {
                           const copy = [...variants];
                           const current = copy[idx];
                           copy[idx] = {
                             ...current,
                             pricesByMarket: {
                               ...current.pricesByMarket,
-                              [m.code]: e.target.value,
+                              [m.code]: value == null ? "" : String(value),
                             },
                           };
                           setVariants(copy);
@@ -837,12 +837,12 @@ export default function ProductEditForm({
                       />
 
                       <div className="pf-percent-input">
-                        <input
-                          type="number"
-                          step="0.01"
+                        <AdminNumberInput
                           disabled={!active || !vat?.enabled}
                           value={vat?.rate ?? ""}
-                          onChange={(e) => {
+                          min={0}
+                          max={100}
+                          onValueChange={(value) => {
                             const copy = [...variants];
                             const current = copy[idx];
                             copy[idx] = {
@@ -853,7 +853,7 @@ export default function ProductEditForm({
                                   ...(current.vatByMarket[m.code] || {
                                     enabled: false,
                                   }),
-                                  rate: e.target.value,
+                                  rate: value == null ? "" : String(value),
                                 },
                               },
                             };
@@ -1112,19 +1112,18 @@ export default function ProductEditForm({
                         }}
                       />
 
-                      <input
-                        type="number"
-                        step="0.01"
+                      <AdminNumberInput
                         disabled={!active}
                         value={a.pricesByMarket[m.code] || ""}
-                        onChange={(e) => {
+                        min={0}
+                        onValueChange={(value) => {
                           const copy = [...addons];
                           const current = copy[idx];
                           copy[idx] = {
                             ...current,
                             pricesByMarket: {
                               ...current.pricesByMarket,
-                              [m.code]: e.target.value,
+                              [m.code]: value == null ? "" : String(value),
                             },
                           };
                           setAddons(copy);
@@ -1156,12 +1155,12 @@ export default function ProductEditForm({
                       />
 
                       <div className="pf-percent-input">
-                        <input
-                          type="number"
-                          step="0.01"
+                        <AdminNumberInput
                           disabled={!active || !vat?.enabled}
                           value={vat?.rate ?? ""}
-                          onChange={(e) => {
+                          min={0}
+                          max={100}
+                          onValueChange={(value) => {
                             const copy = [...addons];
                             const current = copy[idx];
                             copy[idx] = {
@@ -1172,7 +1171,7 @@ export default function ProductEditForm({
                                   ...(current.vatByMarket[m.code] || {
                                     enabled: false,
                                   }),
-                                  rate: e.target.value,
+                                  rate: value == null ? "" : String(value),
                                 },
                               },
                             };
@@ -1232,14 +1231,13 @@ export default function ProductEditForm({
 
           <label className="pf-shipping-summary-field">
             <span>Poids</span>
-            <input
-              type="number"
-              step="0.01"
+            <AdminNumberInput
               className="admin-input"
               placeholder="1,20"
               value={weightKg}
-              onChange={(e) =>
-                setWeightKg(e.target.value)
+              min={0}
+              onValueChange={(value) =>
+                setWeightKg(value == null ? "" : String(value))
               }
             />
             <small>kg</small>
@@ -1247,17 +1245,14 @@ export default function ProductEditForm({
 
           <label className="pf-shipping-summary-field">
             <span>Colis</span>
-            <input
-              type="number"
-              min="1"
-              step="1"
+            <AdminNumberInput
+              min={1}
+              integer
               className="admin-input"
               placeholder="1"
               value={deliveryPackageCount}
-              onChange={(e) =>
-                setDeliveryPackageCount(
-                  e.target.value
-                )
+              onValueChange={(value) =>
+                setDeliveryPackageCount(value == null ? "" : String(value))
               }
             />
             <small>par unité</small>
@@ -1319,15 +1314,14 @@ export default function ProductEditForm({
                   }
                 />
 
-                <input
-                  type="number"
-                  step="0.01"
+                <AdminNumberInput
                   disabled={!active}
                   value={pricesByMarket[m.code] || ""}
-                  onChange={(e) =>
+                  min={0}
+                  onValueChange={(value) =>
                     setPricesByMarket((p) => ({
                       ...p,
-                      [m.code]: e.target.value,
+                      [m.code]: value == null ? "" : String(value),
                     }))
                   }
                 />
@@ -1349,17 +1343,17 @@ export default function ProductEditForm({
                 />
 
                 <div className="pf-percent-input">
-                  <input
-                    type="number"
-                    step="0.01"
+                  <AdminNumberInput
                     disabled={!active || !vat?.enabled}
                     value={vat?.rate ?? ""}
-                    onChange={(e) =>
+                    min={0}
+                    max={100}
+                    onValueChange={(value) =>
                       setVatByMarket((p) => ({
                         ...p,
                         [m.code]: {
                           ...p[m.code],
-                          rate: e.target.value,
+                          rate: value == null ? "" : String(value),
                         },
                       }))
                     }

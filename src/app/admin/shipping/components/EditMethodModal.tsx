@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import type { ShippingMethod } from "../page";
+import AdminNumberInput from "@/app/admin/components/AdminNumberInput";
 
 import {
   COUNTRY_LANGUAGE_MAP,
@@ -10,6 +11,7 @@ import {
 } from "@/lib/shipping-i18n";
 
 import "./edit-method-panel.css";
+import "../../styles/settings-editor.css";
 
 type Props = {
   data: ShippingMethod;
@@ -24,15 +26,26 @@ export default function EditMethodPanel({
   onClose,
   onSaved,
 }: Props) {
-  const country =
-    data.country as CountryCode;
+  const country: CountryCode =
+    data.country in COUNTRY_LANGUAGE_MAP
+      ? data.country
+      : "FR";
 
   const lang =
-    COUNTRY_LANGUAGE_MAP[country];
+    COUNTRY_LANGUAGE_MAP[country] || "fr";
 
   const [form, setForm] =
     useState<ShippingMethod>({
       ...data,
+      country,
+      name:
+        data.name && typeof data.name === "object"
+          ? data.name
+          : { fr: String(data.name || "") },
+      delay:
+        data.delay && typeof data.delay === "object"
+          ? data.delay
+          : { fr: String(data.delay || "") },
     });
 
   const [saving, setSaving] =
@@ -155,7 +168,7 @@ export default function EditMethodPanel({
   ===================================================== */
 
   return (
-    <div className="emp">
+    <div className="emp settings-editor">
 
       {/* HERO */}
       <div className="emp-head">
@@ -163,12 +176,11 @@ export default function EditMethodPanel({
         <div>
 
           <h2 className="emp-title">
-            Modification
+            Modifier « {form.name[lang] || "Méthode de livraison"} »
           </h2>
 
           <div className="emp-meta">
-            {country} •{" "}
-            {lang.toUpperCase()}
+            Livraison • {country} • {lang.toUpperCase()}
           </div>
 
         </div>
@@ -177,6 +189,7 @@ export default function EditMethodPanel({
           className="emp-close"
           onClick={onClose}
           type="button"
+          aria-label="Fermer le formulaire"
         >
           ✕
         </button>
@@ -192,7 +205,7 @@ export default function EditMethodPanel({
           <div className="emp-card-head">
 
             <div className="emp-card-kicker">
-              GENERAL
+              INFORMATIONS
             </div>
 
             <h3>
@@ -210,7 +223,9 @@ export default function EditMethodPanel({
                 Nom
               </label>
 
-              <input
+              <textarea
+                rows={3}
+                placeholder="Nom affiché au client"
                 value={
                   form.name[
                     lang
@@ -243,7 +258,9 @@ export default function EditMethodPanel({
                 Délai
               </label>
 
-              <input
+              <textarea
+                rows={3}
+                placeholder="Ex. Livraison sous 2 à 3 jours ouvrés"
                 value={
                   form.delay[
                     lang
@@ -288,13 +305,12 @@ export default function EditMethodPanel({
                       Jusqu’à kg
                     </label>
 
-                    <input
-                      type="number"
-                      step="0.01"
+                    <AdminNumberInput
                       value={
                         tier.maxWeightKg
                       }
-                      onChange={(e) =>
+                      min={0}
+                      onValueChange={(value) =>
                         setForm(
                           (f) => ({
                             ...f,
@@ -308,11 +324,7 @@ export default function EditMethodPanel({
                                     ? {
                                         ...t,
                                         maxWeightKg:
-                                          Number(
-                                            e
-                                              .target
-                                              .value
-                                          ),
+                                          value ?? 0,
                                       }
                                     : t
                               ),
@@ -327,13 +339,12 @@ export default function EditMethodPanel({
                       Prix HT
                     </label>
 
-                    <input
-                      type="number"
-                      step="0.01"
+                    <AdminNumberInput
                       value={
                         tier.priceHT
                       }
-                      onChange={(e) =>
+                      min={0}
+                      onValueChange={(value) =>
                         setForm(
                           (f) => ({
                             ...f,
@@ -347,11 +358,7 @@ export default function EditMethodPanel({
                                     ? {
                                         ...t,
                                         priceHT:
-                                          Number(
-                                            e
-                                              .target
-                                              .value
-                                          ),
+                                          value ?? 0,
                                       }
                                     : t
                               ),
@@ -411,7 +418,7 @@ export default function EditMethodPanel({
           <div className="emp-card-head">
 
             <div className="emp-card-kicker">
-              DELIVERY
+              LIVRAISON
             </div>
 
             <h3>
@@ -467,7 +474,7 @@ export default function EditMethodPanel({
           <div className="emp-card-head">
 
             <div className="emp-card-kicker">
-              PRICING
+              TARIFICATION
             </div>
 
             <h3>
@@ -485,22 +492,18 @@ export default function EditMethodPanel({
                 Prix HT
               </label>
 
-              <input
-                type="number"
+              <AdminNumberInput
                 value={
                   form.priceHT
                 }
-                onChange={(e) =>
+                min={0}
+                onValueChange={(value) =>
                   setForm(
                     (f) => ({
                       ...f,
 
                       priceHT:
-                        Number(
-                          e
-                            .target
-                            .value
-                        ),
+                        value ?? 0,
                     })
                   )
                 }
@@ -515,8 +518,7 @@ export default function EditMethodPanel({
                 TVA
               </label>
 
-              <input
-                type="number"
+              <AdminNumberInput
                 disabled={
                   country ===
                   "CH"
@@ -524,17 +526,15 @@ export default function EditMethodPanel({
                 value={
                   form.vatRate
                 }
-                onChange={(e) =>
+                min={0}
+                max={100}
+                onValueChange={(value) =>
                   setForm(
                     (f) => ({
                       ...f,
 
                       vatRate:
-                        Number(
-                          e
-                            .target
-                            .value
-                        ),
+                        value ?? 0,
                     })
                   )
                 }
@@ -552,7 +552,7 @@ export default function EditMethodPanel({
           <div className="emp-card-head">
 
             <div className="emp-card-kicker">
-              PRIORITY
+              AFFICHAGE
             </div>
 
             <h3>
@@ -567,27 +567,20 @@ export default function EditMethodPanel({
               Ordre
             </label>
 
-            <input
-              type="number"
+            <AdminNumberInput
+              integer
+              min={0}
               value={
                 form.sortOrder ??
                 ""
               }
-              onChange={(e) =>
+              onValueChange={(value) =>
                 setForm(
                   (f) => ({
                     ...f,
 
                     sortOrder:
-                      e.target
-                        .value ===
-                      ""
-                        ? null
-                        : Number(
-                            e
-                              .target
-                              .value
-                          ),
+                      value,
                   })
                 )
               }

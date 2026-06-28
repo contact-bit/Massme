@@ -3,6 +3,7 @@
 import {
   useState,
 } from "react";
+import AdminNumberInput from "@/app/admin/components/AdminNumberInput";
 
 import {
   COUNTRY_LANGUAGE_MAP,
@@ -14,6 +15,7 @@ import type {
 } from "../types";
 
 import "./edit-payment-method-panel.css";
+import "../../styles/settings-editor.css";
 
 type Props = {
   data: PaymentMethod;
@@ -171,7 +173,7 @@ export default function EditPaymentMethodPanel({
   return (
     <form
       onSubmit={save}
-      className="epmp"
+      className="epmp settings-editor"
     >
 
       {/* HEADER */}
@@ -180,14 +182,12 @@ export default function EditPaymentMethodPanel({
         <div>
 
           <h2 className="epmp-title">
-            Modification
+            Modifier « {name || "Méthode de paiement"} »
           </h2>
 
           <div className="epmp-meta">
 
-            {data.country} •{" "}
-
-            {locale.toUpperCase()}
+            Paiement • {data.country} • {locale.toUpperCase()}
 
           </div>
 
@@ -197,6 +197,7 @@ export default function EditPaymentMethodPanel({
           type="button"
           className="epmp-close"
           onClick={onClose}
+          aria-label="Fermer le formulaire"
         >
           ✕
         </button>
@@ -205,6 +206,13 @@ export default function EditPaymentMethodPanel({
 
       {/* PROVIDER */}
       <section className="epmp-card">
+
+        <div className="epmp-card-head">
+          <div className="epmp-card-kicker">
+            PAIEMENT
+          </div>
+          <h3>Fournisseur</h3>
+        </div>
 
         <div className="epmp-providers">
 
@@ -263,7 +271,7 @@ export default function EditPaymentMethodPanel({
         <div className="epmp-card-head">
 
           <div className="epmp-card-kicker">
-            CONTENT
+            INFORMATIONS
           </div>
 
           <h3>
@@ -280,7 +288,8 @@ export default function EditPaymentMethodPanel({
               Nom
             </label>
 
-            <input
+            <textarea
+              rows={3}
               placeholder={`Nom (${locale.toUpperCase()})`}
               value={name}
               onChange={(e) =>
@@ -299,7 +308,8 @@ export default function EditPaymentMethodPanel({
               Description
             </label>
 
-            <input
+            <textarea
+              rows={3}
               placeholder={`Description (${locale.toUpperCase()})`}
               value={
                 description
@@ -324,7 +334,7 @@ export default function EditPaymentMethodPanel({
         <div className="epmp-card-head">
 
           <div className="epmp-card-kicker">
-            SETTINGS
+            AFFICHAGE
           </div>
 
           <h3>
@@ -341,24 +351,15 @@ export default function EditPaymentMethodPanel({
               Ordre
             </label>
 
-            <input
-              type="number"
+            <AdminNumberInput
+              integer
+              min={0}
               placeholder="1"
               value={
                 sortOrder
               }
-              onChange={(e) =>
-                setSortOrder(
-                  e.target
-                    .value ===
-                    ""
-                    ? ""
-                    : Number(
-                        e
-                          .target
-                          .value
-                      )
-                )
+              onValueChange={(value) =>
+                setSortOrder(value ?? "")
               }
             />
 

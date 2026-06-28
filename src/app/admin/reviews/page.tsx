@@ -1,5 +1,7 @@
 "use client";
 
+import AdminNumberInput from "@/app/admin/components/AdminNumberInput";
+
 import {
   Fragment,
   useCallback,
@@ -1075,33 +1077,18 @@ export default function AdminReviewsPage() {
                   Personnalisé
                 </span>
 
-                <input
-                  type="number"
+                <AdminNumberInput
                   min={0}
                   max={365}
+                  integer
                   value={
                     draftSettings.mode ===
                     "immediate"
                       ? 0
                       : draftSettings.delayDays
                   }
-                  onChange={(
-                    e
-                  ) => {
-
-                    const v =
-                      Math.max(
-                        0,
-                        Math.min(
-                          365,
-                          Math.floor(
-                            Number(
-                              e.target.value ||
-                                0
-                            )
-                          )
-                        )
-                      );
+                  onValueChange={(value) => {
+                    const v = value ?? 0;
 
                     setDraftSettings(
                       {

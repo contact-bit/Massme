@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AdminNumberInput from "@/app/admin/components/AdminNumberInput";
 
 import "./product-form.css";
 
@@ -237,15 +238,13 @@ export default function ProductForm({
                 Prix (€)
               </label>
 
-              <input
-                type="number"
+              <AdminNumberInput
                 className="pf-input"
-                placeholder="149"
+                placeholder="149,00"
                 value={priceHT}
-                onChange={(e) =>
-                  setPriceHT(
-                    e.target.value
-                  )
+                min={0}
+                onValueChange={(value) =>
+                  setPriceHT(value == null ? "" : String(value))
                 }
               />
 
@@ -257,16 +256,13 @@ export default function ProductForm({
                 Poids unitaire (kg)
               </label>
 
-              <input
-                type="number"
-                step="0.01"
+              <AdminNumberInput
                 className="pf-input"
-                placeholder="1.20"
+                placeholder="1,20"
                 value={weightKg}
-                onChange={(e) =>
-                  setWeightKg(
-                    e.target.value
-                  )
+                min={0}
+                onValueChange={(value) =>
+                  setWeightKg(value == null ? "" : String(value))
                 }
               />
 
@@ -278,17 +274,14 @@ export default function ProductForm({
                 Colis par unité
               </label>
 
-              <input
-                type="number"
-                min="1"
-                step="1"
+              <AdminNumberInput
+                min={1}
+                integer
                 className="pf-input"
                 placeholder="1"
                 value={deliveryPackageCount}
-                onChange={(e) =>
-                  setDeliveryPackageCount(
-                    e.target.value
-                  )
+                onValueChange={(value) =>
+                  setDeliveryPackageCount(value == null ? "" : String(value))
                 }
               />
 

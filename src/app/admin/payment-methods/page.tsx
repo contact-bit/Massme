@@ -5,6 +5,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 
 import type {
   CountryCode,
@@ -203,6 +204,23 @@ export default function PaymentsAdminPage() {
     setShowCreate(false);
   }, [activeCountry]);
 
+  useEffect(() => {
+    if (!editing) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setEditing(null);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [editing]);
+
   /* =====================================================
      DELETE
   ===================================================== */
@@ -373,6 +391,12 @@ export default function PaymentsAdminPage() {
       methods,
       activeCountry,
     ]);
+
+  const editingMethod = editing
+    ? methods.find(
+        (method) => method.id === editing
+      ) ?? null
+    : null;
 
   /* =====================================================
      RENDER
@@ -676,35 +700,6 @@ export default function PaymentsAdminPage() {
 
                     </div>
 
-                    {/* EDIT */}
-                    {isOpen && (
-
-                      <div className="pap-edit">
-
-                        <EditPaymentMethodModal
-                          data={
-                            method
-                          }
-                          onClose={() =>
-                            setEditing(
-                              null
-                            )
-                          }
-                          onSaved={() => {
-
-                            reload();
-
-                            setEditing(
-                              null
-                            );
-
-                          }}
-                        />
-
-                      </div>
-
-                    )}
-
                   </div>
                 );
               }
@@ -715,6 +710,35 @@ export default function PaymentsAdminPage() {
         )}
 
       </section>
+
+      {editingMethod && createPortal(
+        <div
+          className="pap-edit-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Modifier la méthode de paiement"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setEditing(null);
+            }
+          }}
+        >
+          <div className="pap-edit-dialog">
+            <EditPaymentMethodModal
+              key={editingMethod.id}
+              data={editingMethod}
+              onClose={() => setEditing(null)}
+              onSaved={() => {
+                reload();
+                setEditing(null);
+              }}
+            />
+          </div>
+        </div>,
+        document.querySelector<HTMLElement>(
+          ".admin-font-root"
+        ) ?? document.body
+      )}
 
     </main>
   );

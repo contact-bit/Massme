@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import AdminNumberInput from "@/app/admin/components/AdminNumberInput";
 
 type TaxConfig = {
   rate: number;
@@ -85,12 +86,12 @@ export default function AdminTaxesPage() {
               <label className="taxes-rate">
                 <span>Taux de TVA</span>
                 <span className="taxes-rate-input">
-                  <input
-                    type="number"
-                    step="0.1"
+                  <AdminNumberInput
                     value={cfg.rate}
-                    onChange={(e) =>
-                      save(c.code, { ...cfg, rate: Number(e.target.value) })
+                    min={0}
+                    max={100}
+                    onValueChange={(value) =>
+                      save(c.code, { ...cfg, rate: value ?? 0 })
                     }
                   />
                   <strong>%</strong>

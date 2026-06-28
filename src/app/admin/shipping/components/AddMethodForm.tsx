@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AdminNumberInput from "@/app/admin/components/AdminNumberInput";
 
 import type {
   ShippingMethodType,
@@ -338,13 +339,12 @@ export default function AddMethodForm({
                     Jusqu’à kg
                   </label>
 
-                  <input
-                    type="number"
-                    step="0.01"
+                  <AdminNumberInput
                     value={
                       tier.maxWeightKg
                     }
-                    onChange={(e) =>
+                    min={0}
+                    onValueChange={(value) =>
                       setForm({
                         ...form,
                         weightPriceTiers:
@@ -354,9 +354,7 @@ export default function AddMethodForm({
                                 ? {
                                     ...t,
                                     maxWeightKg:
-                                      e
-                                        .target
-                                        .value,
+                                      value == null ? "" : String(value),
                                   }
                                 : t
                           ),
@@ -370,11 +368,10 @@ export default function AddMethodForm({
                     Prix HT
                   </label>
 
-                  <input
-                    type="number"
-                    step="0.01"
+                  <AdminNumberInput
                     value={tier.priceHT}
-                    onChange={(e) =>
+                    min={0}
+                    onValueChange={(value) =>
                       setForm({
                         ...form,
                         weightPriceTiers:
@@ -384,9 +381,7 @@ export default function AddMethodForm({
                                 ? {
                                     ...t,
                                     priceHT:
-                                      e
-                                        .target
-                                        .value,
+                                      value == null ? "" : String(value),
                                   }
                                 : t
                           ),
@@ -607,19 +602,18 @@ export default function AddMethodForm({
               Prix HT
             </label>
 
-            <input
-              type="number"
-              placeholder="4.90"
+            <AdminNumberInput
+              placeholder="4,90"
               value={
                 form.priceHT
               }
-              onChange={(e) =>
+              min={0}
+              onValueChange={(value) =>
                 setForm({
                   ...form,
 
                   priceHT:
-                    e.target
-                      .value,
+                    value == null ? "" : String(value),
                 })
               }
               required
@@ -634,8 +628,7 @@ export default function AddMethodForm({
               TVA %
             </label>
 
-            <input
-              type="number"
+            <AdminNumberInput
               placeholder="20"
               value={
                 form.vatRate
@@ -644,13 +637,14 @@ export default function AddMethodForm({
                 country ===
                 "CH"
               }
-              onChange={(e) =>
+              min={0}
+              max={100}
+              onValueChange={(value) =>
                 setForm({
                   ...form,
 
                   vatRate:
-                    e.target
-                      .value,
+                    value == null ? "" : String(value),
                 })
               }
             />
@@ -682,19 +676,19 @@ export default function AddMethodForm({
             Priorité
           </label>
 
-          <input
-            type="number"
+          <AdminNumberInput
+            integer
+            min={0}
             placeholder="1"
             value={
               form.sortOrder
             }
-            onChange={(e) =>
+            onValueChange={(value) =>
               setForm({
                 ...form,
 
                 sortOrder:
-                  e.target
-                    .value,
+                  value == null ? "" : String(value),
               })
             }
           />

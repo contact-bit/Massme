@@ -941,3 +941,80 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Fenêtre d’édition compacte */
+.shipping-edit-dialog .emp {
+  max-width: none;
+  gap: .7rem;
+}
+
+.shipping-edit-dialog .emp-head {
+  align-items: center;
+}
+
+.shipping-edit-dialog .emp-title {
+  margin-top: 0;
+}
+
+.shipping-edit-dialog .emp-meta {
+  margin-top: .45rem;
+}
+
+.shipping-edit-dialog .emp-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+  gap: .7rem;
+  align-items: start;
+}
+
+.shipping-edit-dialog .emp-card {
+  padding: .75rem;
+}
+
+.shipping-edit-dialog .emp-card-head {
+  margin-bottom: .6rem;
+}
+
+.shipping-edit-dialog .emp-card-head h3 {
+  margin-top: .5rem;
+  font-size: 1rem;
+}
+
+.shipping-edit-dialog .emp-weight-tiers {
+  margin-top: .65rem;
+  gap: .5rem;
+}
+
+.shipping-edit-dialog .emp-tier-row {
+  gap: .5rem;
+}
+
+.shipping-edit-dialog .emp-tier-add {
+  width: auto;
+  min-width: max-content;
+  height: 34px;
+  padding: 0 .85rem;
+  white-space: nowrap;
+}
+
+.shipping-edit-dialog .emp-tier-delete {
+  width: auto;
+  min-width: max-content;
+  height: 34px;
+  padding: 0 .85rem;
+  white-space: nowrap;
+}
+
+.shipping-edit-dialog .emp-footer {
+  padding-top: .65rem;
+}
+
+@media (max-width: 900px) {
+  .shipping-edit-dialog .emp-body {
+    grid-template-columns: 1fr;
+  }
+
+  .shipping-edit-dialog .emp-tier-delete {
+    width: 100%;
+  }
+}
