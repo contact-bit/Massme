@@ -229,6 +229,12 @@ export default function NavbarMobile({
             />
 
             <MobileLink
+              href={links.comfort}
+              label={t.nav.comfort}
+              onClick={closeMenu}
+            />
+
+            <MobileLink
               href={links.search}
               label={t.nav.search}
               onClick={closeMenu}
@@ -269,15 +275,6 @@ export default function NavbarMobile({
             locale={locale}
           />
 
-          {/* CTA */}
-
-          <Link
-            href={links.comfort}
-            className="vm-mobile-menu__cta"
-            onClick={closeMenu}
-          >
-            {t.nav.comfort}
-          </Link>
         </div>
       </aside>
     </>

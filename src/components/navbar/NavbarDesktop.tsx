@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 
 import {
   Search,
-  ShoppingBag,
 } from "lucide-react";
 
 import {
@@ -139,12 +138,16 @@ export default function NavbarDesktop({
             {t.nav.guides}
           </NavLink>
 
-          <NavLink href={links.faq}>
-            {t.nav.faq}
-          </NavLink>
-
           <NavLink href={links.directory}>
             {t.nav.directory}
+          </NavLink>
+
+          <NavLink href={links.comfort}>
+            {t.nav.comfort}
+          </NavLink>
+
+          <NavLink href={links.faq}>
+            {t.nav.faq}
           </NavLink>
 
           <NavLink href={links.contact}>
@@ -172,15 +175,6 @@ export default function NavbarDesktop({
           <Search size={24} />
         </Link>
 
-        {/* CTA */}
-
-        <Link
-          href={links.comfort}
-          className="vm-navbar-desktop__cta"
-        >
-          {t.nav.shop}
-          <ShoppingBag size={22} />
-        </Link>
       </div>
     </div>
   );

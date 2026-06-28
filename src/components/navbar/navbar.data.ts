@@ -82,9 +82,7 @@ const FR_TRANSLATIONS = {
 
     contact: "À propos",
 
-    comfort: "Coussin vitrectomie",
-
-    shop: "Boutique",
+    comfort: "Solution VitrectoMed",
 
     menu: "Menu",
   },  
@@ -194,9 +192,7 @@ const EN_TRANSLATIONS = {
 
     contact: "Contact",
 
-    comfort: "Vitrectomy pillow",
-
-    shop: "Shop",
+    comfort: "VitrectoMed solution",
 
     menu: "Menu",
   },
@@ -306,9 +302,7 @@ const DE_TRANSLATIONS = {
 
     contact: "Kontakt",
 
-    comfort: "Vitrektomie-Kissen",
-
-    shop: "Shop",
+    comfort: "VitrectoMed Lösung",
 
     menu: "Menü",
   },
@@ -418,9 +412,7 @@ const IT_TRANSLATIONS = {
 
     contact: "Contatto",
 
-    comfort: "Cuscino vitrectomia",
-
-    shop: "Shop",
+    comfort: "Soluzione VitrectoMed",
 
     menu: "Menu",
   },
@@ -530,9 +522,7 @@ const NL_TRANSLATIONS = {
 
     contact: "Contact",
 
-    comfort: "Vitrectomie-kussen",
-
-    shop: "Shop",
+    comfort: "VitrectoMed-oplossing",
 
     menu: "Menu",
   },
@@ -642,9 +632,7 @@ const ES_TRANSLATIONS = {
 
     contact: "Contacto",
 
-    comfort: "Cojín vitrectomía",
-
-    shop: "Tienda",
+    comfort: "Solución VitrectoMed",
 
     menu: "Menú",
   },
