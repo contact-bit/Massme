@@ -97,18 +97,18 @@
 }
 
 .public-shell .vm-mobile-navbar__burger {
-  border-color: rgba(10, 36, 107, .14);
-  border-radius: 6px;
-  background: #0a246b;
+  border-color: rgba(21, 166, 187, .42);
+  border-radius: 9px;
+  background: linear-gradient(135deg, #0a246b, #15a6bb);
   color: #fff;
-  box-shadow: none;
+  box-shadow: 0 10px 24px rgba(10, 36, 107, .2);
 }
 
 .public-shell .vm-mobile-navbar__burger:hover,
 .public-shell .vm-mobile-navbar__burger[aria-expanded="true"] {
-  border-color: #071b55;
-  background: #071b55;
-  box-shadow: none;
+  border-color: #15a6bb;
+  background: linear-gradient(135deg, #15a6bb, #0a246b);
+  box-shadow: 0 12px 26px rgba(10, 36, 107, .24);
 }
 
 .public-shell .vm-mobile-overlay {
@@ -789,10 +789,12 @@
   right: auto;
   left: 100%;
   transform: none;
-  border-left: 1px solid rgba(10, 36, 107, .12);
-  background: #fff;
-  color: #071b55;
-  box-shadow: none;
+  border-left: 2px solid rgba(21, 166, 187, .42);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(21, 166, 187, .12), transparent 28%),
+    #f4f7fb;
+  color: #0a246b;
+  box-shadow: -20px 0 50px rgba(10, 36, 107, .14);
 }
 
 .public-shell .vm-mobile-menu--open {
@@ -838,7 +840,7 @@
   border-bottom: 1px solid rgba(10, 36, 107, .10);
   border-radius: 0;
   background: transparent;
-  color: #071b55;
+  color: #0a246b;
   font-size: 1.16rem;
   font-weight: 850;
   box-shadow: none;
@@ -849,8 +851,8 @@
 .public-shell .vm-mobile-language__trigger:hover,
 .public-shell .vm-mobile-language__item:hover,
 .public-shell .vm-mobile-language__item--active {
-  background: transparent;
-  color: #0024d8;
+  background: rgba(214, 236, 244, .48);
+  color: #15a6bb;
   border-color: rgba(10, 36, 107, .10);
   transform: translateX(0);
 }
@@ -888,8 +890,8 @@
 }
 
 .public-shell .vm-mobile-menu__cta:hover {
-  background: #071b55;
-  border-color: #071b55;
+  background: #0a246b;
+  border-color: #0a246b;
   color: #fff;
   box-shadow: none;
   transform: none;

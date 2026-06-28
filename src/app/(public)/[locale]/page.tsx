@@ -161,46 +161,20 @@ export default async function HomePage({
               priority
             />
           </div>
-        </div>
 
-        <div className="home-exact-device-column">
-          <div className="home-exact-device-intro">
-            <span>APRÈS L’INTERVENTION</span>
-            <strong>Un appui pensé pour votre récupération</strong>
-          </div>
-
-          <aside className="home-exact-device">
-            <div className="home-exact-device-title">
-              <ShieldCheck />
-              <span>DISPOSITIF MÉDICAL</span>
-              <strong>Vitrectomed®</strong>
+          <aside className="home-exact-image-card">
+            <ShieldCheck aria-hidden="true" />
+            <div>
+              <h3>Position postopératoire prescrite&nbsp;?</h3>
+              <p>
+                Découvrez une solution pensée pour aider les patients à
+                respecter la position recommandée par leur chirurgien.
+              </p>
+              <Link href={`${prefix}/convalescence/coussin`}>
+                En savoir plus <ArrowRight />
+              </Link>
             </div>
-            <p className="home-exact-ce">🇫🇷 Dispositif médical marqué CE</p>
-            <Image
-              src="/brand/home-product.png"
-              alt="Dispositif médical Vitrectomed"
-              width={250}
-              height={190}
-            />
-            <ul>
-              <li><CheckCircle2 /> Aide au maintien de la position prescrite</li>
-              <li><CheckCircle2 /> Utilisation prolongée et assistée</li>
-              <li><CheckCircle2 /> Réduit les tensions cervicales et dorsales</li>
-              <li><CheckCircle2 /> Facilite la convalescence post-opératoire</li>
-            </ul>
-            <Link href={`${prefix}/convalescence/coussin`} className="home-exact-device-cta">
-              Découvrir le dispositif <ArrowRight />
-            </Link>
-            <Link href={`${prefix}/convalescence/coussin`} className="home-exact-device-more">
-              <Search /> En savoir plus sur Vitrectomed®
-            </Link>
           </aside>
-
-          <div className="home-exact-device-benefits" aria-label="Bénéfices du dispositif">
-            <span><ClipboardCheck /> Position</span>
-            <span><Heart /> Confort</span>
-            <span><Clock3 /> Récupération</span>
-          </div>
         </div>
       </section>
 
@@ -211,7 +185,7 @@ export default async function HomePage({
       </section>
 
       <section className="home-exact-panel home-exact-wrap">
-        <SectionTitle title="Vous venez d’être diagnostiqué ?" text="Les pathologies les plus fréquemment traitées par vitrectomie." center />
+        <SectionTitle title="Vous venez d’être diagnostiqué ?" text="Les pathologies les plus fréquemment traitées par vitrectomie." />
         <div className="home-exact-pathologies">
           {pathologyCards.map((card) => (
             <Link href={`${prefix}${card.href}`} className="home-exact-pathology" key={card.title}>
@@ -259,10 +233,10 @@ export default async function HomePage({
 
       <section className="home-exact-directory home-exact-wrap">
         <div className="home-exact-directory-copy">
-          <h2>Trouver un chirurgien spécialisé</h2>
-          <p className="home-exact-green">
-            Un annuaire conçu pour faciliter la mise en relation entre patients et chirurgiens spécialisés.
-          </p>
+          <SectionTitle
+            title="Trouver un chirurgien spécialisé"
+            text="Un annuaire conçu pour faciliter la mise en relation entre patients et chirurgiens spécialisés."
+          />
           <p>
             Trouvez un chirurgien spécialisé en vitrectomie ou un centre expert en chirurgie vitréo-rétinienne près de chez vous.
           </p>
@@ -280,11 +254,12 @@ export default async function HomePage({
         <div className="home-exact-map-search">
           <div className="home-exact-map" aria-hidden="true">
             <Image
-              src="/brand/home-specialist.png"
+              src="/brand/home-directory-map-v2.png"
               alt=""
               width={1536}
-              height={1024}
+              height={512}
               sizes="(max-width: 1260px) 100vw, 820px"
+              unoptimized
             />
             <div className="home-exact-map-badges">
               <span><ShieldCheck size={16} /> Annuaire vérifié</span>
@@ -308,8 +283,10 @@ export default async function HomePage({
 
       <section id="faq" className="home-exact-faq home-exact-wrap">
         <div className="home-exact-faq-title">
-          <h2>FAQ</h2>
-          <p>Les questions les plus fréquentes après une vitrectomie.</p>
+          <div>
+            <h2>FAQ</h2>
+            <p>Les questions les plus fréquentes après une vitrectomie.</p>
+          </div>
           <Link href={`${prefix}#faq`}>Voir toutes les questions <ArrowRight size={16} /></Link>
         </div>
         <div className="home-exact-faq-grid">
@@ -332,14 +309,12 @@ export default async function HomePage({
 function SectionTitle({
   title,
   text,
-  center = false,
 }: {
   title: string;
   text: string;
-  center?: boolean;
 }) {
   return (
-    <div className={`home-exact-section-title ${center ? "home-exact-section-title-center" : ""}`}>
+    <div className="home-exact-section-title">
       <h2>{title}</h2>
       <p>{text}</p>
     </div>

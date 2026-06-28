@@ -321,13 +321,59 @@ const drawLine = (
   y2: number,
   color: any,
   thickness = 1
-) =>
+  ) =>
   page.drawLine({
     start: { x: x1, y: y1 },
     end: { x: x2, y: y2 },
     thickness,
     color,
   });
+
+const getAddressName = (address?: ShippingAddress) =>
+  safeString(address?.name) ||
+  [address?.firstName, address?.lastName]
+    .map(safeString)
+    .filter(Boolean)
+    .join(" ");
+
+const wrapText = (
+  text: string,
+  font: { widthOfTextAtSize: (value: string, size: number) => number },
+  size: number,
+  maxWidth: number
+) => {
+  const value = safeString(text);
+  if (!value) return [];
+
+  const lines: string[] = [];
+  let current = "";
+
+  for (const word of value.split(/\s+/)) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      current = candidate;
+      continue;
+    }
+
+    if (current) lines.push(current);
+    current = "";
+
+    let fragment = "";
+    for (const character of word) {
+      const next = fragment + character;
+      if (fragment && font.widthOfTextAtSize(next, size) > maxWidth) {
+        lines.push(fragment);
+        fragment = character;
+      } else {
+        fragment = next;
+      }
+    }
+    current = fragment;
+  }
+
+  if (current) lines.push(current);
+  return lines;
+};
 
 const getItemUnitPrice = (it: OrderItem) => {
   // ✅ PRIORITÉ : ton vrai champ BDD
@@ -387,13 +433,14 @@ export async function generateInvoicePDF(
   const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const BLUE = rgb(0.14, 0.35, 0.86);
-  const BLUE_DARK = rgb(0.05, 0.18, 0.55);
-  const INK = rgb(0.06, 0.07, 0.1);
-  const MUTED = rgb(0.4, 0.45, 0.55);
-  const BORDER = rgb(0.86, 0.89, 0.93);
-  const LIGHT = rgb(0.94, 0.97, 1);
-  const GREEN = rgb(0.06, 0.63, 0.42);
+  // Palette officielle VitrectoMed
+  const BLUE = rgb(21 / 255, 166 / 255, 187 / 255); // #15A6BB
+  const BLUE_DARK = rgb(10 / 255, 36 / 255, 107 / 255); // #0A246B
+  const INK = rgb(10 / 255, 36 / 255, 107 / 255); // #0A246B
+  const MUTED = rgb(54 / 255, 81 / 255, 127 / 255); // teinte lisible dérivée
+  const BORDER = rgb(214 / 255, 236 / 255, 244 / 255); // #D6ECF4
+  const LIGHT = rgb(244 / 255, 247 / 255, 251 / 255); // #F4F7FB
+  const GREEN = rgb(21 / 255, 166 / 255, 187 / 255); // accent #15A6BB
 
   const M = 42;
   const GUTTER = 22;
@@ -495,8 +542,40 @@ export async function generateInvoicePDF(
     color: INK,
   });
 
+  const a = order.shippingAddress || {};
+  const billing = order.billingAddress || {};
+  const phone = a.phone || billing.phone;
+  const vatNumber = safeString(billing.vatNumber);
+  const clientTextWidth = rightW - 24;
+  const clientLineHeight = 12;
+  const clientEntries = [
+    {
+      text: getAddressName(a).toUpperCase(),
+      font: bold,
+    },
+    { text: safeString(a.address), font: regular },
+    {
+      text: `${safeString(a.postalCode)} ${safeString(a.city)}`.trim(),
+      font: regular,
+    },
+    { text: safeString(a.country || "FR"), font: regular },
+    { text: phone ? `Tél : ${safeString(phone)}` : "", font: regular },
+    {
+      text: vatNumber ? `TVA intracom. : ${vatNumber}` : "",
+      font: regular,
+    },
+  ].flatMap(({ text, font }) =>
+    wrapText(text, font, 9, clientTextWidth).map((line) => ({
+      text: line,
+      font,
+    }))
+  );
+
   const clientBoxYTop = headerY - 16;
-  const clientBoxH = 112;
+  const clientBoxH = Math.max(
+    112,
+    18 + 18 + clientEntries.length * clientLineHeight + 10
+  );
   const clientBoxY = clientBoxYTop - clientBoxH;
   page.drawRectangle({
     x: rightX,
@@ -523,51 +602,16 @@ export async function generateInvoicePDF(
     color: rgb(1, 1, 1),
   });
 
-  // ----- BLOC CLIENT (avec téléphone) -----
-  const a = order.shippingAddress || {};
-  const billing = order.billingAddress || {};
-
   let cy = clientBoxY + clientBoxH - 36;
-  const clientLines = [
-    safeString(a.name).toUpperCase(),
-    safeString(a.address),
-    `${safeString(a.postalCode)} ${safeString(a.city)}`.trim(),
-    safeString(a.country || "FR"),
-  ].filter(Boolean);
-
-  for (const line of clientLines) {
-    page.drawText(line, {
+  for (const entry of clientEntries) {
+    page.drawText(entry.text, {
       x: rightX + 12,
       y: cy,
       size: 9,
-      font: regular,
+      font: entry.font,
       color: INK,
     });
-    cy -= 13;
-  }
-
-  const phone = a.phone || billing.phone;
-  if (phone) {
-    page.drawText(`Tél : ${safeString(phone)}`, {
-      x: rightX + 12,
-      y: cy,
-      size: 9,
-      font: regular,
-      color: INK,
-    });
-    cy -= 13;
-  }
-
-  const vatNumber = safeString(billing.vatNumber);
-  if (vatNumber) {
-    page.drawText(`TVA intracom. : ${vatNumber}`, {
-      x: rightX + 12,
-      y: cy,
-      size: 9,
-      font: regular,
-      color: INK,
-    });
-    cy -= 13;
+    cy -= clientLineHeight;
   }
 
   const infoRowY = clientBoxY - 28;
@@ -661,10 +705,10 @@ export async function generateInvoicePDF(
 
   const tableTop = metaY - 22;
   const cols = [
-    { label: t.REFERENCE, w: 76 },
-    { label: t.DESIGNATION, w: 220 },
-    { label: t.QTY, w: 70 },
-    { label: t.UNIT_PRICE, w: 95 },
+    { label: t.REFERENCE, w: 70 },
+    { label: t.DESIGNATION, w: 205 },
+    { label: t.QTY, w: 52 },
+    { label: t.UNIT_PRICE, w: 92 },
     { label: t.TOTAL_PRICE, w: 92 },
   ];
   const tableX = leftX;
@@ -688,7 +732,6 @@ export async function generateInvoicePDF(
     cx2 += c.w;
   }
 
-  const rowH = 22;
   let y = tableTop - 18;
 
   const items = Array.isArray(order.items) ? order.items : [];
@@ -717,6 +760,15 @@ export async function generateInvoicePDF(
 
   const grid = rgb(0.82, 0.86, 0.93);
   for (const r of rows) {
+    const referenceLines = wrapText(
+      r.reference || "—",
+      regular,
+      8,
+      cols[0].w - 12
+    );
+    const nameLines = wrapText(r.name, regular, 8.5, cols[1].w - 12);
+    const rowLineCount = Math.max(referenceLines.length, nameLines.length, 1);
+    const rowH = Math.max(24, rowLineCount * 10.5 + 9);
     y -= rowH;
     page.drawRectangle({
       x: tableX,
@@ -727,42 +779,55 @@ export async function generateInvoicePDF(
       borderWidth: 1,
       color: rgb(1, 1, 1),
     });
-    let x = tableX;
-    page.drawText(r.reference || "—", {
-      x: x + 6,
-      y: y + 7,
+    const textTop = y + rowH - 12;
+    let lineY = textTop;
+    for (const line of referenceLines) {
+      page.drawText(line, {
+        x: tableX + 6,
+        y: lineY,
+        size: 8,
+        font: regular,
+        color: INK,
+      });
+      lineY -= 10.5;
+    }
+
+    let x = tableX + cols[0].w;
+    lineY = textTop;
+    for (const line of nameLines) {
+      page.drawText(line, {
+        x: x + 6,
+        y: lineY,
+        size: 8.5,
+        font: regular,
+        color: INK,
+      });
+      lineY -= 10.5;
+    }
+
+    const qtyX = tableX + cols[0].w + cols[1].w;
+    const qtyText = String(r.qty);
+    page.drawText(qtyText, {
+      x: qtyX + cols[2].w - regular.widthOfTextAtSize(qtyText, 8.5) - 6,
+      y: textTop,
       size: 8.5,
       font: regular,
       color: INK,
     });
-    x += cols[0].w;
-    page.drawText(r.name, {
-      x: x + 6,
-      y: y + 7,
+    const unitX = qtyX + cols[2].w;
+    const unitText = formatMoney(r.unit);
+    page.drawText(unitText, {
+      x: unitX + cols[3].w - regular.widthOfTextAtSize(unitText, 8.5) - 6,
+      y: textTop,
       size: 8.5,
       font: regular,
       color: INK,
     });
-    x += cols[1].w;
-    page.drawText(String(r.qty), {
-      x: x + 6,
-      y: y + 7,
-      size: 8.5,
-      font: regular,
-      color: INK,
-    });
-    x += cols[2].w;
-    page.drawText(formatMoney(r.unit), {
-      x: x + 6,
-      y: y + 7,
-      size: 8.5,
-      font: regular,
-      color: INK,
-    });
-    x += cols[3].w;
-    page.drawText(formatMoney(r.total), {
-      x: x + 6,
-      y: y + 7,
+    const totalX = unitX + cols[3].w;
+    const totalText = formatMoney(r.total);
+    page.drawText(totalText, {
+      x: totalX + cols[4].w - regular.widthOfTextAtSize(totalText, 8.5) - 6,
+      y: textTop,
       size: 8.5,
       font: regular,
       color: INK,

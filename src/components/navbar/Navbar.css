@@ -23,14 +23,24 @@
 
 .public-shell .vm-navbar {
   padding: 0;
-  border-bottom: 1px solid rgba(207, 217, 255, .55);
-  background: rgba(255, 255, 255, .96);
+  border-bottom: 1px solid rgba(214, 236, 244, .95);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(21, 166, 187, .08), transparent 24%),
+    rgba(244, 247, 251, .96);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
 
-.public-shell .vm-navbar::before {
-  display: none;
+.public-shell .vm-navbar::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, #0a246b 0%, #15a6bb 48%, #d6ecf4 100%);
+  opacity: .72;
 }
 
 /* =========================================================
@@ -136,6 +146,7 @@
 
 .public-shell .vm-navbar--scrolled {
   padding: 0;
+  box-shadow: 0 12px 32px rgba(10, 36, 107, .09) !important;
 }
 
 .vm-navbar--scrolled
@@ -341,5 +352,5 @@
   max-width: none !important;
   margin: 0 !important;
   border-radius: 0 !important;
-  box-shadow: none !important;
+  box-shadow: 0 6px 24px rgba(10, 36, 107, .04) !important;
 }

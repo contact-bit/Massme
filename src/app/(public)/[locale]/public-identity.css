@@ -5,13 +5,13 @@
 
 .public-shell {
   --vm-public-navy: #0a246b;
-  --vm-public-deep: #071b55;
+  --vm-public-deep: #0a246b;
   --vm-public-cyan: #15a6bb;
   --vm-public-sky: #d6ecf4;
-  --vm-public-bg: #f7fbff;
+  --vm-public-bg: #f4f7fb;
   --vm-public-paper: #ffffff;
-  --vm-public-text: #071b55;
-  --vm-public-muted: #52657d;
+  --vm-public-text: #0a246b;
+  --vm-public-muted: #36517f;
   --vm-public-line: rgba(10, 36, 107, .14);
   --vm-public-line-strong: rgba(10, 36, 107, .24);
   --vm-public-shadow: 0 18px 54px rgba(10, 36, 107, .10);
@@ -23,7 +23,7 @@
   line-height: 1.6;
   background:
     radial-gradient(circle at 76% 10%, rgba(21, 166, 187, .12), transparent 30%),
-    linear-gradient(180deg, #ffffff 0%, #f7fbff 45%, #ffffff 100%);
+    linear-gradient(180deg, #ffffff 0%, #f4f7fb 45%, #ffffff 100%);
   color: var(--vm-public-text);
 }
 
@@ -59,7 +59,7 @@
   color: var(--vm-public-text) !important;
   background:
     radial-gradient(circle at 70% 0%, rgba(21, 166, 187, .10), transparent 28%),
-    linear-gradient(180deg, #ffffff 0%, #f7fbff 52%, #ffffff 100%) !important;
+    linear-gradient(180deg, #ffffff 0%, #f4f7fb 52%, #ffffff 100%) !important;
 }
 
 .public-shell :is(
@@ -98,8 +98,8 @@
 .public-shell .footer :is(h1, h2, h3, h4),
 .public-shell .vm-footer :is(h1, h2, h3, h4),
 .public-shell .vm-footer__col h3 {
-  color: #ffffff !important;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, .32) !important;
+  color: var(--vm-public-navy) !important;
+  text-shadow: none !important;
 }
 
 .public-shell :is(p, li, span, label, .products-subtitle, .product-description, .product-recovery, .checkout-subtitle, .contact-subtitle, .contact-intro, .success-subtitle, .pathologies-intro, .pathologies-description, .products-hero__intro, .products-hero__description, .blog-description, .review-subtitle) {

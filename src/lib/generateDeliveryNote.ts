@@ -80,6 +80,45 @@ function getQuantity(item: Order["items"][number]) {
   return Math.max(1, Number(item?.quantity || 1));
 }
 
+function wrapText(
+  text: string,
+  font: { widthOfTextAtSize: (value: string, size: number) => number },
+  size: number,
+  maxWidth: number
+) {
+  const value = safeString(text);
+  if (!value) return [];
+
+  const lines: string[] = [];
+  let current = "";
+
+  for (const word of value.split(/\s+/)) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      current = candidate;
+      continue;
+    }
+
+    if (current) lines.push(current);
+    current = "";
+
+    let fragment = "";
+    for (const character of word) {
+      const next = fragment + character;
+      if (fragment && font.widthOfTextAtSize(next, size) > maxWidth) {
+        lines.push(fragment);
+        fragment = character;
+      } else {
+        fragment = next;
+      }
+    }
+    current = fragment;
+  }
+
+  if (current) lines.push(current);
+  return lines;
+}
+
 async function loadLogo(pdfDoc: PDFDocument) {
   try {
     const bytes = await readFile(LOGO_PATH);
@@ -144,11 +183,12 @@ export async function generateDeliveryNotePDF(
   const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const BLUE = rgb(0.14, 0.35, 0.86);
-  const INK = rgb(0.06, 0.07, 0.1);
-  const MUTED = rgb(0.4, 0.45, 0.55);
-  const BORDER = rgb(0.86, 0.89, 0.93);
-  const LIGHT = rgb(0.94, 0.97, 1);
+  // Palette officielle VitrectoMed
+  const BLUE = rgb(21 / 255, 166 / 255, 187 / 255); // #15A6BB
+  const INK = rgb(10 / 255, 36 / 255, 107 / 255); // #0A246B
+  const MUTED = rgb(54 / 255, 81 / 255, 127 / 255); // teinte lisible dérivée
+  const BORDER = rgb(214 / 255, 236 / 255, 244 / 255); // #D6ECF4
+  const LIGHT = rgb(244 / 255, 247 / 255, 251 / 255); // #F4F7FB
 
   const M = 42;
   const orderNumber = order.orderNumber || orderId;
@@ -209,34 +249,7 @@ export async function generateDeliveryNotePDF(
     ],
   });
 
-  const cardY = H - 250;
-  page.drawRectangle({
-    x: M,
-    y: cardY,
-    width: W - M * 2,
-    height: 116,
-    borderColor: BORDER,
-    borderWidth: 1,
-    color: rgb(1, 1, 1),
-  });
-
-  page.drawRectangle({
-    x: M,
-    y: cardY + 92,
-    width: W - M * 2,
-    height: 24,
-    color: LIGHT,
-  });
-
-  page.drawText("Adresse de livraison", {
-    x: M + 12,
-    y: cardY + 100,
-    size: 9,
-    font: bold,
-    color: INK,
-  });
-
-  const addressLines = relay
+  const addressSourceLines = relay
     ? [
         "Point relais",
         safeString(relay.name),
@@ -255,40 +268,96 @@ export async function generateDeliveryNotePDF(
         safeString(shipping.phone),
       ];
 
-  drawTextLines({
-    page,
-    x: M + 12,
-    y: cardY + 76,
-    size: 9,
-    font: regular,
-    color: INK,
-    lineHeight: 13,
-    lines: addressLines.filter(Boolean),
-  });
-
+  const separatorX = 312;
   const infoX = 330;
+  const addressTextWidth = separatorX - (M + 12) - 14;
+  const addressLines = addressSourceLines.flatMap((line) =>
+    wrapText(line, regular, 9, addressTextWidth)
+  );
   const info = [
     ["Transport", safeString(order.shippingMethod?.name) || "—"],
     ["Délai", safeString(order.shippingMethod?.delay) || "—"],
   ];
+  const infoValueWidth = W - M - (infoX + 72);
+  const wrappedInfo = info.map(([label, value]) => ({
+    label,
+    lines: wrapText(value, regular, 8, infoValueWidth),
+  }));
+  const addressContentHeight = Math.max(1, addressLines.length) * 13;
+  const infoContentHeight = wrappedInfo.reduce(
+    (height, row) => height + Math.max(14, row.lines.length * 11 + 4),
+    0
+  );
+  const cardTop = H - 210;
+  const cardHeaderH = 24;
+  const cardContentHeight = Math.max(addressContentHeight, infoContentHeight);
+  const cardH = Math.max(116, cardHeaderH + 20 + cardContentHeight + 12);
+  const cardY = cardTop - cardH;
+  page.drawRectangle({
+    x: M,
+    y: cardY,
+    width: W - M * 2,
+    height: cardH,
+    borderColor: BORDER,
+    borderWidth: 1,
+    color: rgb(1, 1, 1),
+  });
 
-  let infoY = cardY + 76;
-  for (const [label, value] of info) {
-    page.drawText(`${label} :`, {
+  page.drawRectangle({
+    x: M,
+    y: cardTop - cardHeaderH,
+    width: W - M * 2,
+    height: cardHeaderH,
+    color: LIGHT,
+  });
+
+  page.drawText("Adresse de livraison", {
+    x: M + 12,
+    y: cardTop - 16,
+    size: 9,
+    font: bold,
+    color: INK,
+  });
+
+  drawTextLines({
+    page,
+    x: M + 12,
+    y: cardTop - cardHeaderH - 20,
+    size: 9,
+    font: regular,
+    color: INK,
+    lineHeight: 13,
+    lines: addressLines,
+  });
+
+  page.drawLine({
+    start: { x: separatorX, y: cardY + 12 },
+    end: { x: separatorX, y: cardTop - cardHeaderH - 12 },
+    thickness: 1,
+    color: BORDER,
+  });
+
+  let infoY = cardTop - cardHeaderH - 20;
+  for (const row of wrappedInfo) {
+    page.drawText(`${row.label} :`, {
       x: infoX,
       y: infoY,
       size: 8,
       font: bold,
       color: MUTED,
     });
-    page.drawText(value, {
-      x: infoX + 72,
-      y: infoY,
-      size: 8,
-      font: regular,
-      color: INK,
-    });
-    infoY -= 14;
+    let valueY = infoY;
+    for (const line of row.lines) {
+      page.drawText(line, {
+        x: infoX + 72,
+        y: valueY,
+        size: 8,
+        font: regular,
+        color: INK,
+      });
+      valueY -= 11;
+    }
+    infoY -= Math.max(14, row.lines.length * 11 + 4);
   }
 
   let y = cardY - 38;
@@ -326,32 +395,59 @@ export async function generateDeliveryNotePDF(
 
   for (const item of items) {
     const quantity = getQuantity(item);
+    const referenceLines = wrapText(
+      getItemReference(item) || "—",
+      regular,
+      8,
+      98
+    );
+    const designationLines = wrapText(
+      getItemName(item),
+      bold,
+      8.5,
+      W - M - 52 - (M + 120) - 12
+    );
+    const rowLineCount = Math.max(
+      referenceLines.length,
+      designationLines.length,
+      1
+    );
+    const rowHeight = Math.max(24, rowLineCount * 11 + 6);
+    const rowTop = y;
 
-    page.drawText(getItemReference(item).slice(0, 24) || "—", {
-      x: M + 10,
-      y,
-      size: 8,
-      font: regular,
-      color: MUTED,
-    });
+    let lineY = rowTop;
+    for (const line of referenceLines) {
+      page.drawText(line, {
+        x: M + 10,
+        y: lineY,
+        size: 8,
+        font: regular,
+        color: MUTED,
+      });
+      lineY -= 11;
+    }
 
-    page.drawText(getItemName(item).slice(0, 46), {
-      x: M + 120,
-      y,
-      size: 8.5,
-      font: bold,
-      color: INK,
-    });
+    lineY = rowTop;
+    for (const line of designationLines) {
+      page.drawText(line, {
+        x: M + 120,
+        y: lineY,
+        size: 8.5,
+        font: bold,
+        color: INK,
+      });
+      lineY -= 11;
+    }
 
     page.drawText(String(quantity), {
       x: W - M - 30,
-      y,
+      y: rowTop,
       size: 8.5,
       font: bold,
       color: INK,
     });
 
-    y -= 20;
+    y -= rowHeight;
   }
 
   if (items.length === 0) {
