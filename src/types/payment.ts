@@ -1,14 +1,20 @@
-// ../types.ts
-import type { CountryCode, ShippingLocale } from "@/lib/shipping-i18n";
+import type {
+  CountryCode,
+  ShippingLocale,
+} from "@/lib/shipping-i18n";
 
-export type PaymentMethodProvider = "stripe" | "paypal" | "manual" | "bank_transfer";
+export type PaymentMethodProvider =
+  | "stripe"
+  | "paypal"
+  | "manual"
+  | "bank_transfer";
 
 export type BankTransferConfig = {
   accountHolder?: string;
   iban?: string;
   bic?: string;
   bankName?: string;
-  instructions?: string; // simple, ou i18n si tu veux plus tard
+  instructions?: string;
 };
 
 export type PaymentMethod = {

@@ -169,8 +169,6 @@ export default function AdminDirectoryPage() {
     setLoading(true);
 
     try {
-      const pass =
-        localStorage.getItem("admin_password") || "";
       const params = new URLSearchParams();
 
       if (isConcreteCountry(activeCountry)) {
@@ -183,11 +181,7 @@ export default function AdminDirectoryPage() {
             ? `?${params.toString()}`
             : ""
         }`,
-        {
-          headers: {
-            "x-admin-password": pass,
-          },
-        }
+        { cache: "no-store" }
       );
       const payload = await response.json();
 
@@ -412,8 +406,6 @@ export default function AdminDirectoryPage() {
     setSaving(true);
 
     try {
-      const pass =
-        localStorage.getItem("admin_password") || "";
       const url = editingId
         ? `/api/admin/directory/${editingId}`
         : "/api/admin/directory";
@@ -426,7 +418,6 @@ export default function AdminDirectoryPage() {
         method,
         headers: {
           "Content-Type": "application/json",
-          "x-admin-password": pass,
         },
         body: JSON.stringify(
           editingId
@@ -462,14 +453,10 @@ export default function AdminDirectoryPage() {
     entry: DirectoryEntry,
     nextStatus: DirectoryEntryStatus
   ) {
-    const pass =
-      localStorage.getItem("admin_password") || "";
-
     await fetch(`/api/admin/directory/${entry.id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-admin-password": pass,
       },
       body: JSON.stringify({
         data: {
@@ -491,14 +478,8 @@ export default function AdminDirectoryPage() {
       return;
     }
 
-    const pass =
-      localStorage.getItem("admin_password") || "";
-
     await fetch(`/api/admin/directory/${entry.id}`, {
       method: "DELETE",
-      headers: {
-        "x-admin-password": pass,
-      },
     });
 
     if (editingId === entry.id) {

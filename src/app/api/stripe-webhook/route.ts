@@ -5,7 +5,6 @@ import { getStripe } from "@/lib/stripe";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { computePrice } from "@/lib/pricing";
-import { createOrUpdateOrder } from "@/server/shipstation/client";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 import { scheduleReviewEmailForOrder } from "@/server/reviewEmailScheduler";
 import { sendOrderEmails, OrderEmailPayload } from "@/lib/mailer";
@@ -80,21 +79,6 @@ async function buffer(stream: ReadableStream<Uint8Array>) {
 /* =====================================================
    HELPERS (general)
 ===================================================== */
-function asString(v: unknown, fallback = ""): string {
-  return typeof v === "string" ? v : fallback;
-}
-
-function isNonEmptyString(v: unknown): v is string {
-  return typeof v === "string" && v.trim().length > 0;
-}
-
-function pickFirst<T>(...values: T[]): T | undefined {
-  for (const v of values) {
-    if (v !== undefined && v !== null) return v;
-  }
-  return undefined;
-}
-
 function normalizeEmail(v: unknown): string | null {
   const e = typeof v === "string" ? v.trim().toLowerCase() : "";
   if (!e || !e.includes("@")) return null;
@@ -183,131 +167,6 @@ async function getStripePaymentFee(
 
     return null;
   }
-}
-
-/* =====================================================
-   HELPERS (ShipStation mapping)
-===================================================== */
-function buildShipStationBody(orderData: any, orderId: string) {
-  const orderNumber =
-    asString(pickFirst(orderData?.orderNumber, orderData?.number, orderData?.id), orderId) || orderId;
-
-  const orderDate = (() => {
-    const d = pickFirst(orderData?.createdAt, orderData?.created_at, orderData?.created);
-    if ((d as any)?.toDate) return (d as any).toDate().toISOString();
-    if (typeof d === "string") return d;
-    if (d instanceof Date) return d.toISOString();
-    return new Date().toISOString();
-  })();
-
-  const customerEmail =
-    normalizeEmail(orderData?.email) || normalizeEmail(orderData?.customer_email) || undefined;
-
-  const ship = orderData?.shippingAddress || orderData?.shipTo || {};
-  const bill = orderData?.billingAddress || orderData?.billTo || ship || {};
-
-  const billTo = {
-    name:
-      asString(
-        pickFirst(
-          bill?.name,
-          bill?.fullName,
-          bill?.firstName && bill?.lastName ? `${bill.firstName} ${bill.lastName}` : undefined
-        ),
-        ""
-      ).trim() || "Customer",
-    street1: asString(pickFirst(bill?.street1, bill?.address1, bill?.line1, bill?.address), "").trim(),
-    city: asString(pickFirst(bill?.city, bill?.town), "").trim(),
-    postalCode: asString(pickFirst(bill?.postalCode, bill?.zip, bill?.postcode), "").trim(),
-    country: asString(pickFirst(bill?.country, bill?.countryCode), "FR").trim(),
-    phone: asString(pickFirst(bill?.phone, bill?.phoneNumber), "").trim(),
-  };
-
-  const shipTo = {
-    name:
-      asString(
-        pickFirst(
-          ship?.name,
-          ship?.fullName,
-          ship?.firstName && ship?.lastName ? `${ship.firstName} ${ship.lastName}` : undefined
-        ),
-        ""
-      ).trim() || billTo.name || "Customer",
-    street1:
-      asString(pickFirst(ship?.street1, ship?.address1, ship?.line1, ship?.address), "").trim() ||
-      billTo.street1,
-    city: asString(pickFirst(ship?.city, ship?.town), "").trim() || billTo.city,
-    postalCode:
-      asString(pickFirst(ship?.postalCode, ship?.zip, ship?.postcode), "").trim() || billTo.postalCode,
-    country: asString(pickFirst(ship?.country, ship?.countryCode), billTo.country || "FR").trim(),
-    phone: asString(pickFirst(ship?.phone, ship?.phoneNumber), "").trim() || billTo.phone,
-  };
-
-  if (!shipTo.street1 || !shipTo.city || !shipTo.postalCode || !shipTo.country) {
-    throw new Error(
-      `ShipTo incomplete: street1=${!!shipTo.street1}, city=${!!shipTo.city}, postalCode=${!!shipTo.postalCode}, country=${!!shipTo.country}`
-    );
-  }
-
-  const rawItems = Array.isArray(orderData?.items) ? orderData.items : [];
-  const items = rawItems
-    .map((it: any) => {
-      const q = Math.max(1, Math.floor(Number(it?.quantity ?? 1) || 1));
-      const candidate =
-        it?.unitPrice ??
-        it?.unit_price ??
-        it?.priceHT ??
-        it?.price_ht ??
-        it?.price ??
-        it?.amount ??
-        it?.total ??
-        0;
-
-      let unit = Number(candidate ?? 0) || 0;
-      if (Number.isInteger(unit) && unit >= 1000) unit = unit / 100;
-
-      const imageUrl =
-        (isNonEmptyString(it?.imageUrl) && it.imageUrl) ||
-        (isNonEmptyString(it?.image_url) && it.image_url) ||
-        (isNonEmptyString(it?.image) && it.image) ||
-        (isNonEmptyString(it?.thumbnail) && it.thumbnail) ||
-        (isNonEmptyString(it?.photoUrl) && it.photoUrl) ||
-        (Array.isArray(it?.images) && isNonEmptyString(it.images?.[0]) ? it.images[0] : undefined) ||
-        (Array.isArray(it?.images) && isNonEmptyString(it.images?.[0]?.url) ? it.images[0].url : undefined) ||
-        undefined;
-
-      return {
-        sku: isNonEmptyString(it?.sku) ? it.sku : isNonEmptyString(it?.id) ? String(it.id) : undefined,
-        name: asString(pickFirst(it?.name, it?.title, it?.productName), "Produit").trim(),
-        quantity: q,
-        unitPrice: Math.max(0, unit),
-        ...(imageUrl ? { imageUrl } : {}),
-      };
-    })
-    .filter((x: any) => x.name && x.quantity > 0);
-
-  if (items.length === 0) {
-    throw new Error("ShipStation payload has no items (check orderData.items mapping).");
-  }
-
-  const amountPaidTTC = Number(
-    orderData?.totals?.totalTTC ?? orderData?.totalTTC ?? orderData?.amount_total ?? 0
-  );
-  const shippingAmount = Number(orderData?.totals?.shipping ?? orderData?.shippingMethod?.priceTTC ?? 0);
-  const taxAmount = Number(orderData?.totals?.tax ?? orderData?.totals?.vat ?? 0);
-
-  return {
-    orderNumber,
-    orderDate,
-    orderStatus: "awaiting_shipment" as const,
-    customerEmail,
-    billTo,
-    shipTo,
-    items,
-    ...(Number.isFinite(amountPaidTTC) && amountPaidTTC > 0 ? { amountPaid: amountPaidTTC } : {}),
-    ...(Number.isFinite(shippingAmount) && shippingAmount > 0 ? { shippingAmount } : {}),
-    ...(Number.isFinite(taxAmount) && taxAmount > 0 ? { taxAmount } : {}),
-  };
 }
 
 /* =====================================================
@@ -596,71 +455,6 @@ export async function POST(req: Request) {
         "debug.reviewFallbackError": msg,
         "reviewEmail.lastErrorAt": new Date(),
         "reviewEmail.lastError": msg,
-      },
-      { merge: true }
-    );
-  }
-
-  /* =====================================================
-     2) SHIPSTATION (non bloquant)
-  ===================================================== */
-  try {
-    const snapAfter = await ref.get();
-    const orderDataAfter = snapAfter.exists ? (snapAfter.data() as any) : savedOrder;
-
-    const pushedAt = Boolean(orderDataAfter?.shipstation?.pushedAt);
-    const pushedWithImages = Boolean(orderDataAfter?.shipstation?.pushedWithImages);
-
-    const hasAnyImage =
-      Array.isArray(orderDataAfter?.items) &&
-      orderDataAfter.items.some((it: any) => {
-        const url =
-          it?.imageUrl ||
-          it?.image_url ||
-          it?.image ||
-          it?.thumbnail ||
-          it?.photoUrl ||
-          (Array.isArray(it?.images) ? it.images?.[0] : null) ||
-          (Array.isArray(it?.images) ? it.images?.[0]?.url : null);
-
-        return typeof url === "string" && url.trim().length > 0;
-      });
-
-    const shouldPush = !pushedAt || (!pushedWithImages && hasAnyImage);
-
-    if (shouldPush) {
-      const ssBody = buildShipStationBody(orderDataAfter, orderId);
-      const ssOrder = await createOrUpdateOrder(ssBody);
-
-      const bodyHasImages =
-        Array.isArray((ssBody as any)?.items) &&
-        (ssBody as any).items.some(
-          (x: any) => typeof x?.imageUrl === "string" && x.imageUrl.trim().length > 0
-        );
-
-      await ref.set(
-        {
-          shipstation: {
-            pushedAt: new Date(),
-            pushedWithImages: bodyHasImages,
-            orderNumber: ssBody.orderNumber,
-            response: ssOrder ?? null,
-          },
-        },
-        { merge: true }
-      );
-    }
-  } catch (err: any) {
-    const msg = String(err?.message || err);
-    console.error("[stripe/webhook] shipstation push ERROR (non bloquant):", msg);
-
-    await ref.set(
-      {
-        shipstation: {
-          pushedAt: null,
-          lastErrorAt: new Date(),
-          lastError: msg,
-        },
       },
       { merge: true }
     );

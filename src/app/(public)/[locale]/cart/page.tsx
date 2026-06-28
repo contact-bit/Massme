@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 /* ----------------------------------
    🌍 LOCALES
 ---------------------------------- */
-type Locale = "fr" | "en" | "es" | "de" | "it" | "nl" | "pt";
+type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
 const UI: Record<
   Locale,
@@ -66,14 +66,6 @@ const UI: Record<
     quantity: "Aantal",
     price: "Prijs",
     total: "Totaal",
-  },
-  pt: {
-    title: "Seu carrinho",
-    empty: "Seu carrinho está vazio.",
-    product: "Produto",
-    quantity: "Quantidade",
-    price: "Preço",
-    total: "Total",
   },
 };
 

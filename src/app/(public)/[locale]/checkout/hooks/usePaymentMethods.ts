@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PaymentMethod } from "@/app/admin/payments/types";
+import type { PaymentMethod } from "@/types/payment";
 
 export default function usePaymentMethods({ country }: { country: string }) {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);

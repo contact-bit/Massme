@@ -60,11 +60,6 @@ export default function ProductForm({
     setLoading(true);
 
     try {
-      const pass =
-        localStorage.getItem(
-          "admin_password"
-        ) || "";
-
       const res = await fetch(
         "/api/admin/products",
         {
@@ -73,9 +68,6 @@ export default function ProductForm({
           headers: {
             "Content-Type":
               "application/json",
-
-            "x-admin-password":
-              pass,
           },
 
           body: JSON.stringify({

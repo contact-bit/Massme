@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   const isLoginPage = pathname === "/admin/login";
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(isLoginPage);
 
   useEffect(() => {
     const storedTheme =
@@ -59,25 +59,44 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const token = localStorage.getItem("admin_token");
-    const role = (localStorage.getItem("admin_role") || "admin") as AdminRole;
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_password");
+    localStorage.removeItem("admin_role");
 
-    if (!token && !isLoginPage) {
+    if (isLoginPage) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const validateSession = async () => {
+      const response = await fetch("/api/admin/session", {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        router.replace("/admin/login");
+        return;
+      }
+
+      const data = (await response.json()) as { role?: AdminRole };
+      const role = data.role === "logistics" ? "logistics" : "admin";
+
+      if (!isAllowedForRole(pathname, role)) {
+        router.replace(role === "logistics" ? "/admin/logistics" : "/admin");
+        return;
+      }
+
+      if (!cancelled) setIsReady(true);
+    };
+
+    validateSession().catch(() => {
       router.replace("/admin/login");
-      return;
-    }
+    });
 
-    if (token && isLoginPage) {
-      router.replace(role === "logistics" ? "/admin/logistics" : "/admin");
-      return;
-    }
-
-    if (token && !isLoginPage && !isAllowedForRole(pathname, role)) {
-      router.replace(role === "logistics" ? "/admin/logistics" : "/admin");
-      return;
-    }
-
-    setIsReady(true);
+    return () => {
+      cancelled = true;
+    };
   }, [router, pathname, isLoginPage]);
 
   if (!isLoginPage && !isReady) return null;

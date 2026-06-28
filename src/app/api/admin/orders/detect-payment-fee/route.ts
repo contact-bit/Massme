@@ -188,7 +188,7 @@ async function getPayPalFee(
 }
 
 export async function POST(req: Request) {
-  const auth = assertAdmin(req);
+  const auth = await assertAdmin(req);
   if (auth) return auth;
 
   try {

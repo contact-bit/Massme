@@ -20,7 +20,6 @@ const VAT_BY_COUNTRY: Record<string, number> = {
   ES: 21,
   IT: 22,
   NL: 21,
-  PT: 23,
   IE: 23,
   AT: 20,
   LU: 17,

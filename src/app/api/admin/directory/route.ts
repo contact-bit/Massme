@@ -25,7 +25,7 @@ function isCountryCode(value: unknown): value is CountryCode {
 }
 
 export async function GET(req: Request) {
-  const unauthorized = assertAdmin(req);
+  const unauthorized = await assertAdmin(req);
   if (unauthorized) return unauthorized;
 
   const url = new URL(req.url);
@@ -71,7 +71,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const unauthorized = assertAdmin(req);
+  const unauthorized = await assertAdmin(req);
   if (unauthorized) return unauthorized;
 
   const body = await req.json().catch(() => null);

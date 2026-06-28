@@ -10,7 +10,7 @@ export async function DELETE(
   req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = assertAdmin(req);
+  const auth = await assertAdmin(req);
   if (auth) return auth;
 
   try {
@@ -42,7 +42,7 @@ export async function PATCH(
   req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const roleOrResponse = assertAdminOrLogistics(req);
+  const roleOrResponse = await assertAdminOrLogistics(req);
 
 if (roleOrResponse instanceof Response) {
   return roleOrResponse;
@@ -54,7 +54,7 @@ if (roleOrResponse instanceof Response) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
 
-    const role = getRoleFromRequest(req);
+    const role = await getRoleFromRequest(req);
 
     const body = await req.json().catch(() => ({} as any));
     const addressUpdates = {

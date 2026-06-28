@@ -311,27 +311,6 @@ export default function AdminExportPage() {
 
     try {
 
-      const adminPassword =
-        localStorage.getItem(
-          "admin_password"
-        );
-
-      if (
-        !adminPassword ||
-        adminPassword.length <
-          5
-      ) {
-
-        alert(
-          "Session admin expirée, reconnecte-toi."
-        );
-
-        window.location.href =
-          "/admin/login";
-
-        return;
-      }
-
       const finalHref =
         buildHref(
           format
@@ -345,11 +324,6 @@ export default function AdminExportPage() {
         await fetch(
           finalHref,
           {
-            headers: {
-              "x-admin-password":
-                adminPassword,
-            },
-
             cache:
               "no-store",
           }

@@ -174,10 +174,6 @@ export async function POST(req: Request) {
         status: "pending",
       },
 
-      shipstation: {
-        pushedAt: null,
-      },
-
       source: "checkout_bank_transfer",
     });
 

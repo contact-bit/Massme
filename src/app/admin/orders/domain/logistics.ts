@@ -1,7 +1,5 @@
 import type { Order, ShippingStatus } from "./types";
 
-export type LogisticsSource = "shipstation" | "manual";
-
 export function getEffectiveShippingStatus(order: Order): ShippingStatus {
   const raw = String(order.shippingStatus || "").toLowerCase();
 
@@ -101,28 +99,6 @@ export function getShipDate(order: Order): string | null {
     (typeof (order as any)?.shippedAt === "string" ? (order as any).shippedAt : null) ||
     null
   );
-}
-
-export function hasShipStationLink(order: Order): boolean {
-  return !!(
-    (order as any)?.fulfillment?.shipstation?.orderId ||
-    (order as any)?.fulfillment?.shipstation?.orderKey ||
-    (order as any)?.shipstation?.lastWebhookAt
-  );
-}
-
-export function getLogisticsSource(order: Order): LogisticsSource {
-  return hasShipStationLink(order) ? "shipstation" : "manual";
-}
-
-export function getLogisticsSourceLabel(source: LogisticsSource) {
-  return source === "shipstation" ? "ShipStation" : "Interne";
-}
-
-export function getLogisticsSourceUi(source: LogisticsSource) {
-  return source === "shipstation"
-    ? { bg: "#EEF2FF", color: "#4338CA", border: "#C7D2FE" }
-    : { bg: "#F9FAFB", color: "#374151", border: "#E5E7EB" };
 }
 
 export function getLogisticStatus(order: Order): "to_prepare" | "shipped" {

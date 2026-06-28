@@ -283,10 +283,8 @@ export function OrderDetails({
 
     async function loadCatalogProducts() {
       try {
-        const pass = localStorage.getItem("admin_password") || "";
         const response = await fetch("/api/admin/products", {
           cache: "no-store",
-          headers: { "x-admin-password": pass },
         });
         const data = await response.json();
 
@@ -499,14 +497,12 @@ export function OrderDetails({
   async function saveAllDetails() {
     try {
       setSavingAll(true);
-      const pass = localStorage.getItem("admin_password") || "";
       const response = await fetch(
         `/api/admin/orders/${encodeURIComponent(order.id)}`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            "x-admin-password": pass,
           },
           body: JSON.stringify({
             billingAddress: billingDraft,
@@ -637,11 +633,6 @@ export function OrderDetails({
     try {
       setSavingContact(true);
 
-      const pass =
-        localStorage.getItem(
-          "admin_password"
-        ) || "";
-
       const res = await fetch(
         `/api/admin/orders/${encodeURIComponent(
           order.id
@@ -651,7 +642,6 @@ export function OrderDetails({
           headers: {
             "Content-Type":
               "application/json",
-            "x-admin-password": pass,
           },
           body: JSON.stringify({
             contact: contactDraft,
@@ -714,11 +704,6 @@ export function OrderDetails({
     try {
       setDetectingFee(true);
 
-      const pass =
-        localStorage.getItem(
-          "admin_password"
-        ) || "";
-
       const res = await fetch(
         "/api/admin/orders/detect-payment-fee",
         {
@@ -726,7 +711,6 @@ export function OrderDetails({
           headers: {
             "Content-Type":
               "application/json",
-            "x-admin-password": pass,
           },
           body: JSON.stringify({
             orderId: order.id,
@@ -824,11 +808,6 @@ export function OrderDetails({
         );
       }
 
-      const pass =
-        localStorage.getItem(
-          "admin_password"
-        ) || "";
-
       const res = await fetch(
         `/api/admin/orders/${encodeURIComponent(
           order.id
@@ -838,7 +817,6 @@ export function OrderDetails({
           headers: {
             "Content-Type":
               "application/json",
-            "x-admin-password": pass,
           },
           body: JSON.stringify({
             paymentFee: {
@@ -924,11 +902,6 @@ export function OrderDetails({
     try {
       setSavingAddress(true);
 
-      const pass =
-        localStorage.getItem(
-          "admin_password"
-        ) || "";
-
       const nextAddress = {
         ...addressDraft,
       };
@@ -942,7 +915,6 @@ export function OrderDetails({
           headers: {
             "Content-Type":
               "application/json",
-            "x-admin-password": pass,
           },
           body: JSON.stringify({
             [kind]: nextAddress,

@@ -32,27 +32,6 @@ export function useOrders(
     useRef(false);
 
   /* =========================================================
-     AUTH
-  ========================================================= */
-
-  const requirePassOrRedirect =
-    () => {
-      const pass =
-        localStorage.getItem(
-          "admin_password"
-        ) || "";
-
-      if (!pass) {
-        window.location.href =
-          "/admin/login";
-
-        return null;
-      }
-
-      return pass;
-    };
-
-  /* =========================================================
      FETCH ORDERS
   ========================================================= */
 
@@ -62,19 +41,9 @@ export function useOrders(
       setError("");
 
       try {
-        const pass =
-          requirePassOrRedirect();
-
-        if (!pass) return;
-
         const res = await fetch(
           "/api/admin/orders",
           {
-            headers: {
-              "x-admin-password":
-                pass,
-            },
-
             cache: "no-store",
           }
         );
@@ -223,11 +192,6 @@ export function useOrders(
 
         if (!ok) return;
 
-        const pass =
-          requirePassOrRedirect();
-
-        if (!pass) return;
-
         if (deleting[id]) {
           return;
         }
@@ -245,11 +209,6 @@ export function useOrders(
               )}`,
               {
                 method: "DELETE",
-
-                headers: {
-                  "x-admin-password":
-                    pass,
-                },
 
                 cache: "no-store",
               }
@@ -308,11 +267,6 @@ export function useOrders(
         order: Order,
         nextStatus: ShippingStatus
       ) => {
-        const pass =
-          requirePassOrRedirect();
-
-        if (!pass) return;
-
         const isPickup =
           order.shippingMethod?.name
             ?.toLowerCase()
@@ -338,9 +292,6 @@ export function useOrders(
                 headers: {
                   "Content-Type":
                     "application/json",
-
-                  "x-admin-password":
-                    pass,
                 },
 
                 body: JSON.stringify(
@@ -429,11 +380,6 @@ export function useOrders(
         order: Order,
         shippingAddress: Record<string, unknown>
       ) => {
-        const pass =
-          requirePassOrRedirect();
-
-        if (!pass) return;
-
         try {
           const res =
             await fetch(
@@ -446,9 +392,6 @@ export function useOrders(
                 headers: {
                   "Content-Type":
                     "application/json",
-
-                  "x-admin-password":
-                    pass,
                 },
 
                 body: JSON.stringify({
@@ -504,11 +447,6 @@ export function useOrders(
         order: Order,
         billingAddress: Record<string, unknown>
       ) => {
-        const pass =
-          requirePassOrRedirect();
-
-        if (!pass) return;
-
         try {
           const res =
             await fetch(
@@ -521,9 +459,6 @@ export function useOrders(
                 headers: {
                   "Content-Type":
                     "application/json",
-
-                  "x-admin-password":
-                    pass,
                 },
 
                 body: JSON.stringify({

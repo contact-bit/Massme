@@ -7,7 +7,7 @@ import {
 
 import type { Locale } from "@/lib/i18n";
 
-import type { PaymentMethod } from "@/app/admin/payments/types";
+import type { PaymentMethod } from "@/types/payment";
 
 import {
   FaPaypal,

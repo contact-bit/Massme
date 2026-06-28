@@ -6,7 +6,7 @@ import "@/app/admin/styles/product-form.css";
 /* =====================================================
    TYPES
 ===================================================== */
-type Lang = "fr" | "en" | "es" | "de" | "it" | "nl" | "pt";
+type Lang = "fr" | "en" | "es" | "de" | "it" | "nl";
 type Market =
   | "FR"
   | "EN"
@@ -16,7 +16,6 @@ type Market =
   | "ES"
   | "IT"
   | "NL"
-  | "PT"
   | "CH";
 type Currency = "EUR" | "CHF";
 
@@ -57,7 +56,7 @@ type ProductAddon = {
 /* =====================================================
    CONSTANTES
 ===================================================== */
-const LANGS: Lang[] = ["fr", "en", "es", "de", "it", "nl", "pt"];
+const LANGS: Lang[] = ["fr", "en", "es", "de", "it", "nl"];
 
 const LANG_META: Record<
   Lang,
@@ -73,7 +72,6 @@ const LANG_META: Record<
   de: { flag: "🇩🇪", label: "Allemagne", code: "DE" },
   it: { flag: "🇮🇹", label: "Italie", code: "IT" },
   nl: { flag: "🇳🇱", label: "Pays-Bas", code: "NL" },
-  pt: { flag: "🇵🇹", label: "Portugal", code: "PT" },
 };
 
 const MARKETS: { code: Market; label: string; currency: Currency }[] = [
@@ -85,7 +83,6 @@ const MARKETS: { code: Market; label: string; currency: Currency }[] = [
   { code: "ES", label: "Espagne", currency: "EUR" },
   { code: "IT", label: "Italie", currency: "EUR" },
   { code: "NL", label: "Pays-Bas", currency: "EUR" },
-  { code: "PT", label: "Portugal", currency: "EUR" },
   { code: "CH", label: "Suisse", currency: "CHF" },
 ];
 
@@ -96,7 +93,6 @@ const MARKET_BY_LANG: Partial<Record<Lang, Market>> = {
   de: "DE",
   it: "IT",
   nl: "NL",
-  pt: "PT",
 };
 
 const emptyLangRecord = (): Record<Lang, string> =>
@@ -151,7 +147,6 @@ export default function ProductEditForm({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [adminPassword, setAdminPassword] = useState("");
 
   const [imageUrl, setImageUrl] = useState("");
   const [productCode, setProductCode] = useState("");
@@ -387,7 +382,6 @@ export default function ProductEditForm({
     e.preventDefault();
     setError(null);
 
-    if (!adminPassword) return setError("Mot de passe admin requis");
     if (!name.fr.trim()) return setError("Nom FR obligatoire");
     if (!markets.length) return setError("Sélectionne au moins un pays");
 
@@ -497,7 +491,6 @@ export default function ProductEditForm({
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-password": adminPassword,
         },
         body: JSON.stringify(payload),
       });
@@ -1385,16 +1378,6 @@ export default function ProductEditForm({
 
       <div className="pf-save-bar">
         <div className="pf-save-controls">
-          <label className="pf-admin-password">
-            <span>Mot de passe admin</span>
-            <input
-              type="password"
-              className="admin-input"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-            />
-          </label>
-
           <div className="admin-form-actions pf-final-actions">
             <button
               type="button"

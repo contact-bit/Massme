@@ -32,20 +32,6 @@ type Tab = {
   icon: React.ReactNode;
 };
 
-function getStoredRole(): AdminRole {
-  if (typeof window === "undefined") {
-    return "admin";
-  }
-
-  const storedRole = localStorage.getItem(
-    "admin_role"
-  );
-
-  return storedRole === "logistics"
-    ? "logistics"
-    : "admin";
-}
-
 function getStoredTheme(): "dark" | "light" {
   if (typeof window === "undefined") {
     return "dark";
@@ -67,8 +53,8 @@ export default function AdminNavbar() {
     "dark" | "light"
   >(getStoredTheme);
 
-  const [role] =
-    useState<AdminRole>(getStoredRole);
+  const [role, setRole] =
+    useState<AdminRole>("admin");
 
   useEffect(() => {
     document.documentElement.dataset.adminTheme =
@@ -84,6 +70,20 @@ export default function AdminNavbar() {
       window.removeEventListener("scroll", onScroll);
     };
   }, [theme]);
+
+  useEffect(() => {
+    fetch("/api/admin/session", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unauthorized");
+        return response.json() as Promise<{ role?: AdminRole }>;
+      })
+      .then((data) => {
+        setRole(data.role === "logistics" ? "logistics" : "admin");
+      })
+      .catch(() => {
+        router.replace("/admin/login");
+      });
+  }, [router]);
 
   const tabs: Tab[] = useMemo(() => {
     if (role === "logistics") {
@@ -165,11 +165,10 @@ export default function AdminNavbar() {
     return pathname === href || pathname?.startsWith(`${href}/`);
   }
 
-  function logout() {
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("admin_role");
-    localStorage.removeItem("admin_password");
+  async function logout() {
+    await fetch("/api/admin/session", { method: "DELETE" }).catch(() => null);
     router.replace("/admin/login");
+    router.refresh();
   }
 
   function toggleTheme() {

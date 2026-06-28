@@ -146,7 +146,7 @@ export default function AdminOrdersPage() {
 
   const handleMarkAsPaid = async (id: string) => {
     try {
-      await fetch("/api/mark-as-paid", {
+      const response = await fetch("/api/admin/orders/mark-paid", {
         method: "POST",
 
         headers: {
@@ -157,6 +157,10 @@ export default function AdminOrdersPage() {
           orderId: id,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error("Impossible de marquer la commande comme payée");
+      }
 
       await fetchOrders();
 

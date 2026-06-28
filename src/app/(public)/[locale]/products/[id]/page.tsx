@@ -418,52 +418,6 @@ const TRANSLATIONS:
       "Snelle verzending",
   },
 
-  pt: {
-    loading:
-      "A carregar…",
-
-    notFound:
-      "Produto não encontrado.",
-
-    addToCart:
-      "Adicionar ao carrinho",
-
-    added:
-      "Adicionado ao carrinho",
-
-    priceExclTax:
-      "Preço sem IVA",
-
-    vat:
-      "IVA",
-
-    priceInclTax:
-      "Preço com IVA",
-
-    recoveryTitle:
-      "Concebido para recuperação pós-vitrectomia",
-
-    recoveryText:
-      "Concebido para melhorar o conforto durante longos períodos de recuperação.",
-
-    badge1:
-      "Conforto médico premium",
-
-    badge2:
-      "Suporte posição ventral",
-
-    badge3:
-      "Envio rápido Europa",
-
-    trust1:
-      "Concebido para recuperação retinal",
-
-    trust2:
-      "Conforto cervical otimizado",
-
-    trust3:
-      "Envio rápido",
-  },
 };
 
 /* =====================================================
@@ -518,7 +472,6 @@ function normalizeMarketKey(
     "DE",
     "ES",
     "NL",
-    "PT",
     "BE",
     "CH",
   ];

@@ -18,7 +18,7 @@ function getIdFromUrl(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const unauthorized = assertAdmin(req);
+  const unauthorized = await assertAdmin(req);
   if (unauthorized) return unauthorized;
 
   const id = getIdFromUrl(req);
@@ -70,7 +70,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const unauthorized = assertAdmin(req);
+  const unauthorized = await assertAdmin(req);
   if (unauthorized) return unauthorized;
 
   const id = getIdFromUrl(req);

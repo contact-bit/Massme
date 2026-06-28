@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  ADMIN_SESSION_COOKIE,
+  ADMIN_SESSION_MAX_AGE,
+  createAdminSessionToken,
+} from "@/server/adminSession";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const LOGISTICS_PASSWORD = process.env.LOGISTICS_PASSWORD;
@@ -91,11 +96,24 @@ export async function POST(req: Request) {
 
   attemptsByIp.set(ip, { count: 0, blockedUntil: 0 });
 
-  return NextResponse.json(
+  const sessionToken = await createAdminSessionToken(role);
+  const response = NextResponse.json(
     {
       ok: true,
       role,
     },
     { status: 200 }
   );
+
+  response.cookies.set({
+    name: ADMIN_SESSION_COOKIE,
+    value: sessionToken,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: ADMIN_SESSION_MAX_AGE,
+  });
+
+  return response;
 }

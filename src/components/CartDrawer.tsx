@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 /* ------------------------------------------
    🌍 LOCALES
 ------------------------------------------ */
-type Locale = "fr" | "en" | "es" | "de" | "it" | "nl" | "pt";
+type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
 const SUPPORTED_LOCALES: Locale[] = [
   "fr",
@@ -16,7 +16,6 @@ const SUPPORTED_LOCALES: Locale[] = [
   "de",
   "it",
   "nl",
-  "pt",
 ];
 
 /* ------------------------------------------
@@ -94,16 +93,6 @@ const TRANSLATIONS: Record<
     totalHT: "Totaal excl. btw",
     totalTTC: "Totaal incl. btw",
     checkout: "Afrekenen",
-  },
-  pt: {
-    title: "Seu carrinho",
-    empty: "Seu carrinho está vazio.",
-    remove: "Remover",
-    subtotalHT: "Subtotal sem IVA",
-    vat: "IVA",
-    totalHT: "Total sem IVA",
-    totalTTC: "Total com IVA",
-    checkout: "Finalizar compra",
   },
 };
 

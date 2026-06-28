@@ -1,11 +1,12 @@
 // src/app/api/admin/products/[id]/route.ts
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { assertAdmin } from "@/server/adminAuth";
 
 /* ----------------------------------
    TYPES
 ---------------------------------- */
-type Lang = "fr" | "en" | "es" | "de" | "it" | "nl" | "pt";
+type Lang = "fr" | "en" | "es" | "de" | "it" | "nl";
 type Market =
   | "FR"
   | "EN"
@@ -15,12 +16,11 @@ type Market =
   | "ES"
   | "IT"
   | "NL"
-  | "PT"
   | "CH";
 type Currency = "EUR" | "CHF";
 
-const LANGS: Lang[] = ["fr", "en", "es", "de", "it", "nl", "pt"];
-const MARKETS: Market[] = ["FR", "EN", "BE", "DE", "AT", "ES", "IT", "NL", "PT", "CH"];
+const LANGS: Lang[] = ["fr", "en", "es", "de", "it", "nl"];
+const MARKETS: Market[] = ["FR", "EN", "BE", "DE", "AT", "ES", "IT", "NL", "CH"];
 
 const CURRENCY_BY_MARKET: Record<Market, Currency> = {
   FR: "EUR",
@@ -31,7 +31,6 @@ const CURRENCY_BY_MARKET: Record<Market, Currency> = {
   ES: "EUR",
   IT: "EUR",
   NL: "EUR",
-  PT: "EUR",
   CH: "CHF",
 };
 
@@ -136,28 +135,9 @@ function normalizeMarketSettingsRecord(
 /* ----------------------------------
    COMMON SECURITY
 ---------------------------------- */
-function getAdminPassword(req: Request): { ok: boolean; error?: NextResponse } {
-  const headerPwd = req.headers.get("x-admin-password") || "";
-  const envPwd = process.env.ADMIN_PASSWORD || "";
-
-  if (!envPwd) {
-    return {
-      ok: false,
-      error: NextResponse.json(
-        { error: "ADMIN_PASSWORD manquant côté serveur" },
-        { status: 500 }
-      ),
-    };
-  }
-
-  if (headerPwd !== envPwd) {
-    return {
-      ok: false,
-      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
-    };
-  }
-
-  return { ok: true };
+async function getAdminAuthorization(req: Request) {
+  const error = await assertAdmin(req);
+  return error ? { ok: false, error } : { ok: true };
 }
 
 /* ----------------------------------
@@ -179,7 +159,7 @@ function getIdFromUrl(req: Request): string | null {
 ================================== */
 export async function DELETE(req: Request) {
   try {
-    const sec = getAdminPassword(req);
+    const sec = await getAdminAuthorization(req);
     if (!sec.ok && sec.error) return sec.error;
 
     const id = getIdFromUrl(req);
@@ -207,7 +187,7 @@ export async function DELETE(req: Request) {
 ================================== */
 export async function PATCH(req: Request) {
   try {
-    const sec = getAdminPassword(req);
+    const sec = await getAdminAuthorization(req);
     if (!sec.ok && sec.error) return sec.error;
 
     const id = getIdFromUrl(req);

@@ -17,7 +17,7 @@ import { LOGO_URL } from "@/components/navbar/navbar.data";
 
 import "../styles/shop/components/footer.css";
 
-type Locale = "fr" | "en" | "es" | "de" | "it" | "nl" | "pt";
+type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
 const SUPPORTED_LOCALES: Locale[] = [
   "fr",
@@ -26,7 +26,6 @@ const SUPPORTED_LOCALES: Locale[] = [
   "de",
   "it",
   "nl",
-  "pt",
 ];
 
 const CONTENT: Record<
@@ -231,37 +230,6 @@ const CONTENT: Record<
       { label: "Privacybeleid", href: "/confidentialite" },
       { label: "Cookies", href: "/cookies" },
       { label: "Gebruiksvoorwaarden", href: "/cgu" },
-    ],
-  },
-  pt: {
-    about: "Sobre",
-    resources: "Recursos",
-    information: "Informações",
-    contact: "Contato",
-    medicalNotice:
-      "VitrectoMed ajuda pacientes a compreender a vitrectomia e a recuperação pós-operatória.",
-    contactEmail: "Enviar email",
-    press: "Imprensa",
-    copyright: "© 2026 VitrectoMed — Todos os direitos reservados.",
-    tagline: "Compreender. Preparar. Recuperar.",
-    socialAria: "Redes sociais",
-    aboutLinks: [
-      { label: "Nossa missão", href: "" },
-      { label: "Comitê editorial", href: "/contact" },
-      { label: "Metodologia", href: "/blog" },
-      { label: "Referências médicas", href: "/pathologies" },
-    ],
-    resourceLinks: [
-      { label: "Guias práticos", href: "/blog" },
-      { label: "Vídeos explicativos", href: "/operation" },
-      { label: "Depoimentos de pacientes", href: "/temoignage" },
-      { label: "Perguntas frequentes", href: "/faq" },
-    ],
-    infoLinks: [
-      { label: "Aviso legal", href: "/mentions-legales" },
-      { label: "Política de privacidade", href: "/confidentialite" },
-      { label: "Cookies", href: "/cookies" },
-      { label: "Termos de uso", href: "/cgu" },
     ],
   },
 };

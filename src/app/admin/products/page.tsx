@@ -66,7 +66,6 @@ const MARKET_FLAG: Record<string, string> = {
   ES: "🇪🇸",
   IT: "🇮🇹",
   NL: "🇳🇱",
-  PT: "🇵🇹",
   CH: "🇨🇭",
 };
 
@@ -202,19 +201,8 @@ export default function ProductsAdminPage() {
       setLoading(true);
 
       try {
-        const pass =
-          localStorage.getItem(
-            "admin_password"
-          ) || "";
-
         const res = await fetch(
-          "/api/admin/products",
-          {
-            headers: {
-              "x-admin-password":
-                pass,
-            },
-          }
+          "/api/admin/products"
         );
 
         const json =
@@ -238,20 +226,10 @@ export default function ProductsAdminPage() {
         return;
       }
 
-      const pass =
-        localStorage.getItem(
-          "admin_password"
-        ) || "";
-
       await fetch(
         `/api/admin/products/${id}`,
         {
           method: "DELETE",
-
-          headers: {
-            "x-admin-password":
-              pass,
-          },
         }
       );
 
@@ -263,11 +241,6 @@ export default function ProductsAdminPage() {
       setTogglingId(product.id);
 
       try {
-        const pass =
-          localStorage.getItem(
-            "admin_password"
-          ) || "";
-
         const nextGlobalActive =
           !product.isActive;
         const nextMarketActive =
@@ -299,8 +272,6 @@ export default function ProductsAdminPage() {
             headers: {
               "Content-Type":
                 "application/json",
-              "x-admin-password":
-                pass,
             },
             body: JSON.stringify({
               data: {
@@ -357,11 +328,6 @@ export default function ProductsAdminPage() {
       setTogglingId(toggleKey);
 
       try {
-        const pass =
-          localStorage.getItem(
-            "admin_password"
-          ) || "";
-
         const nextMarketActive =
           !isActiveForMarket(
             product,
@@ -386,8 +352,6 @@ export default function ProductsAdminPage() {
             headers: {
               "Content-Type":
                 "application/json",
-              "x-admin-password":
-                pass,
             },
             body: JSON.stringify({
               data: {

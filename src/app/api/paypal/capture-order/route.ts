@@ -4,7 +4,6 @@ import paypal from "@paypal/checkout-server-sdk";
 import { getPayPalClient } from "@/lib/paypal-client";
 import { dbAdmin } from "@/lib/firebase.admin";
 import { sendOrderEmails } from "@/lib/mailer"; // ⬅️ sendReviewEmail supprimé ici
-import { createOrUpdateOrder } from "@/server/shipstation/client";
 import { finalizePaidOrder } from "@/server/orders/finalizePaidOrder";
 import { generateOrderNumber } from "@/server/orders/generateOrderNumber";
 import { ensureInvoiceNumberForOrder } from "@/server/orders/generateInvoiceNumber";
@@ -16,21 +15,6 @@ function toCents(n: unknown): number {
   const v = Number(n);
   if (!Number.isFinite(v)) return 0;
   return Math.round(v * 100);
-}
-
-function asString(v: unknown, fallback = ""): string {
-  return typeof v === "string" ? v : fallback;
-}
-
-function isNonEmptyString(v: unknown): v is string {
-  return typeof v === "string" && v.trim().length > 0;
-}
-
-function pickFirst<T>(...values: T[]): T | undefined {
-  for (const v of values) {
-    if (v !== undefined && v !== null) return v;
-  }
-  return undefined;
 }
 
 function normalizeEmail(v: unknown): string | null {
@@ -56,204 +40,6 @@ function getPayPalCaptureFee(captureObj: any) {
         ? fee.currency_code.toUpperCase()
         : "EUR",
     feeSource: "paypal_capture",
-  };
-}
-
-function buildShipStationBody(orderData: any, orderDocId: string) {
-  const orderNumber =
-    asString(pickFirst(orderData?.orderNumber, orderData?.number, orderData?.id), orderDocId) ||
-    orderDocId;
-
-  const orderDate = (() => {
-    const d = pickFirst(orderData?.createdAt, orderData?.created_at, orderData?.created);
-    if (d?.toDate) return d.toDate().toISOString();
-    if (typeof d === "string") return d;
-    if (d instanceof Date) return d.toISOString();
-    return new Date().toISOString();
-  })();
-
-  const customerEmail = isNonEmptyString(orderData?.email)
-    ? orderData.email
-    : isNonEmptyString(orderData?.customer_email)
-    ? orderData.customer_email
-    : undefined;
-
-  const totalTTC = Number(
-    orderData?.totals?.totalTTC ?? orderData?.total ?? orderData?.amount_total ?? 0
-  );
-
-  const ship =
-    pickFirst(
-      orderData?.shippingAddress,
-      orderData?.shipping_address,
-      orderData?.shipping?.address,
-      orderData?.shipTo
-    ) || {};
-
-  const bill =
-    pickFirst(
-      orderData?.billingAddress,
-      orderData?.billing_address,
-      orderData?.billing?.address,
-      orderData?.billTo
-    ) || ship || {};
-
-  const billTo = {
-    name:
-      asString(
-        pickFirst(
-          bill?.name,
-          bill?.fullName,
-          bill?.full_name,
-          bill?.contactName,
-          bill?.contact_name,
-          bill?.firstName && bill?.lastName ? `${bill.firstName} ${bill.lastName}` : undefined
-        ),
-        ""
-      ).trim() || "Customer",
-    street1: asString(
-      pickFirst(
-        bill?.street1,
-        bill?.address1,
-        bill?.line1,
-        bill?.addressLine1,
-        bill?.address_line_1,
-        bill?.address,
-        bill?.street,
-        bill?.streetAddress,
-        bill?.street_address
-      ),
-      ""
-    ).trim(),
-    street2:
-      asString(
-        pickFirst(
-          bill?.street2,
-          bill?.address2,
-          bill?.line2,
-          bill?.addressLine2,
-          bill?.address_line_2,
-          bill?.complement,
-          bill?.addressComplement
-        ),
-        ""
-      ).trim() || undefined,
-    city: asString(pickFirst(bill?.city, bill?.town, bill?.locality), "").trim(),
-    state: asString(pickFirst(bill?.state, bill?.province, bill?.region), "").trim() || undefined,
-    postalCode: asString(
-      pickFirst(bill?.postalCode, bill?.zip, bill?.postcode, bill?.zipCode, bill?.zip_code),
-      ""
-    ).trim(),
-    country: asString(pickFirst(bill?.country, bill?.countryCode, bill?.country_code), "FR").trim(),
-    phone:
-      asString(pickFirst(bill?.phone, bill?.phoneNumber, bill?.mobile), "").trim() || undefined,
-  };
-
-  const shipTo = {
-    name:
-      asString(
-        pickFirst(
-          ship?.name,
-          ship?.fullName,
-          ship?.full_name,
-          ship?.contactName,
-          ship?.contact_name,
-          ship?.firstName && ship?.lastName ? `${ship.firstName} ${ship.lastName}` : undefined
-        ),
-        ""
-      ).trim() || billTo.name || "Customer",
-    street1:
-      asString(
-        pickFirst(
-          ship?.street1,
-          ship?.address1,
-          ship?.line1,
-          ship?.addressLine1,
-          ship?.address_line_1,
-          ship?.address,
-          ship?.street,
-          ship?.streetAddress,
-          ship?.street_address
-        ),
-        ""
-      ).trim() || billTo.street1,
-    street2:
-      asString(
-        pickFirst(
-          ship?.street2,
-          ship?.address2,
-          ship?.line2,
-          ship?.addressLine2,
-          ship?.address_line_2,
-          ship?.complement,
-          ship?.addressComplement
-        ),
-        ""
-      ).trim() || undefined,
-    city: asString(pickFirst(ship?.city, ship?.town, ship?.locality), "").trim() || billTo.city,
-    state: asString(pickFirst(ship?.state, ship?.province, ship?.region), "").trim() || undefined,
-    postalCode:
-      asString(
-        pickFirst(ship?.postalCode, ship?.zip, ship?.postcode, ship?.zipCode, ship?.zip_code),
-        ""
-      ).trim() || billTo.postalCode,
-    country: asString(
-      pickFirst(ship?.country, ship?.countryCode, ship?.country_code),
-      billTo.country || "FR"
-    ).trim(),
-    phone:
-      asString(pickFirst(ship?.phone, ship?.phoneNumber, ship?.mobile), "").trim() || billTo.phone,
-  };
-
-  if (!shipTo.street1 || !shipTo.city || !shipTo.postalCode || !shipTo.country) {
-    throw new Error(
-      `ShipTo incomplete: street1=${!!shipTo.street1}, city=${!!shipTo.city}, postalCode=${!!shipTo.postalCode}, country=${!!shipTo.country}`
-    );
-  }
-
-  const rawItems =
-    pickFirst(orderData?.items, orderData?.line_items, orderData?.cart?.items, orderData?.products) ??
-    [];
-
-  const items = Array.isArray(rawItems)
-    ? rawItems
-        .map((it: any) => {
-          const q = Math.max(1, Math.floor(Number(it?.quantity ?? it?.qty ?? 1) || 1));
-
-          const candidate =
-            it?.unitPrice ??
-            it?.unit_price ??
-            it?.price ??
-            it?.priceTTC ??
-            it?.price_ttc ??
-            it?.priceHT ??
-            it?.amount ??
-            it?.total ??
-            it?.totalTTC ??
-            it?.totals?.totalTTC;
-
-          let unit = Number(candidate ?? 0) || 0;
-          if (Number.isInteger(unit) && unit >= 1000) unit = unit / 100;
-
-          return {
-            sku: isNonEmptyString(it?.sku) ? it.sku : isNonEmptyString(it?.id) ? String(it.id) : undefined,
-            name: asString(pickFirst(it?.name, it?.title, it?.productName), "").trim(),
-            quantity: q,
-            unitPrice: Math.max(0, unit),
-          };
-        })
-        .filter((it: any) => it.name.length > 0)
-    : [];
-
-  return {
-    orderNumber,
-    orderDate,
-    orderStatus: "awaiting_shipment" as const,
-    customerEmail,
-    billTo,
-    shipTo,
-    items,
-    ...(Number.isFinite(totalTTC) && totalTTC > 0 ? { amountPaid: totalTTC } : {}),
   };
 }
 
@@ -316,7 +102,6 @@ export async function POST(req: Request) {
         capturedCurrency: capturedCurrency ?? null,
         orderDocId: null,
         emailSent: false,
-        shipstationPushed: false,
         warning: "orderDocId introuvable, commande non mise à jour et email non envoyé",
       });
     }
@@ -332,7 +117,6 @@ export async function POST(req: Request) {
       normalizeEmail(existing?.customer_email);
 
     const alreadySent = Boolean(existing?.emails?.sent);
-    const alreadyPushedToShipstation = Boolean(existing?.shipstation?.pushedAt);
 
     await orderRef.set(
       {
@@ -397,49 +181,6 @@ export async function POST(req: Request) {
       await orderRef.set({ orderNumber }, { merge: true });
       snapAfter = await orderRef.get();
       orderData = snapAfter.exists ? (snapAfter.data() as any) : null;
-    }
-
-    let shipstationPushed = false;
-    let shipstationError: string | null = null;
-
-    if (!alreadyPushedToShipstation) {
-      try {
-        const ssBody = buildShipStationBody(orderData, orderDocId);
-
-        if (!ssBody.items || ssBody.items.length === 0) {
-          throw new Error("ShipStation payload has no items (check orderData items mapping).");
-        }
-
-        const ssOrder = await createOrUpdateOrder(ssBody);
-
-        await orderRef.set(
-          {
-            shipstation: {
-              pushedAt: new Date(),
-              orderNumber: ssBody.orderNumber,
-              response: ssOrder ?? null,
-            },
-          },
-          { merge: true }
-        );
-
-        shipstationPushed = true;
-      } catch (err: any) {
-        shipstationError = String(err?.message || err);
-
-        await orderRef.set(
-          {
-            shipstation: {
-              pushedAt: null,
-              lastErrorAt: new Date(),
-              lastError: shipstationError,
-            },
-          },
-          { merge: true }
-        );
-      }
-    } else {
-      shipstationPushed = true;
     }
 
     let emailSent = false;
@@ -534,8 +275,6 @@ export async function POST(req: Request) {
       capturedCurrency: capturedCurrency ?? null,
       orderDocId,
       emailSent,
-      shipstationPushed,
-      shipstationError,
     });
   } catch (e: any) {
     return NextResponse.json(

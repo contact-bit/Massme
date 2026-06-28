@@ -8,8 +8,7 @@ export type Locale =
   | "es"
   | "de"
   | "it"
-  | "nl"
-  | "pt";
+  | "nl";
 
 /* =====================================================
    🌍 MARCHÉS (BUSINESS / TVA / PRIX)
@@ -22,7 +21,6 @@ export type Market =
   | "DE"
   | "ES"
   | "NL"
-  | "PT"
   | "BE"
   | "CH";
 
@@ -38,5 +36,4 @@ export const MARKET_BY_LOCALE: Record<Locale, Market> = {
   de: "DE",
   it: "IT",
   nl: "NL",
-  pt: "PT",
 };

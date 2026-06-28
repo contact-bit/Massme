@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
 
 import {
+  assertAdmin,
   assertAdminOrLogistics,
 } from "@/server/adminAuth";
 
@@ -48,7 +49,7 @@ export async function GET(
   req: Request
 ) {
   const roleOrResponse =
-    assertAdminOrLogistics(req);
+    await assertAdminOrLogistics(req);
 
   if (
     roleOrResponse instanceof
@@ -321,28 +322,8 @@ export async function GET(
 export async function DELETE(
   req: Request
 ) {
-  const roleOrResponse =
-    assertAdminOrLogistics(req);
-
-  if (
-    roleOrResponse instanceof
-    Response
-  ) {
-    return roleOrResponse;
-  }
-
-  const role =
-    roleOrResponse;
-
-  if (role !== "admin") {
-    return NextResponse.json(
-      {
-        error:
-          "Unauthorized",
-      },
-      { status: 401 }
-    );
-  }
+  const auth = await assertAdmin(req);
+  if (auth) return auth;
 
   const {
     searchParams,

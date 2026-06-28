@@ -6,19 +6,7 @@ import { buildExportData } from "@/server/exports/buildExportData";
 import { buildCSV } from "@/server/exports/csv";
 import { buildExcel } from "@/server/exports/excel";
 import { buildPDF } from "@/server/exports/pdf";
-
-/* ================= AUTH ================= */
-
-function assertAdmin(req: Request) {
-  const pass = req.headers.get("x-admin-password") || "";
-  const expected = process.env.ADMIN_PASSWORD || "";
-
-  if (!expected || pass !== expected) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  return null;
-}
+import { assertAdmin } from "@/server/adminAuth";
 
 /* ================= DATE ================= */
 
@@ -63,7 +51,7 @@ function toYM(date: Date) {
 
 export async function GET(req: Request) {
   try {
-    const auth = assertAdmin(req);
+    const auth = await assertAdmin(req);
     if (auth) return auth;
 
     const { searchParams } = new URL(req.url);

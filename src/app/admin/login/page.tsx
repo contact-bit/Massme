@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import "./login.css";
@@ -27,17 +27,6 @@ export default function AdminLoginPage() {
       !loading
     );
   }, [password, loading]);
-
-  useEffect(() => {
-    const token =
-      localStorage.getItem(
-        "admin_token"
-      );
-
-    if (token) {
-      router.replace("/admin");
-    }
-  }, [router]);
 
   const handleLogin = async () => {
     if (!canSubmit) return;
@@ -84,23 +73,6 @@ export default function AdminLoginPage() {
 
         return;
       }
-
-      localStorage.setItem(
-        "admin_token",
-        "true"
-      );
-
-      localStorage.setItem(
-        "admin_password",
-        password
-      );
-
-      localStorage.setItem(
-        "admin_role",
-        data?.role === "logistics"
-          ? "logistics"
-          : "admin"
-      );
 
       setInfo(
         "Connexion sécurisée..."

@@ -577,18 +577,7 @@ function useReviewEmails() {
     setError(null);
 
     try {
-      const pass =
-        localStorage.getItem("admin_password") || "";
-
-      if (!pass) {
-        window.location.href = "/admin/login";
-        return;
-      }
-
       const res = await fetch("/api/admin/orders", {
-        headers: {
-          "x-admin-password": pass,
-        },
         cache: "no-store",
       });
 

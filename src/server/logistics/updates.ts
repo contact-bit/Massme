@@ -1,5 +1,3 @@
-export type ShippingMode = "manual" | "shipstation";
-
 export type ShippingStatus =
   | "pending"
   | "preparing"
@@ -15,18 +13,6 @@ type BuildManualUpdateParams = {
   carrier?: ShippingCarrier;
   actor?: string | null;
   existingShipDate?: string | null;
-};
-
-type BuildShipStationPreparingParams = {
-  shipstationOrderId?: string | number | null;
-  shipstationOrderKey?: string | null;
-};
-
-type BuildShipStationShippedParams = {
-  trackingNumber?: string | null;
-  carrier?: ShippingCarrier;
-  shipDate?: string | null;
-  orderNumber?: string | null;
 };
 
 function cleanString(v: unknown): string | null {
@@ -64,15 +50,6 @@ function buildTrackingBlock(params: {
     carrier: cleanCarrier(params.carrier) ?? null,
     shipDate: cleanString(params.shipDate) ?? null,
   };
-}
-
-export function getShippingModeFromOrder(order: any): ShippingMode {
-  const raw =
-    cleanString(order?.shippingMode) ||
-    cleanString(order?.logistics?.shippingMode) ||
-    cleanString(order?.fulfillment?.shippingMode);
-
-  return raw === "manual" ? "manual" : "shipstation";
 }
 
 export function buildManualShippingUpdate(params: BuildManualUpdateParams) {
@@ -123,75 +100,4 @@ export function buildManualShippingUpdate(params: BuildManualUpdateParams) {
   }
 
   return updates;
-}
-
-export function buildShipStationPreparingUpdate(
-  params: BuildShipStationPreparingParams
-) {
-  const nowIso = new Date().toISOString();
-
-  return {
-    shippingMode: "shipstation",
-
-    fulfillment: {
-      status: "preparing",
-      shipstation: {
-        orderKey: cleanString(params.shipstationOrderKey) ?? null,
-        orderId:
-          params.shipstationOrderId === undefined
-            ? null
-            : params.shipstationOrderId ?? null,
-      },
-      updatedAt: nowIso,
-    },
-
-    logisticsAudit: {
-      lastActor: "shipstation_push",
-      lastSource: "shipstation",
-      lastAction: "push_order",
-      updatedAt: nowIso,
-    },
-  };
-}
-
-export function buildShipStationShippedUpdate(
-  params: BuildShipStationShippedParams
-) {
-  const shipDate = cleanString(params.shipDate) || new Date().toISOString();
-
-  const tracking = buildTrackingBlock({
-    trackingNumber: params.trackingNumber,
-    carrier: params.carrier,
-    shipDate,
-  });
-
-  return {
-    shippingMode: "shipstation",
-    shippingStatus: "shipped",
-    trackingNumber: tracking.trackingNumber,
-    carrier: tracking.carrier,
-    shippedAt: shipDate,
-
-    shippingTracking: tracking,
-
-    fulfillment: {
-      status: "shipped",
-      tracking,
-      updatedAt: new Date().toISOString(),
-    },
-
-    shipstation: {
-      lastWebhookAt: new Date().toISOString(),
-      lastWebhookOrderNumber: cleanString(params.orderNumber) ?? null,
-      lastWebhookTracking: tracking.trackingNumber,
-      lastWebhookCarrier: tracking.carrier,
-    },
-
-    logisticsAudit: {
-      lastActor: "shipstation_webhook",
-      lastSource: "shipstation",
-      lastAction: "shipment_update",
-      updatedAt: new Date().toISOString(),
-    },
-  };
 }

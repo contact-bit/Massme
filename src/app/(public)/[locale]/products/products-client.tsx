@@ -101,18 +101,6 @@ const UI: Record<
     yes: "Ja",
     no: "Nee",
   },
-  pt: {
-    noProduct: "Nenhum produto disponível.",
-    view: "Ver produto →",
-    add: "Adicionar ao carrinho 🛒",
-    priceHT: "Preço sem IVA",
-    vat: "IVA",
-    priceTTC: "Preço com IVA",
-    chooseVariant: "Escolha o seu modèle",
-    extraCover: "Capa adicional de bambu",
-    yes: "Sim",
-    no: "Não",
-  },
 };
 
 /* =====================================================

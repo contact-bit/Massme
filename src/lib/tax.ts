@@ -13,7 +13,7 @@ export type TaxResult = {
    🇪🇺 EU COUNTRIES (utile par défaut)
 ---------------------------------- */
 const EU_COUNTRIES = new Set([
-  "FR","DE","ES","IT","NL","BE","LU","PT","IE","AT",
+  "FR","DE","ES","IT","NL","BE","LU","IE","AT",
   "FI","SE","DK","PL","CZ","SK","HU","RO","BG","HR",
   "SI","LT","LV","EE","CY","MT","GR",
 ]);

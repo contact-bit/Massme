@@ -1,9 +1,10 @@
 // src/app/api/admin/products/route.ts
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase.admin";
+import { assertAdmin } from "@/server/adminAuth";
 
-type Market = "FR" | "BE" | "DE" | "AT" | "ES" | "IT" | "NL" | "PT" | "CH";
-const MARKETS: Market[] = ["FR", "BE", "DE", "AT", "ES", "IT", "NL", "PT", "CH"];
+type Market = "FR" | "BE" | "DE" | "AT" | "ES" | "IT" | "NL" | "CH";
+const MARKETS: Market[] = ["FR", "BE", "DE", "AT", "ES", "IT", "NL", "CH"];
 
 function isMarket(x: any): x is Market {
   return typeof x === "string" && (MARKETS as string[]).includes(x);
@@ -14,21 +15,8 @@ function isMarket(x: any): x is Market {
 ============================ */
 export async function GET(req: Request) {
   try {
-    const headerPwd = req.headers.get("x-admin-password") || "";
-    const envPwd = process.env.ADMIN_PASSWORD || "";
-
-    if (!envPwd) {
-      return NextResponse.json(
-        { ok: false, error: "ADMIN_PASSWORD non configuré côté serveur" },
-        { status: 500 }
-      );
-    }
-    if (!headerPwd || headerPwd !== envPwd) {
-      return NextResponse.json(
-        { ok: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const auth = await assertAdmin(req);
+    if (auth) return auth;
 
     const url = new URL(req.url);
     const marketParam = url.searchParams.get("market");
@@ -72,21 +60,8 @@ export async function GET(req: Request) {
 ============================ */
 export async function POST(req: Request) {
   try {
-    const headerPwd = req.headers.get("x-admin-password") || "";
-    const envPwd = process.env.ADMIN_PASSWORD || "";
-
-    if (!envPwd) {
-      return NextResponse.json(
-        { ok: false, error: "ADMIN_PASSWORD non configuré côté serveur" },
-        { status: 500 }
-      );
-    }
-    if (!headerPwd || headerPwd !== envPwd) {
-      return NextResponse.json(
-        { ok: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const auth = await assertAdmin(req);
+    if (auth) return auth;
 
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {

@@ -3,6 +3,7 @@ import { dbAdmin } from "@/lib/firebase.admin";
 import { Resend } from "resend";
 import { generateInvoicePDF } from "@/lib/generateInvoice";
 import { ensureInvoiceNumberForOrder } from "@/server/orders/generateInvoiceNumber";
+import { assertAdmin } from "@/server/adminAuth";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -17,6 +18,9 @@ function resolveOrderNumber(rawOrder: any, orderId: string) {
 }
 
 export async function POST(req: Request) {
+  const auth = await assertAdmin(req);
+  if (auth) return auth;
+
   try {
     const { orderId, customerEmail } = await req.json();
 

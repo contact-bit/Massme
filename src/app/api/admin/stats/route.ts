@@ -71,7 +71,6 @@ function normalizeOrderStatus(order: any): string {
     order?.status ||
     order?.paymentStatus ||
     order?.payment?.status ||
-    order?.shipstation?.status ||
     "unknown";
 
   const s = String(status).toLowerCase();

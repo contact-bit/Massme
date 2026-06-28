@@ -48,8 +48,6 @@ type StripeCheckoutLocale =
   | "nb"
   | "nl"
   | "pl"
-  | "pt"
-  | "pt-BR"
   | "ro"
   | "ru"
   | "sk"
