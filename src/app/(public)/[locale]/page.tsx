@@ -13,6 +13,7 @@ import {
   Eye,
   GraduationCap,
   Heart,
+  HeartHandshake,
   Languages,
   MapPin,
   Plane,
@@ -116,13 +117,31 @@ export default async function HomePage({
       <section className="home-exact-hero home-exact-wrap">
         <div className="home-exact-hero-main">
           <div className="home-exact-hero-copy">
-            <h1>Vitrectomie :<br />votre parcours,<br />notre accompagnement</h1>
-            <p className="home-exact-lead">
-              Comprendre sa pathologie, choisir son chirurgien et réussir sa récupération après vitrectomie.
-            </p>
-            <p>
-              Des informations fiables et claires pour comprendre votre intervention, choisir votre chirurgien et réussir votre récupération après une vitrectomie.
-            </p>
+            <h1>
+              Vitrectomie :<br />
+              votre <span>parcours</span>,<br />
+              notre accompagnement
+            </h1>
+
+            <h2 className="home-exact-lead">
+              Comprendre votre pathologie, préparer votre intervention,
+              choisir un chirurgien spécialisé et réussir votre récupération
+              après vitrectomie.
+            </h2>
+
+            <section className="home-exact-support" aria-labelledby="home-support-title">
+              <HeartHandshake aria-hidden="true" />
+              <div>
+                <h3 id="home-support-title">
+                  VitrectoMed accompagne les patients
+                </h3>
+                <p>
+                  du diagnostic jusqu’au retour à la vie quotidienne après une
+                  vitrectomie.
+                </p>
+              </div>
+            </section>
+
             <div className="home-exact-actions">
               <Link href={`${prefix}/convalescence`} className="home-exact-btn home-exact-btn-primary">
                 Commencer mon parcours <ArrowRight />
