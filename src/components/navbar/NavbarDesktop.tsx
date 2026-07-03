@@ -114,7 +114,7 @@ export default function NavbarDesktop({
 
           {recoveryDropdown ? (
             <NavbarDropdown
-              label={recoveryDropdown.label}
+              label={locale === "fr" ? "Parcours" : recoveryDropdown.label}
               href={recoveryDropdown.href}
             >
               {recoveryDropdown.items.map(
@@ -130,7 +130,7 @@ export default function NavbarDesktop({
             </NavbarDropdown>
           ) : (
             <NavLink href={links.recovery}>
-              {t.nav.recovery}
+              {locale === "fr" ? "Parcours" : t.nav.recovery}
             </NavLink>
           )}
 
@@ -140,10 +140,6 @@ export default function NavbarDesktop({
 
           <NavLink href={links.directory}>
             {t.nav.directory}
-          </NavLink>
-
-          <NavLink href={links.comfort}>
-            {t.nav.comfort}
           </NavLink>
 
           <NavLink href={links.faq}>

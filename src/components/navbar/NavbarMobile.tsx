@@ -13,7 +13,6 @@ import {
 import {
   TRANSLATIONS,
   generateNavbarLinks,
-  generateDropdowns,
   LOGO_URL,
 } from "./navbar.data";
 
@@ -35,15 +34,19 @@ interface MobileLinkProps {
   onClick?: () => void;
 }
 
-interface MobileDropdownProps {
-  label: string;
-  children: React.ReactNode;
-}
-
 interface MobileSectionProps {
   label: string;
   children: React.ReactNode;
 }
+
+const MOBILE_LABELS: Record<Locale, { journey: string; surgeon: string }> = {
+  fr: { journey: "Parcours", surgeon: "Trouver un chirurgien" },
+  en: { journey: "Patient journey", surgeon: "Find a surgeon" },
+  es: { journey: "Recorrido", surgeon: "Encontrar un cirujano" },
+  de: { journey: "Patientenweg", surgeon: "Chirurgen finden" },
+  it: { journey: "Percorso", surgeon: "Trova un chirurgo" },
+  nl: { journey: "Patiëntenreis", surgeon: "Vind een chirurg" },
+};
 
 /* =========================================================
    COMPONENT
@@ -63,18 +66,7 @@ export default function NavbarMobile({
       locale
     );
 
-  const dropdowns =
-    generateDropdowns(
-      locale
-    );
-
-  const primaryDropdowns =
-    dropdowns.filter(
-      (dropdown) =>
-        dropdown.href === links.pathologies ||
-        dropdown.href === links.operation ||
-        dropdown.href === links.recovery
-    );
+  const mobileLabels = MOBILE_LABELS[locale];
 
   /* =====================================================
      LOCK BODY SCROLL
@@ -182,37 +174,17 @@ export default function NavbarMobile({
               onClick={closeMenu}
             />
 
-            {primaryDropdowns.map(
-              (dropdown) => (
-                <MobileDropdown
-                  key={
-                    dropdown.label
-                  }
-                  label={
-                    dropdown.label
-                  }
-                >
-                  {dropdown.items.map(
-                    (item) => (
-                      <MobileLink
-                        key={
-                          item.href
-                        }
-                        href={
-                          item.href
-                        }
-                        label={
-                          item.label
-                        }
-                        onClick={
-                          closeMenu
-                        }
-                      />
-                    )
-                  )}
-                </MobileDropdown>
-              )
-            )}
+            <MobileLink
+              href={links.pathologies}
+              label={t.nav.pathologies}
+              onClick={closeMenu}
+            />
+
+            <MobileLink
+              href={links.recovery}
+              label={mobileLabels.journey}
+              onClick={closeMenu}
+            />
 
             <MobileLink
               href={links.guides}
@@ -224,34 +196,12 @@ export default function NavbarMobile({
           <MobileSection label={t.nav.directory}>
             <MobileLink
               href={links.directory}
-              label={t.dropdowns.directory.overview}
-              onClick={closeMenu}
-            />
-
-            <MobileLink
-              href={links.comfort}
-              label={t.nav.comfort}
-              onClick={closeMenu}
-            />
-
-            <MobileLink
-              href={links.search}
-              label={t.nav.search}
+              label={mobileLabels.surgeon}
               onClick={closeMenu}
             />
           </MobileSection>
 
           <MobileSection label={t.nav.contact}>
-            <MobileLink
-              href={
-                links.testimonial
-              }
-              label={
-                t.nav.testimonial
-              }
-              onClick={closeMenu}
-            />
-
             <MobileLink
               href={links.faq}
               label={t.nav.faq}
@@ -319,56 +269,6 @@ function MobileLink({
     >
       {label}
     </Link>
-  );
-}
-
-/* =========================================================
-   MOBILE DROPDOWN
-========================================================= */
-
-function MobileDropdown({
-  label,
-  children,
-}: MobileDropdownProps) {
-  const [isOpen, setIsOpen] =
-    useState(false);
-
-  return (
-    <div className="vm-mobile-dropdown">
-      <button
-        type="button"
-        className="vm-mobile-dropdown__trigger"
-        onClick={() =>
-          setIsOpen(
-            (prev) => !prev
-          )
-        }
-        aria-expanded={
-          isOpen
-        }
-      >
-        <span>{label}</span>
-
-        <ChevronDown
-          size={18}
-          className={`vm-mobile-dropdown__icon ${
-            isOpen
-              ? "vm-mobile-dropdown__icon--open"
-              : ""
-          }`}
-        />
-      </button>
-
-      <div
-        className={`vm-mobile-dropdown__content ${
-          isOpen
-            ? "vm-mobile-dropdown__content--open"
-            : ""
-        }`}
-      >
-        {children}
-      </div>
-    </div>
   );
 }
 

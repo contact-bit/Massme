@@ -9,7 +9,6 @@ import {
   Linkedin,
   Mail,
   MapPin,
-  ShieldCheck,
   Youtube,
 } from "lucide-react";
 
@@ -37,7 +36,6 @@ const CONTENT: Record<
     contact: string;
     medicalNotice: string;
     contactEmail: string;
-    press: string;
     copyright: string;
     tagline: string;
     socialAria: string;
@@ -52,9 +50,8 @@ const CONTENT: Record<
     information: "Informations",
     contact: "Contact",
     medicalNotice:
-      "VitrectoMed accompagne les patients dans la compréhension de la vitrectomie et la récupération post-opératoire.",
+      "La référence pour votre parcours avant et après vitrectomie",
     contactEmail: "Nous écrire",
-    press: "Presse",
     copyright: "© 2026 VitrectoMed — Tous droits réservés.",
     tagline: "Comprendre. Se préparer. Récupérer.",
     socialAria: "Réseaux sociaux",
@@ -85,7 +82,6 @@ const CONTENT: Record<
     medicalNotice:
       "VitrectoMed helps patients understand vitrectomy and post-operative recovery.",
     contactEmail: "Email us",
-    press: "Press",
     copyright: "© 2026 VitrectoMed — All rights reserved.",
     tagline: "Understand. Prepare. Recover.",
     socialAria: "Social media",
@@ -116,7 +112,6 @@ const CONTENT: Record<
     medicalNotice:
       "VitrectoMed ayuda a los pacientes a comprender la vitrectomía y la recuperación postoperatoria.",
     contactEmail: "Escríbenos",
-    press: "Prensa",
     copyright: "© 2026 VitrectoMed — Todos los derechos reservados.",
     tagline: "Comprender. Prepararse. Recuperarse.",
     socialAria: "Redes sociales",
@@ -147,7 +142,6 @@ const CONTENT: Record<
     medicalNotice:
       "VitrectoMed hilft Patienten, die Vitrektomie und die postoperative Erholung besser zu verstehen.",
     contactEmail: "E-Mail senden",
-    press: "Presse",
     copyright: "© 2026 VitrectoMed — Alle Rechte vorbehalten.",
     tagline: "Verstehen. Vorbereiten. Erholen.",
     socialAria: "Soziale Netzwerke",
@@ -178,7 +172,6 @@ const CONTENT: Record<
     medicalNotice:
       "VitrectoMed aiuta i pazienti a comprendere la vitrectomia e il recupero post-operatorio.",
     contactEmail: "Scrivici",
-    press: "Stampa",
     copyright: "© 2026 VitrectoMed — Tutti i diritti riservati.",
     tagline: "Capire. Prepararsi. Recuperare.",
     socialAria: "Social media",
@@ -209,7 +202,6 @@ const CONTENT: Record<
     medicalNotice:
       "VitrectoMed helpt patiënten vitrectomie en postoperatief herstel beter te begrijpen.",
     contactEmail: "Mail ons",
-    press: "Pers",
     copyright: "© 2026 VitrectoMed — Alle rechten voorbehouden.",
     tagline: "Begrijpen. Voorbereiden. Herstellen.",
     socialAria: "Sociale media",
@@ -294,10 +286,6 @@ export default function Footer() {
             <li>
               <MapPin size={15} />
               <span>Nice, France</span>
-            </li>
-            <li>
-              <ShieldCheck size={15} />
-              <span>{t.press}</span>
             </li>
           </ul>
         </div>

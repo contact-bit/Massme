@@ -120,44 +120,46 @@ export default async function HomePage({
             <h1>
               Vitrectomie :<br />
               votre <span>parcours</span>,<br />
-              notre accompagnement
+              notre <span>accompagnement</span>
             </h1>
 
             <h2 className="home-exact-lead">
-              Comprendre votre pathologie, préparer votre intervention,
-              choisir un chirurgien spécialisé et réussir votre récupération
-              après vitrectomie.
+              Comprendre votre pathologie, préparer votre intervention, choisir un chirurgien{" "}
+              <br className="home-exact-lead-break" />
+              spécialisé et réussir votre récupération après vitrectomie.
             </h2>
 
-            <section className="home-exact-support" aria-labelledby="home-support-title">
-              <HeartHandshake aria-hidden="true" />
-              <div>
-                <h3 id="home-support-title">
-                  VitrectoMed accompagne les patients
-                </h3>
-                <p>
-                  du diagnostic jusqu’au retour à la vie quotidienne après une
-                  vitrectomie.
-                </p>
-              </div>
-            </section>
+            <div className="home-exact-hero-cta-row">
+              <section className="home-exact-support" aria-labelledby="home-support-title">
+                <HeartHandshake aria-hidden="true" />
+                <div>
+                  <h3 id="home-support-title">
+                    VitrectoMed accompagne les patients
+                  </h3>
+                  <p>
+                    du diagnostic jusqu’au retour à la vie quotidienne après une
+                    vitrectomie.
+                  </p>
+                </div>
+              </section>
 
-            <div className="home-exact-actions">
-              <Link href={`${prefix}/convalescence`} className="home-exact-btn home-exact-btn-primary">
-                Commencer mon parcours <ArrowRight />
-              </Link>
-              <Link href={`${prefix}/annuaire`} className="home-exact-btn home-exact-btn-secondary">
-                <UserRound /> Trouver un chirurgien
-              </Link>
+              <div className="home-exact-actions">
+                <Link href={`${prefix}/convalescence`} className="home-exact-btn home-exact-btn-primary">
+                  Commencer mon parcours <ArrowRight />
+                </Link>
+                <Link href={`${prefix}/annuaire`} className="home-exact-btn home-exact-btn-secondary">
+                  <UserRound /> Trouver un chirurgien
+                </Link>
+              </div>
             </div>
           </div>
 
           <div className="home-exact-hero-image">
             <Image
-              src="/brand/home-hero-patient.jpeg"
+              src="/brand/home-hero-patient-v2.png"
               alt="Patiente en position face vers le bas après une vitrectomie"
-              width={900}
-              height={620}
+              width={2020}
+              height={778}
               priority
             />
           </div>
@@ -247,7 +249,7 @@ export default async function HomePage({
             <span><BriefcaseMedical /> Informations vérifiées et mises à jour</span>
           </div>
           <Link href={`${prefix}/annuaire`} className="home-exact-btn home-exact-btn-primary">
-            Rechercher un chirurgien <ArrowRight />
+            Trouver un chirurgien <ArrowRight />
           </Link>
         </div>
 
@@ -261,10 +263,6 @@ export default async function HomePage({
               sizes="(max-width: 1260px) 100vw, 820px"
               unoptimized
             />
-            <div className="home-exact-map-badges">
-              <span><ShieldCheck size={16} /> Annuaire vérifié</span>
-              <span><MapPin size={16} /> Recherche locale</span>
-            </div>
           </div>
           <div className="home-exact-search-card">
             <label>
@@ -290,9 +288,16 @@ export default async function HomePage({
           <Link href={`${prefix}#faq`}>Voir toutes les questions <ArrowRight size={16} /></Link>
         </div>
         <div className="home-exact-faq-grid">
-          {faqItems.map((item) => (
-            <FaqItem item={item} key={typeof item === "string" ? item : item.question} />
-          ))}
+          <div className="home-exact-faq-column home-exact-faq-column-open">
+            {faqItems.slice(0, 2).map((item) => (
+              <FaqItem item={item} key={typeof item === "string" ? item : item.question} />
+            ))}
+          </div>
+          <div className="home-exact-faq-column home-exact-faq-column-closed">
+            {faqItems.slice(2).map((item) => (
+              <FaqItem item={item} key={typeof item === "string" ? item : item.question} />
+            ))}
+          </div>
         </div>
       </section>
 

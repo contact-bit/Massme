@@ -818,6 +818,7 @@
 .vm-footer__brand {
   display: grid;
   align-content: start;
+  min-width: 0;
   gap: 18px;
 }
 
@@ -847,6 +848,7 @@
   font-size: 14px;
   font-weight: 550;
   line-height: 1.75;
+  overflow-wrap: anywhere;
 }
 
 .vm-footer__socials {
