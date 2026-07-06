@@ -17,6 +17,7 @@ import {
 } from "./navbar.data";
 
 import type { Locale } from "./navbar.types";
+import NavbarCartButton from "./NavbarCartButton";
 
 import "./NavbarMobile.css";
 
@@ -119,27 +120,29 @@ export default function NavbarMobile({
           />
         </Link>
 
-        {/* BURGER */}
+        <div className="vm-mobile-navbar__actions">
+          <NavbarCartButton locale={locale} />
 
-        <button
-          type="button"
-          className="vm-mobile-navbar__burger"
-          onClick={toggleMenu}
-          aria-label={
-            isMenuOpen
-              ? "Fermer le menu"
-              : "Ouvrir le menu"
-          }
-          aria-expanded={
-            isMenuOpen
-          }
-        >
-          {isMenuOpen ? (
-            <X size={30} />
-          ) : (
-            <Menu size={30} />
-          )}
-        </button>
+          <button
+            type="button"
+            className="vm-mobile-navbar__burger"
+            onClick={toggleMenu}
+            aria-label={
+              isMenuOpen
+                ? "Fermer le menu"
+                : "Ouvrir le menu"
+            }
+            aria-expanded={
+              isMenuOpen
+            }
+          >
+            {isMenuOpen ? (
+              <X size={30} />
+            ) : (
+              <Menu size={30} />
+            )}
+          </button>
+        </div>
       </header>
 
       {/* =====================================================

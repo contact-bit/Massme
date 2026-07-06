@@ -249,7 +249,7 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
 
       const all = snap.docs.map((d) => ({
         id: d.id,
-        ...(d.data() as any),
+        ...(d.data() as Omit<Product, "id">),
       })) as Product[];
 
       const filtered = all.filter(
@@ -287,13 +287,19 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
 
     const variantsForMarket = Array.isArray(p.variants)
       ? p.variants.filter(
-          (v) => Array.isArray(v.markets) && v.markets.includes(market)
+          (v) =>
+            !Array.isArray(v.markets) ||
+            v.markets.length === 0 ||
+            v.markets.includes(market)
         )
       : [];
 
     const addonsForMarket = Array.isArray(p.addons)
       ? p.addons.filter(
-          (a) => Array.isArray(a.markets) && a.markets.includes(market)
+          (a) =>
+            !Array.isArray(a.markets) ||
+            a.markets.length === 0 ||
+            a.markets.includes(market)
         )
       : [];
 
@@ -394,13 +400,19 @@ export default function ProductsClient({ locale }: { locale: Locale }) {
 
         const variantsForMarket = Array.isArray(p.variants)
           ? p.variants.filter(
-              (v) => Array.isArray(v.markets) && v.markets.includes(market)
+              (v) =>
+                !Array.isArray(v.markets) ||
+                v.markets.length === 0 ||
+                v.markets.includes(market)
             )
           : [];
 
         const addonsForMarket = Array.isArray(p.addons)
           ? p.addons.filter(
-              (a) => Array.isArray(a.markets) && a.markets.includes(market)
+              (a) =>
+                !Array.isArray(a.markets) ||
+                a.markets.length === 0 ||
+                a.markets.includes(market)
             )
           : [];
 

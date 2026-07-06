@@ -1,136 +1,139 @@
 "use client";
 
-import { useCart } from "@/context/CartContext";
+import Link from "next/link";
+import { ArrowRight, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
 
-/* ----------------------------------
-   🌍 LOCALES
----------------------------------- */
+import {
+  isMainVitrectomedProduct,
+  useCart,
+} from "@/context/CartContext";
+
+import "./cart.css";
+
 type Locale = "fr" | "en" | "es" | "de" | "it" | "nl";
 
-const UI: Record<
-  Locale,
-  {
-    title: string;
-    empty: string;
-    product: string;
-    quantity: string;
-    price: string;
-    total: string;
-  }
-> = {
-  fr: {
-    title: "Votre panier",
-    empty: "Votre panier est vide.",
-    product: "Produit",
-    quantity: "Quantité",
-    price: "Prix",
-    total: "Total",
-  },
-  en: {
-    title: "Your cart",
-    empty: "Your cart is empty.",
-    product: "Product",
-    quantity: "Quantity",
-    price: "Price",
-    total: "Total",
-  },
-  es: {
-    title: "Tu carrito",
-    empty: "Tu carrito está vacío.",
-    product: "Producto",
-    quantity: "Cantidad",
-    price: "Precio",
-    total: "Total",
-  },
-  de: {
-    title: "Ihr Warenkorb",
-    empty: "Ihr Warenkorb ist leer.",
-    product: "Produkt",
-    quantity: "Menge",
-    price: "Preis",
-    total: "Summe",
-  },
-  it: {
-    title: "Il tuo carrello",
-    empty: "Il tuo carrello è vuoto.",
-    product: "Prodotto",
-    quantity: "Quantità",
-    price: "Prezzo",
-    total: "Totale",
-  },
-  nl: {
-    title: "Je winkelwagen",
-    empty: "Je winkelwagen is leeg.",
-    product: "Product",
-    quantity: "Aantal",
-    price: "Prijs",
-    total: "Totaal",
-  },
+const TITLES: Record<Locale, { title: string; empty: string; checkout: string }> = {
+  fr: { title: "Votre panier", empty: "Votre panier est vide.", checkout: "Passer au paiement" },
+  en: { title: "Your cart", empty: "Your cart is empty.", checkout: "Proceed to checkout" },
+  es: { title: "Tu carrito", empty: "Tu carrito está vacío.", checkout: "Continuar al pago" },
+  de: { title: "Ihr Warenkorb", empty: "Ihr Warenkorb ist leer.", checkout: "Zur Kasse" },
+  it: { title: "Il tuo carrello", empty: "Il tuo carrello è vuoto.", checkout: "Vai al pagamento" },
+  nl: { title: "Je winkelwagen", empty: "Je winkelwagen is leeg.", checkout: "Naar afrekenen" },
 };
 
-/* ==================================
-   🛒 CART PAGE
-================================== */
 export default function CartPage() {
   const params = useParams() as { locale?: string };
-  const locale: Locale = UI[params.locale as Locale]
+  const locale: Locale = TITLES[params.locale as Locale]
     ? (params.locale as Locale)
     : "fr";
 
-  const T = UI[locale];
-
   const {
     items,
+    isHydrated,
     totalHT,
     totalVAT,
     totalTTC,
+    updateQuantity,
+    removeItem,
   } = useCart();
+
+  if (!isHydrated) {
+    return <main className="cart-page"><p>Chargement du panier…</p></main>;
+  }
 
   if (items.length === 0) {
     return (
-      <main className="max-w-3xl mx-auto py-10 px-4">
-        <h1 className="text-2xl font-bold mb-4">{T.title}</h1>
-        <p>{T.empty}</p>
+      <main className="cart-page">
+        <section className="cart-page-empty">
+          <ShoppingCart size={44} />
+          <h1>{TITLES[locale].title}</h1>
+          <p>{TITLES[locale].empty}</p>
+          <Link href={`/${locale}/convalescence/coussin`}>
+            Découvrir le dispositif VitrectoMed
+          </Link>
+        </section>
       </main>
     );
   }
 
   return (
-    <main className="max-w-3xl mx-auto py-10 px-4">
-      <h1 className="text-2xl font-bold mb-6">{T.title}</h1>
+    <main className="cart-page">
+      <header className="cart-page-header">
+        <span>Commande VitrectoMed</span>
+        <h1>{TITLES[locale].title}</h1>
+        <p>Choisissez un ou deux dispositifs, puis vérifiez les compléments.</p>
+      </header>
 
-      <div className="space-y-4">
-        {items.map((item, index) => (
-          <div
-            key={`${item.id}-${index}`}
-            className="flex justify-between items-center border-b pb-3"
-          >
-            <div>
-              <p className="font-medium">{item.name}</p>
-              <p className="text-sm text-gray-500">
-                {item.quantity} × {item.priceHT.toFixed(2)} € HT
-              </p>
-            </div>
+      <div className="cart-page-layout">
+        <section className="cart-page-items">
+          {items.map((item) => {
+            const isMainProduct = isMainVitrectomedProduct(item);
 
-            <div className="font-semibold">
-              {(item.priceHT * item.quantity).toFixed(2)} €
-            </div>
+            return (
+              <article className="cart-page-item" key={item.id}>
+                <img src={item.imageUrl || "/brand/home-product.png"} alt="" />
+                <div className="cart-page-item-copy">
+                  <span>{isMainProduct ? "Dispositif principal" : "Complément"}</span>
+                  <h2>{item.name}</h2>
+                  <p>{item.priceHT.toFixed(2)} € HT / unité</p>
+                </div>
+
+                {isMainProduct ? (
+                  <div className="cart-page-choice" aria-label="Quantité du dispositif">
+                    {[1, 2].map((quantity) => (
+                      <button
+                        key={quantity}
+                        type="button"
+                        className={item.quantity === quantity ? "is-active" : ""}
+                        onClick={() => updateQuantity(item.id, quantity)}
+                        aria-pressed={item.quantity === quantity}
+                      >
+                        ×{quantity}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="cart-page-stepper">
+                    <button type="button" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                      <Minus size={16} />
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button type="button" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                )}
+
+                <strong className="cart-page-line-total">
+                  {(item.priceHT * item.quantity).toFixed(2)} €
+                </strong>
+
+                <button
+                  type="button"
+                  className="cart-page-remove"
+                  onClick={() => removeItem(item.id)}
+                  aria-label={`Retirer ${item.name}`}
+                >
+                  <Trash2 size={18} />
+                </button>
+              </article>
+            );
+          })}
+        </section>
+
+        <aside className="cart-page-summary">
+          <h2>Récapitulatif</h2>
+          <div><span>Total HT</span><strong>{totalHT.toFixed(2)} €</strong></div>
+          {totalVAT > 0 && <div><span>TVA</span><strong>{totalVAT.toFixed(2)} €</strong></div>}
+          <div className="cart-page-summary-total">
+            <span>Total TTC</span><strong>{totalTTC.toFixed(2)} €</strong>
           </div>
-        ))}
-      </div>
-
-      {/* TOTALS */}
-      <div className="mt-6 border-t pt-4 space-y-1">
-        <p>Total HT : {totalHT.toFixed(2)} €</p>
-
-        {totalVAT > 0 && (
-          <p>TVA : {totalVAT.toFixed(2)} €</p>
-        )}
-
-        <p className="text-lg font-bold">
-          Total TTC : {totalTTC.toFixed(2)} €
-        </p>
+          <Link href={`/${locale}/checkout`}>
+            {TITLES[locale].checkout} <ArrowRight size={18} />
+          </Link>
+          <small>Paiement sécurisé • Livraison calculée à l’étape suivante</small>
+        </aside>
       </div>
     </main>
   );

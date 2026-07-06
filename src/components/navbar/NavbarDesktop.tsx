@@ -22,6 +22,7 @@ import type {
 import NavbarDropdown from "./NavbarDropdown";
 
 import NavbarLanguage from "./NavbarLanguage";
+import NavbarCartButton from "./NavbarCartButton";
 
 import "./NavbarDesktop.css";
 
@@ -170,6 +171,8 @@ export default function NavbarDesktop({
         >
           <Search size={24} />
         </Link>
+
+        <NavbarCartButton locale={locale} />
 
       </div>
     </div>

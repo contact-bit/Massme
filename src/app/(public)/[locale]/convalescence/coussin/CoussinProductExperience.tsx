@@ -72,6 +72,7 @@ type Product = {
 };
 
 const FALLBACK_IMAGE = "/brand/home-product.png";
+const VITRECTOMED_PRODUCT_ID = "3tuSUenbUVVF6cuSHwS9";
 
 function pickLocaleValue(
   obj: Partial<Record<Locale, string>> | undefined,
@@ -138,7 +139,7 @@ export default function CoussinProductExperience({
         const snap = await getDocs(collection(db, "products"));
         const all = snap.docs.map((doc) => ({
           id: doc.id,
-          ...(doc.data() as any),
+          ...(doc.data() as Omit<Product, "id">),
         })) as Product[];
 
         setProducts(all.filter((product) => isProductActiveInMarket(product, market)));
@@ -150,23 +151,35 @@ export default function CoussinProductExperience({
     load();
   }, [market]);
 
-  const product = products[0] || null;
+  const product =
+    products.find((candidate) => candidate.id === VITRECTOMED_PRODUCT_ID) ||
+    products[0] ||
+    null;
 
   const variantsForMarket = useMemo(() => {
     if (!product?.variants) return [];
 
     return product.variants.filter(
       (variant) =>
-        Array.isArray(variant.markets) && variant.markets.includes(market)
+        !Array.isArray(variant.markets) ||
+        variant.markets.length === 0 ||
+        variant.markets.includes(market)
     );
   }, [market, product]);
 
   const addonsForMarket = useMemo(() => {
     if (!product?.addons) return [];
 
-    return product.addons.filter(
-      (addon) => Array.isArray(addon.markets) && addon.markets.includes(market)
+    const matchingAddons = product.addons.filter(
+      (addon) =>
+        !Array.isArray(addon.markets) ||
+        addon.markets.length === 0 ||
+        addon.markets.includes(market)
     );
+
+    return matchingAddons.length > 0
+      ? matchingAddons
+      : product.addons.slice(0, 1);
   }, [market, product]);
 
   const selectedVariant =
@@ -432,7 +445,7 @@ export default function CoussinProductExperience({
 
           <strong className="coussin-stock">En stock</strong>
 
-          <button type="button" className="coussin-cart" onClick={addMainItem}>
+          <button type="button" className="coussin-cart" onClick={() => addMainItem()}>
             Ajouter au panier
           </button>
           <button type="button" className="coussin-buy" onClick={handleBuyNow}>
@@ -488,9 +501,9 @@ export default function CoussinProductExperience({
             </article>
           ))}
         </div>
-        <Link href={`/${safeLocale}/checkout`} className="coussin-bottom-cta">
+        <button type="button" className="coussin-bottom-cta" onClick={handleBuyNow}>
           Finaliser ma commande <ArrowRight size={18} />
-        </Link>
+        </button>
       </section>
     </>
   );

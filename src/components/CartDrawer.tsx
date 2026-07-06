@@ -1,6 +1,11 @@
 "use client";
 
-import { useCart } from "@/context/CartContext";
+import { useEffect, useRef } from "react";
+import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import {
+  isMainVitrectomedProduct,
+  useCart,
+} from "@/context/CartContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -100,6 +105,7 @@ const TRANSLATIONS: Record<
    🛒 CART DRAWER
 ------------------------------------------ */
 export default function CartDrawer() {
+  const drawerRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
   const rawLocale = pathname?.split("/")[1];
 
@@ -112,8 +118,9 @@ export default function CartDrawer() {
   const {
     items,
     removeItem,
+    updateQuantity,
     isOpen,
-    toggleCart,
+    closeCart,
     totalHT,
     totalVAT,
     totalTTC,
@@ -121,35 +128,75 @@ export default function CartDrawer() {
 
   const showVAT = totalVAT > 0;
 
-  return (
-    <>
-      {/* BACKDROP */}
-      {isOpen && (
-        <div className="cart-backdrop" onClick={toggleCart} />
-      )}
+  useEffect(() => {
+    if (!isOpen) return;
 
-      {/* DRAWER */}
-      <aside className={`cart-drawer ${isOpen ? "open" : ""}`}>
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeCart();
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (!(target instanceof Node)) return;
+      if (drawerRef.current?.contains(target)) return;
+
+      const element = target instanceof Element ? target : target.parentElement;
+      if (element?.closest("[data-cart-trigger]")) return;
+
+      closeCart();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [closeCart, isOpen]);
+
+  // Keep the drawer completely out of the page until the customer
+  // explicitly opens it from the navigation cart button.
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <aside
+      ref={drawerRef}
+      id="cart-drawer"
+      className="cart-drawer cart-drawer--popover open"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="cart-drawer-title"
+    >
         {/* HEADER */}
         <div className="cart-header">
-          <h2 className="cart-title">{t.title}</h2>
+          <h2 className="cart-title" id="cart-drawer-title">{t.title}</h2>
           <button
             type="button"
             className="cart-close-btn"
-            onClick={toggleCart}
+            onClick={closeCart}
             aria-label="Close cart"
           >
-            ✕
+            <X size={20} />
           </button>
         </div>
 
         {/* ITEMS */}
         <div className="cart-items">
           {items.length === 0 ? (
-            <p className="cart-empty">{t.empty}</p>
+            <div className="cart-empty">
+              <ShoppingBag size={38} aria-hidden="true" />
+              <p>{t.empty}</p>
+            </div>
           ) : (
-            items.map((item) => (
-              <div key={item.id} className="cart-item">
+            items.map((item) => {
+              const isMainProduct = isMainVitrectomedProduct(item);
+
+              return (
+              <article key={item.id} className="cart-item">
                 <img
                   src={item.imageUrl || "/placeholder.jpg"}
                   alt={item.name}
@@ -163,16 +210,53 @@ export default function CartDrawer() {
                     {item.priceHT.toFixed(2)} € HT × {item.quantity}
                   </p>
 
-                  <button
-                    type="button"
-                    className="cart-item-remove"
-                    onClick={() => removeItem(item.id)}
-                  >
-                    {t.remove}
-                  </button>
+                  <div className="cart-item-actions">
+                    {isMainProduct ? (
+                      <div className="cart-item-quantity cart-item-quantity--choice" aria-label={`Quantité de ${item.name}`}>
+                        {[1, 2].map((quantity) => (
+                          <button
+                            key={quantity}
+                            type="button"
+                            className={item.quantity === quantity ? "is-active" : ""}
+                            onClick={() => updateQuantity(item.id, quantity)}
+                            aria-pressed={item.quantity === quantity}
+                          >
+                            ×{quantity}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="cart-item-quantity" aria-label={`Quantité de ${item.name}`}>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          aria-label="Diminuer la quantité"
+                        >
+                          <Minus size={15} />
+                        </button>
+                        <span>{item.quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          aria-label="Augmenter la quantité"
+                        >
+                          <Plus size={15} />
+                        </button>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      className="cart-item-remove"
+                      onClick={() => removeItem(item.id)}
+                    >
+                      <Trash2 size={15} /> {t.remove}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              </article>
+              );
+            })
           )}
         </div>
 
@@ -205,13 +289,12 @@ export default function CartDrawer() {
             <Link
               href={`/${locale}/checkout`}
               className="btn btn-primary btn-full"
-              onClick={toggleCart}
+              onClick={closeCart}
             >
               {t.checkout}
             </Link>
           </div>
         )}
-      </aside>
-    </>
+    </aside>
   );
 }

@@ -5,8 +5,7 @@ import "./CheckoutProgress.css";
 type CheckoutStep =
   | "shipping"
   | "billing"
-  | "payment"
-  | "confirmation";
+  | "payment";
 
 type StepItem = {
   id: CheckoutStep;
@@ -25,27 +24,21 @@ type Props = {
 
 const STEP_ORDER: StepItem[] = [
   {
-    id: "shipping",
+    id: "billing",
     number: 1,
-    label: "Livraison",
+    label: "Informations",
   },
 
   {
-    id: "billing",
+    id: "shipping",
     number: 2,
-    label: "Informations",
+    label: "Livraison",
   },
 
   {
     id: "payment",
     number: 3,
     label: "Paiement",
-  },
-
-  {
-    id: "confirmation",
-    number: 4,
-    label: "Confirmation",
   },
 ];
 
@@ -60,10 +53,10 @@ export default function CheckoutProgress({
     );
 
   return (
-    <aside
+    <nav
       className="checkout-progress"
       data-step={currentStep}
-      aria-label="Checkout progress"
+      aria-label="Progression de la commande"
     >
 
       <div className="checkout-progress-steps">
@@ -126,6 +119,6 @@ export default function CheckoutProgress({
         )}
 
       </div>
-    </aside>
+    </nav>
   );
 }

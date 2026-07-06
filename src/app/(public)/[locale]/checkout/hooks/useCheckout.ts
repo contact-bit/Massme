@@ -54,13 +54,14 @@ export default function useCheckout() {
     totalVAT,
     totalTTC,
     clearCart,
+    isHydrated,
   } = useCart();
 
   const totalWeightKg =
     useMemo(
       () =>
         items.reduce(
-          (sum, item: any) =>
+          (sum, item) =>
             sum +
             (Number(item.weightKg) || 0) *
               Math.max(
@@ -239,8 +240,9 @@ export default function useCheckout() {
       return items.map(
         (item) => {
           if (
-            item.id ===
-            VITRECTOMED_PRODUCT_ID
+            item.id === VITRECTOMED_PRODUCT_ID ||
+            (item.id.startsWith(`${VITRECTOMED_PRODUCT_ID}:`) &&
+              !item.id.includes(":addon:"))
           ) {
             return {
               ...item,
@@ -626,6 +628,7 @@ export default function useCheckout() {
 
     items,
     safeItems,
+    isHydrated,
 
     billingCustomer,
     setBillingCustomer,

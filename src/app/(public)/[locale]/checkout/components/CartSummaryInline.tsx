@@ -15,7 +15,10 @@ import { usePathname } from "next/navigation";
 
 import { db } from "@/lib/firebase";
 
-import { useCart } from "@/context/CartContext";
+import {
+  isMainVitrectomedProduct,
+  useCart,
+} from "@/context/CartContext";
 
 import {
   getLocale,
@@ -216,8 +219,9 @@ export default function CartSummaryInline() {
       (
         item: CartItem
       ) =>
-        item.id ===
-        VITRECTOMED_PRODUCT_ID
+        item.id === VITRECTOMED_PRODUCT_ID ||
+        (item.id.startsWith(`${VITRECTOMED_PRODUCT_ID}:`) &&
+          !item.id.includes(":addon:"))
     );
 
   const hasProtectiveCase =
@@ -225,8 +229,11 @@ export default function CartSummaryInline() {
       (
         item: CartItem
       ) =>
-        item.id ===
-        protectiveCase?.id
+        item.id === protectiveCase?.id ||
+        Boolean(
+          protectiveCase?.id &&
+            item.id.endsWith(`:addon:${protectiveCase.id}`)
+        )
     );
 
   const showUpsell =
@@ -349,8 +356,11 @@ export default function CartSummaryInline() {
             index: number
           ) => {
 
+            const isMainProduct =
+              isMainVitrectomedProduct(item);
+
             const isMaxQuantity =
-              item.quantity >= 2;
+              item.quantity >= (isMainProduct ? 2 : 10);
 
             return (
               <article
@@ -417,42 +427,46 @@ export default function CartSummaryInline() {
 
                   <div className="cart-summary-actions">
 
-                    <div className="cart-summary-quantity">
+                    {isMainProduct ? (
+                      <div className="cart-summary-quantity cart-summary-quantity-choice">
+                        {[1, 2].map((quantity) => (
+                          <button
+                            key={quantity}
+                            type="button"
+                            className={`cart-summary-quantity-button ${
+                              item.quantity === quantity ? "is-active" : ""
+                            }`}
+                            onClick={() => updateQuantity(item.id, quantity)}
+                            aria-pressed={item.quantity === quantity}
+                          >
+                            ×{quantity}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="cart-summary-quantity">
+                        <button
+                          type="button"
+                          className="cart-summary-quantity-button"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        >
+                          −
+                        </button>
 
-                      <button
-                        type="button"
-                        className="cart-summary-quantity-button"
-                        onClick={() =>
-                          updateQuantity(
-                            item.id,
-                            item.quantity - 1
-                          )
-                        }
-                      >
-                        −
-                      </button>
+                        <span className="cart-summary-quantity-value">
+                          {item.quantity}
+                        </span>
 
-                      <span className="cart-summary-quantity-value">
-                        {item.quantity}
-                      </span>
-
-                      <button
-                        type="button"
-                        disabled={
-                          isMaxQuantity
-                        }
-                        className="cart-summary-quantity-button"
-                        onClick={() =>
-                          updateQuantity(
-                            item.id,
-                            item.quantity + 1
-                          )
-                        }
-                      >
-                        +
-                      </button>
-
-                    </div>
+                        <button
+                          type="button"
+                          disabled={isMaxQuantity}
+                          className="cart-summary-quantity-button"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
 
                     <button
                       type="button"

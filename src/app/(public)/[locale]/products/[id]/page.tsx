@@ -710,7 +710,7 @@ export default function ProductPage() {
 
           setProduct({
             id: snap.id,
-            ...(data as any),
+            ...(data as Omit<Product, "id">),
           });
         }
 

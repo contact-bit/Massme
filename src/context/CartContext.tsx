@@ -91,9 +91,15 @@ type CartContextType = {
 
   totalTTC: number;
 
+  totalItems: number;
+
+  isHydrated: boolean;
+
   isOpen: boolean;
 
   toggleCart: () => void;
+
+  closeCart: () => void;
 };
 
 /* =====================================================
@@ -105,6 +111,18 @@ const VITRECTOMED_PRODUCT_ID =
 
 const STORAGE_KEY =
   "vitrectomed-cart";
+
+export function isMainVitrectomedProduct(item: Pick<CartItem, "id">) {
+  return (
+    item.id === VITRECTOMED_PRODUCT_ID ||
+    (item.id.startsWith(`${VITRECTOMED_PRODUCT_ID}:`) &&
+      !item.id.includes(":addon:"))
+  );
+}
+
+function getMaxQuantity(item: Pick<CartItem, "id">) {
+  return isMainVitrectomedProduct(item) ? 2 : 10;
+}
 
 /* =====================================================
    CONTEXT
@@ -135,6 +153,11 @@ export function CartProvider({
     setIsOpen,
   ] = useState(false);
 
+  const [
+    isHydrated,
+    setIsHydrated,
+  ] = useState(false);
+
   /* =====================================================
      LOAD STORAGE
   ===================================================== */
@@ -158,14 +181,43 @@ export function CartProvider({
             parsed
           )
         ) {
-          // Hydratation volontaire depuis le stockage du navigateur.
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setItems(parsed);
+          const validItems = parsed.filter(
+            (item): item is CartItem =>
+              Boolean(
+                item &&
+                  typeof item.id === "string" &&
+                  typeof item.name === "string" &&
+                  Number.isFinite(item.priceHT) &&
+                  Number.isFinite(item.quantity) &&
+                  item.quantity > 0
+              )
+          );
+
+          let hasMainProduct = false;
+
+          setItems(
+            validItems.flatMap((item) => {
+              if (isMainVitrectomedProduct(item)) {
+                if (hasMainProduct) return [];
+                hasMainProduct = true;
+              }
+
+              return [{
+                ...item,
+                quantity: Math.min(
+                  Math.max(1, Math.floor(item.quantity)),
+                  getMaxQuantity(item)
+                ),
+              }];
+            })
+          );
         }
       }
 
     } catch {
       setItems([]);
+    } finally {
+      setIsHydrated(true);
     }
 
   }, []);
@@ -176,12 +228,16 @@ export function CartProvider({
 
   useEffect(() => {
 
+    if (!isHydrated) {
+      return;
+    }
+
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify(items)
     );
 
-  }, [items]);
+  }, [isHydrated, items]);
 
   /* =====================================================
      ADD ITEM
@@ -193,6 +249,14 @@ export function CartProvider({
 
     setItems((prev) => {
 
+      const isMainProduct =
+        isMainVitrectomedProduct(item);
+
+      const existingMainProduct =
+        isMainProduct
+          ? prev.find(isMainVitrectomedProduct)
+          : undefined;
+
       const existing =
         prev.find(
           (p) =>
@@ -200,21 +264,43 @@ export function CartProvider({
             item.id
         );
 
-      const isVitrectomedProduct =
-        item.id ===
-        VITRECTOMED_PRODUCT_ID;
-
       const maxQty =
-        isVitrectomedProduct
-          ? 2
-          : Infinity;
+        getMaxQuantity(item);
+
+      const requestedQuantity =
+        Math.max(1, Math.floor(Number(item.quantity) || 1));
+
+      if (isMainProduct && existingMainProduct) {
+        if (existingMainProduct.id !== item.id) {
+          return [
+            ...prev.filter((current) => !isMainVitrectomedProduct(current)),
+            {
+              ...item,
+              quantity: Math.min(requestedQuantity, 2),
+            },
+          ];
+        }
+
+        return prev.map((current) =>
+          current.id === item.id
+            ? {
+                ...current,
+                ...item,
+                quantity: Math.min(
+                  current.quantity + requestedQuantity,
+                  2
+                ),
+              }
+            : current
+        );
+      }
 
       if (existing) {
 
         const safeQty =
           Math.min(
             existing.quantity +
-              item.quantity,
+              requestedQuantity,
             maxQty
           );
 
@@ -236,14 +322,15 @@ export function CartProvider({
           ...item,
           quantity:
             Math.min(
-              item.quantity,
+              requestedQuantity,
               maxQty
             ),
         },
       ];
     });
 
-    setIsOpen(true);
+    // Adding an item never opens the floating cart. The customer keeps
+    // control and can reveal it only from the navigation cart button.
   }
 
   /* =====================================================
@@ -288,14 +375,8 @@ export function CartProvider({
       prev
         .map((item) => {
 
-          const isVitrectomedProduct =
-            item.id ===
-            VITRECTOMED_PRODUCT_ID;
-
           const maxQty =
-            isVitrectomedProduct
-              ? 2
-              : Infinity;
+            getMaxQuantity(item);
 
           const safeQty =
             Math.max(
@@ -369,6 +450,12 @@ export function CartProvider({
     totalHT +
     totalVAT;
 
+  const totalItems =
+    items.reduce(
+      (sum, item) => sum + item.quantity,
+      0
+    );
+
   /* =====================================================
      UI
   ===================================================== */
@@ -378,6 +465,10 @@ export function CartProvider({
     setIsOpen(
       (prev) => !prev
     );
+  }
+
+  function closeCart() {
+    setIsOpen(false);
   }
 
   /* =====================================================
@@ -397,9 +488,12 @@ export function CartProvider({
         totalHT,
         totalVAT,
         totalTTC,
+        totalItems,
+        isHydrated,
 
         isOpen,
         toggleCart,
+        closeCart,
       }}
     >
       {children}

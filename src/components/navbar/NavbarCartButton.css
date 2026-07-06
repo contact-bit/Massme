@@ -1,0 +1,64 @@
+.vm-navbar-cart {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .06);
+  color: #fff;
+  cursor: pointer;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.vm-navbar-cart:hover {
+  transform: translateY(-1px);
+  border-color: rgba(21, 166, 187, .5);
+  box-shadow: 0 10px 24px rgba(10, 36, 107, .16);
+}
+
+.vm-navbar-cart:focus-visible {
+  outline: 3px solid rgba(21, 166, 187, .34);
+  outline-offset: 3px;
+}
+
+.vm-navbar-cart__count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #15a6bb;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.public-shell .vm-navbar-cart {
+  border-color: rgba(21, 166, 187, .35);
+  background: #fff;
+  color: #0a246b;
+  box-shadow: 0 8px 20px rgba(10, 36, 107, .08);
+}
+
+.public-shell .vm-navbar-cart:hover {
+  border-color: #15a6bb;
+  background: #eef9fb;
+}
+
+@media (max-width: 640px) {
+  .vm-navbar-cart {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+}

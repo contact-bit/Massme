@@ -50,25 +50,29 @@ const pathologyCards = [
     title: "Trou maculaire",
     text: "Qu'est-ce qu'un trou maculaire ? Quels symptômes ? Comment évolue la maladie ?",
     href: "/pathologies/trou-maculaire",
-    visual: "macular",
+    image: "/brand/pathologies/macular-hole.png",
+    imageAlt: "Illustration médicale moderne d’un trou maculaire",
   },
   {
     title: "Décollement de rétine",
     text: "Comprendre cette urgence ophtalmologique et les options de traitement.",
     href: "/pathologies/decollement-retine",
-    visual: "detachment",
+    image: "/brand/pathologies/retinal-detachment.png",
+    imageAlt: "Illustration médicale moderne d’un décollement de rétine",
   },
   {
     title: "Membrane épirétinienne",
     text: "Comprendre les symptômes, l'évolution et le moment d'envisager une chirurgie.",
     href: "/pathologies",
-    visual: "diabetic",
+    image: "/brand/pathologies/epiretinal-membrane.png",
+    imageAlt: "Illustration médicale moderne d’une membrane épirétinienne",
   },
   {
     title: "Corps flottants",
     text: "Comprendre les causes et savoir quand consulter.",
     href: "/pathologies/mouches-volantes-ou-corps-flottants",
-    visual: "floaters",
+    image: "/brand/pathologies/eye-floaters.png",
+    imageAlt: "Illustration médicale moderne des corps flottants dans le vitré",
   },
 ];
 
@@ -118,9 +122,13 @@ export default async function HomePage({
         <div className="home-exact-hero-main">
           <div className="home-exact-hero-copy">
             <h1>
-              Vitrectomie :<br />
-              votre <span>parcours</span>,<br />
-              notre <span>accompagnement</span>
+              <span className="home-exact-title-line">Vitrectomie :</span>
+              <span className="home-exact-title-line">
+                votre <span className="home-exact-title-accent">parcours</span>,
+              </span>
+              <span className="home-exact-title-line">
+                notre <span className="home-exact-title-accent">accompagnement</span>
+              </span>
             </h1>
 
             <h2 className="home-exact-lead">
@@ -130,19 +138,6 @@ export default async function HomePage({
             </h2>
 
             <div className="home-exact-hero-cta-row">
-              <section className="home-exact-support" aria-labelledby="home-support-title">
-                <HeartHandshake aria-hidden="true" />
-                <div>
-                  <h3 id="home-support-title">
-                    VitrectoMed accompagne les patients
-                  </h3>
-                  <p>
-                    du diagnostic jusqu’au retour à la vie quotidienne après une
-                    vitrectomie.
-                  </p>
-                </div>
-              </section>
-
               <div className="home-exact-actions">
                 <Link href={`${prefix}/convalescence`} className="home-exact-btn home-exact-btn-primary">
                   Commencer mon parcours <ArrowRight />
@@ -151,6 +146,19 @@ export default async function HomePage({
                   <UserRound /> Trouver un chirurgien
                 </Link>
               </div>
+
+              <section className="home-exact-support" aria-labelledby="home-support-title">
+                <HeartHandshake aria-hidden="true" />
+                <div>
+                  <h3 id="home-support-title">
+                    VitrectoMed accompagne les patients
+                  </h3>
+                  <p>
+                    Du diagnostic jusqu’au retour à la vie quotidienne après une
+                    vitrectomie.
+                  </p>
+                </div>
+              </section>
             </div>
           </div>
 
@@ -191,10 +199,14 @@ export default async function HomePage({
         <div className="home-exact-pathologies">
           {pathologyCards.map((card) => (
             <Link href={`${prefix}${card.href}`} className="home-exact-pathology" key={card.title}>
-              <span className={`home-exact-pathology-visual home-exact-pathology-visual--${card.visual}`}>
-                <span className="home-exact-pathology-orbit" />
-                <span className="home-exact-pathology-mark home-exact-pathology-mark--one" />
-                <span className="home-exact-pathology-mark home-exact-pathology-mark--two" />
+              <span className="home-exact-pathology-visual">
+                <Image
+                  src={card.image}
+                  alt={card.imageAlt}
+                  width={1024}
+                  height={1024}
+                  sizes="(max-width: 820px) 100vw, (max-width: 1360px) 50vw, 25vw"
+                />
               </span>
               <strong>{card.title}</strong>
               <p>{card.text}</p>

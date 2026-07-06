@@ -577,6 +577,22 @@
     700;
 }
 
+.cart-summary-quantity-choice {
+  gap: .35rem;
+  border-radius: 14px;
+}
+
+.cart-summary-quantity-choice .cart-summary-quantity-button {
+  width: 48px;
+  border-radius: 10px;
+  font-size: .82rem;
+}
+
+.cart-summary-quantity-choice .cart-summary-quantity-button.is-active {
+  background: linear-gradient(135deg, #0a246b, #15a6bb);
+  box-shadow: 0 8px 18px rgba(10, 36, 107, .22);
+}
+
 /* =====================================================
    REMOVE
 ===================================================== */
