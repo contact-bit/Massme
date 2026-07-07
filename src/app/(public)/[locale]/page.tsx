@@ -219,7 +219,7 @@ export default async function HomePage({
       <section className="home-exact-panel home-exact-wrap home-exact-journey">
         <SectionTitle title="Votre parcours patient" text="Nous vous accompagnons à chaque étape de votre vitrectomie." />
         <div className="home-exact-steps">
-          <Step icon={<ClipboardCheck />} step="ÉTAPE 1" title="Préparer son intervention" subtitle="Avant l'opération" text="Comprendre l'opération, les examens, les étapes clés et les conseils avant votre intervention." href={`${prefix}/operation`} />
+          <Step icon={<ClipboardCheck />} step="ÉTAPE 1" title="Comprendre et préparer son intervention" subtitle="Avant l'opération" text="Comprendre l'opération, les examens, les étapes clés et les conseils avant votre intervention." href={`${prefix}/operation`} />
           <ArrowRight className="home-exact-step-arrow" />
           <Step icon={<Heart />} step="ÉTAPE 2" title="Réussir sa récupération" subtitle="Après l'opération" text="Récupération et suivi. Les étapes clés de votre convalescence après vitrectomie." href={`${prefix}/convalescence`} />
           <ArrowRight className="home-exact-step-arrow" />
