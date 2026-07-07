@@ -13,7 +13,7 @@ import {
 import {
   TRANSLATIONS,
   generateNavbarLinks,
-  LOGO_URL,
+  LOGO_COMPACT_URL,
 } from "./navbar.data";
 
 import type { Locale } from "./navbar.types";
@@ -114,7 +114,7 @@ export default function NavbarMobile({
           onClick={closeMenu}
         >
           <img
-            src={LOGO_URL}
+            src={LOGO_COMPACT_URL}
             alt="VitrectoMed"
             className="vm-mobile-navbar__logo-image"
           />
@@ -170,6 +170,29 @@ export default function NavbarMobile({
         }`}
       >
         <div className="vm-mobile-menu__content">
+          <div className="vm-mobile-menu__brand">
+            <Link
+              href={links.home}
+              className="vm-mobile-menu__brand-link"
+              onClick={closeMenu}
+            >
+              <img
+                src={LOGO_COMPACT_URL}
+                alt="VitrectoMed"
+                className="vm-mobile-menu__brand-image"
+              />
+            </Link>
+
+            <button
+              type="button"
+              className="vm-mobile-menu__close"
+              onClick={closeMenu}
+              aria-label="Fermer le menu"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
           <MobileSection label={t.nav.menu}>
             <MobileLink
               href={links.home}

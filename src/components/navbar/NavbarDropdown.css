@@ -260,14 +260,19 @@
 
 .public-shell .vm-dropdown__trigger {
   min-height: 42px;
-  padding: 0;
-  border-radius: 0;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   background: transparent;
+  box-shadow: none;
 }
 
 .public-shell .vm-dropdown:hover
 .vm-dropdown__trigger {
-  background: transparent;
+  border-color: rgba(21, 166, 187, .16);
+  background: rgba(214, 236, 244, .46);
+  box-shadow: 0 8px 20px rgba(10, 36, 107, .06);
+  transform: translateY(-1px);
 }
 
 .public-shell .vm-dropdown__button {
@@ -363,7 +368,7 @@
 
 .public-shell .vm-dropdown__trigger {
   min-height: 42px;
-  padding: 0;
+  padding: 0 10px;
 }
 
 .public-shell .vm-dropdown__menu {

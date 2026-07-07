@@ -219,11 +219,11 @@ export default async function HomePage({
       <section className="home-exact-panel home-exact-wrap home-exact-journey">
         <SectionTitle title="Votre parcours patient" text="Nous vous accompagnons à chaque étape de votre vitrectomie." />
         <div className="home-exact-steps">
-          <Step icon={<ClipboardCheck />} step="ÉTAPE 1" title="Préparer son intervention" subtitle="Avant l'opération" text="Comprendre l'opération, les examens, les étapes clés et les conseils avant votre intervention." />
+          <Step icon={<ClipboardCheck />} step="ÉTAPE 1" title="Préparer son intervention" subtitle="Avant l'opération" text="Comprendre l'opération, les examens, les étapes clés et les conseils avant votre intervention." href={`${prefix}/operation`} />
           <ArrowRight className="home-exact-step-arrow" />
-          <Step icon={<Heart />} step="ÉTAPE 2" title="Réussir sa récupération" subtitle="Après l'opération" text="Récupération et suivi. Les étapes clés de votre convalescence après vitrectomie." />
+          <Step icon={<Heart />} step="ÉTAPE 2" title="Réussir sa récupération" subtitle="Après l'opération" text="Récupération et suivi. Les étapes clés de votre convalescence après vitrectomie." href={`${prefix}/convalescence`} />
           <ArrowRight className="home-exact-step-arrow" />
-          <Step icon={<UserRound />} step="ÉTAPE 3" title="Retrouver ses activités" subtitle="Retour à la vie quotidienne" text="Conseils et repères pour retrouver vos activités en toute sécurité." />
+          <Step icon={<UserRound />} step="ÉTAPE 3" title="Retrouver ses activités" subtitle="Retour à la vie quotidienne" text="Conseils et repères pour retrouver vos activités en toute sécurité." href={`${prefix}/convalescence`} />
         </div>
 
         <div className="home-exact-guides-head">
@@ -238,8 +238,10 @@ export default async function HomePage({
           {guideCards.map((guide) => (
             <Link href={`${prefix}${guide.href}`} key={guide.label}>
               {guide.icon}
-              <span>{guide.label}</span>
-              <ArrowRight size={15} />
+              <span>
+                {guide.label}
+                <em>En savoir plus <ArrowRight size={15} /></em>
+              </span>
             </Link>
           ))}
         </div>
@@ -359,12 +361,14 @@ function Step({
   title,
   subtitle,
   text,
+  href,
 }: {
   icon: ReactNode;
   step: string;
   title: string;
   subtitle: string;
   text: string;
+  href: string;
 }) {
   return (
     <article className="home-exact-step">
@@ -374,6 +378,9 @@ function Step({
         <h3>{title}</h3>
         <strong>{subtitle}</strong>
         <p>{text}</p>
+        <Link href={href} className="home-exact-step-more">
+          En savoir plus <ArrowRight size={16} />
+        </Link>
       </div>
     </article>
   );

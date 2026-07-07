@@ -628,6 +628,10 @@
   color: #0a246b;
 }
 
+.public-shell .vm-dropdown:hover .vm-dropdown__link {
+  color: #15a6bb;
+}
+
 .public-shell .vm-dropdown:hover .vm-dropdown__icon {
   color: #15a6bb;
 }

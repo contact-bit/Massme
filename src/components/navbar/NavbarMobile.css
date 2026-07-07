@@ -98,19 +98,19 @@
 }
 
 .public-shell .vm-mobile-navbar__logo-image {
-  width: min(58vw, 230px);
+  width: clamp(170px, 46vw, 218px);
   height: auto;
 }
 
 @media (max-width: 1100px) {
   .public-shell .vm-mobile-navbar__logo-image {
-    width: min(44vw, 210px);
+    width: clamp(168px, 43vw, 204px);
   }
 }
 
 @media (max-width: 420px) {
   .public-shell .vm-mobile-navbar__logo-image {
-    width: min(42vw, 168px);
+    width: clamp(172px, 48vw, 196px);
   }
 
   .vm-mobile-navbar__actions {
@@ -328,6 +328,16 @@
     -20px 0 80px rgba(0,0,0,.42);
 }
 
+.public-shell .vm-mobile-menu {
+  z-index: 10001;
+  width: min(94vw, 430px);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(21, 166, 187, .16), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f6fbfd 58%, #eef7fb 100%);
+  border-left: 1px solid rgba(214, 236, 244, .95);
+  box-shadow: -18px 0 60px rgba(10, 36, 107, .18);
+}
+
 /* =========================================================
    MENU OPEN
 ========================================================= */
@@ -364,6 +374,12 @@
     );
 }
 
+.public-shell .vm-mobile-menu::before {
+  background:
+    radial-gradient(circle at top left, rgba(21, 166, 187, .16), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(10, 36, 107, .08), transparent 28%);
+}
+
 /* =========================================================
    LIGHT
 ========================================================= */
@@ -389,6 +405,10 @@
     );
 }
 
+.public-shell .vm-mobile-menu::after {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, .78), transparent);
+}
+
 /* =========================================================
    CONTENT
 ========================================================= */
@@ -408,6 +428,82 @@
 
   padding:
     7rem 1.25rem 2rem;
+}
+
+.public-shell .vm-mobile-menu__content {
+  gap: 1rem;
+  padding: 1rem 1rem 1.5rem;
+}
+
+.vm-mobile-menu__brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .85rem;
+  margin-bottom: .25rem;
+  min-height: 84px;
+  padding: .8rem 3.25rem .95rem .8rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .08);
+}
+
+.public-shell .vm-mobile-menu__brand {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(244, 251, 253, .94));
+  border-color: rgba(214, 236, 244, .95);
+  box-shadow: 0 12px 28px rgba(10, 36, 107, .08);
+}
+
+.vm-mobile-menu__brand-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  width: 100%;
+  text-decoration: none;
+}
+
+.vm-mobile-menu__brand-image {
+  display: block;
+  width: min(66vw, 270px);
+  height: auto;
+  object-fit: contain;
+}
+
+.vm-mobile-menu__close {
+  position: absolute;
+  top: 50%;
+  right: .75rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .08);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform .22s ease,
+    background .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease;
+}
+
+.public-shell .vm-mobile-menu__close {
+  border-color: rgba(21, 166, 187, .32);
+  background: linear-gradient(135deg, #0a246b, #15a6bb);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(10, 36, 107, .16);
+}
+
+.vm-mobile-menu__close:hover {
+  transform: translateY(calc(-50% - 1px));
 }
 
 /* =========================================================
@@ -836,10 +932,18 @@
 }
 
 .public-shell .vm-mobile-menu__content {
-  gap: .5rem;
+  gap: .85rem;
   min-height: 0;
   height: 100%;
-  padding: 88px 18px 14px;
+  padding: 14px 10px;
+}
+
+.public-shell .vm-mobile-menu__brand {
+  margin-bottom: .35rem;
+}
+
+.public-shell .vm-mobile-menu__brand-image {
+  width: min(72vw, 285px);
 }
 
 .public-shell .vm-mobile-section {
@@ -903,14 +1007,24 @@
 
 @supports (padding: max(0px)) {
   .public-shell .vm-mobile-menu__content {
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
   }
 }
 
 @media (max-height: 700px) {
   .public-shell .vm-mobile-menu__content {
-    gap: .32rem;
-    padding-top: 80px;
+    gap: .42rem;
+    padding-top: 10px;
+  }
+
+  .public-shell .vm-mobile-menu__brand {
+    min-height: 70px;
+    padding: .55rem 3.45rem .7rem .75rem;
+    margin-bottom: .05rem;
+  }
+
+  .public-shell .vm-mobile-menu__brand-image {
+    width: min(58vw, 238px);
   }
 
   .public-shell .vm-mobile-link,

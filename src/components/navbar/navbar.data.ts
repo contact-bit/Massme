@@ -10,6 +10,9 @@ import type {
 export const LOGO_URL =
   "/brand/logo-officiel.png";
 
+export const LOGO_COMPACT_URL =
+  "/brand/vitrectomed-logo-compact.png";
+
 /* =========================================================
    LANGUAGES
 ========================================================= */
