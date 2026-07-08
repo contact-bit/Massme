@@ -44,21 +44,6 @@ function getOrderNumber(
   );
 }
 
-function getInvoiceNumber(
-  order: Record<string, unknown>
-) {
-  const invoiceEmail =
-    pickRecord(order, "invoiceEmail");
-
-  const invoiceNumber =
-    asString(order.invoiceNumber) ||
-    asString(invoiceEmail.invoiceNumber);
-
-  return /^FID\d{5,}$/.test(invoiceNumber)
-    ? invoiceNumber
-    : "";
-}
-
 function getOrderEmail(
   order: Record<string, unknown>
 ) {
@@ -192,10 +177,7 @@ export async function POST(req: Request) {
 
     const orderNumber = getOrderNumber(order, orderId);
     const invoiceNumber =
-      getInvoiceNumber(order) ||
-      (await ensureInvoiceNumberForOrder(
-        sourceRef
-      ));
+      await ensureInvoiceNumberForOrder(sourceRef);
     const rawLocale = asString(order.locale);
     const locale = isLocale(rawLocale)
       ? rawLocale

@@ -1,6 +1,7 @@
 // src/lib/mailer.ts
 import { Resend } from "resend";
 import { generateInvoicePDF } from "@/lib/generateInvoice";
+import { isInvoiceNumber } from "@/server/orders/generateInvoiceNumber";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -69,7 +70,7 @@ function resolveInvoiceNumber(order: OrderEmailPayload) {
   for (const candidate of candidates) {
     if (
       typeof candidate === "string" &&
-      /^FID\d{5,}$/.test(candidate.trim())
+      isInvoiceNumber(candidate.trim())
     ) {
       return candidate.trim();
     }

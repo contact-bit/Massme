@@ -12,36 +12,6 @@ function asString(value: unknown) {
     : "";
 }
 
-function asRecord(
-  value: unknown
-): Record<string, unknown> {
-  return value && typeof value === "object"
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function pickRecord(
-  record: Record<string, unknown>,
-  key: string
-) {
-  return asRecord(record[key]);
-}
-
-function getInvoiceNumber(
-  order: Record<string, unknown>
-) {
-  const invoiceEmail =
-    pickRecord(order, "invoiceEmail");
-
-  const invoiceNumber =
-    asString(order.invoiceNumber) ||
-    asString(invoiceEmail.invoiceNumber);
-
-  return /^FID\d{5,}$/.test(invoiceNumber)
-    ? invoiceNumber
-    : "";
-}
-
 async function findOrderSource(orderId: string) {
   for (const collection of [
     "orders",
@@ -108,12 +78,8 @@ export async function GET(req: Request) {
       );
     }
 
-    const order = asRecord(source.snap.data());
     const invoiceNumber =
-      getInvoiceNumber(order) ||
-      (await ensureInvoiceNumberForOrder(
-        source.ref
-      ));
+      await ensureInvoiceNumberForOrder(source.ref);
 
     return NextResponse.json({
       ok: true,

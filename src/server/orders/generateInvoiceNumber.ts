@@ -1,7 +1,9 @@
 import { dbAdmin } from "@/lib/firebase.admin";
 import type { DocumentReference } from "firebase-admin/firestore";
 
-function formatInvoiceNumber(count: number) {
+function formatInvoiceNumber(
+  count: number
+) {
   return `FID${String(count).padStart(5, "0")}`;
 }
 
@@ -11,12 +13,12 @@ function cleanString(value: unknown) {
     : "";
 }
 
-function isInvoiceNumber(value: string) {
-  return /^FID\d{5,}$/.test(value);
+export function isInvoiceNumber(value: string) {
+  return /^FID\d{5,}$/i.test(value);
 }
 
 function numberFromBusinessId(value: string) {
-  const match = value.match(/^(?:ID|FID)(\d+)$/);
+  const match = value.match(/^(?:FID|ID)(\d+)$/i);
 
   if (!match) return 0;
 
@@ -33,6 +35,15 @@ function getOrderSequence(
     cleanString(data?.__orderNumber);
 
   return numberFromBusinessId(orderNumber);
+}
+
+function getOrderNumber(
+  data: Record<string, unknown> | undefined
+) {
+  return (
+    cleanString(data?.orderNumber) ||
+    cleanString(data?.__orderNumber)
+  );
 }
 
 function getExistingInvoiceNumber(
@@ -58,7 +69,7 @@ function getExistingInvoiceNumber(
 
   if (
     orderSequence > 0 &&
-    invoiceSequence < orderSequence
+    invoiceSequence !== orderSequence
   ) {
     return "";
   }
@@ -114,8 +125,9 @@ export async function ensureInvoiceNumberForOrder(
 
     if (existing) return existing;
 
+    const orderNumber = getOrderNumber(orderData);
     const orderSequence =
-      getOrderSequence(orderData);
+      numberFromBusinessId(orderNumber);
 
     const counterSnap = await tx.get(counterRef);
     const counterNext = counterSnap.exists
@@ -124,22 +136,24 @@ export async function ensureInvoiceNumberForOrder(
         ) + 1
       : 1;
 
-    const next = Math.max(
+    const nextCounter = Math.max(
       counterNext,
       orderSequence || 1
     );
 
     if (counterSnap.exists) {
-      tx.update(counterRef, { count: next });
+      tx.update(counterRef, { count: nextCounter });
     } else {
       tx.set(counterRef, {
-        count: next,
+        count: nextCounter,
         createdAt: new Date(),
       });
     }
 
+    const invoiceSequence =
+      orderSequence || nextCounter;
     const invoiceNumber =
-      formatInvoiceNumber(next);
+      formatInvoiceNumber(invoiceSequence);
 
     tx.set(
       orderRef,

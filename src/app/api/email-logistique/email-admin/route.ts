@@ -38,10 +38,7 @@ export async function POST(req: Request) {
 
     const orderNumber = resolveOrderNumber(rawOrder, orderId);
     const invoiceNumber =
-      typeof rawOrder?.invoiceNumber === "string" &&
-      /^FID\d{5,}$/.test(rawOrder.invoiceNumber.trim())
-        ? rawOrder.invoiceNumber.trim()
-        : await ensureInvoiceNumberForOrder(ref);
+      await ensureInvoiceNumberForOrder(ref);
 
     console.log("ADMIN ORDER DEBUG", {
       orderId,
