@@ -7,7 +7,6 @@ import {
   Bed,
   BriefcaseMedical,
   CheckCircle2,
-  ChevronDown,
   ClipboardCheck,
   Clock3,
   Eye,
@@ -17,13 +16,14 @@ import {
   Languages,
   MapPin,
   Plane,
-  Search,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
 
 import type { Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n";
+import homeHeroPatientV2 from "../../../../public/brand/home-hero-patient-v2.png";
+import { HomeDirectorySearch } from "./HomeDirectorySearch";
 
 export const dynamic = "force-dynamic";
 
@@ -164,10 +164,10 @@ export default async function HomePage({
 
           <div className="home-exact-hero-image">
             <Image
-              src="/brand/home-hero-patient-v2.png"
+              src={homeHeroPatientV2}
               alt="Patiente en position face vers le bas après une vitrectomie"
               width={2020}
-              height={778}
+              height={687}
               priority
             />
           </div>
@@ -240,8 +240,8 @@ export default async function HomePage({
               {guide.icon}
               <span>
                 {guide.label}
-                <em>En savoir plus <ArrowRight size={15} /></em>
               </span>
+              <ArrowRight className="home-exact-guide-arrow" size={16} aria-hidden="true" />
             </Link>
           ))}
         </div>
@@ -268,28 +268,7 @@ export default async function HomePage({
         </div>
 
         <div className="home-exact-map-search">
-          <div className="home-exact-map" aria-hidden="true">
-            <Image
-              src="/brand/home-directory-map-v2.png"
-              alt=""
-              width={1536}
-              height={512}
-              sizes="(max-width: 1260px) 100vw, 820px"
-              unoptimized
-            />
-          </div>
-          <div className="home-exact-search-card">
-            <label>
-              Où ?
-              <span>Pays, ville ou code postal <MapPin size={16} /></span>
-            </label>
-            <label>
-              Spécialité recherchée
-              <span>Sélectionner une spécialité <ChevronDown size={16} /></span>
-            </label>
-            <Link href={`${prefix}/annuaire`}><Search size={18} /> Rechercher</Link>
-            <small>Exemples : Vitrectomie, Trou maculaire, Décollement de rétine, Membrane épirétinienne...</small>
-          </div>
+          <HomeDirectorySearch locale={locale} />
         </div>
       </section>
 
@@ -309,7 +288,11 @@ export default async function HomePage({
           </div>
           <div className="home-exact-faq-column home-exact-faq-column-closed">
             {faqItems.slice(2).map((item) => (
-              <FaqItem item={item} key={typeof item === "string" ? item : item.question} />
+              <FaqItem
+                href={`${prefix}#faq`}
+                item={item}
+                key={typeof item === "string" ? item : item.question}
+              />
             ))}
           </div>
         </div>
@@ -387,11 +370,21 @@ function Step({
 }
 
 function FaqItem({
+  href,
   item,
 }: {
+  href?: string;
   item: string | { question: string; answer: string };
 }) {
   if (typeof item === "string") {
+    if (href) {
+      return (
+        <Link href={href} className="home-exact-faq-item home-exact-faq-link">
+          <span>{item}</span>
+        </Link>
+      );
+    }
+
     return (
       <details className="home-exact-faq-item">
         <summary>{item}</summary>
@@ -400,9 +393,9 @@ function FaqItem({
   }
 
   return (
-    <details className="home-exact-faq-item" open>
-      <summary>{item.question}</summary>
+    <article className="home-exact-faq-item home-exact-faq-item-locked">
+      <h3>{item.question}</h3>
       <p>{item.answer}</p>
-    </details>
+    </article>
   );
 }

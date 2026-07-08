@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { collection, getDocs } from "firebase/firestore";
 import {
   isMainVitrectomedProduct,
   useCart,
+  type CartItem,
 } from "@/context/CartContext";
+import { db } from "@/lib/firebase";
+import {
+  MARKET_BY_LOCALE,
+  type Market,
+} from "@/lib/market";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -37,6 +44,8 @@ const TRANSLATIONS: Record<
     totalHT: string;
     totalTTC: string;
     checkout: string;
+    emptyHint: string;
+    addProduct: string;
   }
 > = {
   fr: {
@@ -48,6 +57,8 @@ const TRANSLATIONS: Record<
     totalHT: "Total HT",
     totalTTC: "Total TTC",
     checkout: "Commander",
+    emptyHint: "Ajoutez le coussin VitrectoMed pour démarrer votre commande.",
+    addProduct: "Ajouter l’article",
   },
   en: {
     title: "Your cart",
@@ -58,6 +69,8 @@ const TRANSLATIONS: Record<
     totalHT: "Total excl. VAT",
     totalTTC: "Total incl. VAT",
     checkout: "Checkout",
+    emptyHint: "Add the VitrectoMed cushion to start your order.",
+    addProduct: "Add item",
   },
   es: {
     title: "Tu carrito",
@@ -68,6 +81,8 @@ const TRANSLATIONS: Record<
     totalHT: "Total sin IVA",
     totalTTC: "Total con IVA",
     checkout: "Pagar",
+    emptyHint: "Añade el cojín VitrectoMed para empezar tu pedido.",
+    addProduct: "Añadir el artículo",
   },
   de: {
     title: "Ihr Warenkorb",
@@ -78,6 +93,8 @@ const TRANSLATIONS: Record<
     totalHT: "Gesamt netto",
     totalTTC: "Gesamt brutto",
     checkout: "Zur Kasse",
+    emptyHint: "Fügen Sie das VitrectoMed-Kissen hinzu, um Ihre Bestellung zu starten.",
+    addProduct: "Artikel hinzufügen",
   },
   it: {
     title: "Il tuo carrello",
@@ -88,6 +105,8 @@ const TRANSLATIONS: Record<
     totalHT: "Totale IVA esclusa",
     totalTTC: "Totale IVA inclusa",
     checkout: "Checkout",
+    emptyHint: "Aggiungi il cuscino VitrectoMed per iniziare l'ordine.",
+    addProduct: "Aggiungi l'articolo",
   },
   nl: {
     title: "Je winkelwagen",
@@ -98,8 +117,138 @@ const TRANSLATIONS: Record<
     totalHT: "Totaal excl. btw",
     totalTTC: "Totaal incl. btw",
     checkout: "Afrekenen",
+    emptyHint: "Voeg het VitrectoMed-kussen toe om je bestelling te starten.",
+    addProduct: "Artikel toevoegen",
   },
 };
+
+type VatConfig = {
+  enabled: boolean;
+  rate: number;
+};
+
+type ProductVariant = {
+  id: string;
+  productCode?: string;
+  label: string;
+  imageUrl?: string;
+  markets?: Market[];
+  pricesByMarket?: Record<Market, number>;
+  vatByMarket?: Record<Market, VatConfig>;
+};
+
+type Product = {
+  id: string;
+  productCode?: string;
+  name?: Partial<Record<Locale, string>>;
+  description?: Partial<Record<Locale, string>>;
+  imageUrl?: string;
+  isActive?: boolean;
+  weightKg?: number;
+  deliveryPackageCount?: number;
+  markets?: Market[];
+  marketSettings?: Partial<Record<Market, { isActive?: boolean }>>;
+  pricesByMarket?: Record<Market, number>;
+  vatByMarket?: Record<Market, VatConfig>;
+  variants?: ProductVariant[];
+};
+
+const FALLBACK_IMAGE = "/brand/home-product.png";
+const VITRECTOMED_PRODUCT_ID = "3tuSUenbUVVF6cuSHwS9";
+
+function pickLocaleValue(
+  obj: Partial<Record<Locale, string>> | undefined,
+  locale: Locale
+) {
+  return obj?.[locale] || obj?.fr || "";
+}
+
+function getPriceHT(
+  pricesByMarket: Record<Market, number> | undefined,
+  market: Market
+) {
+  return Number(pricesByMarket?.[market] ?? 0);
+}
+
+function getVat(
+  vatByMarket: Record<Market, VatConfig> | undefined,
+  market: Market
+) {
+  return vatByMarket?.[market] || { enabled: false, rate: 0 };
+}
+
+function isProductActiveInMarket(product: Product, market: Market) {
+  return (
+    product.isActive !== false &&
+    Array.isArray(product.markets) &&
+    product.markets.includes(market) &&
+    product.marketSettings?.[market]?.isActive !== false
+  );
+}
+
+function variantIsAvailableInMarket(
+  variant: ProductVariant,
+  market: Market
+) {
+  return (
+    !Array.isArray(variant.markets) ||
+    variant.markets.length === 0 ||
+    variant.markets.includes(market)
+  );
+}
+
+function buildCartItemFromProduct(
+  product: Product,
+  locale: Locale,
+  market: Market
+): CartItem | null {
+  const variantsForMarket = Array.isArray(product.variants)
+    ? product.variants.filter((variant) =>
+        variantIsAvailableInMarket(variant, market)
+      )
+    : [];
+  const selectedVariant = variantsForMarket[0] || null;
+  const baseName =
+    pickLocaleValue(product.name, locale) || "Coussin VitrectoMed";
+  const description = pickLocaleValue(product.description, locale);
+  const priceHT = selectedVariant
+    ? getPriceHT(selectedVariant.pricesByMarket, market)
+    : getPriceHT(product.pricesByMarket, market);
+  const vat = selectedVariant
+    ? getVat(selectedVariant.vatByMarket, market)
+    : getVat(product.vatByMarket, market);
+
+  if (!priceHT) return null;
+
+  return {
+    id: selectedVariant
+      ? `${product.id}:${selectedVariant.id}`
+      : product.id,
+    sku:
+      selectedVariant?.productCode ||
+      product.productCode ||
+      undefined,
+    productCode:
+      selectedVariant?.productCode ||
+      product.productCode ||
+      undefined,
+    name: selectedVariant
+      ? `${baseName} – ${selectedVariant.label}`
+      : baseName,
+    priceHT,
+    weightKg: Number(product.weightKg ?? 0) || 0,
+    deliveryPackageCount:
+      Number(product.deliveryPackageCount ?? 1) || 1,
+    quantity: 1,
+    imageUrl:
+      selectedVariant?.imageUrl || product.imageUrl || FALLBACK_IMAGE,
+    description,
+    vat: {
+      enabled: vat.enabled,
+      rate: vat.rate,
+    },
+  };
+}
 
 /* ------------------------------------------
    🛒 CART DRAWER
@@ -112,13 +261,16 @@ export default function CartDrawer() {
   const locale: Locale = SUPPORTED_LOCALES.includes(rawLocale as Locale)
     ? (rawLocale as Locale)
     : "fr";
+  const market = MARKET_BY_LOCALE[locale];
 
   const t = TRANSLATIONS[locale];
+  const [suggestedProduct, setSuggestedProduct] = useState<Product | null>(null);
 
   const {
     items,
     removeItem,
     updateQuantity,
+    addItem,
     isOpen,
     closeCart,
     totalHT,
@@ -127,6 +279,67 @@ export default function CartDrawer() {
   } = useCart();
 
   const showVAT = totalVAT > 0;
+  const defaultCartItem = useMemo<CartItem | null>(() => {
+    if (!suggestedProduct) return null;
+
+    return buildCartItemFromProduct(suggestedProduct, locale, market);
+  }, [locale, market, suggestedProduct]);
+
+  async function fetchSuggestedProduct() {
+    try {
+      const snap = await getDocs(collection(db, "products"));
+      const products = snap.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Product, "id">),
+      })) as Product[];
+
+      const activeProducts = products.filter((product) =>
+        isProductActiveInMarket(product, market)
+      );
+      const product =
+        activeProducts.find(
+          (candidate) => candidate.id === VITRECTOMED_PRODUCT_ID
+        ) ||
+        activeProducts[0] ||
+        null;
+
+      setSuggestedProduct(product);
+      return product;
+    } catch (error) {
+      console.error("[cart] product suggestion failed:", error);
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    if (!isOpen || items.length > 0 || suggestedProduct) {
+      return;
+    }
+
+    fetchSuggestedProduct();
+  }, [isOpen, items.length, market, suggestedProduct]);
+
+  async function handleAddSuggestedProduct() {
+    const cartItem =
+      defaultCartItem ||
+      (suggestedProduct
+        ? buildCartItemFromProduct(suggestedProduct, locale, market)
+        : null);
+
+    if (cartItem) {
+      addItem(cartItem);
+      return;
+    }
+
+    const product = await fetchSuggestedProduct();
+    const loadedCartItem = product
+      ? buildCartItemFromProduct(product, locale, market)
+      : null;
+
+    if (loadedCartItem) {
+      addItem(loadedCartItem);
+    }
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -188,8 +401,41 @@ export default function CartDrawer() {
         <div className="cart-items">
           {items.length === 0 ? (
             <div className="cart-empty">
-              <ShoppingBag size={38} aria-hidden="true" />
-              <p>{t.empty}</p>
+              <div className="cart-empty__intro">
+                <ShoppingBag size={30} aria-hidden="true" />
+                <div>
+                  <p>{t.empty}</p>
+                  <span>{t.emptyHint}</span>
+                </div>
+              </div>
+
+              <div className="cart-empty-product">
+                <img
+                  src={defaultCartItem?.imageUrl || FALLBACK_IMAGE}
+                  alt={defaultCartItem?.name || "VitrectoMed"}
+                  className="cart-empty-product__image"
+                />
+
+                <div className="cart-empty-product__body">
+                  <p className="cart-empty-product__name">
+                    {defaultCartItem?.name || "Coussin VitrectoMed"}
+                  </p>
+
+                  {defaultCartItem ? (
+                    <p className="cart-empty-product__price">
+                      {defaultCartItem.priceHT.toFixed(2)} € HT
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="cart-empty__cta"
+                onClick={handleAddSuggestedProduct}
+              >
+                {t.addProduct}
+              </button>
             </div>
           ) : (
             items.map((item) => {
