@@ -31,18 +31,6 @@
   -webkit-backdrop-filter: blur(18px);
 }
 
-.public-shell .vm-navbar::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: 2px;
-  pointer-events: none;
-  background: linear-gradient(90deg, #0a246b 0%, #15a6bb 48%, #d6ecf4 100%);
-  opacity: .72;
-}
-
 /* =========================================================
    GLOBAL ATMOSPHERE
 ========================================================= */
